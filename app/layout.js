@@ -36,6 +36,16 @@ const quickAccessMenuItems = [
     icon: "leaderboard",
   },
   {
+    name: "Comparativas",
+    href: "/comparativas",
+    icon: "analytics",
+  },
+  {
+    name: "Notas",
+    href: "/notas",
+    icon: "note",
+  },
+  {
     name: "Agenda",
     href: "/agenda",
     icon: "book",
@@ -75,6 +85,11 @@ const quickAccessMenuItems = [
     name: "Liquid...",
     href: "/liquidaciones",
     icon: "payments",
+  },
+  {
+    name: "Studio",
+    href: "/studio",
+    icon: "edit_document",
   },
 ];
 
@@ -572,6 +587,28 @@ export default function RootLayout({ children }) {
                             <span className="compact-title">Contratos</span>
                           </Link>
                         </li>
+                        <li className="relative">
+                          <Link
+                            href="/comparativas"
+                            className={`flex flex-row items-center gap-3 py-3 pl-4 pr-6 mb-1 rounded-full text-black hover:bg-gray-300 ${
+                              pathname === "/comparativas" ? "bg-backgroundHover" : ""
+                            }`}
+                          >
+                            <span className="material-symbols-outlined">analytics</span>
+                            <span className="compact-title">Comparativas</span>
+                          </Link>
+                        </li>
+                        <li className="relative">
+                          <Link
+                            href="/notas"
+                            className={`flex flex-row items-center gap-3 py-3 pl-4 pr-6 mb-1 rounded-full text-black hover:bg-gray-300 ${
+                              pathname === "/notas" ? "bg-backgroundHover" : ""
+                            }`}
+                          >
+                            <span className="material-symbols-outlined">note</span>
+                            <span className="compact-title">Notas Rápidas</span>
+                          </Link>
+                        </li>
                       </ul>
                       <div className="z-50 compact-hide">
                         <button
@@ -696,6 +733,17 @@ export default function RootLayout({ children }) {
                               <span className="compact-title">Generar Justo Titulo</span>
                             </Link>
                           </li>
+                          <li className="relative">
+                            <Link
+                              href="/studio"
+                              className={`flex flex-row items-center gap-3 py-3 pl-4 pr-6 mb-1 rounded-full text-black hover:bg-gray-300 ${
+                                pathname === "/studio" ? "bg-backgroundHover" : ""
+                              }`}
+                            >
+                              <span className="material-symbols-outlined">edit_document</span>
+                              <span className="compact-title">Studio</span>
+                            </Link>
+                          </li>
                         </ul>
                       )}
 
@@ -727,6 +775,19 @@ export default function RootLayout({ children }) {
                           >
                             <span className="material-symbols-outlined">payments</span>
                             <span className="compact-title">Liquidaciones</span>
+                          </Link>
+                        </li>
+                        <li className="relative">
+                          <Link
+                            href="/studio"
+                            className={`
+                                      flex flex-row items-center gap-3 py-3 pl-4 pr-6 mb-1 rounded-full text-black hover:bg-gray-300 ${
+                                        pathname === "/studio" ? "bg-backgroundHover" : ""
+                                      }
+                                    `}
+                          >
+                            <span className="material-symbols-outlined">edit_document</span>
+                            <span className="compact-title">Contratos</span>
                           </Link>
                         </li>
                       </ul>
