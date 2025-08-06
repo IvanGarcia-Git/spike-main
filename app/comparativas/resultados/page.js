@@ -7,6 +7,7 @@ import TariffComparisonResults from '@/components/comparativas/tariffs/TariffCom
 import { getTariffs } from '@/lib/tariff-store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import ComparativasHeader from '@/components/comparativas/Header';
 
 export default function ComparativasResultadosPage() {
     const router = useRouter();
@@ -64,7 +65,9 @@ export default function ComparativasResultadosPage() {
     };
 
     return (
-        <div className="container mx-auto p-4 md:p-8">
+        <div>
+            <ComparativasHeader />
+            <div className="container mx-auto p-4 md:p-8">
              {formData && filteredTariffs.length > 0 && (
                 <TariffComparisonResults
                     tariffs={filteredTariffs}
@@ -83,6 +86,7 @@ export default function ComparativasResultadosPage() {
                     </CardContent>
                 </Card>
             )}
+            </div>
         </div>
     );
 }

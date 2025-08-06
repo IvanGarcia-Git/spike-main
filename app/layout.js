@@ -3,6 +3,7 @@ import { useRef, useState, useEffect, createContext, useContext, use } from "rea
 import { usePathname, useRouter } from "next/navigation";
 import { authGetFetch } from "@/helpers/server-fetch.helper";
 import Link from "next/link";
+import Image from "next/image";
 import * as jose from "jose";
 import localFont from "next/font/local";
 import { getCookie, deleteCookie } from "cookies-next";
@@ -563,12 +564,14 @@ export default function RootLayout({ children }) {
                       <span className="material-symbols-outlined text-black">close</span>
                     </button>
                     <Link href="/" className="sidebar-logo pt-4 pb-2 pl-6 flex items-center w-full">
-                      <div className="z-50 w-9 h-9 rounded-full border-2 border-primary-600 flex items-center justify-center text-primary-800 font-bold text-lg">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-full text-black bg-primary-200">
-                          B
-                        </span>
-                      </div>
-                      <h4 className="text-2xl font-medium tracking-wide compact-hide text-black ml-2 z-50">
+                      <Image
+                        src="/images/logo.svg"
+                        alt="Spikes Logo"
+                        width={36}
+                        height={36}
+                        className="object-contain z-50"
+                      />
+                      <h4 className="text-2xl font-medium tracking-wide compact-hide text-black ml-3 z-50">
                         Spikes
                       </h4>
                     </Link>

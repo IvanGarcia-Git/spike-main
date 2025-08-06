@@ -155,8 +155,8 @@ export default function ComparisonPdfPreview({ pdfData, colors }: ComparisonPdfP
     const [headerLine1, setHeaderLine1] = useState('Comparado entre');
     const [headerLine2, setHeaderLine2] = useState('+ 150 compañías');
     
-    const [mainLogoSrc, setMainLogoSrc] = useState('https://placehold.co/200x100.png');
-    const [footerLogoSrc, setFooterLogoSrc] = useState('https://placehold.co/300x50.png');
+    const [mainLogoSrc, setMainLogoSrc] = useState('/images/logo.svg');
+    const [footerLogoSrc, setFooterLogoSrc] = useState('/images/logo.svg');
 
     const [currentBillDetails, setCurrentBillDetails] = useState<EditableCardData>(initialCurrentBillDetails);
     const [bestTariffDetails, setBestTariffDetails] = useState<EditableCardData>(initialBestTariffDetails);

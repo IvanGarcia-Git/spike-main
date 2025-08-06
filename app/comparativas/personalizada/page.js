@@ -9,6 +9,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import ComparativasHeader from '@/components/comparativas/Header';
 
 export default function ComparativasPersonalizadaPage() {
   const previewRef = useRef(null);
@@ -90,7 +91,9 @@ export default function ComparativasPersonalizadaPage() {
   };
 
   return (
-    <div className="container mx-auto p-4 md:p-8">
+    <div>
+      <ComparativasHeader />
+      <div className="container mx-auto p-4 md:p-8">
       <div className="flex justify-between items-start mb-8">
         <div>
           <h1 className="text-3xl font-bold">Personalizar Comparativa</h1>
@@ -159,6 +162,7 @@ export default function ComparativasPersonalizadaPage() {
             <ComparisonPdfPreview pdfData={pdfData} colors={colors} />
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

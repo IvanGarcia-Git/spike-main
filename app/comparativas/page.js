@@ -26,6 +26,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import ComparativasHeader from '@/components/comparativas/Header';
 
 const recentComparisons = [
   {
@@ -715,6 +716,7 @@ export default function ComparativasPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
+      <ComparativasHeader />
       <main className="flex-grow p-8">
         <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Left Column */}
