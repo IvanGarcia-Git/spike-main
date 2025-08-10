@@ -26,9 +26,7 @@
       "Bash(find:*)",
       "Bash(npm run build:*)",
       "Bash(npx next dev:*)",
-      "Bash(timeout 10s npm run dev)",
-      "WebFetch(domain:vercel.com)",
-      "WebFetch(domain:vercel.com)"
+      "Bash(timeout 10s npm run dev)"
     ],
     "deny": []
   }
