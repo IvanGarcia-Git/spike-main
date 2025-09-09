@@ -57,3 +57,20 @@ export const authFetchFormData = async (method, suffix, formData, jwtToken) => {
     body: formData,
   });
 };
+
+// Comparativas API functions
+export const createComparativa = async (comparativaData, jwtToken) => {
+  return await authFetch("POST", "comparativas", comparativaData, jwtToken);
+};
+
+export const getComparativas = async (jwtToken) => {
+  return await authGetFetch("comparativas", jwtToken);
+};
+
+export const getRecentComparativas = async (limit, jwtToken) => {
+  return await authGetFetch(`comparativas/recent?limit=${limit}`, jwtToken);
+};
+
+export const deleteComparativa = async (comparativaId, jwtToken) => {
+  return await authFetch("DELETE", `comparativas/${comparativaId}`, null, jwtToken);
+};

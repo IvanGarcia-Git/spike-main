@@ -14,7 +14,15 @@ module.exports = {
         foreground: "var(--foreground)",
         secondary: "var(--secondary)",
         secondaryHover: "var(--secondary-hover)",
-        
+        border: "hsl(var(--border, 214.3 31.8% 91.4%))",
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
       },
     },
   },

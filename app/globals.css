@@ -13,6 +13,12 @@ html {
   --background-hover-bold: #cad3e1;
   --secondary: #faca15;
   --secondary-hover: #fac815c6;
+  
+  /* Dropdown menu colors */
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -62,6 +68,107 @@ button, .font-normal {
 /* General text elements */
 p, span, div {
   color: #000 !important;
+}
+
+/* Dropdown menu styles */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Dropdown menu specific fixes */
+[data-radix-dropdown-menu-content] {
+  background-color: white !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.5rem !important;
+  padding: 0.375rem !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  z-index: 9999 !important;
+  min-width: 11rem !important;
+  animation: slideDown 0.2s ease-out !important;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+[data-radix-dropdown-menu-item] {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  padding: 0.625rem 0.875rem !important;
+  margin: 0.125rem 0 !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  color: #4b5563 !important;
+  border-radius: 0.375rem !important;
+  outline: none !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  transition: all 0.15s ease !important;
+  font-weight: 500 !important;
+}
+
+[data-radix-dropdown-menu-item] svg {
+  color: #6b7280 !important;
+  transition: color 0.15s ease !important;
+}
+
+[data-radix-dropdown-menu-item]:hover,
+[data-radix-dropdown-menu-item]:focus {
+  background-color: #f9fafb !important;
+  color: #111827 !important;
+}
+
+[data-radix-dropdown-menu-item]:hover svg {
+  color: #374151 !important;
+}
+
+[data-radix-dropdown-menu-item][data-highlighted] {
+  background-color: #f3f4f6 !important;
+  color: #1f2937 !important;
+}
+
+[data-radix-dropdown-menu-item][data-highlighted] svg {
+  color: #374151 !important;
+}
+
+/* Estilo especial para el item de borrar */
+[data-radix-dropdown-menu-item].text-red-600 {
+  color: #ef4444 !important;
+}
+
+[data-radix-dropdown-menu-item].text-red-600 svg {
+  color: #f87171 !important;
+}
+
+[data-radix-dropdown-menu-item].text-red-600:hover,
+[data-radix-dropdown-menu-item].text-red-600[data-highlighted] {
+  background-color: #fef2f2 !important;
+  color: #dc2626 !important;
+}
+
+[data-radix-dropdown-menu-item].text-red-600:hover svg,
+[data-radix-dropdown-menu-item].text-red-600[data-highlighted] svg {
+  color: #ef4444 !important;
+}
+
+/* Separador del menú */
+[data-radix-dropdown-menu-separator] {
+  height: 1px !important;
+  background-color: #e5e7eb !important;
+  margin: 0.25rem -0.5rem !important;
 }
 
 /* Radio button styling to match reference project */
@@ -451,5 +558,50 @@ span[data-field-id].field-completed {
   @page {
     size: A4;
     margin: 15mm;
+    /* Remove browser headers and footers */
+    @top-left { content: ""; }
+    @top-center { content: ""; }
+    @top-right { content: ""; }
+    @bottom-left { content: ""; }
+    @bottom-center { content: ""; }
+    @bottom-right { content: ""; }
   }
+}
+
+/* Estilos específicos para PDF de comparativas */
+.pdf-page {
+  position: relative;
+  box-sizing: border-box;
+}
+
+.pdf-page * {
+  box-sizing: border-box;
+}
+
+.pdf-page textarea,
+.pdf-page input[type="text"] {
+  white-space: nowrap;
+  text-overflow: visible;
+  overflow: visible !important;
+}
+
+.pdf-content-page textarea,
+.pdf-content-page input {
+  min-height: 20px;
+  line-height: 1.4;
+}
+
+.pdf-content-page .space-y-2 > * {
+  margin-bottom: 0.5rem;
+}
+
+/* Asegurar que el texto en las tarjetas no se corte */
+.pdf-page [class*="CompanyCard"] {
+  overflow: visible !important;
+}
+
+.pdf-page [class*="EditableCostDetail"] {
+  min-height: 24px;
+  display: flex;
+  align-items: center;
 }

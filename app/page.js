@@ -40,7 +40,7 @@ export default function Login() {
       try {
         const payload = jose.decodeJwt(token);
         if (payload) {
-          router.push("/contratos");
+          router.push("/dashboard");
         }
       } catch (error) {
         console.error("Error al decodificar el token:", error);
@@ -62,7 +62,7 @@ export default function Login() {
 
       if (response.ok) {
         await getNotifications();
-        router.push("/contratos");
+        router.push("/dashboard");
       } else {
         alert("Nombre de usuario o contraseña incorrectos");
       }

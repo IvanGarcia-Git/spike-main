@@ -10,6 +10,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Button } from "@/components/ui/button";
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
+import { createComparativa } from '@/helpers/server-fetch.helper';
+import { useToast } from '@/hooks/use-toast';
 
 interface TariffComparisonResultsProps {
   tariffs: CompanyTariff[];
@@ -143,10 +145,12 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
     const { tariffs, formData, initialRegulatedCosts } = props;
     const { currentBillAmount, numDias, clientName, showCurrentBill, comparisonType } = formData;
     const router = useRouter();
+    const { toast } = useToast();
 
     const [regulatedCosts, setRegulatedCosts] = useState(initialRegulatedCosts);
     const [results, setResults] = useState<TariffComparisonResult[]>([]);
     const [openRowId, setOpenRowId] = useState<string | null>(null);
+    const [comparativaSaved, setComparativaSaved] = useState(false);
 
 
     const handleRegulatedCostChange = (name: string, value: number) => {
@@ -275,6 +279,70 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
         }
         setResults(newResults);
     }, [tariffs, formData, regulatedCosts, calculateLightTariffCosts, calculateGasTariffCosts, comparisonType]);
+
+    // Save comparativa to backend when results are calculated
+    useEffect(() => {
+        const saveComparativa = async () => {
+            if (results.length > 0 && !comparativaSaved) {
+                try {
+                    // Get JWT token from cookies
+                    const cookies = document.cookie.split(';');
+                    const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('factura-token='));
+                    const token = tokenCookie ? tokenCookie.split('=')[1] : null;
+
+                    if (!token) {
+                        console.log('No token available for saving comparativa');
+                        return;
+                    }
+
+                    // Get the best tariff (first in sorted results)
+                    const bestResult = results[0];
+                    
+                    const comparativaData = {
+                        ...formData,
+                        tariffType: formData.selectedLightTariff || formData.selectedGasTariff || 'N/A',
+                        calculatedOldPrice: currentBillAmount,
+                        calculatedNewPrice: bestResult.totalCost,
+                        savings: currentBillAmount - bestResult.totalCost,
+                        calculationDetails: JSON.stringify({
+                            formData,
+                            results: results.slice(0, 3), // Save top 3 results
+                            regulatedCosts,
+                            timestamp: new Date().toISOString(),
+                        }),
+                    };
+
+                    const response = await createComparativa(comparativaData, token);
+                    
+                    if (response && response.ok) {
+                        const savedComparativa = await response.json();
+                        console.log('Comparativa saved successfully:', savedComparativa);
+                        setComparativaSaved(true);
+                        toast({
+                            title: "Comparativa guardada",
+                            description: "La comparativa se ha guardado correctamente en tu historial.",
+                        });
+                    } else {
+                        console.error('Failed to save comparativa');
+                        toast({
+                            title: "Error al guardar",
+                            description: "No se pudo guardar la comparativa. Por favor, intenta de nuevo.",
+                            variant: "destructive",
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error saving comparativa:', error);
+                    toast({
+                        title: "Error",
+                        description: "Ocurrió un error al guardar la comparativa.",
+                        variant: "destructive",
+                    });
+                }
+            }
+        };
+
+        saveComparativa();
+    }, [results, comparativaSaved, formData, currentBillAmount, regulatedCosts, toast]);
 
 
     if (results.length === 0) {

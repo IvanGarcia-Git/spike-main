@@ -19,7 +19,7 @@ const getContrastColor = (hexcolor: string): 'black' | 'white' => {
   return (yiq >= 128) ? 'black' : 'white';
 };
 
-const EditableCostDetail = ({ label, value, onLabelChange, onValueChange, className = '' }: { label: string; value: string; onLabelChange: (e: ChangeEvent<HTMLTextAreaElement>) => void; onValueChange: (e: ChangeEvent<HTMLInputElement>) => void; className?: string }) => {
+const EditableCostDetail = ({ label, value, onLabelChange, onValueChange, className = '', textColor }: { label: string; value: string; onLabelChange: (e: ChangeEvent<HTMLTextAreaElement>) => void; onValueChange: (e: ChangeEvent<HTMLInputElement>) => void; className?: string; textColor?: string }) => {
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
@@ -29,44 +29,48 @@ const EditableCostDetail = ({ label, value, onLabelChange, onValueChange, classN
         }
     }, [label]);
 
+    const effectiveColor = textColor || 'inherit';
+
     return (
-        <div className={`flex justify-between items-start text-xs ${className}`}>
+        <div className={`flex justify-between items-start text-xs ${className} min-h-[20px]`} style={{ color: effectiveColor }}>
             <textarea
                 ref={textAreaRef}
                 value={label}
                 onChange={onLabelChange}
-                className="w-full bg-transparent border-none p-0 m-0 focus:ring-1 focus:ring-primary focus:bg-white/50 rounded-sm resize-none text-xs"
+                className="flex-1 bg-transparent border-none p-0 m-0 pr-2 focus:ring-1 focus:ring-primary focus:bg-white/50 rounded-sm resize-none text-xs overflow-hidden"
+                style={{ lineHeight: '1.4', minHeight: '20px', color: effectiveColor }}
                 rows={1}
             />
             <input
                 type="text"
                 value={value}
                 onChange={onValueChange}
-                className="font-medium bg-transparent border-none p-0 m-0 w-20 text-right focus:ring-1 focus:ring-primary focus:bg-white/50 rounded-sm text-xs"
+                className="font-medium bg-transparent border-none p-0 m-0 w-24 text-right focus:ring-1 focus:ring-primary focus:bg-white/50 rounded-sm text-xs flex-shrink-0"
+                style={{ lineHeight: '1.4', color: effectiveColor }}
             />
         </div>
     );
 };
 
-const Section = ({ title, color, children }: { title: string; color: string; children: React.ReactNode }) => (
+const Section = ({ title, color, children, textColor }: { title: string; color: string; children: React.ReactNode; textColor?: string }) => (
     <div className="mb-6">
-        <h4 className={`text-xl font-bold ${color}`}>{title}</h4>
-        <div className={`border-t-2 ${color.replace('text-', 'border-').replace('-500', '-400')} w-24 my-2`}></div>
-        <div className="space-y-1">{children}</div>
+        <h4 className="text-xl font-bold" style={{ color: textColor || '#000000' }}>{title}</h4>
+        <div className="border-t-2 border-gray-400 w-24 my-2"></div>
+        <div className="space-y-2" style={{ color: textColor || 'inherit' }}>{children}</div>
     </div>
 );
 
-const EditableTotalSection = ({ color, total, onTotalChange }: { color: string; total: string; onTotalChange: (e: ChangeEvent<HTMLInputElement>) => void }) => (
+const EditableTotalSection = ({ color, total, onTotalChange, textColor }: { color: string; total: string; onTotalChange: (e: ChangeEvent<HTMLInputElement>) => void; textColor?: string }) => (
     <div>
-        <div className={`border-t-2 ${color.replace('text-', 'border-').replace('-500', '-400')} w-full my-3`}></div>
+        <div className="border-t-2 border-gray-400 w-full my-3"></div>
         <div className="flex justify-between items-baseline">
-            <span className={`text-3xl font-extrabold ${color}`}>Total</span>
+            <span className="text-3xl font-extrabold" style={{ color: textColor || '#000000' }}>Total</span>
              <input
                 type="text"
                 value={total}
                 onChange={onTotalChange}
                 className="text-4xl font-extrabold bg-transparent border-none p-0 m-0 w-32 text-right focus:ring-1 focus:ring-primary focus:bg-white/50 rounded-sm"
-                style={{ color: 'inherit' }}
+                style={{ color: textColor || '#000000', WebkitTextFillColor: textColor || '#000000' }}
             />
         </div>
     </div>
@@ -77,20 +81,22 @@ const CompanyCard = ({
     subtitle,
     subtitleColor,
     borderColor,
-    children
+    children,
+    textColor
 }: {
     title: string;
     subtitle: string;
     subtitleColor: string;
     borderColor: string;
     children: React.ReactNode;
+    textColor?: string;
 }) => (
-    <div className={`bg-white shadow-lg rounded-md overflow-hidden ${borderColor}`}>
-        <div className="bg-black p-4 text-center text-white">
-            <h2 className="text-lg font-semibold tracking-widest">{title}</h2>
+    <div className={`bg-white shadow-lg rounded-md overflow-visible ${borderColor}`}>
+        <div className="bg-black p-4 text-center">
+            <h2 className="text-lg font-semibold tracking-widest text-white">{title}</h2>
             <h3 className={`text-4xl font-bold tracking-wider ${subtitleColor}`}>{subtitle}</h3>
         </div>
-        <div className="p-6">
+        <div className="p-8" style={{ color: textColor || '#000000' }}>
             {children}
         </div>
     </div>
@@ -102,6 +108,11 @@ interface ComparisonPdfPreviewProps {
     background: string;
     primaryText: string;
     secondaryText: string;
+  };
+  userData?: {
+    name: string;
+    email: string;
+    profileImageUri: string;
   };
 }
 
@@ -145,7 +156,7 @@ const initialBestTariffDetails: EditableCardData = {
 };
 
 
-export default function ComparisonPdfPreview({ pdfData, colors }: ComparisonPdfPreviewProps) {
+export default function ComparisonPdfPreview({ pdfData, colors, userData }: ComparisonPdfPreviewProps) {
     const [logos, setLogos] = useState<string[]>([
         'https://placehold.co/80x35.png',
         'https://placehold.co/80x35.png',
@@ -501,21 +512,21 @@ export default function ComparisonPdfPreview({ pdfData, colors }: ComparisonPdfP
 
                 {/* Bottom Section */}
                 <footer className="text-center">
-                    <h1 className="text-5xl font-bold">{pdfData?.clientName || 'Marcos'},</h1>
-                    <h2 className="text-4xl">aquí tienes tu comparativa</h2>
-                    <p className="text-green-500 text-4xl font-bold mt-6">{formatCurrency(annualSaving)} Ahorro Anual</p>
+                    <h1 className="text-5xl font-bold" style={{ color: colors.primaryText }}>{pdfData?.clientName || 'Marcos'},</h1>
+                    <h2 className="text-4xl" style={{ color: colors.primaryText }}>aquí tienes tu comparativa</h2>
+                    <p className="text-4xl font-bold mt-6" style={{ color: colors.primaryText }}>{formatCurrency(annualSaving)} Ahorro Anual</p>
                 </footer>
             </div>
 
             {/* Page 2: Content */}
             <div 
-                className="pdf-page aspect-[210/297] p-8 font-sans rounded-lg flex flex-col justify-center"
-                style={{ backgroundColor: colors.background }}
+                className="pdf-page aspect-[210/297] p-8 font-sans rounded-lg flex flex-col justify-center pdf-content-page"
+                style={{ backgroundColor: colors.background, color: colors.primaryText }}
             >
                 <div className="w-full">
                     <h1 
                         className="text-center text-4xl lg:text-6xl font-extrabold mb-4 lg:mb-8 tracking-tighter"
-                        style={{ color: colors.secondaryText }}
+                        style={{ color: colors.primaryText }}
                     >
                         Comparativa
                     </h1>
@@ -525,10 +536,11 @@ export default function ComparisonPdfPreview({ pdfData, colors }: ComparisonPdfP
                             <CompanyCard
                                 title="COMPAÑÍA"
                                 subtitle="ACTUAL"
-                                subtitleColor="text-rose-500"
+                                subtitleColor="text-white"
                                 borderColor="border-8 border-white ring-4 ring-black"
+                                textColor={colors.primaryText}
                             >
-                                <Section title={sectionTitlePotencia} color="text-rose-500">
+                                <Section title={sectionTitlePotencia} color="text-rose-500" textColor={colors.primaryText}>
                                     {currentBillDetails.potencia.map((detail, index) => (
                                         <EditableCostDetail
                                             key={detail.id}
@@ -537,10 +549,11 @@ export default function ComparisonPdfPreview({ pdfData, colors }: ComparisonPdfP
                                             onLabelChange={(e) => handleDetailChange(setCurrentBillDetails, 'potencia', index, 'label', e.target.value)}
                                             onValueChange={(e) => handleDetailChange(setCurrentBillDetails, 'potencia', index, 'value', e.target.value)}
                                             className={index > 0 ? 'mt-1' : ''}
+                                            textColor={colors.primaryText}
                                         />
                                     ))}
                                 </Section>
-                                <Section title="Energía" color="text-rose-500">
+                                <Section title="Energía" color="text-rose-500" textColor={colors.primaryText}>
                                      {currentBillDetails.energia.map((detail, index) => (
                                         <EditableCostDetail
                                             key={detail.id}
@@ -549,10 +562,11 @@ export default function ComparisonPdfPreview({ pdfData, colors }: ComparisonPdfP
                                             onLabelChange={(e) => handleDetailChange(setCurrentBillDetails, 'energia', index, 'label', e.target.value)}
                                             onValueChange={(e) => handleDetailChange(setCurrentBillDetails, 'energia', index, 'value', e.target.value)}
                                             className={index > 0 ? 'mt-1' : ''}
+                                            textColor={colors.primaryText}
                                         />
                                     ))}
                                 </Section>
-                                <Section title="Impuestos y Extras" color="text-rose-500">
+                                <Section title="Impuestos y Extras" color="text-rose-500" textColor={colors.primaryText}>
                                     {currentBillDetails.impuestos.map((detail, index) => (
                                         <EditableCostDetail
                                             key={detail.id}
@@ -561,10 +575,11 @@ export default function ComparisonPdfPreview({ pdfData, colors }: ComparisonPdfP
                                             onLabelChange={(e) => handleDetailChange(setCurrentBillDetails, 'impuestos', index, 'label', e.target.value)}
                                             onValueChange={(e) => handleDetailChange(setCurrentBillDetails, 'impuestos', index, 'value', e.target.value)}
                                             className={index > 0 ? 'mt-1' : ''}
+                                            textColor={colors.primaryText}
                                         />
                                     ))}
                                 </Section>
-                                <EditableTotalSection color="text-rose-500" total={totalCurrent} onTotalChange={(e) => setTotalCurrent(e.target.value)} />
+                                <EditableTotalSection color="text-rose-500" total={totalCurrent} onTotalChange={(e) => setTotalCurrent(e.target.value)} textColor={colors.primaryText} />
                             </CompanyCard>
                         )}
 
@@ -573,10 +588,11 @@ export default function ComparisonPdfPreview({ pdfData, colors }: ComparisonPdfP
                             <CompanyCard
                                 title={bestCompanyName}
                                 subtitle="COMPAÑÍA"
-                                subtitleColor="text-emerald-500"
+                                subtitleColor="text-white"
                                 borderColor="border-8 border-emerald-500"
+                                textColor={colors.primaryText}
                             >
-                                <Section title={sectionTitlePotencia} color="text-emerald-500">
+                                <Section title={sectionTitlePotencia} color="text-emerald-500" textColor={colors.primaryText}>
                                     {bestTariffDetails.potencia.map((detail, index) => (
                                         <EditableCostDetail
                                             key={detail.id}
@@ -585,10 +601,11 @@ export default function ComparisonPdfPreview({ pdfData, colors }: ComparisonPdfP
                                             onLabelChange={(e) => handleDetailChange(setBestTariffDetails, 'potencia', index, 'label', e.target.value)}
                                             onValueChange={(e) => handleDetailChange(setBestTariffDetails, 'potencia', index, 'value', e.target.value)}
                                             className={index > 0 ? 'mt-1' : ''}
+                                            textColor={colors.primaryText}
                                         />
                                     ))}
                                 </Section>
-                                <Section title="Energía" color="text-emerald-500">
+                                <Section title="Energía" color="text-emerald-500" textColor={colors.primaryText}>
                                     {bestTariffDetails.energia.map((detail, index) => (
                                         <EditableCostDetail
                                             key={detail.id}
@@ -597,10 +614,11 @@ export default function ComparisonPdfPreview({ pdfData, colors }: ComparisonPdfP
                                             onLabelChange={(e) => handleDetailChange(setBestTariffDetails, 'energia', index, 'label', e.target.value)}
                                             onValueChange={(e) => handleDetailChange(setBestTariffDetails, 'energia', index, 'value', e.target.value)}
                                             className={index > 0 ? 'mt-1' : ''}
+                                            textColor={colors.primaryText}
                                         />
                                     ))}
                                 </Section>
-                                <Section title="Impuestos y Extras" color="text-emerald-500">
+                                <Section title="Impuestos y Extras" color="text-emerald-500" textColor={colors.primaryText}>
                                     {bestTariffDetails.impuestos.map((detail, index) => (
                                         <EditableCostDetail
                                             key={detail.id}
@@ -609,10 +627,11 @@ export default function ComparisonPdfPreview({ pdfData, colors }: ComparisonPdfP
                                             onLabelChange={(e) => handleDetailChange(setBestTariffDetails, 'impuestos', index, 'label', e.target.value)}
                                             onValueChange={(e) => handleDetailChange(setBestTariffDetails, 'impuestos', index, 'value', e.target.value)}
                                             className={index > 0 ? 'mt-1' : ''}
+                                            textColor={colors.primaryText}
                                         />
                                     ))}
                                 </Section>
-                                <EditableTotalSection color="text-emerald-500" total={totalBest} onTotalChange={(e) => setTotalBest(e.target.value)} />
+                                <EditableTotalSection color="text-emerald-500" total={totalBest} onTotalChange={(e) => setTotalBest(e.target.value)} textColor={colors.primaryText} />
                             </CompanyCard>
                         </div>
                     </div>
@@ -621,7 +640,7 @@ export default function ComparisonPdfPreview({ pdfData, colors }: ComparisonPdfP
                     {showCurrentBill && (
                         <div className="p-4 mt-4 lg:mt-8 max-w-5xl mx-auto flex justify-center items-center gap-6 rounded-md">
                             <p className="text-xl lg:text-3xl font-bold tracking-wider" style={{color: colors.primaryText}}>AHORRO MENSUAL</p>
-                            <p className="text-4xl lg:text-6xl font-extrabold text-emerald-500">{formatCurrency(monthlySaving)}</p>
+                            <p className="text-4xl lg:text-6xl font-extrabold" style={{color: colors.primaryText}}>{formatCurrency(monthlySaving)}</p>
                         </div>
                     )}
                 </div>
@@ -651,26 +670,26 @@ export default function ComparisonPdfPreview({ pdfData, colors }: ComparisonPdfP
                         <div>
                             <ul className="space-y-2 mb-6">
                                 <li className="flex items-center gap-3">
-                                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                                    <span className="font-semibold">Precio fijo 24h / 12 meses</span>
+                                    <Check className="w-5 h-5 flex-shrink-0 text-green-500" />
+                                    <span className="font-semibold" style={{ color: colors.primaryText }}>Precio fijo 24h / 12 meses</span>
                                 </li>
                                 <li className="flex items-center gap-3">
-                                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                                    <span className="font-semibold">Compromiso ahorro</span>
+                                    <Check className="w-5 h-5 flex-shrink-0 text-green-500" />
+                                    <span className="font-semibold" style={{ color: colors.primaryText }}>Compromiso ahorro</span>
                                 </li>
                                 <li className="flex items-center gap-3">
-                                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                                    <span className="font-semibold">Sin mantenimientos</span>
+                                    <Check className="w-5 h-5 flex-shrink-0 text-green-500" />
+                                    <span className="font-semibold" style={{ color: colors.primaryText }}>Sin mantenimientos</span>
                                 </li>
                                 <li className="flex items-center gap-3">
-                                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                                    <span className="font-semibold">Sin permanencias</span>
+                                    <Check className="w-5 h-5 flex-shrink-0 text-green-500" />
+                                    <span className="font-semibold" style={{ color: colors.primaryText }}>Sin permanencias</span>
                                 </li>
                             </ul>
                             <div>
-                                <h2 className="font-bold text-lg tracking-wider" style={{ color: colors.secondaryText }}>VISÍTANOS</h2>
-                                <p className="font-semibold">Calle Virgen de Luján 20</p>
-                                <p className="font-semibold">41011 Sevilla</p>
+                                <h2 className="font-bold text-lg tracking-wider" style={{ color: colors.primaryText }}>VISÍTANOS</h2>
+                                <p className="font-semibold" style={{ color: colors.primaryText }}>Calle Virgen de Luján 20</p>
+                                <p className="font-semibold" style={{ color: colors.primaryText }}>41011 Sevilla</p>
                                 <Image 
                                     data-ai-hint="office building"
                                     src="https://placehold.co/280x180.png"
@@ -683,9 +702,9 @@ export default function ComparisonPdfPreview({ pdfData, colors }: ComparisonPdfP
                         </div>
                         <div className="flex items-end gap-4">
                             <div>
-                                <p className="text-xl font-bold">CONOCE</p>
-                                <p className="text-xl font-bold" style={{ color: colors.secondaryText }}>NUESTRAS</p>
-                                <p className="text-xl font-bold">RESEÑAS</p>
+                                <p className="text-xl font-bold" style={{ color: colors.primaryText }}>CONOCE</p>
+                                <p className="text-xl font-bold" style={{ color: colors.primaryText }}>NUESTRAS</p>
+                                <p className="text-xl font-bold" style={{ color: colors.primaryText }}>RESEÑAS</p>
                             </div>
                             <div className="relative">
                                 <div 
@@ -708,16 +727,16 @@ export default function ComparisonPdfPreview({ pdfData, colors }: ComparisonPdfP
                     </div>
 
                     <div className="flex flex-col items-center pt-4">
-                        <h2 className="font-bold text-lg tracking-wider">TU ASESOR:</h2>
+                        <h2 className="font-bold text-lg tracking-wider" style={{ color: colors.primaryText }}>TU ASESOR:</h2>
                         <Image
                             data-ai-hint="portrait person"
-                            src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxwZXJzb25hfGVufDB8fHx8MTc1MTczNTY2OXww&ixlib=rb-4.1.0&q=80&w=1080"
-                            alt="Asesor Sergio"
+                            src={userData?.profileImageUri || "https://images.unsplash.com/photo-1633332755192-727a05c4013d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxwZXJzb25hfGVufDB8fHx8MTc1MTczNTY2OXww&ixlib=rb-4.1.0&q=80&w=1080"}
+                            alt={`Asesor ${userData?.name || 'Usuario'}`}
                             width={120}
                             height={120}
                             className="rounded-full my-1.5 object-cover"
                         />
-                        <p className="text-3xl font-bold mb-4">Sergio</p>
+                        <p className="text-3xl font-bold mb-4" style={{ color: colors.primaryText }}>{userData?.name || 'Usuario'}</p>
                         <div className="space-y-2.5 w-full max-w-xs text-center">
                             <div className="rounded-full py-2.5" style={{ backgroundColor: colors.secondaryText }}>
                                 <p className="font-bold text-sm" style={{ color: getContrastColor(colors.secondaryText) }}>Asesoramiento GRATIS</p>
@@ -730,15 +749,15 @@ export default function ComparisonPdfPreview({ pdfData, colors }: ComparisonPdfP
                             </div>
                         </div>
                         <div className="text-center mt-4 font-semibold">
-                            <p>Contacto: 621 19 36 34</p>
-                            <p>Mail: estudio@bajaturafactura.es</p>
+                            <p style={{ color: colors.primaryText }}>Contacto: 621 19 36 34</p>
+                            <p style={{ color: colors.primaryText }}>Mail: {userData?.email || 'estudio@bajaturafactura.es'}</p>
                         </div>
                     </div>
                 </main>
 
                 <footer className="text-center mt-6 border-t border-gray-300 pt-2">
-                    <p className="text-[10px] text-gray-700">
-                        Política Privacidad: <a href="https://bajaturafactura.es/politica-de-privacidad/" className="underline font-semibold">https://bajaturafactura.es/politica-de-privacidad/</a>
+                    <p className="text-[10px]" style={{ color: colors.primaryText }}>
+                        Política Privacidad: <a href="https://bajaturafactura.es/politica-de-privacidad/" className="underline font-semibold" style={{ color: colors.primaryText }}>https://bajaturafactura.es/politica-de-privacidad/</a>
                     </p>
                 </footer>
             </div>

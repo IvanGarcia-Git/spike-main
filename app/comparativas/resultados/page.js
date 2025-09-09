@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import TariffComparisonResults from '@/components/comparativas/tariffs/TariffComparisonResults';
-import { getTariffs } from '@/lib/tariff-store';
+import { getCompanyTariffs } from '@/lib/company-service';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import ComparativasHeader from '@/components/comparativas/Header';
@@ -12,8 +12,28 @@ import ComparativasHeader from '@/components/comparativas/Header';
 export default function ComparativasResultadosPage() {
     const router = useRouter();
     const { toast } = useToast();
-    const allTariffs = useMemo(() => getTariffs(), []);
+    const [allTariffs, setAllTariffs] = useState([]);
     const [formData, setFormData] = useState(null);
+    const [isLoadingTariffs, setIsLoadingTariffs] = useState(true);
+
+    useEffect(() => {
+        const loadTariffs = async () => {
+            try {
+                const tariffs = await getCompanyTariffs();
+                setAllTariffs(tariffs);
+            } catch (error) {
+                console.error('Error loading tariffs:', error);
+                toast({
+                    title: 'Error cargando tarifas',
+                    description: 'No se pudieron cargar las tarifas de las compañías.',
+                });
+            } finally {
+                setIsLoadingTariffs(false);
+            }
+        };
+        
+        loadTariffs();
+    }, [toast]);
 
     useEffect(() => {
         const storedData = sessionStorage.getItem('comparisonData');
@@ -52,7 +72,7 @@ export default function ComparativasResultadosPage() {
         }
     }, [formData, allTariffs]);
 
-    if (!formData) {
+    if (!formData || isLoadingTariffs) {
         return <div className="container mx-auto p-8 text-center">Cargando resultados...</div>;
     }
 

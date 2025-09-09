@@ -32,6 +32,11 @@ const geistMono = localFont({
 
 const quickAccessMenuItems = [
   {
+    name: "Dashboard",
+    href: "/dashboard",
+    icon: "dashboard",
+  },
+  {
     name: "Contratos",
     href: "/contratos",
     icon: "leaderboard",
@@ -579,6 +584,17 @@ export default function RootLayout({ children }) {
                     {/* Menú */}
                     <div className="w-full inline-flex flex-col px-3 pb-3 mt-4">
                       <ul className="sidebar-menu flex flex-col">
+                        <li className="relative">
+                          <Link
+                            href="/dashboard"
+                            className={`flex flex-row items-center gap-3 py-3 pl-4 pr-6 mb-1 rounded-full text-black hover:bg-gray-300 ${
+                              pathname === "/dashboard" ? "bg-backgroundHover" : ""
+                            }`}
+                          >
+                            <span className="material-symbols-outlined">dashboard</span>
+                            <span className="compact-title">Dashboard</span>
+                          </Link>
+                        </li>
                         <li className="relative">
                           <Link
                             href="/contratos"

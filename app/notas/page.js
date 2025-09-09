@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from "next/link";
 import { FaPlus, FaSearch, FaFolder, FaTrash, FaEdit, FaCheck, FaTimes, FaEllipsisV, FaStar, FaFolderPlus, FaHome, FaChevronRight, FaCopy } from 'react-icons/fa';
+import { NotesAPI } from '@/helpers/notes.helper';
+import { NoteFoldersAPI } from '@/helpers/note-folders.helper';
+import { toast } from 'react-toastify';
 
 const NewNoteForm = ({ onAddNote, selectedFolderId }) => {
     const [title, setTitle] = useState('');
@@ -183,59 +186,155 @@ export default function NotasRapidas() {
 
     useEffect(() => {
         setIsClient(true);
-        try {
-            const storedNotes = localStorage.getItem('spikes-notes-v3');
-            if (storedNotes) setNotes(JSON.parse(storedNotes));
-            
-            const storedFolders = localStorage.getItem('spikes-folders-v2');
-            if (storedFolders) setFolders(JSON.parse(storedFolders));
-        } catch (error) {
-            console.error("Failed to parse from localStorage", error);
-        }
+        loadNotes();
+        loadFolders();
     }, []);
 
-    useEffect(() => {
-        if (isClient) {
-            localStorage.setItem('spikes-notes-v3', JSON.stringify(notes));
+    const loadNotes = async () => {
+        try {
+            const notesFromAPI = await NotesAPI.getAll();
+            
+            if (notesFromAPI.length === 0) {
+                const storedNotes = localStorage.getItem('spikes-notes-v3');
+                if (storedNotes) {
+                    try {
+                        const localNotes = JSON.parse(storedNotes);
+                        if (localNotes.length > 0) {
+                            const migratedNotes = await NotesAPI.bulkCreate(localNotes);
+                            setNotes(migratedNotes);
+                            localStorage.removeItem('spikes-notes-v3');
+                            toast.success(`${localNotes.length} notas migradas a la base de datos`);
+                            return;
+                        }
+                    } catch (error) {
+                        console.error("Failed to migrate notes from localStorage", error);
+                    }
+                }
+            }
+            
+            setNotes(notesFromAPI);
+        } catch (error) {
+            console.error("Failed to load notes from API", error);
+            
+            const storedNotes = localStorage.getItem('spikes-notes-v3');
+            if (storedNotes) {
+                try {
+                    setNotes(JSON.parse(storedNotes));
+                    toast.warning("Usando notas locales. La conexión con el servidor falló.");
+                } catch (e) {
+                    console.error("Failed to parse from localStorage", e);
+                    setNotes([]);
+                }
+            } else {
+                setNotes([]);
+            }
         }
-    }, [notes, isClient]);
-
-    useEffect(() => {
-        if (isClient) {
-            localStorage.setItem('spikes-folders-v2', JSON.stringify(folders));
-        }
-    }, [folders, isClient]);
-
-    const handleAddNote = (title, content) => {
-        const now = Date.now();
-        const currentFolderId = selectedFolderId !== 'all' && selectedFolderId !== 'favorites' ? selectedFolderId : null;
-        const newNote = {
-            id: now.toString(),
-            title,
-            content,
-            isFavorite: false,
-            createdAt: now,
-            updatedAt: now,
-            folderId: currentFolderId,
-        };
-        setNotes(prevNotes => [newNote, ...prevNotes]);
-        setShowNewNoteForm(false);
     };
 
-    const handleUpdateNote = (id, newTitle, newContent) => {
-        setNotes(notes.map(note => note.id === id ? { ...note, title: newTitle, content: newContent, updatedAt: Date.now() } : note));
+    const loadFolders = async () => {
+        try {
+            const foldersFromAPI = await NoteFoldersAPI.getAll();
+            
+            if (foldersFromAPI.length === 0) {
+                const storedFolders = localStorage.getItem('spikes-folders-v2');
+                if (storedFolders) {
+                    try {
+                        const localFolders = JSON.parse(storedFolders);
+                        if (localFolders.length > 0) {
+                            const migratedFolders = await NoteFoldersAPI.bulkCreate(localFolders);
+                            setFolders(migratedFolders);
+                            localStorage.removeItem('spikes-folders-v2');
+                            toast.success(`${localFolders.length} carpetas migradas a la base de datos`);
+                            return;
+                        }
+                    } catch (error) {
+                        console.error("Failed to migrate folders from localStorage", error);
+                    }
+                }
+            }
+            
+            setFolders(foldersFromAPI);
+        } catch (error) {
+            console.error("Failed to load folders from API", error);
+            
+            const storedFolders = localStorage.getItem('spikes-folders-v2');
+            if (storedFolders) {
+                try {
+                    setFolders(JSON.parse(storedFolders));
+                    toast.warning("Usando carpetas locales. La conexión con el servidor falló.");
+                } catch (e) {
+                    console.error("Failed to parse folders from localStorage", e);
+                    setFolders([]);
+                }
+            } else {
+                setFolders([]);
+            }
+        }
+    };
+
+    const handleAddNote = async (title, content) => {
+        try {
+            const currentFolderId = selectedFolderId !== 'all' && selectedFolderId !== 'favorites' ? selectedFolderId : null;
+            const newNote = {
+                title,
+                content,
+                isFavorite: false,
+                folderId: currentFolderId,
+            };
+            const createdNote = await NotesAPI.create(newNote);
+            setNotes(prevNotes => [createdNote, ...prevNotes]);
+            setShowNewNoteForm(false);
+            toast.success("Nota creada exitosamente");
+        } catch (error) {
+            console.error("Error creating note:", error);
+            toast.error("Error al crear la nota");
+        }
+    };
+
+    const handleUpdateNote = async (id, newTitle, newContent) => {
+        try {
+            const updatedNote = await NotesAPI.update(id, {
+                title: newTitle,
+                content: newContent
+            });
+            setNotes(notes.map(note => note.id === id ? updatedNote : note));
+            toast.success("Nota actualizada");
+        } catch (error) {
+            console.error("Error updating note:", error);
+            toast.error("Error al actualizar la nota");
+        }
     };
     
-    const handleDeleteNote = (id) => {
-        setNotes(notes.filter(note => note.id !== id));
+    const handleDeleteNote = async (id) => {
+        try {
+            await NotesAPI.delete(id);
+            setNotes(notes.filter(note => note.id !== id));
+            toast.success("Nota eliminada");
+        } catch (error) {
+            console.error("Error deleting note:", error);
+            toast.error("Error al eliminar la nota");
+        }
     };
     
-    const handleToggleFavorite = (id) => {
-        setNotes(prevNotes => 
-            prevNotes.map(note =>
-                note.id === id ? { ...note, isFavorite: !note.isFavorite, updatedAt: Date.now() } : note
-            )
-        );
+    const handleToggleFavorite = async (id) => {
+        try {
+            const note = notes.find(n => n.id === id);
+            if (!note) return;
+            
+            const updatedNote = await NotesAPI.update(id, {
+                ...note,
+                isFavorite: !note.isFavorite
+            });
+            
+            setNotes(prevNotes => 
+                prevNotes.map(n =>
+                    n.id === id ? updatedNote : n
+                )
+            );
+        } catch (error) {
+            console.error("Error toggling favorite:", error);
+            toast.error("Error al actualizar favorito");
+        }
     };
     
     const handleCopyNote = (content) => {
@@ -244,40 +343,78 @@ export default function NotasRapidas() {
         }
     };
 
-    const handleMoveNote = (noteId, targetFolderId) => {
-        setNotes(prevNotes =>
-            prevNotes.map(note =>
-                note.id === noteId ? { ...note, folderId: targetFolderId, updatedAt: Date.now() } : note
-            )
-        );
+    const handleMoveNote = async (noteId, targetFolderId) => {
+        try {
+            const note = notes.find(n => n.id === noteId);
+            if (!note) return;
+            
+            const updatedNote = await NotesAPI.update(noteId, {
+                ...note,
+                folderId: targetFolderId
+            });
+            
+            setNotes(prevNotes =>
+                prevNotes.map(n =>
+                    n.id === noteId ? updatedNote : n
+                )
+            );
+        } catch (error) {
+            console.error("Error moving note:", error);
+            toast.error("Error al mover la nota");
+        }
     };
     
-    const handleAddFolder = () => {
+    const handleAddFolder = async () => {
         const newFolderName = prompt("Introduce el nombre de la nueva carpeta:");
         if (newFolderName && newFolderName.trim()) {
-            const parentId = selectedFolderId !== 'all' && selectedFolderId !== 'favorites' ? selectedFolderId : null;
-            const newFolder = {
-                id: Date.now().toString(),
-                name: newFolderName.trim(),
-                parentId: parentId,
-            };
-            const newFolders = [...folders, newFolder];
-            setFolders(newFolders);
-            setSelectedFolderId(newFolder.id);
+            try {
+                const parentId = selectedFolderId !== 'all' && selectedFolderId !== 'favorites' ? selectedFolderId : null;
+                const folderId = Date.now().toString();
+                const newFolder = {
+                    folderId: folderId,
+                    name: newFolderName.trim(),
+                    parentId: parentId,
+                };
+                const createdFolder = await NoteFoldersAPI.create(newFolder);
+                setFolders([...folders, createdFolder]);
+                setSelectedFolderId(createdFolder.folderId);
+                toast.success("Carpeta creada exitosamente");
+            } catch (error) {
+                console.error("Error creating folder:", error);
+                toast.error("Error al crear la carpeta");
+            }
         }
     };
     
     const handleStartEditingFolder = (folder) => {
-        setEditingFolderId(folder.id);
+        setEditingFolderId(folder.folderId || folder.id);
         setEditingFolderName(folder.name);
     }
 
-    const handleUpdateFolder = () => {
+    const handleUpdateFolder = async () => {
         if (!editingFolderId) return;
         if (!editingFolderName.trim()) return;
-        setFolders(folders.map(f => f.id === editingFolderId ? { ...f, name: editingFolderName.trim() } : f));
-        setEditingFolderId(null);
-        setEditingFolderName("");
+        
+        try {
+            const folder = folders.find(f => f.folderId === editingFolderId || f.id === editingFolderId);
+            if (folder) {
+                const updatedFolder = await NoteFoldersAPI.updateByFolderId(
+                    folder.folderId || editingFolderId,
+                    { ...folder, name: editingFolderName.trim() }
+                );
+                setFolders(folders.map(f => 
+                    (f.folderId === editingFolderId || f.id === editingFolderId) 
+                        ? updatedFolder 
+                        : f
+                ));
+                toast.success("Carpeta actualizada");
+            }
+            setEditingFolderId(null);
+            setEditingFolderName("");
+        } catch (error) {
+            console.error("Error updating folder:", error);
+            toast.error("Error al actualizar la carpeta");
+        }
     };
 
     const handleCancelEditFolder = () => {
@@ -285,21 +422,33 @@ export default function NotasRapidas() {
         setEditingFolderName("");
     }
 
-    const handleDeleteFolder = (folderId) => {
-      const childFolderIds = new Set();
-      const findChildren = (fId) => {
-        childFolderIds.add(fId);
-        const children = folders.filter(f => f.parentId === fId);
-        children.forEach(child => findChildren(child.id));
-      };
-      findChildren(folderId);
-
-      setNotes(notes.map(n => childFolderIds.has(n.folderId || '') ? { ...n, folderId: null } : n));
-      setFolders(folders.filter(f => !childFolderIds.has(f.id)));
-
-      if (selectedFolderId && childFolderIds.has(selectedFolderId)) {
-          setSelectedFolderId('all');
-      }
+    const handleDeleteFolder = async (folderId) => {
+        try {
+            const folder = folders.find(f => f.folderId === folderId || f.id === folderId);
+            if (folder) {
+                await NoteFoldersAPI.deleteByFolderId(folder.folderId || folderId);
+                
+                const childFolderIds = new Set();
+                const findChildren = (fId) => {
+                    childFolderIds.add(fId);
+                    const children = folders.filter(f => f.parentId === fId);
+                    children.forEach(child => findChildren(child.folderId || child.id));
+                };
+                findChildren(folder.folderId || folderId);
+                
+                setNotes(notes.map(n => childFolderIds.has(n.folderId || '') ? { ...n, folderId: null } : n));
+                setFolders(folders.filter(f => !childFolderIds.has(f.folderId || f.id)));
+                
+                if (selectedFolderId && childFolderIds.has(selectedFolderId)) {
+                    setSelectedFolderId('all');
+                }
+                
+                toast.success("Carpeta eliminada");
+            }
+        } catch (error) {
+            console.error("Error deleting folder:", error);
+            toast.error("Error al eliminar la carpeta");
+        }
     };
 
     const handleDragStart = (id) => {
@@ -327,7 +476,7 @@ export default function NotasRapidas() {
     const breadcrumbs = useMemo(() => {
       const getPath = (folderId) => {
           if (!folderId || folderId === 'all' || folderId === 'favorites') return [];
-          const folder = folders.find(f => f.id === folderId);
+          const folder = folders.find(f => f.folderId === folderId || f.id === folderId);
           if (!folder) return [];
           return [...getPath(folder.parentId), folder];
       };
@@ -381,7 +530,7 @@ export default function NotasRapidas() {
     const getHeaderTitle = () => {
         if (selectedFolderId === 'all') return "Todas las Notas";
         if (selectedFolderId === 'favorites') return "Favoritos";
-        const folder = folders.find(f => f.id === selectedFolderId);
+        const folder = folders.find(f => f.folderId === selectedFolderId || f.id === selectedFolderId);
         return folder ? folder.name : "Notas";
     };
 
@@ -416,10 +565,10 @@ export default function NotasRapidas() {
                         <FaHome />
                     </button>
                     {breadcrumbs.map(folder => (
-                        <React.Fragment key={folder.id}>
+                        <React.Fragment key={folder.folderId || folder.id}>
                             <FaChevronRight className="text-xs" />
                             <button 
-                              onClick={() => setSelectedFolderId(folder.id)}
+                              onClick={() => setSelectedFolderId(folder.folderId || folder.id)}
                               className="hover:underline"
                             >
                                 {folder.name}
@@ -433,7 +582,7 @@ export default function NotasRapidas() {
                         <h2 className="text-xl font-bold mb-4">Carpetas</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                                 {displayedFolders.map(folder => (
-                                    <div key={folder.id}>
+                                    <div key={folder.folderId || folder.id}>
                                     {editingFolderId === folder.id ? (
                                         <div className="flex items-center gap-2">
                                             <input
@@ -457,7 +606,7 @@ export default function NotasRapidas() {
                                     ) : (
                                     <div
                                         className="group relative flex items-center gap-3 rounded-lg p-3 cursor-pointer transition-colors bg-white hover:bg-gray-100 border"
-                                        onClick={() => setSelectedFolderId(folder.id)}
+                                        onClick={() => setSelectedFolderId(folder.folderId || folder.id)}
                                     >
                                         <FaFolder className="text-blue-500" />
                                         <span className="font-medium truncate flex-1">{folder.name}</span>
@@ -469,7 +618,7 @@ export default function NotasRapidas() {
                                                 <FaEdit className="text-xs" />
                                             </button>
                                             <button 
-                                              onClick={(e) => {e.stopPropagation(); handleDeleteFolder(folder.id);}}
+                                              onClick={(e) => {e.stopPropagation(); handleDeleteFolder(folder.folderId || folder.id);}}
                                               className="p-1 hover:bg-gray-200 rounded text-red-600"
                                             >
                                                 <FaTrash className="text-xs" />
@@ -598,9 +747,9 @@ export default function NotasRapidas() {
                       {topLevelFolders.length > 0 && <hr className="my-2" />}
                       {topLevelFolders.map((folder) => (
                         <button 
-                          key={folder.id}
-                          onClick={() => setSelectedFolderId(folder.id)} 
-                          className={`w-full text-left p-2 rounded-md hover:bg-gray-100 flex items-center gap-2 ${selectedFolderId === folder.id ? 'bg-blue-100' : ''}`}
+                          key={folder.folderId || folder.id}
+                          onClick={() => setSelectedFolderId(folder.folderId || folder.id)} 
+                          className={`w-full text-left p-2 rounded-md hover:bg-gray-100 flex items-center gap-2 ${selectedFolderId === (folder.folderId || folder.id) ? 'bg-blue-100' : ''}`}
                         >
                             <FaFolder />
                             {folder.name}

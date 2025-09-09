@@ -20,56 +20,30 @@ import {
   CheckSquare,
   Square,
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  Download,
+  Edit2,
+  Edit3,
+  Trash2
 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import ComparativasHeader from '@/components/comparativas/Header';
+import { getRecentComparativas, deleteComparativa, createComparativa } from '@/helpers/server-fetch.helper';
 
-const recentComparisons = [
-  {
-    type: 'luz',
-    name: 'Oficina Principal',
-    tariffType: '3.0',
-    lastAccessed: 'hace 2 horas',
-    oldPrice: '189,45€',
-    newPrice: '142,30€',
-  },
-  {
-    type: 'gas',
-    name: 'Almacén Norte',
-    tariffType: 'RL.2',
-    lastAccessed: 'hace 1 día',
-    oldPrice: '98,60€',
-    newPrice: '81,15€',
-  },
-  {
-    type: 'luz',
-    name: 'Tienda Centro',
-    tariffType: '2.0',
-    lastAccessed: 'hace 3 días',
-    oldPrice: '112,80€',
-    newPrice: '95,00€',
-  },
-  {
-    type: 'luz',
-    name: 'Casa de Campo',
-    tariffType: '6.1',
-    lastAccessed: 'hace 1 semana',
-    oldPrice: '250,10€',
-    newPrice: '198,50€',
-  },
-  {
-    type: 'gas',
-    name: 'Restaurante',
-    tariffType: 'RL.3',
-    lastAccessed: 'hace 2 semanas',
-    oldPrice: '430,70€',
-    newPrice: '380,20€',
-  },
-];
+// Helper function to get JWT token from cookies
+const getJWTToken = () => {
+  if (typeof document !== 'undefined') {
+    const cookies = document.cookie.split(';');
+    const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('factura-token='));
+    return tokenCookie ? tokenCookie.split('=')[1] : null;
+  }
+  return null;
+};
+
+// Empty initial state - will be filled from backend or remain empty
 
 const ProgressDots = ({ step, totalSteps, invalidSteps = [] }) => (
     <div className="flex justify-center gap-2">
@@ -100,6 +74,9 @@ export default function ComparativasPage() {
   const { toast } = useToast();
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [comparisons, setComparisons] = useState([]); // Start with empty array
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingName, setEditingName] = useState('');
   const [formStep, setFormStep] = useState(1);
   const [supplyType, setSupplyType] = useState(null);
 
@@ -129,6 +106,93 @@ export default function ComparativasPage() {
 
   const [maxStepReached, setMaxStepReached] = useState(1);
   const [invalidSteps, setInvalidSteps] = useState([]);
+  const [isLoadingComparativas, setIsLoadingComparativas] = useState(true); // Start as loading
+  const [hasLoadedFromBackend, setHasLoadedFromBackend] = useState(false);
+
+  // Function to load comparativas from backend
+  const loadComparativas = async () => {
+    setIsLoadingComparativas(true);
+    try {
+      const token = getJWTToken();
+      if (!token) {
+        console.log('No token available for loading comparativas');
+        setIsLoadingComparativas(false);
+        return;
+      }
+
+      console.log('Loading comparativas from backend...');
+      const response = await getRecentComparativas(10, token);
+      
+      if (response && response.ok) {
+        const data = await response.json();
+        console.log('Loaded comparativas:', data);
+        
+        // Transform backend data to match frontend format
+        const transformedData = data.map(comparativa => {
+          // Calculate relative time
+          const createdDate = new Date(comparativa.createdAt);
+          const now = new Date();
+          const diffInMs = now - createdDate;
+          const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+          const diffInDays = Math.floor(diffInHours / 24);
+          
+          let lastAccessed;
+          if (diffInHours < 1) {
+            lastAccessed = 'hace menos de 1 hora';
+          } else if (diffInHours < 24) {
+            lastAccessed = `hace ${diffInHours} hora${diffInHours !== 1 ? 's' : ''}`;
+          } else if (diffInDays < 7) {
+            lastAccessed = `hace ${diffInDays} día${diffInDays !== 1 ? 's' : ''}`;
+          } else if (diffInDays < 30) {
+            const weeks = Math.floor(diffInDays / 7);
+            lastAccessed = `hace ${weeks} semana${weeks !== 1 ? 's' : ''}`;
+          } else {
+            const months = Math.floor(diffInDays / 30);
+            lastAccessed = `hace ${months} mes${months !== 1 ? 'es' : ''}`;
+          }
+          
+          return {
+            type: comparativa.comparisonType,
+            name: comparativa.clientName,
+            tariffType: comparativa.tariffType,
+            lastAccessed,
+            oldPrice: `${parseFloat(comparativa.calculatedOldPrice).toFixed(2)}€`,
+            newPrice: `${parseFloat(comparativa.calculatedNewPrice).toFixed(2)}€`,
+            id: comparativa.id,
+            uuid: comparativa.uuid,
+          };
+        });
+        
+        // Set backend data if available
+        if (transformedData.length > 0) {
+          setComparisons(transformedData);
+          setHasLoadedFromBackend(true);
+          console.log('Loaded comparativas from backend:', transformedData.length);
+        } else {
+          // No data in backend
+          console.log('No comparativas in backend');
+          setHasLoadedFromBackend(false);
+          setComparisons([]);
+        }
+      } else {
+        console.log('Failed to load comparativas from backend');
+        setHasLoadedFromBackend(false);
+        setComparisons([]);
+      }
+    } catch (error) {
+      console.log('Error loading comparativas from backend:', error);
+      setHasLoadedFromBackend(false);
+      setComparisons([]);
+    } finally {
+      setIsLoadingComparativas(false);
+    }
+  };
+
+  // Load comparativas from backend on component mount
+  useEffect(() => {
+    loadComparativas();
+  }, []);
+
 
   useEffect(() => {
     if (!selectedLightTariff) return;
@@ -254,6 +318,125 @@ export default function ComparativasPage() {
     setSelectedItems([]);
   };
 
+  const handleExport = (index) => {
+    const comp = comparisons[index];
+    const data = {
+      nombre: comp.name,
+      tipo: comp.type,
+      tarifa: comp.tariffType,
+      precioAnterior: comp.oldPrice,
+      precioNuevo: comp.newPrice,
+      ultimoAcceso: comp.lastAccessed
+    };
+    
+    const dataStr = JSON.stringify(data, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const exportName = `comparativa_${comp.name.replace(/ /g, '_')}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportName);
+    linkElement.click();
+    
+    toast({
+      title: "Comparativa exportada",
+      description: `${comp.name} ha sido exportada correctamente`
+    });
+  };
+
+  const handleRename = (index) => {
+    setEditingIndex(index);
+    setEditingName(comparisons[index].name);
+  };
+
+  const handleSaveRename = () => {
+    if (editingIndex !== null && editingName.trim()) {
+      const updatedComparisons = [...comparisons];
+      updatedComparisons[editingIndex].name = editingName.trim();
+      setComparisons(updatedComparisons);
+      
+      toast({
+        title: "Nombre actualizado",
+        description: `La comparativa ha sido renombrada a "${editingName.trim()}"`
+      });
+      
+      setEditingIndex(null);
+      setEditingName('');
+    }
+  };
+
+  const handleCancelRename = () => {
+    setEditingIndex(null);
+    setEditingName('');
+  };
+
+  const handleEdit = (index) => {
+    const comp = comparisons[index];
+    toast({
+      title: "Editar comparativa",
+      description: `Abriendo editor para ${comp.name}...`
+    });
+    // TODO: Implementar navegación a página de edición
+    // router.push(`/comparativas/editar/${comp.id}`);
+  };
+
+  const handleDelete = async (index) => {
+    const comp = comparisons[index];
+    
+    try {
+      // Delete from backend if it has an ID
+      if (comp.id) {
+        const token = getJWTToken();
+        if (token) {
+          const response = await deleteComparativa(comp.id, token);
+          if (!response.ok) {
+            toast({
+              title: "Error al eliminar",
+              description: "No se pudo eliminar la comparativa del servidor",
+              variant: "destructive"
+            });
+            return;
+          }
+        }
+      }
+      
+      // Remove from local state
+      const updatedComparisons = comparisons.filter((_, i) => i !== index);
+      setComparisons(updatedComparisons);
+      
+      // Si el elemento estaba seleccionado, lo removemos de la selección
+      if (selectedItems.includes(index)) {
+        setSelectedItems(selectedItems.filter(i => i !== index));
+      }
+      
+      toast({
+        title: "Comparativa eliminada",
+        description: `${comp.name} ha sido eliminada correctamente`
+      });
+    } catch (error) {
+      console.error('Error deleting comparativa:', error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al eliminar la comparativa",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    const remaining = comparisons.filter((_, index) => !selectedItems.includes(index));
+    const deletedCount = selectedItems.length;
+    
+    setComparisons(remaining);
+    setSelectedItems([]);
+    setSelectionMode(false);
+    
+    toast({
+      title: "Comparativas eliminadas",
+      description: `${deletedCount} comparativa(s) han sido eliminadas`
+    });
+  };
+
   const handleSupplyTypeSelection = (type) => {
     setSupplyType(type);
     nextStep();
@@ -273,13 +456,89 @@ export default function ComparativasPage() {
     }
   };
 
-   const handleCalculate = () => {
+   const handleCalculate = async () => {
     if (!isFormValid) {
         toast({
             title: "Formulario Incompleto",
             description: "Por favor, revisa los pasos marcados en rojo y completa todos los campos.",
         });
         return;
+    }
+
+    // Calculate estimated prices for saving to database
+    const calculateEstimatedPrices = () => {
+      let oldPrice = parseFloat(currentBillAmount) || 0;
+      let newPrice = oldPrice * 0.85; // Default 15% savings estimate
+      
+      // More realistic calculation based on type
+      if (supplyType === 'luz') {
+        // Basic estimation logic for electricity
+        const avgPotencia = comparativePotencia.reduce((sum, p) => sum + parseFloat(p || 0), 0) / comparativePotencia.length;
+        const avgEnergia = comparativeEnergy.reduce((sum, e) => sum + parseFloat(e || 0), 0) / comparativeEnergy.length;
+        
+        // Rough estimate: potencia costs + energy costs
+        const potenciaCost = avgPotencia * 0.12 * parseInt(numDias); // €0.12/kW/day estimate
+        const energiaCost = avgEnergia * 0.15; // €0.15/kWh estimate
+        
+        if (potenciaCost + energiaCost > 0) {
+          oldPrice = potenciaCost + energiaCost;
+          newPrice = oldPrice * 0.82; // 18% savings estimate
+        }
+      } else if (supplyType === 'gas') {
+        // Basic estimation logic for gas
+        const gasConsumption = parseFloat(gasEnergy) || 0;
+        oldPrice = gasConsumption * 0.08; // €0.08/kWh estimate
+        newPrice = oldPrice * 0.88; // 12% savings estimate
+      }
+      
+      return { oldPrice, newPrice };
+    };
+
+    const { oldPrice, newPrice } = calculateEstimatedPrices();
+
+    // Prepare data for database
+    const comparativaData = {
+      clientName: clientName || 'Cliente Sin Nombre',
+      comparisonType: supplyType,
+      customerType: customerType === 'particular' ? 'particular' : 'empresa',
+      tariffType: supplyType === 'luz' ? selectedLightTariff : selectedGasTariff,
+      solarPanelActive: solarPanelActive || false,
+      excedentes: solarPanelActive ? parseFloat(comparativeExcedentes) : null,
+      potencias: supplyType === 'luz' ? comparativePotencia.map(p => parseFloat(p)) : null,
+      energias: supplyType === 'luz' ? comparativeEnergy.map(e => parseFloat(e)) : null,
+      numDias: parseInt(numDias, 10),
+      currentBillAmount: parseFloat(currentBillAmount),
+      hasMainServices,
+      mainMaintenanceCost: hasMainServices ? parseFloat(mainMaintenanceCost) : null,
+      hasClientServices: hasClientServices || false,
+      clientMaintenanceCost: hasClientServices ? parseFloat(clientMaintenanceCost) : null,
+      clientPowerPrices: addClientBillData && supplyType === 'luz' ? clientPowerPrices.map(p => parseFloat(p)) : null,
+      clientEnergyPrices: addClientBillData && supplyType === 'luz' ? clientEnergyPrices.map(e => parseFloat(e)) : null,
+      clientSurplusPrice: addClientBillData && solarPanelActive ? parseFloat(clientSurplusPrice) : null,
+      clientFixedPrice: addClientBillData && supplyType === 'gas' ? parseFloat(clientFixedPrice) : null,
+      clientGasEnergyPrice: addClientBillData && supplyType === 'gas' ? parseFloat(clientGasEnergyPrice) : null,
+      calculatedOldPrice: oldPrice,
+      calculatedNewPrice: newPrice,
+      savings: oldPrice - newPrice,
+    };
+
+    // Save to database
+    try {
+      const token = getJWTToken();
+      if (token) {
+        const response = await createComparativa(comparativaData, token);
+        if (response && response.ok) {
+          console.log('Comparativa saved to database');
+          // Reload comparativas list after saving
+          setTimeout(() => {
+            loadComparativas();
+          }, 500);
+        } else {
+          console.log('Failed to save comparativa to database');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving comparativa:', error);
     }
 
     const comparisonData = {
@@ -317,7 +576,7 @@ export default function ComparativasPage() {
             clientGasEnergyPrice: parseFloat(clientGasEnergyPrice),
         })
     };
-    
+
     sessionStorage.setItem('comparisonData', JSON.stringify(comparisonData));
     router.push('/comparativas/resultados');
   };
@@ -755,19 +1014,14 @@ export default function ComparativasPage() {
                 <CardTitle>Últimas Comparativas</CardTitle>
                  <div className="flex items-center gap-2">
                   {selectionMode && selectedItems.length > 0 && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem disabled={selectedItems.length === 0}>
-                          <Trash className="mr-2 h-4 w-4" />
-                          Borrar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={handleDeleteSelected}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
                   )}
                   
                   {selectionMode ? (
@@ -792,9 +1046,22 @@ export default function ComparativasPage() {
                 </div>
               </CardHeader>
               <CardContent>
+                {isLoadingComparativas && (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-gray-500">Cargando comparativas...</div>
+                  </div>
+                )}
+                {!isLoadingComparativas && comparisons.length === 0 && (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-gray-500">No hay comparativas guardadas</div>
+                  </div>
+                )}
+                {!isLoadingComparativas && comparisons.length > 0 && (
                 <div className="space-y-4">
-                  {recentComparisons.map((comp, index) => {
+                  {comparisons.map((comp, index) => {
                     const isSelected = selectedItems.includes(index);
+                    const isEditing = editingIndex === index;
+                    
                     return (
                       <div
                         key={index}
@@ -805,13 +1072,17 @@ export default function ComparativasPage() {
                       >
                         {selectionMode && (
                           <button
-                            onClick={() => toggleSelection(index)}
-                            className="p-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSelection(index);
+                            }}
+                            className="p-1 cursor-pointer focus:outline-none"
+                            type="button"
                           >
                             {isSelected ? (
                               <CheckSquare className="h-5 w-5 text-blue-600" />
                             ) : (
-                              <Square className="h-5 w-5 text-gray-400" />
+                              <Square className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                             )}
                           </button>
                         )}
@@ -821,10 +1092,50 @@ export default function ComparativasPage() {
                           <Flame className="h-6 w-6 text-orange-500" />
                         )}
                         <div className="flex-grow">
-                          <p className="font-semibold">{comp.name}</p>
-                          <p className="text-sm text-gray-600">
-                            {comp.tariffType} &bull; {comp.lastAccessed}
-                          </p>
+                          {isEditing ? (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                value={editingName}
+                                onChange={(e) => setEditingName(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveRename();
+                                  if (e.key === 'Escape') handleCancelRename();
+                                }}
+                                className="h-8"
+                                autoFocus
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSaveRename();
+                                }}
+                                className="h-8 px-2"
+                              >
+                                ✓
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCancelRename();
+                                }}
+                                className="h-8 px-2"
+                              >
+                                ✕
+                              </Button>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="font-semibold">{comp.name}</p>
+                              <p className="text-sm text-gray-600">
+                                {comp.tariffType} &bull; {comp.lastAccessed}
+                              </p>
+                            </>
+                          )}
                         </div>
                         <div className="text-right">
                           <p className="font-semibold text-lg">{comp.newPrice}</p>
@@ -832,23 +1143,59 @@ export default function ComparativasPage() {
                             {comp.oldPrice}
                           </p>
                         </div>
-                        {!selectionMode && (
+                        {!selectionMode && !isEditing && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>Exportar</DropdownMenuItem>
-                              <DropdownMenuItem>Renombrar</DropdownMenuItem>
-                              <DropdownMenuItem>Editar</DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600">
-                                Borrar
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuItem 
+                                onSelect={(e) => {
+                                  e.preventDefault();
+                                  handleExport(index);
+                                }}
+                                className="cursor-pointer flex items-center gap-2"
+                              >
+                                <Download className="h-4 w-4" />
+                                <span>Exportar</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onSelect={(e) => {
+                                  e.preventDefault();
+                                  handleRename(index);
+                                }}
+                                className="cursor-pointer flex items-center gap-2"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                                <span>Renombrar</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onSelect={(e) => {
+                                  e.preventDefault();
+                                  handleEdit(index);
+                                }}
+                                className="cursor-pointer flex items-center gap-2"
+                              >
+                                <Edit3 className="h-4 w-4" />
+                                <span>Editar</span>
+                              </DropdownMenuItem>
+                              <div className="my-1 h-px bg-gray-200"></div>
+                              <DropdownMenuItem 
+                                onSelect={(e) => {
+                                  e.preventDefault();
+                                  handleDelete(index);
+                                }}
+                                className="text-red-600 focus:text-red-600 cursor-pointer flex items-center gap-2"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                <span>Borrar</span>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -857,6 +1204,7 @@ export default function ComparativasPage() {
                     );
                   })}
                 </div>
+                )}
               </CardContent>
             </Card>
           </div>

@@ -1,4 +1,4 @@
-import { Cog, Palette } from 'lucide-react';
+import { Palette } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -12,12 +12,6 @@ const ComparativasHeader = () => {
           <h1 className="text-2xl font-bold text-gray-900">Comparativas</h1>
         </Link>
         <nav className="flex items-center gap-2">
-           <Button asChild variant="outline" size="sm">
-            <Link href="/comparativas/admin">
-              <Cog className="mr-2 h-4 w-4" />
-              Gestionar Tarifas
-            </Link>
-          </Button>
           <Button asChild variant="outline" size="sm">
             <Link href="/comparativas/personalizada">
                 <Palette className="mr-2 h-4 w-4" />
