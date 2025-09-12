@@ -4,7 +4,7 @@ import { getCookie } from "cookies-next";
 import { authFetchFormData } from "@/helpers/server-fetch.helper";
 import CreateFolderModal from "./CreateFolderModal";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_FILE_SIZE = 1024 * 1024 * 1024;
 const MAX_FILE_SIZE_MB = MAX_FILE_SIZE / 1024 / 1024;
 
 export default function FileUpload({ section, setFiles, setFolders }) {

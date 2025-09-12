@@ -105,9 +105,9 @@ export function ContractForm({ onDataChange, setFocusedField, onLogoChange }: Co
       return;
     }
     
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('El archivo es demasiado grande. Máximo 5MB.');
+    // Validate file size (max 1GB)
+    if (file.size > 1024 * 1024 * 1024) {
+      alert('El archivo es demasiado grande. Máximo 1GB.');
       return;
     }
     
@@ -194,7 +194,7 @@ export function ContractForm({ onDataChange, setFocusedField, onLogoChange }: Co
                             />
                           </label>
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">PNG, JPG hasta 5MB</p>
+                        <p className="text-xs text-gray-400 mt-1">PNG, JPG hasta 1GB</p>
                       </div>
                     </div>
                   </div>
