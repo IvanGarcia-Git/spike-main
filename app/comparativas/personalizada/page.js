@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download, Loader2 } from 'lucide-react';
@@ -15,9 +16,11 @@ import { getCookie } from 'cookies-next';
 import * as jose from 'jose';
 
 export default function ComparativasPersonalizadaPage() {
+  const router = useRouter();
   const previewRef = useRef(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [pdfData, setPdfData] = useState(null);
+  const [shouldAutoDownload, setShouldAutoDownload] = useState(false);
   const [colors, setColors] = useState({
     background: '#ffffff', // White background
     primaryText: '#ef4444', // Red text (matches the input shown)
@@ -75,14 +78,23 @@ export default function ComparativasPersonalizadaPage() {
 
   useEffect(() => {
     const storedData = sessionStorage.getItem('pdfDataForGeneration');
+    const autoDownload = sessionStorage.getItem('autoDownloadPDF') === 'true';
+    
     if (storedData) {
       try {
         const data = JSON.parse(storedData);
         setPdfData(data);
         sessionStorage.removeItem('pdfDataForGeneration');
+        
+        // Si hay flag de descarga automática, activar el estado
+        if (autoDownload) {
+          sessionStorage.removeItem('autoDownloadPDF');
+          setShouldAutoDownload(true);
+        }
       } catch (error) {
         console.error("Failed to parse PDF data from sessionStorage", error);
         sessionStorage.removeItem('pdfDataForGeneration');
+        sessionStorage.removeItem('autoDownloadPDF');
       }
     }
   }, []);
@@ -207,6 +219,23 @@ export default function ComparativasPersonalizadaPage() {
       setIsDownloading(false);
     }
   };
+
+  // Efecto para manejar la descarga automática
+  useEffect(() => {
+    if (shouldAutoDownload && pdfData && previewRef.current) {
+      // Esperar un poco para asegurar que el componente está completamente renderizado
+      const timer = setTimeout(async () => {
+        await handleDownloadPdf();
+        setShouldAutoDownload(false);
+        // Volver a la página de comparativas después de la descarga
+        setTimeout(() => {
+          router.push('/comparativas');
+        }, 500);
+      }, 1500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [shouldAutoDownload, pdfData]);
 
   return (
     <div>

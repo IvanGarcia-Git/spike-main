@@ -71,6 +71,10 @@ export const getRecentComparativas = async (limit, jwtToken) => {
   return await authGetFetch(`comparativas/recent?limit=${limit}`, jwtToken);
 };
 
+export const getComparativaById = async (comparativaId, jwtToken) => {
+  return await authGetFetch(`comparativas/${comparativaId}`, jwtToken);
+};
+
 export const deleteComparativa = async (comparativaId, jwtToken) => {
   return await authFetch("DELETE", `comparativas/${comparativaId}`, null, jwtToken);
 };

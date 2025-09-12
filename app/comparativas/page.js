@@ -31,7 +31,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import ComparativasHeader from '@/components/comparativas/Header';
-import { getRecentComparativas, deleteComparativa, createComparativa } from '@/helpers/server-fetch.helper';
+import { getRecentComparativas, deleteComparativa, createComparativa, getComparativaById } from '@/helpers/server-fetch.helper';
 
 // Helper function to get JWT token from cookies
 const getJWTToken = () => {
@@ -318,30 +318,141 @@ export default function ComparativasPage() {
     setSelectedItems([]);
   };
 
-  const handleExport = (index) => {
+  const handleExport = async (index) => {
     const comp = comparisons[index];
-    const data = {
-      nombre: comp.name,
-      tipo: comp.type,
-      tarifa: comp.tariffType,
-      precioAnterior: comp.oldPrice,
-      precioNuevo: comp.newPrice,
-      ultimoAcceso: comp.lastAccessed
-    };
     
-    const dataStr = JSON.stringify(data, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const exportName = `comparativa_${comp.name.replace(/ /g, '_')}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportName);
-    linkElement.click();
-    
-    toast({
-      title: "Comparativa exportada",
-      description: `${comp.name} ha sido exportada correctamente`
-    });
+    // Si tenemos el ID, obtenemos los datos completos del backend
+    if (comp.id) {
+      try {
+        const token = getJWTToken();
+        if (token) {
+          const response = await getComparativaById(comp.id, token);
+          if (response.ok) {
+            const fullData = await response.json();
+            
+            // Crear un objeto con los datos para el PDF
+            const pdfData = {
+              bestTariff: {
+                tariff: {
+                  companyName: comp.name || 'Sin nombre',
+                  type: comp.type || 'luz',
+                  tariffType: comp.tariffType || '2.0',
+                  customerType: fullData.customerType || 'particular',
+                },
+                totalCost: parseFloat(comp.newPrice?.replace('€', '').replace(',', '.')) || 0,
+                breakdown: {
+                  powerCosts: [],
+                  energyCosts: [],
+                  surplusCredit: 0,
+                  equipmentRental: 0,
+                  socialBonus: 0,
+                  electricityTax: 0,
+                  hydrocarbonTax: 0,
+                  vat: 0,
+                  fixedCost: 0,
+                  energyCost: 0
+                }
+              },
+              currentBillAmount: fullData.currentBillAmount || 0,
+              annualSaving: (fullData.savings || 0) * 12,
+              monthlySaving: fullData.savings || 0,
+              clientName: fullData.clientName || comp.name || 'Cliente',
+              showCurrentBill: false,
+              comparisonType: fullData.comparisonType || comp.type || 'luz',
+              potencias: fullData.potencias || [],
+              energias: fullData.energias || [],
+              excedentes: fullData.excedentes || 0,
+              energia: fullData.energia || 0,
+              numDias: fullData.numDias || 30,
+              clientPrices: {},
+              regulatedCosts: {
+                ihp: 0.5,
+                alquiler: 0.026712,
+                social: 0.038466,
+                hydrocarbon: 0.00234,
+                iva: 21
+              },
+            };
+            
+            // Guardar datos y marcar para descarga automática
+            sessionStorage.setItem('pdfDataForGeneration', JSON.stringify(pdfData));
+            sessionStorage.setItem('autoDownloadPDF', 'true');
+            router.push('/comparativas/personalizada');
+            
+            toast({
+              title: "Preparando exportación",
+              description: `Generando PDF de ${comp.name}...`
+            });
+          } else {
+            throw new Error('No se pudieron obtener los datos completos');
+          }
+        }
+      } catch (error) {
+        console.error('Error obteniendo datos de comparativa:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo exportar la comparativa",
+          variant: "destructive"
+        });
+      }
+    } else {
+      // Si no tenemos ID, navegamos con los datos básicos
+      const oldPriceNum = parseFloat(comp.oldPrice?.replace('€', '').replace(',', '.')) || 0;
+      const newPriceNum = parseFloat(comp.newPrice?.replace('€', '').replace(',', '.')) || 0;
+      const estimatedSaving = oldPriceNum - newPriceNum;
+      
+      const pdfData = {
+        bestTariff: {
+          tariff: {
+            companyName: comp.name || 'Sin nombre',
+            type: comp.type || 'luz',
+            tariffType: comp.tariffType || '2.0',
+            customerType: 'particular',
+          },
+          totalCost: newPriceNum,
+          breakdown: {
+            powerCosts: [],
+            energyCosts: [],
+            surplusCredit: 0,
+            equipmentRental: 0,
+            socialBonus: 0,
+            electricityTax: 0,
+            hydrocarbonTax: 0,
+            vat: 0,
+            fixedCost: 0,
+            energyCost: 0
+          }
+        },
+        currentBillAmount: oldPriceNum,
+        annualSaving: estimatedSaving * 12,
+        monthlySaving: estimatedSaving,
+        clientName: comp.name || 'Cliente',
+        showCurrentBill: false,
+        comparisonType: comp.type || 'luz',
+        potencias: [],
+        energias: [],
+        excedentes: 0,
+        energia: 0,
+        numDias: 30,
+        clientPrices: {},
+        regulatedCosts: {
+          ihp: 0.5,
+          alquiler: 0.026712,
+          social: 0.038466,
+          hydrocarbon: 0.00234,
+          iva: 21
+        },
+      };
+      
+      sessionStorage.setItem('pdfDataForGeneration', JSON.stringify(pdfData));
+      sessionStorage.setItem('autoDownloadPDF', 'true');
+      router.push('/comparativas/personalizada');
+      
+      toast({
+        title: "Preparando exportación",
+        description: `Generando PDF de ${comp.name}...`
+      });
+    }
   };
 
   const handleRename = (index) => {
@@ -370,14 +481,139 @@ export default function ComparativasPage() {
     setEditingName('');
   };
 
-  const handleEdit = (index) => {
+  const handleEdit = async (index) => {
     const comp = comparisons[index];
-    toast({
-      title: "Editar comparativa",
-      description: `Abriendo editor para ${comp.name}...`
-    });
-    // TODO: Implementar navegación a página de edición
-    // router.push(`/comparativas/editar/${comp.id}`);
+    
+    // Si tenemos el ID, obtenemos los datos completos del backend
+    if (comp.id) {
+      try {
+        const token = getJWTToken();
+        if (token) {
+          const response = await getComparativaById(comp.id, token);
+          if (response.ok) {
+            const fullData = await response.json();
+            
+            // Crear un objeto con los datos para personalizar
+            const pdfData = {
+              bestTariff: {
+                tariff: {
+                  companyName: comp.name || 'Sin nombre',
+                  type: comp.type || 'luz',
+                  tariffType: comp.tariffType || '2.0',
+                  customerType: fullData.customerType || 'particular',
+                },
+                totalCost: parseFloat(comp.newPrice?.replace('€', '').replace(',', '.')) || 0,
+                breakdown: {
+                  powerCosts: [],
+                  energyCosts: [],
+                  surplusCredit: 0,
+                  equipmentRental: 0,
+                  socialBonus: 0,
+                  electricityTax: 0,
+                  hydrocarbonTax: 0,
+                  vat: 0,
+                  fixedCost: 0,
+                  energyCost: 0
+                }
+              },
+              currentBillAmount: fullData.currentBillAmount || 0,
+              annualSaving: (fullData.savings || 0) * 12, // Estimación anual
+              monthlySaving: fullData.savings || 0,
+              clientName: fullData.clientName || comp.name || 'Cliente',
+              showCurrentBill: false,
+              comparisonType: fullData.comparisonType || comp.type || 'luz',
+              potencias: fullData.potencias || [],
+              energias: fullData.energias || [],
+              excedentes: fullData.excedentes || 0,
+              energia: fullData.energia || 0,
+              numDias: fullData.numDias || 30,
+              clientPrices: {},
+              regulatedCosts: {
+                ihp: 0.5,
+                alquiler: 0.026712,
+                social: 0.038466,
+                hydrocarbon: 0.00234,
+                iva: 21
+              },
+            };
+            
+            // Guardar datos en sessionStorage y navegar a la página personalizada
+            sessionStorage.setItem('pdfDataForGeneration', JSON.stringify(pdfData));
+            router.push('/comparativas/personalizada');
+            
+            toast({
+              title: "Abriendo editor",
+              description: `Personalizando comparativa de ${comp.name}...`
+            });
+          } else {
+            throw new Error('No se pudieron obtener los datos completos');
+          }
+        }
+      } catch (error) {
+        console.error('Error obteniendo datos de comparativa:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo cargar la comparativa para editar",
+          variant: "destructive"
+        });
+      }
+    } else {
+      // Si no tenemos ID, navegamos con los datos básicos
+      const oldPriceNum = parseFloat(comp.oldPrice?.replace('€', '').replace(',', '.')) || 0;
+      const newPriceNum = parseFloat(comp.newPrice?.replace('€', '').replace(',', '.')) || 0;
+      const estimatedSaving = oldPriceNum - newPriceNum;
+      
+      const pdfData = {
+        bestTariff: {
+          tariff: {
+            companyName: comp.name || 'Sin nombre',
+            type: comp.type || 'luz',
+            tariffType: comp.tariffType || '2.0',
+            customerType: 'particular',
+          },
+          totalCost: newPriceNum,
+          breakdown: {
+            powerCosts: [],
+            energyCosts: [],
+            surplusCredit: 0,
+            equipmentRental: 0,
+            socialBonus: 0,
+            electricityTax: 0,
+            hydrocarbonTax: 0,
+            vat: 0,
+            fixedCost: 0,
+            energyCost: 0
+          }
+        },
+        currentBillAmount: oldPriceNum,
+        annualSaving: estimatedSaving * 12,
+        monthlySaving: estimatedSaving,
+        clientName: comp.name || 'Cliente',
+        showCurrentBill: false,
+        comparisonType: comp.type || 'luz',
+        potencias: [],
+        energias: [],
+        excedentes: 0,
+        energia: 0,
+        numDias: 30,
+        clientPrices: {},
+        regulatedCosts: {
+          ihp: 0.5,
+          alquiler: 0.026712,
+          social: 0.038466,
+          hydrocarbon: 0.00234,
+          iva: 21
+        },
+      };
+      
+      sessionStorage.setItem('pdfDataForGeneration', JSON.stringify(pdfData));
+      router.push('/comparativas/personalizada');
+      
+      toast({
+        title: "Abriendo editor",
+        description: `Personalizando comparativa de ${comp.name}...`
+      });
+    }
   };
 
   const handleDelete = async (index) => {

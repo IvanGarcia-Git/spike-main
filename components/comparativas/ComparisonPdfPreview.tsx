@@ -5,7 +5,12 @@ import Image from 'next/image';
 import { Phone, Mail, Globe, Check } from 'lucide-react';
 import type { PdfData, CompanyLightTariff, CompanyGasTariff } from '@/lib/types';
 
-const formatCurrency = (value: number) => `${value.toFixed(2).replace('.', ',')}€`;
+const formatCurrency = (value: number | undefined | null) => {
+  if (value === undefined || value === null || isNaN(value)) {
+    return '0,00€';
+  }
+  return `${value.toFixed(2).replace('.', ',')}€`;
+};
 const parseCurrency = (value: string) => parseFloat(value.replace('€', '').replace(',', '.')) || 0;
 
 
@@ -191,25 +196,25 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                 const bestTariffSurplusPrice = bestLightTariff.surplusPrice || 0;
                 
                 const bestImpuestos = [
-                    { id: 'best-rental', label: 'Alquiler Equipos', value: formatCurrency(pdfData.bestTariff.breakdown.equipmentRental!) },
-                    { id: 'best-bonus', label: 'Bono Social', value: formatCurrency(pdfData.bestTariff.breakdown.socialBonus!) }
+                    { id: 'best-rental', label: 'Alquiler Equipos', value: formatCurrency(pdfData.bestTariff?.breakdown?.equipmentRental || 0) },
+                    { id: 'best-bonus', label: 'Bono Social', value: formatCurrency(pdfData.bestTariff?.breakdown?.socialBonus || 0) }
                 ];
 
                 if ((bestLightTariff as any).maintenanceCost > 0) {
                     bestImpuestos.push({ id: 'best-maintenance', label: 'Servicios Adicionales', value: formatCurrency((bestLightTariff as any).maintenanceCost) });
                 }
 
-                bestImpuestos.push({ id: 'best-tax', label: 'Imp. Electricidad', value: formatCurrency(pdfData.bestTariff.breakdown.electricityTax!) });
-                bestImpuestos.push({ id: 'best-vat', label: 'IVA', value: formatCurrency(pdfData.bestTariff.breakdown.vat) });
+                bestImpuestos.push({ id: 'best-tax', label: 'Imp. Electricidad', value: formatCurrency(pdfData.bestTariff?.breakdown?.electricityTax || 0) });
+                bestImpuestos.push({ id: 'best-vat', label: 'IVA', value: formatCurrency(pdfData.bestTariff?.breakdown?.vat || 0) });
 
                 setBestTariffDetails({
-                    potencia: pdfData.bestTariff.breakdown.powerCosts!.map((cost, i) => ({
+                    potencia: (pdfData.bestTariff?.breakdown?.powerCosts || []).map((cost, i) => ({
                         id: `best-p-cost-${i}`,
                         label: `${potencias[i] || 'X'}kW x ${numDias}dias x ${bestTariffPowerPrices[i] !== undefined ? bestTariffPowerPrices[i].toFixed(3) : `PrecioP${i + 1}`}`,
                         value: formatCurrency(cost)
                     })),
                     energia: [
-                        ...pdfData.bestTariff.breakdown.energyCosts!.map((cost, i) => ({
+                        ...(pdfData.bestTariff?.breakdown?.energyCosts || []).map((cost, i) => ({
                             id: `best-e-cost-${i}`,
                             label: `${energias[i] || 'X'}kWh x ${bestTariffEnergyPrices[i] !== undefined ? bestTariffEnergyPrices[i].toFixed(3) : `PrecioE${i + 1}`}€/kWh`,
                             value: formatCurrency(cost)
@@ -217,7 +222,7 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                         ...(pdfData.bestTariff.breakdown.surplusCredit! > 0 ? [{
                             id: 'best-surplus',
                             label: `Abono Excedentes: ${excedentes}kWh x ${bestTariffSurplusPrice.toFixed(3)}€/kWh`,
-                            value: formatCurrency(-pdfData.bestTariff.breakdown.surplusCredit!)
+                            value: formatCurrency(-(pdfData.bestTariff?.breakdown?.surplusCredit || 0))
                         }] : [])
                     ],
                     impuestos: bestImpuestos
@@ -282,26 +287,26 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                 const energia = pdfData.energia || 0;
 
                 const bestImpuestos = [
-                    { id: 'best-gas-rental', label: 'Alquiler Equipos', value: formatCurrency(pdfData.bestTariff.breakdown.equipmentRental!) },
+                    { id: 'best-gas-rental', label: 'Alquiler Equipos', value: formatCurrency(pdfData.bestTariff?.breakdown?.equipmentRental || 0) },
                 ];
                 
                 if ((bestGasTariff as any).maintenanceCost > 0) {
                     bestImpuestos.push({ id: 'best-gas-maintenance', label: 'Servicios Adicionales', value: formatCurrency((bestGasTariff as any).maintenanceCost) });
                 }
 
-                bestImpuestos.push({ id: 'best-gas-tax', label: 'Imp. Hidrocarburos', value: formatCurrency(pdfData.bestTariff.breakdown.hydrocarbonTax!) });
-                bestImpuestos.push({ id: 'best-gas-vat', label: 'IVA', value: formatCurrency(pdfData.bestTariff.breakdown.vat) });
+                bestImpuestos.push({ id: 'best-gas-tax', label: 'Imp. Hidrocarburos', value: formatCurrency(pdfData.bestTariff?.breakdown?.hydrocarbonTax || 0) });
+                bestImpuestos.push({ id: 'best-gas-vat', label: 'IVA', value: formatCurrency(pdfData.bestTariff?.breakdown?.vat || 0) });
 
                 setBestTariffDetails({
                     potencia: [{
                         id: 'best-fixed',
                         label: `Término Fijo: ${numDias}dias x ${bestGasTariff.fixedPrice.toFixed(3)}€/día`,
-                        value: formatCurrency(pdfData.bestTariff.breakdown.fixedCost!)
+                        value: formatCurrency(pdfData.bestTariff?.breakdown?.fixedCost || 0)
                     }],
                     energia: [{
                         id: 'best-gas-energy',
                         label: `Energía: ${energia}kWh x ${bestGasTariff.energyPrice.toFixed(3)}€/kWh`,
-                        value: formatCurrency(pdfData.bestTariff.breakdown.energyCost!)
+                        value: formatCurrency(pdfData.bestTariff?.breakdown?.energyCost || 0)
                     }],
                     impuestos: bestImpuestos
                 });
@@ -345,8 +350,8 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                 }
             }
 
-            setTotalBest(formatCurrency(pdfData.bestTariff.totalCost));
-            setTotalCurrent(formatCurrency(pdfData.currentBillAmount ?? 0));
+            setTotalBest(formatCurrency(pdfData.bestTariff?.totalCost || 0));
+            setTotalCurrent(formatCurrency(pdfData.currentBillAmount || 0));
 
         } else {
             setBestTariffDetails(initialBestTariffDetails);
@@ -411,8 +416,8 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
     };
 
     const showCurrentBill = pdfData?.showCurrentBill ?? true;
-    const annualSaving = pdfData ? pdfData.annualSaving : 351;
-    const monthlySaving = pdfData ? pdfData.monthlySaving : 27.53;
+    const annualSaving = pdfData?.annualSaving || 0;
+    const monthlySaving = pdfData?.monthlySaving || 0;
     const bestCompanyName = pdfData?.bestTariff?.tariff?.companyName?.toUpperCase() ?? "MEJOR";
     const sectionTitlePotencia = pdfData?.comparisonType === 'gas' ? 'Término Fijo' : 'Potencia';
 
