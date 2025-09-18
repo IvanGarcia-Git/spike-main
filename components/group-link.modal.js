@@ -17,7 +17,7 @@ export default function GroupLinkModal({
     if (isOpen) {
       fetchGroups();
 
-      const preSelectedGroups = groupCampaigns.map(
+      const preSelectedGroups = (groupCampaigns || []).map(
         (campaign) => campaign.groupId
       );
       setSelectedGroups(preSelectedGroups);

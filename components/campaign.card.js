@@ -482,7 +482,7 @@ export default function CampaignCard({
     searchTerm,
     assignedFilter,
     billFilter,
-    campaign.leads || [],
+    campaign.leads,
   ]);
 
   const handleCellClick = (e, leadId, column) => {
@@ -786,7 +786,7 @@ export default function CampaignCard({
           <GroupLinkModal
             isOpen={isGroupLinkModalOpen}
             onClose={handleCloseModal}
-            groupCampaigns={campaign.groupCampaigns}
+            groupCampaigns={campaign.groupCampaigns || []}
             campaignId={campaign.id}
           />
         </div>
