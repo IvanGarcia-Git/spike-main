@@ -51,7 +51,7 @@ export default function CampaignsPage() {
     const jwtToken = getCookie("factura-token");
 
     try {
-      const response = await authGetFetch("campaigns/all", jwtToken);
+      const response = await authGetFetch("campaigns/basic", jwtToken);
       if (response.ok) {
         const campaignsData = await response.json();
         setCampaigns(campaignsData);
@@ -336,7 +336,12 @@ export default function CampaignsPage() {
           )}
         </div>
 
-        {isModalOpen && <NewCampaignModal closeModal={closeModal} />}
+        {isModalOpen && (
+          <NewCampaignModal
+            closeModal={closeModal}
+            onCampaignCreated={fetchCampaigns}
+          />
+        )}
 
         <RepeatedLeads />
 

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 
 const ComparativasHeader = () => {
   return (
-    <header className="py-4 px-4 md:px-8 border-b border-gray-200 bg-white sticky top-0 z-50">
+    <header className="py-4 px-4 md:px-8 border-b border-gray-200 bg-white sticky top-0 z-10">
       <div className="container mx-auto flex items-center justify-between gap-4">
         <Link href="/comparativas" className="flex items-center gap-2">
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>

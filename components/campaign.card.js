@@ -173,7 +173,7 @@ export default function CampaignCard({
   const [billFilter, setBillFilter] = useState(null);
   const [assignedFilter, setAssignedFilter] = useState(null);
 
-  const [filteredLeads, setFilteredLeads] = useState(campaign.leads);
+  const [filteredLeads, setFilteredLeads] = useState(campaign.leads || []);
   const [allLeadsFetched, setAllLeadsFetched] = useState(false);
 
   const [isVisible, setIsVisible] = useState(true);
@@ -411,7 +411,7 @@ export default function CampaignCard({
       dateFrom ||
       dateTo;
 
-    if (!allLeadsFetched && campaign.leads.length > 9 && hasGlobalFilters) {
+    if (!allLeadsFetched && (campaign.leads || []).length > 9 && hasGlobalFilters) {
       fetchAllLeads();
     }
   }, [globalSearchTerm, globalAssignedFilter, globalBillFilter, dateFrom, dateTo]);
@@ -422,7 +422,7 @@ export default function CampaignCard({
     const normalizedGlobalSearch = normalize(globalSearchTerm);
     const normalizedLocalSearch = normalize(searchTerm);
 
-    let results = campaign.leads;
+    let results = campaign.leads || [];
 
     if (normalizedGlobalSearch) {
       results = results.filter((lead) => {
@@ -482,7 +482,7 @@ export default function CampaignCard({
     searchTerm,
     assignedFilter,
     billFilter,
-    campaign.leads,
+    campaign.leads || [],
   ]);
 
   const handleCellClick = (e, leadId, column) => {
@@ -516,9 +516,10 @@ export default function CampaignCard({
     return null;
   }
 
-  if (filteredLeads.length === 0) {
-    return null;
-  }
+  // Don't hide campaigns without leads - show them with empty state
+  // if (filteredLeads.length === 0) {
+  //   return null;
+  // }
 
   return (
     <div className="p-4 bg-foreground text-black rounded-lg shadow-md mb-6">

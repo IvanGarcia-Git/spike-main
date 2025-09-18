@@ -93,7 +93,7 @@ const quickAccessMenuItems = [
     icon: "payments",
   },
   {
-    name: "Studio",
+    name: "Contratos Colaboración",
     href: "/studio",
     icon: "edit_document",
   },
@@ -760,7 +760,7 @@ export default function RootLayout({ children }) {
                               }`}
                             >
                               <span className="material-symbols-outlined">edit_document</span>
-                              <span className="compact-title">Studio</span>
+                              <span className="compact-title">Contratos Colaboración</span>
                             </Link>
                           </li>
                         </ul>
@@ -794,19 +794,6 @@ export default function RootLayout({ children }) {
                           >
                             <span className="material-symbols-outlined">payments</span>
                             <span className="compact-title">Liquidaciones</span>
-                          </Link>
-                        </li>
-                        <li className="relative">
-                          <Link
-                            href="/studio"
-                            className={`
-                                      flex flex-row items-center gap-3 py-3 pl-4 pr-6 mb-1 rounded-full text-black hover:bg-gray-300 ${
-                                        pathname === "/studio" ? "bg-backgroundHover" : ""
-                                      }
-                                    `}
-                          >
-                            <span className="material-symbols-outlined">edit_document</span>
-                            <span className="compact-title">Contratos</span>
                           </Link>
                         </li>
                       </ul>

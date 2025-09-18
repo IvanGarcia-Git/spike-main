@@ -104,11 +104,18 @@ export default function SendTaskModal({ isOpen, onClose }) {
     e.preventDefault();
     const jwtToken = getCookie("factura-token");
 
+    // Validate assigneeUserId
+    if (!newTask.assigneeUserId) {
+      alert("Por favor selecciona un destinatario");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("subject", newTask.subject);
     formData.append("startDate", newTask.startDate);
-    formData.append("assigneeUserId", newTask.assigneeUserId);
+    formData.append("assigneeUserId", String(newTask.assigneeUserId)); // Ensure it's a string
     formData.append("initialComment", newTask.initialComment);
+    formData.append("taskStateId", "1"); // 1 = "Por Hacer" (default state)
 
     if (selectedFile) {
       formData.append("taskCommentFile", selectedFile);

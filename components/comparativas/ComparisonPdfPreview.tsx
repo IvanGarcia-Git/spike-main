@@ -755,7 +755,7 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                         </div>
                         <div className="text-center mt-4 font-semibold">
                             <p style={{ color: colors.primaryText }}>Contacto: 621 19 36 34</p>
-                            <p style={{ color: colors.primaryText }}>Mail: {userData?.email || 'estudio@bajaturafactura.es'}</p>
+                            <p style={{ color: colors.primaryText }}>Nombre: {userData?.name || 'Usuario'}</p>
                         </div>
                     </div>
                 </main>

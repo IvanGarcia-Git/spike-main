@@ -4,7 +4,7 @@ import { FiX } from "react-icons/fi";
 import { getCookie } from "cookies-next";
 import { authFetch } from "@/helpers/server-fetch.helper";
 
-export default function NewCampaignModal({ closeModal }) {
+export default function NewCampaignModal({ closeModal, onCampaignCreated }) {
   const [selectedSector, setSelectedSelector] = useState("");
   const [campaignName, setCampaignName] = useState("");
   const [error, setError] = useState("");
@@ -48,6 +48,9 @@ export default function NewCampaignModal({ closeModal }) {
 
       if (response.ok) {
         alert("Campaña creada exitosamente.");
+        if (onCampaignCreated) {
+          onCampaignCreated(); // Call the callback to refresh campaigns
+        }
         closeModal();
       } else {
         alert("Error al crear la campaña.");
