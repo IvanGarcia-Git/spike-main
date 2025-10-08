@@ -44,7 +44,7 @@ function classNames(...classes) {
 export default function Dashboard() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
-  const [activeView, setActiveView] = useState('general') // general, semanal, colaboradores, facturacion
+  const [activeView, setActiveView] = useState('general') // general, facturacion, colaboradores, agentes, clientes, pizarra
   const [searchTerm, setSearchTerm] = useState('')
   const [dashboardData, setDashboardData] = useState({
     stats: {
@@ -231,52 +231,74 @@ export default function Dashboard() {
     <div className="px-4 sm:px-6 lg:px-8 py-8 bg-gray-50 min-h-screen">
       {/* Header con título y tabs */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col space-y-4">
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setActiveView('general')}
               className={classNames(
-                'px-4 py-2 text-sm font-medium rounded-lg',
+                'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
                 activeView === 'general'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
               )}
             >
               General
             </button>
             <button
-              onClick={() => setActiveView('semanal')}
+              onClick={() => setActiveView('facturacion')}
               className={classNames(
-                'px-4 py-2 text-sm font-medium rounded-lg',
-                activeView === 'semanal'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+                activeView === 'facturacion'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
               )}
             >
-              Semanal
+              Facturación
             </button>
             <button
               onClick={() => setActiveView('colaboradores')}
               className={classNames(
-                'px-4 py-2 text-sm font-medium rounded-lg',
+                'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
                 activeView === 'colaboradores'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
               )}
             >
               Colaboradores
             </button>
             <button
-              onClick={() => setActiveView('facturacion')}
+              onClick={() => setActiveView('agentes')}
               className={classNames(
-                'px-4 py-2 text-sm font-medium rounded-lg',
-                activeView === 'facturacion'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+                activeView === 'agentes'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
               )}
             >
-              Facturación
+              Agentes
+            </button>
+            <button
+              onClick={() => setActiveView('clientes')}
+              className={classNames(
+                'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+                activeView === 'clientes'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+              )}
+            >
+              Clientes / Contratos
+            </button>
+            <button
+              onClick={() => setActiveView('pizarra')}
+              className={classNames(
+                'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+                activeView === 'pizarra'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+              )}
+            >
+              Pizarra Semanal
             </button>
           </div>
         </div>
@@ -565,8 +587,193 @@ export default function Dashboard() {
         </>
       )}
 
-      {/* Vista Semanal */}
-      {activeView === 'semanal' && (
+      {/* Vista Agentes */}
+      {activeView === 'agentes' && (
+        <>
+          <div className="bg-white rounded-lg shadow mb-6">
+            <div className="p-4 border-b">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Estadísticas de Agentes</h2>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    placeholder="Buscar agente..."
+                    className="px-3 py-1 border rounded-lg text-sm"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 text-xs uppercase text-gray-700">
+                  <tr>
+                    <th className="px-4 py-3 text-left">Rank</th>
+                    <th className="px-4 py-3 text-left">Nombre</th>
+                    <th className="px-4 py-3 text-left">Ventas/Objetivo</th>
+                    <th className="px-4 py-3 text-left">Comisiones</th>
+                    <th className="px-4 py-3 text-left">% Objetivo</th>
+                    <th className="px-4 py-3 text-left">Crecimiento</th>
+                    <th className="px-4 py-3 text-left">Turno</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filteredAgentes.map((agente, idx) => (
+                    <tr key={agente.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm">
+                        <span className="text-red-500 font-bold">{idx + 1}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center">
+                          <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
+                            {agente.name?.charAt(0) || 'A'}
+                          </div>
+                          <div className="ml-3">
+                            <p className="text-sm font-medium">{agente.name}</p>
+                            <p className="text-xs text-gray-500">{agente.role || 'Agente'}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {agente.ventas}/{agente.objetivo}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <span className="text-green-600 font-bold">
+                          €{agente.comisiones}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center">
+                          <div className="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                            <div
+                              className="bg-blue-500 h-2 rounded-full"
+                              style={{ width: `${Math.min(100, agente.porcentaje)}%` }}
+                            />
+                          </div>
+                          <span className="text-xs">{agente.porcentaje}%</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <span className={classNames(
+                          'flex items-center',
+                          agente.trend === 'up' ? 'text-green-600' : 'text-red-600'
+                        )}>
+                          {agente.trend === 'up' ? '↑' : '↓'} {agente.trendValue}%
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                          Mañana
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Vista Clientes y Contratos */}
+      {activeView === 'clientes' && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-sm font-semibold mb-3">Distribución de Clientes</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-600">Particulares</span>
+                  <span className="font-bold text-sm text-blue-600">75%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-blue-500 h-2 rounded-full" style={{ width: '75%' }} />
+                </div>
+                <div className="flex justify-between items-center mt-3">
+                  <span className="text-xs text-gray-600">Empresas</span>
+                  <span className="font-bold text-sm text-green-600">25%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-green-500 h-2 rounded-full" style={{ width: '25%' }} />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-sm font-semibold mb-3">Por Servicio</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-600">Luz</span>
+                  <span className="font-bold text-sm">45%</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-600">Gas</span>
+                  <span className="font-bold text-sm">35%</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-600">Telefonía</span>
+                  <span className="font-bold text-sm">20%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-sm font-semibold mb-3">Contratos Renovables</h3>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-gray-900">124</p>
+                <p className="text-xs text-gray-500 mt-1">Próximos 3 meses</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-4 mb-6">
+            <h3 className="text-lg font-semibold mb-4">Distribución por Compañía</h3>
+            <div className="h-64">
+              {dashboardData.ventasPorMes.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Compañía A', value: 400 },
+                        { name: 'Compañía B', value: 300 },
+                        { name: 'Compañía C', value: 200 },
+                        { name: 'Otras', value: 100 }
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label
+                    >
+                      {[
+                        { name: 'Compañía A', value: 400 },
+                        { name: 'Compañía B', value: 300 },
+                        { name: 'Compañía C', value: 200 },
+                        { name: 'Otras', value: 100 }
+                      ].map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={['#3B82F6', '#10B981', '#F59E0B', '#6B7280'][index % 4]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-400">
+                  No hay datos disponibles
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Vista Pizarra Semanal */}
+      {activeView === 'pizarra' && (
         <div className="bg-white rounded-lg shadow">
           <div className="p-4 border-b">
             <h2 className="text-lg font-semibold">Estadísticas Semanales</h2>
