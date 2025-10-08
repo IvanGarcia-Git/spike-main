@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { authGetFetch } from "@/helpers/server-fetch.helper";
 import { useRouter } from "next/navigation";
 import { getCookie } from "cookies-next";
 import * as jose from "jose";
@@ -13,10 +12,13 @@ export default function Login() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const getNotifications = async () => {
-    const jwtToken = getCookie("factura-token");
-
     try {
-      const response = await authGetFetch("notifications", jwtToken);
+      const response = await fetch("/api/notifications", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       if (response.ok) {
         const allNotifications = await response.json();

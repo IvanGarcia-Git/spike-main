@@ -60,6 +60,7 @@ export const config = {
     "/notifications-settings",
     "/emitir-factura",
     "/perfil",
-    "/liquidaciones"
+    "/liquidaciones",
+    "/dashboard"
   ],
 };
