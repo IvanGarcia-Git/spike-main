@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { 
-  CalendarIcon, 
-  UserGroupIcon, 
-  DocumentTextIcon, 
+import {
+  CalendarIcon,
+  UserGroupIcon,
+  DocumentTextIcon,
   CurrencyEuroIcon,
   ChartBarIcon,
   TrendingUpIcon,
@@ -18,6 +18,7 @@ import {
   PhoneIcon
 } from '@heroicons/react/24/outline'
 import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/20/solid'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import {
   LineChart,
   Line,
@@ -298,7 +299,8 @@ export default function Dashboard() {
           comisiones: 1570,
           porcentaje: 92,
           trend: 'up',
-          trendValue: 20
+          trendValue: 20,
+          avatar: null
         },
         {
           id: 2,
@@ -309,7 +311,8 @@ export default function Dashboard() {
           comisiones: 800,
           porcentaje: 75,
           trend: 'up',
-          trendValue: 4
+          trendValue: 4,
+          avatar: null
         },
         {
           id: 3,
@@ -320,7 +323,8 @@ export default function Dashboard() {
           comisiones: 650,
           porcentaje: 45,
           trend: 'down',
-          trendValue: 31
+          trendValue: 31,
+          avatar: null
         }
       ],
       estadosLeads: [
@@ -468,8 +472,14 @@ export default function Dashboard() {
         {dashboardData.topAgentes.slice(0, 3).map((agente, idx) => (
           <div key={agente.id} className="bg-white rounded-lg shadow p-4">
             <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center">
-                <div className="text-xs text-gray-500 mr-2">#{idx + 1}</div>
+              <div className="flex items-center gap-3">
+                <div className="text-xs text-gray-500">#{idx + 1}</div>
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={agente.avatar || '/avatar.png'} alt={agente.name} />
+                  <AvatarFallback className="bg-blue-500 text-white">
+                    {agente.name?.charAt(0) || 'A'}
+                  </AvatarFallback>
+                </Avatar>
                 <div>
                   <p className="text-sm font-medium text-gray-900">{agente.name}</p>
                   <p className="text-xs text-gray-500">{agente.role || 'Salesman'}</p>
@@ -568,9 +578,12 @@ export default function Dashboard() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center">
-                          <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
-                            {agente.name?.charAt(0) || 'A'}
-                          </div>
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={agente.avatar || '/avatar.png'} alt={agente.name} />
+                            <AvatarFallback className="bg-blue-500 text-white text-xs">
+                              {agente.name?.charAt(0) || 'A'}
+                            </AvatarFallback>
+                          </Avatar>
                           <div className="ml-3">
                             <p className="text-sm font-medium">{agente.name}</p>
                             <p className="text-xs text-gray-500">{agente.role || 'Salesman'}</p>
@@ -786,9 +799,12 @@ export default function Dashboard() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center">
-                          <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
-                            {agente.name?.charAt(0) || 'A'}
-                          </div>
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={agente.avatar || '/avatar.png'} alt={agente.name} />
+                            <AvatarFallback className="bg-blue-500 text-white text-xs">
+                              {agente.name?.charAt(0) || 'A'}
+                            </AvatarFallback>
+                          </Avatar>
                           <div className="ml-3">
                             <p className="text-sm font-medium">{agente.name}</p>
                             <p className="text-xs text-gray-500">{agente.role || 'Agente'}</p>
@@ -1105,9 +1121,12 @@ export default function Dashboard() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center">
-                          <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
-                            {agente.name?.charAt(0) || 'A'}
-                          </div>
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={agente.avatar || '/avatar.png'} alt={agente.name} />
+                            <AvatarFallback className="bg-blue-500 text-white text-xs font-bold">
+                              {agente.name?.charAt(0) || 'A'}
+                            </AvatarFallback>
+                          </Avatar>
                           <div className="ml-3">
                             <p className="text-sm font-medium">{agente.name}</p>
                           </div>
@@ -1246,9 +1265,12 @@ export default function Dashboard() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center">
-                          <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
-                            {agente.name?.charAt(0) || 'A'}
-                          </div>
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={agente.avatar || '/avatar.png'} alt={agente.name} />
+                            <AvatarFallback className="bg-blue-500 text-white text-xs">
+                              {agente.name?.charAt(0) || 'A'}
+                            </AvatarFallback>
+                          </Avatar>
                           <div className="ml-3">
                             <p className="text-sm font-medium">{agente.name}</p>
                           </div>
