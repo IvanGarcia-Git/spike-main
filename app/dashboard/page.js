@@ -470,7 +470,11 @@ export default function Dashboard() {
       {/* Top 3 Agentes Cards - Siempre visible */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         {dashboardData.topAgentes.slice(0, 3).map((agente, idx) => (
-          <div key={agente.id} className="bg-white rounded-lg shadow p-4">
+          <div
+            key={agente.id}
+            className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => router.push(`/agentes/${agente.id}`)}
+          >
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="text-xs text-gray-500">#{idx + 1}</div>
@@ -572,7 +576,11 @@ export default function Dashboard() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {filteredAgentes.map((agente, idx) => (
-                    <tr key={agente.id} className="hover:bg-gray-50">
+                    <tr
+                      key={agente.id}
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => router.push(`/agentes/${agente.id}`)}
+                    >
                       <td className="px-4 py-3 text-sm">
                         <span className="text-red-500">{idx + 1}</span>
                       </td>
@@ -793,7 +801,11 @@ export default function Dashboard() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {filteredAgentes.map((agente, idx) => (
-                    <tr key={agente.id} className="hover:bg-gray-50">
+                    <tr
+                      key={agente.id}
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => router.push(`/agentes/${agente.id}`)}
+                    >
                       <td className="px-4 py-3 text-sm">
                         <span className="text-red-500 font-bold">{idx + 1}</span>
                       </td>
@@ -1104,9 +1116,10 @@ export default function Dashboard() {
                     <tr
                       key={agente.id}
                       className={classNames(
-                        'hover:bg-gray-50',
+                        'hover:bg-gray-50 cursor-pointer',
                         idx === 0 ? 'bg-yellow-50' : idx === 1 ? 'bg-gray-100' : idx === 2 ? 'bg-orange-50' : ''
                       )}
+                      onClick={() => router.push(`/agentes/${agente.id}`)}
                     >
                       <td className="px-4 py-3 text-sm">
                         <span className={classNames(
@@ -1259,7 +1272,11 @@ export default function Dashboard() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {filteredAgentes.map((agente, idx) => (
-                    <tr key={agente.id} className="hover:bg-gray-50">
+                    <tr
+                      key={agente.id}
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => router.push(`/colaboradores/${agente.id}`)}
+                    >
                       <td className="px-4 py-3 text-sm">
                         <span className="text-red-500">{idx + 1}</span>
                       </td>
@@ -1267,8 +1284,8 @@ export default function Dashboard() {
                         <div className="flex items-center">
                           <Avatar className="h-8 w-8">
                             <AvatarImage src={agente.avatar || '/avatar.png'} alt={agente.name} />
-                            <AvatarFallback className="bg-blue-500 text-white text-xs">
-                              {agente.name?.charAt(0) || 'A'}
+                            <AvatarFallback className="bg-purple-500 text-white text-xs">
+                              {agente.name?.charAt(0) || 'C'}
                             </AvatarFallback>
                           </Avatar>
                           <div className="ml-3">
