@@ -44,7 +44,7 @@ function classNames(...classes) {
 export default function Dashboard() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
-  const [activeView, setActiveView] = useState('general') // general, facturacion, colaboradores, agentes, clientes, pizarra
+  const [activeView, setActiveView] = useState('general') // general, facturacion, colaboradores, agentes, pizarra
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedUser, setSelectedUser] = useState(null)
   const [activeTurno, setActiveTurno] = useState('todos') // todos, manana, tarde
@@ -115,8 +115,6 @@ export default function Dashboard() {
       fetchFacturacionData()
     } else if (activeView === 'colaboradores' && selectedUser) {
       fetchColaboradorData(selectedUser)
-    } else if (activeView === 'clientes') {
-      fetchClientesData()
     } else if (activeView === 'pizarra') {
       fetchPizarraData()
     }
@@ -440,17 +438,6 @@ export default function Dashboard() {
               )}
             >
               Agentes
-            </button>
-            <button
-              onClick={() => setActiveView('clientes')}
-              className={classNames(
-                'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
-                activeView === 'clientes'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-              )}
-            >
-              Clientes / Contratos
             </button>
             <button
               onClick={() => setActiveView('pizarra')}
@@ -861,146 +848,75 @@ export default function Dashboard() {
               </table>
             </div>
           </div>
-        </>
-      )}
 
-      {/* Vista Clientes y Contratos */}
-      {activeView === 'clientes' && (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {/* Estadísticas agregadas de todos los agentes */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-semibold mb-3">Distribución de Clientes</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600">Particulares</span>
-                  <span className="font-bold text-sm text-blue-600">
-                    {clientesData.distribucion?.particulares?.porcentaje || 0}%
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-500 h-2 rounded-full"
-                    style={{ width: `${clientesData.distribucion?.particulares?.porcentaje || 0}%` }}
-                  />
-                </div>
-                <div className="text-xs text-gray-500">
-                  {clientesData.distribucion?.particulares?.cantidad || 0} clientes
-                </div>
-                <div className="flex justify-between items-center mt-3">
-                  <span className="text-xs text-gray-600">Empresas</span>
-                  <span className="font-bold text-sm text-green-600">
-                    {clientesData.distribucion?.empresas?.porcentaje || 0}%
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-green-500 h-2 rounded-full"
-                    style={{ width: `${clientesData.distribucion?.empresas?.porcentaje || 0}%` }}
-                  />
-                </div>
-                <div className="text-xs text-gray-500">
-                  {clientesData.distribucion?.empresas?.cantidad || 0} empresas
-                </div>
+              <h3 className="text-sm font-semibold text-gray-600 mb-2">Total Ventas</h3>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold">
+                  {dashboardData.topAgentes.reduce((sum, agente) => sum + (agente.ventas || 0), 0)}
+                </span>
+                <span className="text-sm text-gray-500">
+                  / {dashboardData.topAgentes.reduce((sum, agente) => sum + (agente.objetivo || 0), 0)}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Objetivo total</p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-sm font-semibold text-gray-600 mb-2">Total Comisiones</h3>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold text-green-600">
+                  €{dashboardData.topAgentes.reduce((sum, agente) => sum + (agente.comisiones || 0), 0)}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Todas las comisiones</p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-sm font-semibold text-gray-600 mb-2">% Objetivo Promedio</h3>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold">
+                  {dashboardData.topAgentes.length > 0
+                    ? Math.round(
+                        dashboardData.topAgentes.reduce((sum, agente) => {
+                          const porcentaje = agente.objetivo > 0
+                            ? (agente.ventas / agente.objetivo * 100)
+                            : 0
+                          return sum + porcentaje
+                        }, 0) / dashboardData.topAgentes.length
+                      )
+                    : 0}%
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                <div
+                  className="bg-blue-500 h-2 rounded-full"
+                  style={{
+                    width: `${Math.min(100, dashboardData.topAgentes.length > 0
+                      ? dashboardData.topAgentes.reduce((sum, agente) => {
+                          const porcentaje = agente.objetivo > 0
+                            ? (agente.ventas / agente.objetivo * 100)
+                            : 0
+                          return sum + porcentaje
+                        }, 0) / dashboardData.topAgentes.length
+                      : 0)}%`
+                  }}
+                />
               </div>
             </div>
 
             <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-semibold mb-3">Por Servicio</h3>
-              <div className="space-y-2">
-                {clientesData.porServicios?.distribucion?.map((servicio, idx) => (
-                  <div key={idx}>
-                    <div className="flex justify-between items-center text-sm mb-1">
-                      <span className="text-gray-600">{servicio.servicio}</span>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs text-gray-500">{servicio.cantidad}</span>
-                        <span className="font-bold">{servicio.porcentaje}%</span>
-                      </div>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-1.5">
-                      <div
-                        className="bg-blue-500 h-1.5 rounded-full"
-                        style={{ width: `${servicio.porcentaje}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-                {(!clientesData.porServicios?.distribucion || clientesData.porServicios.distribucion.length === 0) && (
-                  <p className="text-sm text-gray-400 text-center py-4">No hay datos disponibles</p>
-                )}
+              <h3 className="text-sm font-semibold text-gray-600 mb-2">Número de Agentes</h3>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold">
+                  {dashboardData.topAgentes.length}
+                </span>
               </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-semibold mb-3">Contratos Renovables</h3>
-              <div className="text-center">
-                <p className="text-3xl font-bold text-gray-900">
-                  {clientesData.renovables?.total || 0}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">Próximos 3 meses</p>
-              </div>
-              {clientesData.renovables?.distribucionMensual && clientesData.renovables.distribucionMensual.length > 0 && (
-                <div className="mt-4 space-y-1">
-                  {clientesData.renovables.distribucionMensual.map((mes, idx) => (
-                    <div key={idx} className="flex justify-between text-xs">
-                      <span className="text-gray-600">{mes.mes}</span>
-                      <span className="font-medium">{mes.cantidad} contratos</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-4 mb-6">
-            <h3 className="text-lg font-semibold mb-4">Distribución por Compañía</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="h-64">
-                {Array.isArray(clientesData.porCompania) && clientesData.porCompania.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={clientesData.porCompania.map(c => ({
-                          name: c.compania,
-                          value: c.cantidad
-                        }))}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={(entry) => `${entry.name}: ${entry.value}`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {clientesData.porCompania.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'][index % 6]}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-400">
-                    No hay datos disponibles
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold mb-3">Detalle por Compañía</h4>
-                {Array.isArray(clientesData.porCompania) && clientesData.porCompania.slice(0, 8).map((compania, idx) => (
-                  <div key={idx} className="flex justify-between items-center text-sm">
-                    <span className="text-gray-600">{compania.compania}</span>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs text-gray-500">{compania.cantidad} contratos</span>
-                      <span className="font-bold">{compania.porcentaje}%</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Activos: {dashboardData.topAgentes.filter(a => a.ventas > 0).length}
+              </p>
             </div>
           </div>
         </>
@@ -1256,7 +1172,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            
+
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 text-xs uppercase text-gray-700">
@@ -1312,6 +1228,67 @@ export default function Dashboard() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          {/* Estadísticas agregadas de todos los colaboradores */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-sm font-semibold text-gray-600 mb-2">Total Contratos</h3>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold">
+                  {dashboardData.topAgentes.reduce((sum, agente) => sum + (agente.totalContratos || agente.ventas || 0), 0)}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Todos los colaboradores</p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-sm font-semibold text-gray-600 mb-2">Total Comisiones</h3>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold text-green-600">
+                  €{dashboardData.topAgentes.reduce((sum, agente) => sum + (agente.comisiones || 0), 0)}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Suma de todas las comisiones</p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-sm font-semibold text-gray-600 mb-2">Crecimiento Promedio</h3>
+              <div className="flex items-baseline gap-2">
+                <span className={classNames(
+                  "text-3xl font-bold",
+                  dashboardData.topAgentes.length > 0 &&
+                  dashboardData.topAgentes.reduce((sum, agente) => {
+                    const value = agente.trend === 'up' ? (agente.trendValue || 0) : -(agente.trendValue || 0)
+                    return sum + value
+                  }, 0) / dashboardData.topAgentes.length >= 0
+                    ? 'text-green-600'
+                    : 'text-red-600'
+                )}>
+                  {dashboardData.topAgentes.length > 0
+                    ? (dashboardData.topAgentes.reduce((sum, agente) => {
+                        const value = agente.trend === 'up' ? (agente.trendValue || 0) : -(agente.trendValue || 0)
+                        return sum + value
+                      }, 0) / dashboardData.topAgentes.length).toFixed(1)
+                    : 0}%
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                {dashboardData.topAgentes.filter(a => a.trend === 'up').length} en crecimiento
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-sm font-semibold text-gray-600 mb-2">Número de Colaboradores</h3>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold">
+                  {dashboardData.topAgentes.length}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Activos: {dashboardData.topAgentes.filter(a => (a.totalContratos || a.ventas || 0) > 0).length}
+              </p>
             </div>
           </div>
 
