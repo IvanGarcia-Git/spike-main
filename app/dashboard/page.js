@@ -252,7 +252,7 @@ export default function Dashboard() {
       setClientesData({
         distribucion,
         porServicios: servicios,
-        porCompania: compania,
+        porCompania: Array.isArray(compania) ? compania : [],
         referidos,
         renovables
       })
@@ -927,7 +927,7 @@ export default function Dashboard() {
             <h3 className="text-lg font-semibold mb-4">Distribución por Compañía</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="h-64">
-                {clientesData.porCompania && clientesData.porCompania.length > 0 ? (
+                {Array.isArray(clientesData.porCompania) && clientesData.porCompania.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -963,7 +963,7 @@ export default function Dashboard() {
 
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold mb-3">Detalle por Compañía</h4>
-                {clientesData.porCompania?.slice(0, 8).map((compania, idx) => (
+                {Array.isArray(clientesData.porCompania) && clientesData.porCompania.slice(0, 8).map((compania, idx) => (
                   <div key={idx} className="flex justify-between items-center text-sm">
                     <span className="text-gray-600">{compania.compania}</span>
                     <div className="flex items-center space-x-2">
