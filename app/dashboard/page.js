@@ -41,6 +41,15 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+function getRoleLabel(role) {
+  const roleLabels = {
+    'admin': 'Administrador',
+    'agente': 'Agente',
+    'colaborador': 'Colaborador'
+  }
+  return roleLabels[role] || role || 'Usuario'
+}
+
 export default function Dashboard() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -48,6 +57,7 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedUser, setSelectedUser] = useState(null)
   const [activeTurno, setActiveTurno] = useState('todos') // todos, manana, tarde
+  const [activeCompanyTab, setActiveCompanyTab] = useState('luz') // luz, gas, telefonia
   const [dashboardData, setDashboardData] = useState({
     stats: {
       totalClientes: 0,
@@ -89,7 +99,13 @@ export default function Dashboard() {
     historialComisiones: [],
     cumplimientoObjetivo: null,
     historicoMensual: [],
-    tiemposActivacion: []
+    tiemposActivacion: [],
+    posiblesRenovaciones: null
+  })
+
+  const [colaboradoresData, setColaboradoresData] = useState({
+    distribucionClientes: null,
+    metricasAgregadas: null
   })
 
   const [clientesData, setClientesData] = useState({
@@ -98,6 +114,13 @@ export default function Dashboard() {
     porCompania: [],
     referidos: [],
     renovables: null
+  })
+
+  const [agentesData, setAgentesData] = useState({
+    distribucionClientes: null,
+    posiblesRenovaciones: null,
+    contratosPorCompania: null,
+    metricasAgregadas: null
   })
 
   const [pizarraData, setPizarraData] = useState({
@@ -113,8 +136,13 @@ export default function Dashboard() {
   useEffect(() => {
     if (activeView === 'facturacion') {
       fetchFacturacionData()
-    } else if (activeView === 'colaboradores' && selectedUser) {
-      fetchColaboradorData(selectedUser)
+    } else if (activeView === 'colaboradores') {
+      if (selectedUser) {
+        fetchColaboradorData(selectedUser)
+      }
+      fetchColaboradoresData()
+    } else if (activeView === 'agentes') {
+      fetchAgentesData()
     } else if (activeView === 'pizarra') {
       fetchPizarraData()
     }
@@ -216,13 +244,14 @@ export default function Dashboard() {
 
   const fetchColaboradorData = async (userId) => {
     try {
-      const [stats, clientesPorTipo, historial, cumplimiento, historico, tiempos] = await Promise.all([
+      const [stats, clientesPorTipo, historial, cumplimiento, historico, tiempos, renovaciones] = await Promise.all([
         fetch(`/api/dashboard/colaborador/${userId}/stats`).then(r => r.json()),
         fetch(`/api/dashboard/colaborador/${userId}/clientes-por-tipo`).then(r => r.json()),
         fetch(`/api/dashboard/colaborador/${userId}/historial-comisiones?limit=10`).then(r => r.json()),
         fetch(`/api/dashboard/colaborador/${userId}/cumplimiento-objetivo`).then(r => r.json()),
         fetch(`/api/dashboard/colaborador/${userId}/historico-mensual?meses=6`).then(r => r.json()),
-        fetch('/api/dashboard/tiempos-activacion').then(r => r.json())
+        fetch('/api/dashboard/tiempos-activacion').then(r => r.json()),
+        fetch(`/api/dashboard/colaborador/${userId}/posibles-renovaciones`).then(r => r.json())
       ])
 
       setColaboradorData({
@@ -231,7 +260,8 @@ export default function Dashboard() {
         historialComisiones: historial,
         cumplimientoObjetivo: cumplimiento,
         historicoMensual: historico,
-        tiemposActivacion: tiempos
+        tiemposActivacion: tiempos,
+        posiblesRenovaciones: renovaciones
       })
     } catch (error) {
       console.error('Error fetching colaborador data:', error)
@@ -257,6 +287,42 @@ export default function Dashboard() {
       })
     } catch (error) {
       console.error('Error fetching clientes data:', error)
+    }
+  }
+
+  const fetchColaboradoresData = async () => {
+    try {
+      const [distribucionClientes, metricasAgregadas] = await Promise.all([
+        fetch('/api/dashboard/colaboradores/distribucion-clientes').then(r => r.json()),
+        fetch('/api/dashboard/colaboradores/metricas-agregadas').then(r => r.json())
+      ])
+
+      setColaboradoresData({
+        distribucionClientes,
+        metricasAgregadas
+      })
+    } catch (error) {
+      console.error('Error fetching colaboradores data:', error)
+    }
+  }
+
+  const fetchAgentesData = async () => {
+    try {
+      const [distribucionClientes, posiblesRenovaciones, contratosPorCompania, metricasAgregadas] = await Promise.all([
+        fetch('/api/dashboard/agentes/distribucion-clientes').then(r => r.json()),
+        fetch('/api/dashboard/agentes/posibles-renovaciones').then(r => r.json()),
+        fetch('/api/dashboard/agentes/contratos-por-compania').then(r => r.json()),
+        fetch('/api/dashboard/agentes/metricas-agregadas').then(r => r.json())
+      ])
+
+      setAgentesData({
+        distribucionClientes,
+        posiblesRenovaciones,
+        contratosPorCompania,
+        metricasAgregadas
+      })
+    } catch (error) {
+      console.error('Error fetching agentes data:', error)
     }
   }
 
@@ -460,7 +526,10 @@ export default function Dashboard() {
           <div
             key={agente.id}
             className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => router.push(`/agentes/${agente.id}`)}
+            onClick={() => {
+              const path = agente.role === 'colaborador' ? '/colaboradores' : '/agentes';
+              router.push(`${path}/${agente.id}`)
+            }}
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
@@ -473,7 +542,7 @@ export default function Dashboard() {
                 </Avatar>
                 <div>
                   <p className="text-sm font-medium text-gray-900">{agente.name}</p>
-                  <p className="text-xs text-gray-500">{agente.role || 'Salesman'}</p>
+                  <p className="text-xs text-gray-500">{getRoleLabel(agente.role)}</p>
                 </div>
               </div>
               <div className="text-right">
@@ -566,7 +635,10 @@ export default function Dashboard() {
                     <tr
                       key={agente.id}
                       className="hover:bg-gray-50 cursor-pointer"
-                      onClick={() => router.push(`/agentes/${agente.id}`)}
+                      onClick={() => {
+                        const path = agente.role === 'colaborador' ? '/colaboradores' : '/agentes';
+                        router.push(`${path}/${agente.id}`)
+                      }}
                     >
                       <td className="px-4 py-3 text-sm">
                         <span className="text-red-500">{idx + 1}</span>
@@ -581,7 +653,7 @@ export default function Dashboard() {
                           </Avatar>
                           <div className="ml-3">
                             <p className="text-sm font-medium">{agente.name}</p>
-                            <p className="text-xs text-gray-500">{agente.role || 'Salesman'}</p>
+                            <p className="text-xs text-gray-500">{getRoleLabel(agente.role)}</p>
                           </div>
                         </div>
                       </td>
@@ -791,7 +863,10 @@ export default function Dashboard() {
                     <tr
                       key={agente.id}
                       className="hover:bg-gray-50 cursor-pointer"
-                      onClick={() => router.push(`/agentes/${agente.id}`)}
+                      onClick={() => {
+                        const path = agente.role === 'colaborador' ? '/colaboradores' : '/agentes';
+                        router.push(`${path}/${agente.id}`)
+                      }}
                     >
                       <td className="px-4 py-3 text-sm">
                         <span className="text-red-500 font-bold">{idx + 1}</span>
@@ -806,7 +881,7 @@ export default function Dashboard() {
                           </Avatar>
                           <div className="ml-3">
                             <p className="text-sm font-medium">{agente.name}</p>
-                            <p className="text-xs text-gray-500">{agente.role || 'Agente'}</p>
+                            <p className="text-xs text-gray-500">{getRoleLabel(agente.role)}</p>
                           </div>
                         </div>
                       </td>
@@ -919,6 +994,325 @@ export default function Dashboard() {
               </p>
             </div>
           </div>
+
+          {/* Grid con dos columnas para Distribución de Clientes y Posibles Renovaciones */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Sección de Distribución de Clientes (Particulares vs Empresas) - GENERAL */}
+            {agentesData.distribucionClientes &&
+             agentesData.distribucionClientes.particulares &&
+             agentesData.distribucionClientes.empresas && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold mb-4">Distribución de Clientes</h3>
+
+                {/* Gráfico de distribución */}
+                <div className="flex items-center justify-center h-48 mb-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          {
+                            name: 'Particulares',
+                            value: agentesData.distribucionClientes.particulares.cantidad || 0,
+                            color: '#3B82F6'
+                          },
+                          {
+                            name: 'Empresas',
+                            value: agentesData.distribucionClientes.empresas.cantidad || 0,
+                            color: '#8B5CF6'
+                          }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {[
+                          { color: '#3B82F6' },
+                          { color: '#8B5CF6' }
+                        ].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Estadísticas detalladas */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center border-l-4 border-blue-500 pl-4">
+                    <div>
+                      <p className="text-xs text-gray-600">Particulares (B2C)</p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {agentesData.distribucionClientes.particulares.cantidad || 0}
+                      </p>
+                    </div>
+                    <p className="text-sm text-gray-500">
+                      {agentesData.distribucionClientes.particulares.porcentaje || 0}%
+                    </p>
+                  </div>
+
+                  <div className="flex justify-between items-center border-l-4 border-purple-500 pl-4">
+                    <div>
+                      <p className="text-xs text-gray-600">Empresas (B2B)</p>
+                      <p className="text-2xl font-bold text-purple-600">
+                        {agentesData.distribucionClientes.empresas.cantidad || 0}
+                      </p>
+                    </div>
+                    <p className="text-sm text-gray-500">
+                      {agentesData.distribucionClientes.empresas.porcentaje || 0}%
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t">
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm text-gray-600">Total de Clientes</p>
+                      <p className="text-xl font-bold text-gray-900">
+                        {agentesData.distribucionClientes.total || 0}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Sección de Posibles Renovaciones - GENERAL */}
+            {agentesData.posiblesRenovaciones && agentesData.posiblesRenovaciones.contratos && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Posibles Renovaciones</h3>
+                  <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                    Total: {agentesData.posiblesRenovaciones.total || 0}
+                  </span>
+                </div>
+
+                {(agentesData.posiblesRenovaciones.total || 0) > 0 ? (
+                  <>
+                    {/* Distribución mensual */}
+                    {agentesData.posiblesRenovaciones.distribucionMensual &&
+                     agentesData.posiblesRenovaciones.distribucionMensual.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-sm font-semibold mb-3">Distribución por mes</h4>
+                        <div className="h-48">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={agentesData.posiblesRenovaciones.distribucionMensual}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
+                              <YAxis />
+                              <Tooltip />
+                              <Bar dataKey="cantidad" fill="#3B82F6" />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Lista compacta de contratos */}
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      <h4 className="text-sm font-semibold mb-2 sticky top-0 bg-white">
+                        Próximos a expirar ({agentesData.posiblesRenovaciones.contratos.length})
+                      </h4>
+                      {agentesData.posiblesRenovaciones.contratos.slice(0, 5).map((contrato) => (
+                        <div key={contrato.id} className="border-l-4 border-blue-500 pl-3 py-2 bg-gray-50 rounded">
+                          <div className="flex justify-between items-start mb-1">
+                            <p className="text-sm font-medium text-gray-900">{contrato.cliente}</p>
+                            <span className={classNames(
+                              'text-xs font-semibold',
+                              contrato.diasRestantes <= 30 ? 'text-red-600' :
+                              contrato.diasRestantes <= 60 ? 'text-orange-600' :
+                              'text-green-600'
+                            )}>
+                              {contrato.diasRestantes}d
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <p className="text-xs text-gray-600">{contrato.agente} • {contrato.compania}</p>
+                            <span className={classNames(
+                              'px-2 py-0.5 text-xs rounded-full',
+                              contrato.tipo === 'Luz' ? 'bg-yellow-100 text-yellow-800' :
+                              contrato.tipo === 'Gas' ? 'bg-orange-100 text-orange-800' :
+                              'bg-blue-100 text-blue-800'
+                            )}>
+                              {contrato.tipo}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                      {agentesData.posiblesRenovaciones.contratos.length > 5 && (
+                        <p className="text-xs text-center text-gray-500 pt-2">
+                          +{agentesData.posiblesRenovaciones.contratos.length - 5} contratos más
+                        </p>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-8 text-gray-400 text-sm">
+                    No hay contratos próximos a renovar en los próximos 3 meses
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Sección de Contratos por Compañía (Luz, Gas, Telefonía) */}
+          {agentesData.contratosPorCompania && (
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+              <h3 className="text-lg font-semibold mb-4">Contratos por Compañía</h3>
+
+              {/* Tabs para Luz, Gas, Telefonía */}
+              <div className="border-b border-gray-200 mb-4">
+                <nav className="-mb-px flex space-x-8">
+                  <button
+                    onClick={() => setActiveCompanyTab('luz')}
+                    className={classNames(
+                      activeCompanyTab === 'luz'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                      'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm'
+                    )}
+                  >
+                    Luz ({agentesData.contratosPorCompania.luz?.length || 0})
+                  </button>
+                  <button
+                    onClick={() => setActiveCompanyTab('gas')}
+                    className={classNames(
+                      activeCompanyTab === 'gas'
+                        ? 'border-orange-500 text-orange-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                      'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm'
+                    )}
+                  >
+                    Gas ({agentesData.contratosPorCompania.gas?.length || 0})
+                  </button>
+                  <button
+                    onClick={() => setActiveCompanyTab('telefonia')}
+                    className={classNames(
+                      activeCompanyTab === 'telefonia'
+                        ? 'border-purple-500 text-purple-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                      'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm'
+                    )}
+                  >
+                    Telefonía ({agentesData.contratosPorCompania.telefonia?.length || 0})
+                  </button>
+                </nav>
+              </div>
+
+              {/* Gráfico de barras horizontal */}
+              <div className="h-96">
+                {(() => {
+                  let data = []
+                  let barColor = '#3B82F6'
+
+                  if (activeCompanyTab === 'gas') {
+                    data = agentesData.contratosPorCompania.gas || []
+                    barColor = '#F97316'
+                  } else if (activeCompanyTab === 'telefonia') {
+                    data = agentesData.contratosPorCompania.telefonia || []
+                    barColor = '#8B5CF6'
+                  } else {
+                    data = agentesData.contratosPorCompania.luz || []
+                    barColor = '#3B82F6'
+                  }
+
+                  if (data.length === 0) {
+                    return (
+                      <div className="flex items-center justify-center h-full text-gray-400">
+                        No hay datos disponibles para esta categoría
+                      </div>
+                    )
+                  }
+
+                  return (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={data}
+                        layout="vertical"
+                        margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" />
+                        <YAxis
+                          dataKey="nombre"
+                          type="category"
+                          width={100}
+                          tick={{ fontSize: 12 }}
+                        />
+                        <Tooltip />
+                        <Bar dataKey="cantidad" fill={barColor} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )
+                })()}
+              </div>
+
+              {/* Resumen total */}
+              <div className="mt-4 pt-4 border-t">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-600">Total de contratos:</span>
+                  <span className="text-2xl font-bold text-blue-600">
+                    {agentesData.contratosPorCompania.total || 0}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Gráficas de Métricas Agregadas - Promedio de todos los agentes */}
+          {agentesData.metricasAgregadas &&
+           agentesData.metricasAgregadas.cumplimientoObjetivo &&
+           agentesData.metricasAgregadas.historicoMensual && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              {/* Cumplimiento de Objetivo Promedio */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold mb-4">Cumplimiento de Objetivo (Promedio)</h3>
+                <div className="text-center mb-4">
+                  <p className="text-5xl font-bold text-blue-600">
+                    {agentesData.metricasAgregadas.cumplimientoObjetivo.porcentaje || 0}%
+                  </p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    {agentesData.metricasAgregadas.cumplimientoObjetivo.ventas || 0} / {agentesData.metricasAgregadas.cumplimientoObjetivo.objetivo || 0} contratos
+                  </p>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-4">
+                  <div
+                    className="bg-blue-600 h-4 rounded-full transition-all duration-500"
+                    style={{
+                      width: `${Math.min(100, agentesData.metricasAgregadas.cumplimientoObjetivo.porcentaje || 0)}%`
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  Promedio de {agentesData.metricasAgregadas.totalAgentes || 0} agentes
+                </p>
+              </div>
+
+              {/* Histórico Mensual Promedio */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold mb-4">Histórico Mensual (Promedio por Agente)</h3>
+                <div className="h-64">
+                  {agentesData.metricasAgregadas.historicoMensual.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={agentesData.metricasAgregadas.historicoMensual}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="contratos" fill="#3B82F6" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-400">
+                      No hay datos históricos disponibles
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
 
@@ -1191,7 +1585,10 @@ export default function Dashboard() {
                     <tr
                       key={agente.id}
                       className="hover:bg-gray-50 cursor-pointer"
-                      onClick={() => router.push(`/colaboradores/${agente.id}`)}
+                      onClick={() => {
+                        const path = agente.role === 'colaborador' ? '/colaboradores' : '/agentes';
+                        router.push(`${path}/${agente.id}`)
+                      }}
                     >
                       <td className="px-4 py-3 text-sm">
                         <span className="text-red-500">{idx + 1}</span>
@@ -1292,6 +1689,91 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* Sección de Distribución de Clientes - Colaboradores */}
+          {colaboradoresData.distribucionClientes &&
+           colaboradoresData.distribucionClientes.particulares &&
+           colaboradoresData.distribucionClientes.empresas && (
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+              <h3 className="text-lg font-semibold mb-4">Distribución de Clientes - Todos los Colaboradores</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Gráfico de distribución */}
+                <div>
+                  <div className="flex items-center justify-center h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={[
+                            {
+                              name: 'Particulares',
+                              value: colaboradoresData.distribucionClientes.particulares.cantidad || 0,
+                              color: '#3B82F6'
+                            },
+                            {
+                              name: 'Empresas',
+                              value: colaboradoresData.distribucionClientes.empresas.cantidad || 0,
+                              color: '#8B5CF6'
+                            }
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {[
+                            { color: '#3B82F6' },
+                            { color: '#8B5CF6' }
+                          ].map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Estadísticas detalladas */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center border-l-4 border-blue-500 pl-4">
+                    <div>
+                      <p className="text-xs text-gray-600">Particulares (B2C)</p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {colaboradoresData.distribucionClientes.particulares.cantidad || 0}
+                      </p>
+                    </div>
+                    <p className="text-sm text-gray-500">
+                      {colaboradoresData.distribucionClientes.particulares.porcentaje || 0}%
+                    </p>
+                  </div>
+
+                  <div className="flex justify-between items-center border-l-4 border-purple-500 pl-4">
+                    <div>
+                      <p className="text-xs text-gray-600">Empresas (B2B)</p>
+                      <p className="text-2xl font-bold text-purple-600">
+                        {colaboradoresData.distribucionClientes.empresas.cantidad || 0}
+                      </p>
+                    </div>
+                    <p className="text-sm text-gray-500">
+                      {colaboradoresData.distribucionClientes.empresas.porcentaje || 0}%
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t">
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm text-gray-600">Total de Clientes</p>
+                      <p className="text-xl font-bold text-gray-900">
+                        {colaboradoresData.distribucionClientes.total || 0}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Gráficos de Actividad de Contratos */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div className="bg-white rounded-lg shadow p-4">
@@ -1360,6 +1842,59 @@ export default function Dashboard() {
               </table>
             </div>
           </div>
+
+          {/* Gráficas de Métricas Agregadas - Promedio de todos los colaboradores */}
+          {colaboradoresData.metricasAgregadas &&
+           colaboradoresData.metricasAgregadas.cumplimientoObjetivo &&
+           colaboradoresData.metricasAgregadas.historicoMensual && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              {/* Cumplimiento de Objetivo Promedio */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold mb-4">Cumplimiento de Objetivo (Promedio)</h3>
+                <div className="text-center mb-4">
+                  <p className="text-5xl font-bold text-purple-600">
+                    {colaboradoresData.metricasAgregadas.cumplimientoObjetivo.porcentaje || 0}%
+                  </p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    {colaboradoresData.metricasAgregadas.cumplimientoObjetivo.ventas || 0} / {colaboradoresData.metricasAgregadas.cumplimientoObjetivo.objetivo || 0} contratos
+                  </p>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-4">
+                  <div
+                    className="bg-purple-600 h-4 rounded-full transition-all duration-500"
+                    style={{
+                      width: `${Math.min(100, colaboradoresData.metricasAgregadas.cumplimientoObjetivo.porcentaje || 0)}%`
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  Promedio de {colaboradoresData.metricasAgregadas.totalColaboradores || 0} colaboradores
+                </p>
+              </div>
+
+              {/* Histórico Mensual Promedio */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold mb-4">Histórico Mensual (Promedio por Colaborador)</h3>
+                <div className="h-64">
+                  {colaboradoresData.metricasAgregadas.historicoMensual.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={colaboradoresData.metricasAgregadas.historicoMensual}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="contratos" fill="#8B5CF6" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-400">
+                      No hay datos históricos disponibles
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
 

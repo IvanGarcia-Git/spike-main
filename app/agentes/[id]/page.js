@@ -33,10 +33,18 @@ export default function AgentProfile() {
       setLoading(true)
       const response = await fetch(`/api/agentes/${params.id}`)
 
+      console.log('Response status:', response.status)
+
       if (response.ok) {
-        const data = await response.json()
-        setAgentData(data)
+        const backendData = await response.json()
+        console.log('Backend data received:', backendData)
+        // Transformar datos del backend al formato del frontend
+        const transformedData = transformBackendData(backendData)
+        console.log('Transformed data:', transformedData)
+        setAgentData(transformedData)
       } else {
+        const errorData = await response.json()
+        console.error('API error:', response.status, errorData)
         // Usar datos de fallback para desarrollo
         setAgentData(generateFallbackData())
       }
@@ -45,6 +53,128 @@ export default function AgentProfile() {
       setAgentData(generateFallbackData())
     } finally {
       setLoading(false)
+    }
+  }
+
+  const transformBackendData = (data) => {
+    // Calcular días del mes
+    const currentDate = new Date()
+    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
+    const currentDay = currentDate.getDate()
+    const daysLeft = daysInMonth - currentDay
+
+    return {
+      id: data.id,
+      name: data.name,
+      role: data.role,
+      avatar: data.avatar,
+      email: data.email,
+      phone: data.phone,
+      shift: data.shift,
+
+      // Days Left
+      daysLeft: {
+        current: daysLeft,
+        total: daysInMonth,
+        percentage: Math.round((currentDay / daysInMonth) * 100)
+      },
+
+      // Estadísticas principales
+      contratos: {
+        confirmados: 0,
+        activos: data.stats?.contratosActivos || 0,
+        porActivarse: Math.round(data.stats?.prediccionVentas || 0),
+        retiros: 0,
+        cancelados: 0
+      },
+
+      puntosRestantes: data.cumplimientoObjetivo?.faltante || 0,
+
+      // Histórico de comisiones
+      historicoComisiones: data.historialComisiones?.map(h => ({
+        mes: h.mes,
+        comision: h.comision,
+        ventasObjetivo: `${h.contratos || 0}/140`
+      })) || [],
+
+      // Histórico de puntos (basado en contratos)
+      historialPuntos: data.historicoMensual?.slice(0, 6).map(h => ({
+        cliente: h.mes,
+        puntos: (h.contratos || 0) / 10 // Simulación de puntos
+      })) || [],
+
+      // Histórico mensual para gráficos
+      mediaMensual: {
+        value: data.stats?.comisionMedia?.diaria || 0,
+        unit: '€/día',
+        change: 0,
+        data: data.historicoMensual?.map((h, i) => ({
+          month: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'][i] || h.mes,
+          value: (h.comision || 0) / (new Date(currentDate.getFullYear(), i + 1, 0).getDate())
+        })) || []
+      },
+
+      conversion: {
+        percentage: data.cumplimientoObjetivo?.porcentaje || 0,
+        change: 0,
+        data: data.historicoMensual?.map((h, i) => ({
+          month: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'][i] || h.mes,
+          value: Math.round((h.contratos / 140) * 100) || 0
+        })) || []
+      },
+
+      puntosMedioVenta: {
+        value: data.stats?.ingresos?.puntos || 0,
+        change: 0,
+        data: data.historicoMensual?.map((h, i) => ({
+          month: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'][i] || h.mes,
+          value: (h.contratos || 0) / 10 // Simulación
+        })) || []
+      },
+
+      comisionMedia: {
+        value: data.stats?.comisionMedia?.mensual || 0,
+        currency: '€',
+        change: 0,
+        data: data.historialComisiones?.map((h, i) => ({
+          month: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'][i] || h.mes,
+          value: h.comision || 0
+        })) || []
+      },
+
+      // Distribución de clientes
+      estados: data.clientesPorTipo?.porTipo?.slice(0, 6).map(t => ({
+        name: t.tipo,
+        percentage: t.porcentaje
+      })) || [],
+
+      distribucionGenero: {
+        hombre: 62, // Simulado - requiere implementación en backend
+        mujer: 6,
+        otro: 16
+      },
+
+      totalClientes: data.stats?.clientes?.total || 0,
+      referidos: Math.round((data.stats?.clientes?.total || 0) * 0.54), // Simulado
+      contratos: data.stats?.contratosActivos || 0,
+
+      tiemposActivacion: data.clientesPorTipo?.porCompania?.slice(0, 4).map(c => ({
+        tiempo: '4 días', // Simulado - requiere implementación en backend
+        tipo: c.compania
+      })) || [],
+
+      distribucionTipo: {
+        particulares: {
+          cantidad: Math.round((data.stats?.clientes?.total || 0) * 0.73),
+          percentage: 73
+        },
+        empresas: {
+          cantidad: Math.round((data.stats?.clientes?.total || 0) * 0.20),
+          percentage: 20
+        }
+      },
+
+      ventasCarretera: Math.round((data.stats?.contratosActivos || 0) * 0.22) // Simulado
     }
   }
 
@@ -203,7 +333,12 @@ export default function AgentProfile() {
           </Avatar>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{agentData.name}</h1>
-            <p className="text-gray-500">{agentData.role}</p>
+            <p className="text-gray-500">
+              {agentData.role === 'agente' ? 'Agente' : agentData.role === 'colaborador' ? 'Colaborador' : agentData.role}
+            </p>
+            {agentData.email && (
+              <p className="text-sm text-gray-400">{agentData.email}</p>
+            )}
           </div>
         </div>
       </div>

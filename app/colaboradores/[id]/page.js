@@ -33,10 +33,18 @@ export default function ColaboradorProfile() {
       setLoading(true)
       const response = await fetch(`/api/colaboradores/${params.id}`)
 
+      console.log('Response status:', response.status)
+
       if (response.ok) {
-        const data = await response.json()
-        setColaboradorData(data)
+        const backendData = await response.json()
+        console.log('Backend data received:', backendData)
+        // Transformar datos del backend al formato del frontend
+        const transformedData = transformBackendData(backendData)
+        console.log('Transformed data:', transformedData)
+        setColaboradorData(transformedData)
       } else {
+        const errorData = await response.json()
+        console.error('API error:', response.status, errorData)
         // Usar datos de fallback para desarrollo
         setColaboradorData(generateFallbackData())
       }
@@ -45,6 +53,100 @@ export default function ColaboradorProfile() {
       setColaboradorData(generateFallbackData())
     } finally {
       setLoading(false)
+    }
+  }
+
+  const transformBackendData = (data) => {
+    // Calcular crecimiento basado en histórico
+    const crecimiento = data.historicoMensual && data.historicoMensual.length >= 2
+      ? Math.round(((data.historicoMensual[data.historicoMensual.length - 1]?.contratos || 0) -
+          (data.historicoMensual[data.historicoMensual.length - 2]?.contratos || 0)) /
+          (data.historicoMensual[data.historicoMensual.length - 2]?.contratos || 1) * 100)
+      : 0
+
+    return {
+      id: data.id,
+      name: data.name,
+      role: data.role,
+      avatar: data.avatar,
+      email: data.email,
+      phone: data.phone,
+      shift: data.shift,
+
+      // Estadísticas principales
+      contratosActivos: data.stats?.contratosActivos || 0,
+      contratosActivosCrecimiento: crecimiento,
+
+      prediccionVentasTotal: {
+        ventas: Math.round(data.stats?.prediccionVentas || 0),
+        dinero: Math.round(data.stats?.ingresos?.mes || 0)
+      },
+
+      numeroClientes: {
+        valor: data.stats?.clientes?.total || 0,
+        crecimiento: Math.round(((data.stats?.clientes?.nuevosMes || 0) / (data.stats?.clientes?.total || 1)) * 100)
+      },
+
+      retiros: {
+        valor: 0,
+        cambio: 0
+      },
+
+      clientesMedios: {
+        valor: data.stats?.comisionMedia?.diaria || 0,
+        unidad: '€/día',
+        crecimiento: crecimiento
+      },
+
+      comisionMedia: {
+        valor: data.stats?.comisionMedia?.mensual || 0,
+        unidad: '€',
+        crecimiento: crecimiento
+      },
+
+      // Histórico de comisiones
+      historicoComisiones: data.historialComisiones?.map(h => ({
+        mes: h.mes,
+        comision: h.comision,
+        contratos: h.contratos || 0
+      })) || [],
+
+      // Histórico mensual para ventas diarias
+      ventasDiarias: Array.from({ length: 12 }, (_, i) => {
+        const monthData = data.historicoMensual?.[i] || {}
+        return {
+          dia: `Día ${i + 1}`,
+          contratos: monthData.contratos || 0,
+          dinero: Math.round(monthData.comision || 0)
+        }
+      }),
+
+      // Distribución de clientes
+      estados: data.clientesPorTipo?.porTipo?.map((t, idx) => ({
+        name: t.tipo,
+        percentage: t.porcentaje,
+        valor: t.cantidad || 0,
+        cambio: idx % 2 === 0 ? Math.abs(crecimiento) : -Math.abs(crecimiento)
+      })) || [],
+
+      // Compañías
+      compañias: data.clientesPorTipo?.porCompania?.map(c => ({
+        nombre: c.compania,
+        valor: c.cantidad || 0
+      })) || [],
+
+      // Distribución de género (simulado)
+      distribucionGenero: {
+        mujer: { emoji: '♀', porcentaje: 9 },
+        hombre: { emoji: '♂', porcentaje: 6 },
+        otro: { emoji: '⚧', porcentaje: 16 }
+      },
+
+      // Ventas por agente
+      ventasPorAgente: data.historicoMensual?.map((h, i) => ({
+        agente: `${h.mes?.substring(0, 1)}${i + 1}`,
+        ventas: h.contratos || 0
+      })) || []
     }
   }
 
@@ -214,7 +316,12 @@ export default function ColaboradorProfile() {
           </Avatar>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{colaboradorData.name}</h1>
-            <p className="text-gray-500">{colaboradorData.role}</p>
+            <p className="text-gray-500">
+              {colaboradorData.role === 'colaborador' ? 'Colaborador' : colaboradorData.role === 'agente' ? 'Agente' : colaboradorData.role}
+            </p>
+            {colaboradorData.email && (
+              <p className="text-sm text-gray-400">{colaboradorData.email}</p>
+            )}
           </div>
         </div>
       </div>
