@@ -1796,166 +1796,230 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Estadísticas agregadas de todos los colaboradores */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-semibold text-gray-600 mb-2">Total Contratos</h3>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold">
-                  {dashboardData.topAgentes.reduce((sum, agente) => sum + (agente.totalContratos || agente.ventas || 0), 0)}
-                </span>
+          {/* Days Left Card */}
+          <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg shadow-lg p-6 mb-6 text-white">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm opacity-90">Días restantes del mes</p>
+                <p className="text-5xl font-bold mt-2">
+                  {new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()}
+                </p>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Todos los colaboradores</p>
+              <div className="text-right">
+                <p className="text-sm opacity-90">
+                  {new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                </p>
+              </div>
             </div>
+          </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-semibold text-gray-600 mb-2">Total Comisiones</h3>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-green-600">
-                  €{dashboardData.topAgentes.reduce((sum, agente) => sum + (agente.comisiones || 0), 0)}
-                </span>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Suma de todas las comisiones</p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-semibold text-gray-600 mb-2">Crecimiento Promedio</h3>
-              <div className="flex items-baseline gap-2">
-                <span className={classNames(
-                  "text-3xl font-bold",
-                  dashboardData.topAgentes.length > 0 &&
-                  dashboardData.topAgentes.reduce((sum, agente) => {
-                    const value = agente.trend === 'up' ? (agente.trendValue || 0) : -(agente.trendValue || 0)
-                    return sum + value
-                  }, 0) / dashboardData.topAgentes.length >= 0
-                    ? 'text-green-600'
-                    : 'text-red-600'
-                )}>
-                  {dashboardData.topAgentes.length > 0
-                    ? (dashboardData.topAgentes.reduce((sum, agente) => {
-                        const value = agente.trend === 'up' ? (agente.trendValue || 0) : -(agente.trendValue || 0)
-                        return sum + value
-                      }, 0) / dashboardData.topAgentes.length).toFixed(1)
-                    : 0}%
-                </span>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                {dashboardData.topAgentes.filter(a => a.trend === 'up').length} en crecimiento
+          {/* Contract Status Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-yellow-400">
+              <h3 className="text-xs font-semibold text-gray-600 mb-2">Confirmados</h3>
+              <p className="text-3xl font-bold text-gray-900">
+                {colaboradoresData.metricasAgregadas?.contratosAgregados?.confirmados || 0}
               </p>
             </div>
-
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-semibold text-gray-600 mb-2">Número de Colaboradores</h3>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold">
-                  {dashboardData.topAgentes.length}
-                </span>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Activos: {dashboardData.topAgentes.filter(a => (a.totalContratos || a.ventas || 0) > 0).length}
+            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-400">
+              <h3 className="text-xs font-semibold text-gray-600 mb-2">Activos</h3>
+              <p className="text-3xl font-bold text-gray-900">
+                {colaboradoresData.metricasAgregadas?.contratosAgregados?.activos || 0}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-400">
+              <h3 className="text-xs font-semibold text-gray-600 mb-2">Por Activarse</h3>
+              <p className="text-3xl font-bold text-gray-900">
+                {colaboradoresData.metricasAgregadas?.contratosAgregados?.porActivarse || 0}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-orange-400">
+              <h3 className="text-xs font-semibold text-gray-600 mb-2">Retiros</h3>
+              <p className="text-3xl font-bold text-gray-900">
+                {colaboradoresData.metricasAgregadas?.contratosAgregados?.retiros || 0}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-red-400">
+              <h3 className="text-xs font-semibold text-gray-600 mb-2">Cancelados</h3>
+              <p className="text-3xl font-bold text-gray-900">
+                {colaboradoresData.metricasAgregadas?.contratosAgregados?.cancelados || 0}
               </p>
             </div>
           </div>
 
-          {/* Sección de Distribución de Clientes - Colaboradores */}
-          {colaboradoresData.distribucionClientes &&
-           colaboradoresData.distribucionClientes.particulares &&
-           colaboradoresData.distribucionClientes.empresas && (
-            <div className="bg-white rounded-lg shadow p-6 mb-6">
-              <h3 className="text-lg font-semibold mb-4">Distribución de Clientes - Todos los Colaboradores</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Gráfico de distribución */}
+          {/* Graphs: Media Mensual, % Conversión, Comisión Media */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            {/* Media Mensual */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex justify-between items-start mb-3">
                 <div>
-                  <div className="flex items-center justify-center h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={[
-                            {
-                              name: 'Particulares',
-                              value: colaboradoresData.distribucionClientes.particulares.cantidad || 0,
-                              color: '#3B82F6'
-                            },
-                            {
-                              name: 'Empresas',
-                              value: colaboradoresData.distribucionClientes.empresas.cantidad || 0,
-                              color: '#8B5CF6'
-                            }
-                          ]}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {[
-                            { color: '#3B82F6' },
-                            { color: '#8B5CF6' }
-                          ].map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                {/* Estadísticas detalladas */}
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center border-l-4 border-blue-500 pl-4">
-                    <div>
-                      <p className="text-xs text-gray-600">Particulares (B2C)</p>
-                      <p className="text-2xl font-bold text-blue-600">
-                        {colaboradoresData.distribucionClientes.particulares.cantidad || 0}
-                      </p>
-                    </div>
-                    <p className="text-sm text-gray-500">
-                      {colaboradoresData.distribucionClientes.particulares.porcentaje || 0}%
-                    </p>
-                  </div>
-
-                  <div className="flex justify-between items-center border-l-4 border-purple-500 pl-4">
-                    <div>
-                      <p className="text-xs text-gray-600">Empresas (B2B)</p>
-                      <p className="text-2xl font-bold text-purple-600">
-                        {colaboradoresData.distribucionClientes.empresas.cantidad || 0}
-                      </p>
-                    </div>
-                    <p className="text-sm text-gray-500">
-                      {colaboradoresData.distribucionClientes.empresas.porcentaje || 0}%
-                    </p>
-                  </div>
-
-                  <div className="pt-3 border-t">
-                    <div className="flex justify-between items-center">
-                      <p className="text-sm text-gray-600">Total de Clientes</p>
-                      <p className="text-xl font-bold text-gray-900">
-                        {colaboradoresData.distribucionClientes.total || 0}
-                      </p>
-                    </div>
-                  </div>
+                  <h3 className="text-xs font-semibold text-gray-600">Media Mensual</h3>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
+                    {colaboradoresData.metricasAgregadas?.mediaMensual?.value || 9}
+                  </p>
+                  <span className="text-xs text-green-600">+12%</span>
                 </div>
               </div>
+              <div className="h-24">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={colaboradoresData.metricasAgregadas?.mediaMensual?.data &&
+                          colaboradoresData.metricasAgregadas.mediaMensual.data.length > 0 ?
+                          colaboradoresData.metricasAgregadas.mediaMensual.data : [
+                      { month: 'Ene', value: 8 },
+                      { month: 'Feb', value: 10 },
+                      { month: 'Mar', value: 7 },
+                      { month: 'Abr', value: 11 },
+                      { month: 'May', value: 9 },
+                      { month: 'Jun', value: 12 }
+                    ]}
+                  >
+                    <defs>
+                      <linearGradient id="colorMediaColab" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <Area type="monotone" dataKey="value" stroke="#8B5CF6" fillOpacity={1} fill="url(#colorMediaColab)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-          )}
 
-          {/* Gráficos de Actividad de Contratos */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {/* % Conversión */}
             <div className="bg-white rounded-lg shadow p-4">
-              <h3 className="text-sm font-semibold mb-3">Actividad de Contratos</h3>
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h3 className="text-xs font-semibold text-gray-600">% Conversión</h3>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
+                    {colaboradoresData.metricasAgregadas?.conversion?.percentage || 67}%
+                  </p>
+                  <span className="text-xs text-red-600">-4%</span>
+                </div>
+              </div>
+              <div className="h-24">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={colaboradoresData.metricasAgregadas?.conversion?.data &&
+                          colaboradoresData.metricasAgregadas.conversion.data.length > 0 ?
+                          colaboradoresData.metricasAgregadas.conversion.data : [
+                      { month: 'Ene', value: 70 },
+                      { month: 'Feb', value: 68 },
+                      { month: 'Mar', value: 72 },
+                      { month: 'Abr', value: 65 },
+                      { month: 'May', value: 69 },
+                      { month: 'Jun', value: 67 }
+                    ]}
+                  >
+                    <defs>
+                      <linearGradient id="colorConversionColab" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#EC4899" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#EC4899" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <Area type="monotone" dataKey="value" stroke="#EC4899" fillOpacity={1} fill="url(#colorConversionColab)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Comisión Media */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h3 className="text-xs font-semibold text-gray-600">Comisión Media</h3>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
+                    €{colaboradoresData.metricasAgregadas?.comisionMedia?.value || 850}
+                  </p>
+                  <span className="text-xs text-green-600">+8%</span>
+                </div>
+              </div>
+              <div className="h-24">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={colaboradoresData.metricasAgregadas?.comisionMedia?.data &&
+                          colaboradoresData.metricasAgregadas.comisionMedia.data.length > 0 ?
+                          colaboradoresData.metricasAgregadas.comisionMedia.data : [
+                      { month: 'Ene', value: 800 },
+                      { month: 'Feb', value: 820 },
+                      { month: 'Mar', value: 790 },
+                      { month: 'Abr', value: 870 },
+                      { month: 'May', value: 840 },
+                      { month: 'Jun', value: 850 }
+                    ]}
+                  >
+                    <defs>
+                      <linearGradient id="colorComisionColab" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <Area type="monotone" dataKey="value" stroke="#10B981" fillOpacity={1} fill="url(#colorComisionColab)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+
+          {/* Histórico de Comisiones Table */}
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h3 className="text-lg font-semibold mb-4">Histórico de Comisiones</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left">Periodo</th>
+                    <th className="px-4 py-3 text-right">Comisión</th>
+                    <th className="px-4 py-3 text-right">Estado</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {colaboradoresData.metricasAgregadas?.historicoComisiones &&
+                   colaboradoresData.metricasAgregadas.historicoComisiones.length > 0 ? (
+                    colaboradoresData.metricasAgregadas.historicoComisiones.map((item, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 text-sm">{item.periodo}</td>
+                        <td className="px-4 py-3 text-sm text-right font-semibold">€{item.monto}</td>
+                        <td className="px-4 py-3 text-right">
+                          <span className={classNames(
+                            "px-2 py-1 text-xs rounded-full",
+                            item.estado === 'Pagado'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          )}>
+                            {item.estado}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="3" className="px-4 py-8 text-center text-gray-500">
+                        No hay datos de comisiones disponibles
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Historial de Puntos & Puntos medioventa Graph */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {/* Historial de Puntos */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <h3 className="text-sm font-semibold mb-3">Historial de Puntos</h3>
               <div className="h-48">
-                {dashboardData.ventasPorMes.length > 0 ? (
+                {colaboradoresData.metricasAgregadas?.historicoMensual &&
+                 colaboradoresData.metricasAgregadas.historicoMensual.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={dashboardData.ventasPorMes}>
+                    <BarChart data={colaboradoresData.metricasAgregadas.historicoMensual}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
+                      <XAxis dataKey="mes" />
                       <YAxis />
                       <Tooltip />
-                      <Line type="monotone" dataKey="value" stroke="#3B82F6" strokeWidth={2} />
-                    </LineChart>
+                      <Bar dataKey="ventas" fill="#8B5CF6" />
+                    </BarChart>
                   </ResponsiveContainer>
                 ) : (
                   <div className="flex items-center justify-center h-full text-gray-400">
@@ -1965,104 +2029,238 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Número de Clientes y Retiros */}
+            {/* Puntos medioventa */}
             <div className="bg-white rounded-lg shadow p-4">
-              <div className="space-y-3">
+              <div className="flex justify-between items-start mb-3">
                 <div>
-                  <h3 className="text-sm font-semibold mb-2">Nº Clientes</h3>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold">{dashboardData.stats.totalClientes}</span>
-                    <span className="text-green-600">+10%</span>
-                  </div>
+                  <h3 className="text-xs font-semibold text-gray-600">Puntos medio/venta</h3>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">2.3</p>
+                  <span className="text-xs text-green-600">+5%</span>
                 </div>
-                <div>
-                  <h3 className="text-sm font-semibold mb-2">Retiros</h3>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold">-12</span>
-                    <span className="text-red-600">-19%</span>
-                  </div>
+              </div>
+              <div className="h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={[
+                      { month: 'Ene', value: 2.1 },
+                      { month: 'Feb', value: 2.4 },
+                      { month: 'Mar', value: 2.0 },
+                      { month: 'Abr', value: 2.5 },
+                      { month: 'May', value: 2.2 },
+                      { month: 'Jun', value: 2.3 }
+                    ]}
+                  >
+                    <defs>
+                      <linearGradient id="colorPuntosColab" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#F59E0B" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <Area type="monotone" dataKey="value" stroke="#F59E0B" fillOpacity={1} fill="url(#colorPuntosColab)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+
+          {/* Estados (Horizontal Bars) */}
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h3 className="text-lg font-semibold mb-4">Estados</h3>
+            <div className="space-y-3">
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Activos</span>
+                  <span className="font-semibold">
+                    {colaboradoresData.metricasAgregadas?.contratosAgregados?.activos || 0}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div className="bg-green-500 h-2.5 rounded-full" style={{ width: '65%' }}></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Por Activarse</span>
+                  <span className="font-semibold">
+                    {colaboradoresData.metricasAgregadas?.contratosAgregados?.porActivarse || 0}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div className="bg-blue-500 h-2.5 rounded-full" style={{ width: '25%' }}></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Retiros</span>
+                  <span className="font-semibold">
+                    {colaboradoresData.metricasAgregadas?.contratosAgregados?.retiros || 0}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div className="bg-orange-500 h-2.5 rounded-full" style={{ width: '7%' }}></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Cancelados</span>
+                  <span className="font-semibold">
+                    {colaboradoresData.metricasAgregadas?.contratosAgregados?.cancelados || 0}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div className="bg-red-500 h-2.5 rounded-full" style={{ width: '3%' }}></div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Histórico de Comisiones */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-lg font-semibold mb-4">Histórico Liquidaciones</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left">Cliente</th>
-                    <th className="px-4 py-2 text-left">Monto</th>
-                    <th className="px-4 py-2 text-left">Fecha</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {dashboardData.historicalLiquidations.map((liq, idx) => (
-                    <tr key={idx}>
-                      <td className="px-4 py-2 text-sm">{liq.client}</td>
-                      <td className="px-4 py-2 text-sm text-green-600 font-bold">${liq.deal}</td>
-                      <td className="px-4 py-2 text-sm">{liq.date}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {/* Distribución (Pie Chart) */}
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h3 className="text-lg font-semibold mb-4">Distribución</h3>
+            <div className="h-64 relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: 'Particulares', value: colaboradoresData.distribucionClientes?.particulares?.cantidad || 45, color: '#EC4899' },
+                      { name: 'Empresas', value: colaboradoresData.distribucionClientes?.empresas?.cantidad || 30, color: '#A855F7' },
+                      { name: 'Autónomos', value: 25, color: '#8B5CF6' }
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {[
+                      { color: '#EC4899' },
+                      { color: '#A855F7' },
+                      { color: '#8B5CF6' }
+                    ].map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <FaUser className="text-2xl text-pink-500" />
+                <FaBriefcase className="text-2xl text-purple-500" />
+                <FaBuilding className="text-2xl text-indigo-500" />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4 mt-4">
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <div className="w-3 h-3 rounded-full bg-pink-500"></div>
+                  <span className="text-xs text-gray-600">Particulares</span>
+                </div>
+                <p className="text-lg font-bold">{colaboradoresData.distribucionClientes?.particulares?.cantidad || 45}</p>
+              </div>
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                  <span className="text-xs text-gray-600">Empresas</span>
+                </div>
+                <p className="text-lg font-bold">{colaboradoresData.distribucionClientes?.empresas?.cantidad || 30}</p>
+              </div>
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
+                  <span className="text-xs text-gray-600">Autónomos</span>
+                </div>
+                <p className="text-lg font-bold">25</p>
+              </div>
             </div>
           </div>
 
-          {/* Gráficas de Métricas Agregadas - Promedio de todos los colaboradores */}
-          {colaboradoresData.metricasAgregadas &&
-           colaboradoresData.metricasAgregadas.cumplimientoObjetivo &&
-           colaboradoresData.metricasAgregadas.historicoMensual && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Cumplimiento de Objetivo Promedio */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold mb-4">Cumplimiento de Objetivo (Promedio)</h3>
-                <div className="text-center mb-4">
-                  <p className="text-5xl font-bold text-purple-600">
-                    {colaboradoresData.metricasAgregadas.cumplimientoObjetivo.porcentaje || 0}%
-                  </p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    {colaboradoresData.metricasAgregadas.cumplimientoObjetivo.ventas || 0} / {colaboradoresData.metricasAgregadas.cumplimientoObjetivo.objetivo || 0} contratos
-                  </p>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-4">
-                  <div
-                    className="bg-purple-600 h-4 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${Math.min(100, colaboradoresData.metricasAgregadas.cumplimientoObjetivo.porcentaje || 0)}%`
-                    }}
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-2 text-center">
-                  Promedio de {colaboradoresData.metricasAgregadas.totalColaboradores || 0} colaboradores
-                </p>
-              </div>
+          {/* Tiempo medio Activ */}
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h3 className="text-lg font-semibold mb-4">Tiempo medio Activ</h3>
+            <div className="space-y-3">
+              {colaboradoresData.metricasAgregadas?.tiemposActivacion &&
+               colaboradoresData.metricasAgregadas.tiemposActivacion.length > 0 ? (
+                colaboradoresData.metricasAgregadas.tiemposActivacion.map((item, index) => (
+                  <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                    <span className="text-sm text-gray-700">{item.compania}</span>
+                    <span className="text-sm font-semibold text-gray-900">{item.dias} días</span>
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-700">Vodafone</span>
+                    <span className="text-sm font-semibold text-gray-900">7 días</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-700">Orange</span>
+                    <span className="text-sm font-semibold text-gray-900">5 días</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-700">Movistar</span>
+                    <span className="text-sm font-semibold text-gray-900">9 días</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-sm text-gray-700">Yoigo</span>
+                    <span className="text-sm font-semibold text-gray-900">6 días</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
 
-              {/* Histórico Mensual Promedio */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold mb-4">Histórico Mensual (Promedio por Colaborador)</h3>
-                <div className="h-64">
-                  {colaboradoresData.metricasAgregadas.historicoMensual.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={colaboradoresData.metricasAgregadas.historicoMensual}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="contratos" fill="#8B5CF6" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-gray-400">
-                      No hay datos históricos disponibles
-                    </div>
-                  )}
-                </div>
+          {/* Bottom Section: Total Clientes, Referidos, Contratos */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <FaUsers className="text-2xl text-purple-500" />
+                <h3 className="text-sm font-semibold text-gray-600">Total Clientes</h3>
+              </div>
+              <p className="text-3xl font-bold text-gray-900">
+                {colaboradoresData.distribucionClientes?.total || 100}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <FaUser className="text-2xl text-purple-500" />
+                <h3 className="text-sm font-semibold text-gray-600">Referidos</h3>
+              </div>
+              <p className="text-3xl font-bold text-gray-900">23</p>
+            </div>
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <FaFileContract className="text-2xl text-purple-500" />
+                <h3 className="text-sm font-semibold text-gray-600">Contratos</h3>
+              </div>
+              <p className="text-3xl font-bold text-gray-900">
+                {colaboradoresData.metricasAgregadas?.contratosAgregados?.activos || 0}
+              </p>
+            </div>
+          </div>
+
+          {/* Publicidad, Otros, Ventas Carretera */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-sm font-semibold text-gray-600 mb-4">Publicidad</h3>
+              <div className="flex items-center justify-center">
+                <span className="text-5xl font-bold text-gray-900">45</span>
               </div>
             </div>
-          )}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-sm font-semibold text-gray-600 mb-4">Otros</h3>
+              <div className="flex items-center justify-center">
+                <span className="text-5xl font-bold text-gray-900">12</span>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-sm font-semibold text-gray-600 mb-4">Ventas Carretera</h3>
+              <div className="flex items-center justify-center">
+                <span className="text-5xl font-bold text-gray-900">98</span>
+              </div>
+            </div>
+          </div>
+
         </>
       )}
 
