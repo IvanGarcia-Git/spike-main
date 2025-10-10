@@ -924,395 +924,560 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Estadísticas agregadas de todos los agentes */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-semibold text-gray-600 mb-2">Total Ventas</h3>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold">
-                  {dashboardData.topAgentes.reduce((sum, agente) => sum + (agente.ventas || 0), 0)}
-                </span>
-                <span className="text-sm text-gray-500">
-                  / {dashboardData.topAgentes.reduce((sum, agente) => sum + (agente.objetivo || 0), 0)}
-                </span>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Objetivo total</p>
-            </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-semibold text-gray-600 mb-2">Total Comisiones</h3>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-green-600">
-                  €{dashboardData.topAgentes.reduce((sum, agente) => sum + (agente.comisiones || 0), 0)}
-                </span>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Todas las comisiones</p>
-            </div>
+          {/* Secciones adicionales con datos agregados de todos los agentes */}
+          {agentesData.metricasAgregadas && (
+            <>
+              {/* Days Left y Contratos/Activos */}
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                {/* Days Left */}
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow p-6 text-white">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold opacity-90">Days Left</span>
+                  </div>
+                  <div className="mb-2">
+                    <p className="text-4xl font-bold">
+                      {(() => {
+                        const currentDate = new Date();
+                        const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+                        const currentDay = currentDate.getDate();
+                        return daysInMonth - currentDay;
+                      })()}
+                    </p>
+                    <p className="text-sm opacity-75">
+                      / {new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()} días
+                    </p>
+                  </div>
+                  <div className="w-full bg-white/20 rounded-full h-2">
+                    <div
+                      className="bg-white h-2 rounded-full"
+                      style={{
+                        width: `${Math.round((new Date().getDate() / new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()) * 100)}%`
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs mt-2 opacity-75">53% del mes</p>
+                </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-semibold text-gray-600 mb-2">% Objetivo Promedio</h3>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold">
-                  {dashboardData.topAgentes.length > 0
-                    ? Math.round(
-                        dashboardData.topAgentes.reduce((sum, agente) => {
-                          const porcentaje = agente.objetivo > 0
-                            ? (agente.ventas / agente.objetivo * 100)
-                            : 0
-                          return sum + porcentaje
-                        }, 0) / dashboardData.topAgentes.length
-                      )
-                    : 0}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                <div
-                  className="bg-blue-500 h-2 rounded-full"
-                  style={{
-                    width: `${Math.min(100, dashboardData.topAgentes.length > 0
-                      ? dashboardData.topAgentes.reduce((sum, agente) => {
-                          const porcentaje = agente.objetivo > 0
-                            ? (agente.ventas / agente.objetivo * 100)
-                            : 0
-                          return sum + porcentaje
-                        }, 0) / dashboardData.topAgentes.length
-                      : 0)}%`
-                  }}
-                />
-              </div>
-            </div>
+                {/* Confirmados */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-gray-600">Confirmados</span>
+                    <span className="text-green-500">●</span>
+                  </div>
+                  <p className="text-3xl font-bold text-gray-900">0</p>
+                  <p className="text-xs text-gray-500 mt-1">Contratos confirmados</p>
+                </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-semibold text-gray-600 mb-2">Número de Agentes</h3>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold">
-                  {dashboardData.topAgentes.length}
-                </span>
+                {/* Activos */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-gray-600">Activos</span>
+                    <span className="text-green-500">●</span>
+                  </div>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {agentesData.metricasAgregadas.contratosAgregados?.activos || 0}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Contratos activos</p>
+                </div>
+
+                {/* Por Activarse */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-gray-600">Por Activarse</span>
+                    <span className="text-yellow-500">●</span>
+                  </div>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {agentesData.metricasAgregadas.contratosAgregados?.porActivarse || 0}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Pendientes de activación</p>
+                </div>
+
+                {/* Cancelados */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-gray-600">Cancelados</span>
+                    <span className="text-red-500">●</span>
+                  </div>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {agentesData.metricasAgregadas.contratosAgregados?.cancelados || 0}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Contratos cancelados</p>
+                </div>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Activos: {dashboardData.topAgentes.filter(a => a.ventas > 0).length}
-              </p>
-            </div>
-          </div>
 
-          {/* Grid con dos columnas para Distribución de Clientes y Posibles Renovaciones */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* Sección de Distribución de Clientes (Particulares vs Empresas) - GENERAL */}
-            {agentesData.distribucionClientes &&
-             agentesData.distribucionClientes.particulares &&
-             agentesData.distribucionClientes.empresas && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold mb-4">Distribución de Clientes</h3>
+              {/* Gráficas: Media Mensual, % Conversión, Comisión Media */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                {/* Media Mensual */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-gray-600">Media Mensual</h3>
+                    <div className="flex items-baseline gap-2 mt-2">
+                      <span className="text-3xl font-bold text-gray-900">
+                        {agentesData.metricasAgregadas.mediaMensual?.value || 12}
+                      </span>
+                      <span className="text-sm text-gray-500">€/día</span>
+                      <span className="text-sm text-green-600 font-medium">+12%</span>
+                    </div>
+                  </div>
+                  <div className="h-32">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={agentesData.metricasAgregadas.mediaMensual?.data && agentesData.metricasAgregadas.mediaMensual.data.length > 0 ? agentesData.metricasAgregadas.mediaMensual.data : [
+                        { month: 'Ene', value: 8 },
+                        { month: 'Feb', value: 10 },
+                        { month: 'Mar', value: 11 },
+                        { month: 'Abr', value: 9 },
+                        { month: 'May', value: 13 },
+                        { month: 'Jun', value: 12 }
+                      ]}>
+                        <defs>
+                          <linearGradient id="colorMedia" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <Area
+                          type="monotone"
+                          dataKey="value"
+                          stroke="#3B82F6"
+                          strokeWidth={2}
+                          fillOpacity={1}
+                          fill="url(#colorMedia)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
 
-                {/* Gráfico de distribución */}
-                <div className="flex items-center justify-center h-48 mb-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={[
-                          {
-                            name: 'Particulares',
-                            value: agentesData.distribucionClientes.particulares.cantidad || 0,
-                            color: '#3B82F6'
-                          },
-                          {
-                            name: 'Empresas',
-                            value: agentesData.distribucionClientes.empresas.cantidad || 0,
-                            color: '#8B5CF6'
-                          }
-                        ]}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {[
-                          { color: '#3B82F6' },
-                          { color: '#8B5CF6' }
-                        ].map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
+                {/* % Conversión */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-gray-600">% Conversión</h3>
+                    <div className="flex items-baseline gap-2 mt-2">
+                      <span className="text-3xl font-bold text-gray-900">
+                        {agentesData.metricasAgregadas.conversion?.percentage || 39.6}
+                      </span>
+                      <span className="text-sm text-gray-500">%</span>
+                      <span className="text-sm text-red-600 font-medium">-4%</span>
+                    </div>
+                  </div>
+                  <div className="h-32">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={agentesData.metricasAgregadas.conversion?.data && agentesData.metricasAgregadas.conversion.data.length > 0 ? agentesData.metricasAgregadas.conversion.data : [
+                        { month: 'Ene', value: 42 },
+                        { month: 'Feb', value: 45 },
+                        { month: 'Mar', value: 43 },
+                        { month: 'Abr', value: 40 },
+                        { month: 'May', value: 38 },
+                        { month: 'Jun', value: 39.6 }
+                      ]}>
+                        <defs>
+                          <linearGradient id="colorConversion" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <Area
+                          type="monotone"
+                          dataKey="value"
+                          stroke="#10B981"
+                          strokeWidth={2}
+                          fillOpacity={1}
+                          fill="url(#colorConversion)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Comisión Media */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-gray-600">Comisión Media</h3>
+                    <div className="flex items-baseline gap-2 mt-2">
+                      <span className="text-3xl font-bold text-gray-900">
+                        {agentesData.metricasAgregadas.comisionMedia?.value || 349.3}
+                      </span>
+                      <span className="text-sm text-gray-500">€</span>
+                      <span className="text-sm text-red-600 font-medium">-4%</span>
+                    </div>
+                  </div>
+                  <div className="h-32">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={agentesData.metricasAgregadas.comisionMedia?.data && agentesData.metricasAgregadas.comisionMedia.data.length > 0 ? agentesData.metricasAgregadas.comisionMedia.data : [
+                        { month: 'Ene', value: 380 },
+                        { month: 'Feb', value: 390 },
+                        { month: 'Mar', value: 370 },
+                        { month: 'Abr', value: 360 },
+                        { month: 'May', value: 340 },
+                        { month: 'Jun', value: 349.3 }
+                      ]}>
+                        <defs>
+                          <linearGradient id="colorComision" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#EC4899" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#EC4899" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <Area
+                          type="monotone"
+                          dataKey="value"
+                          stroke="#EC4899"
+                          strokeWidth={2}
+                          fillOpacity={1}
+                          fill="url(#colorComision)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+
+              {/* Histórico de Comisiones (Tabla) */}
+              {agentesData.metricasAgregadas.historicoComisiones &&
+               agentesData.metricasAgregadas.historicoComisiones.length > 0 && (
+                <div className="bg-white rounded-lg shadow mb-6">
+                  <div className="p-4 border-b">
+                    <h3 className="text-lg font-semibold">Histórico de Comisiones (Total)</h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mes</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Comisión</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ventas/Objetivo</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {agentesData.metricasAgregadas.historicoComisiones.map((item, idx) => (
+                          <tr key={idx} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.mes}</td>
+                            <td className="px-6 py-4 text-sm text-green-600 font-bold">€{item.comision?.toLocaleString() || 0}</td>
+                            <td className="px-6 py-4 text-sm text-gray-500">{item.ventasObjetivo}</td>
+                          </tr>
                         ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Grid de 3 columnas: Historial Puntos + Puntos medioventa + Estados */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                {/* Historial de Puntos */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-sm font-semibold text-gray-600 mb-4">Historial de Puntos</h3>
+                  <div className="space-y-2">
+                    {['Cliente 1', 'Cliente 2', 'Cliente 3', 'Cliente 4', 'Cliente 5', 'Cliente 6'].map((cliente, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-sm">
+                        <span className="text-gray-700">{cliente}</span>
+                        <span className="font-bold text-gray-900">+{(Math.random() * 10).toFixed(1)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-gray-600">Puntos Restantes</span>
+                      <span className="text-2xl font-bold text-blue-600">
+                        {agentesData.metricasAgregadas.cumplimientoObjetivo?.objetivo -
+                         agentesData.metricasAgregadas.cumplimientoObjetivo?.ventas || 22}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Estadísticas detalladas */}
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center border-l-4 border-blue-500 pl-4">
-                    <div>
-                      <p className="text-xs text-gray-600">Particulares (B2C)</p>
-                      <p className="text-2xl font-bold text-blue-600">
-                        {agentesData.distribucionClientes.particulares.cantidad || 0}
-                      </p>
+                {/* Puntos medioventa */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-gray-600">Puntos medioventa</h3>
+                    <div className="flex items-baseline gap-2 mt-2">
+                      <span className="text-3xl font-bold text-gray-900">5.6</span>
+                      <span className="text-sm text-green-600 font-medium">+12%</span>
                     </div>
-                    <p className="text-sm text-gray-500">
-                      {agentesData.distribucionClientes.particulares.porcentaje || 0}%
-                    </p>
                   </div>
+                  <div className="h-32">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={agentesData.metricasAgregadas.historicoMensual && agentesData.metricasAgregadas.historicoMensual.length > 0 ?
+                        agentesData.metricasAgregadas.historicoMensual.slice(0, 6).map(item => ({
+                          month: item.mes,
+                          value: item.contratos || 0
+                        })) : [
+                        { month: 'Ene', value: 4.8 },
+                        { month: 'Feb', value: 5.2 },
+                        { month: 'Mar', value: 5.5 },
+                        { month: 'Abr', value: 5.0 },
+                        { month: 'May', value: 5.8 },
+                        { month: 'Jun', value: 5.6 }
+                      ]}>
+                        <defs>
+                          <linearGradient id="colorPuntos" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#FBBF24" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#FBBF24" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <Area
+                          type="monotone"
+                          dataKey="value"
+                          stroke="#FBBF24"
+                          strokeWidth={2}
+                          fillOpacity={1}
+                          fill="url(#colorPuntos)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
 
-                  <div className="flex justify-between items-center border-l-4 border-purple-500 pl-4">
+                {/* Estados (Barras Horizontales) */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-sm font-semibold text-gray-600 mb-4">Estados</h3>
+                  <div className="space-y-3">
                     <div>
-                      <p className="text-xs text-gray-600">Empresas (B2B)</p>
-                      <p className="text-2xl font-bold text-purple-600">
-                        {agentesData.distribucionClientes.empresas.cantidad || 0}
-                      </p>
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="text-gray-600">Pagado</span>
+                        <span className="font-semibold">76%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-blue-500 h-2 rounded-full" style={{ width: '76%' }} />
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-500">
-                      {agentesData.distribucionClientes.empresas.porcentaje || 0}%
-                    </p>
-                  </div>
-
-                  <div className="pt-3 border-t">
-                    <div className="flex justify-between items-center">
-                      <p className="text-sm text-gray-600">Total de Clientes</p>
-                      <p className="text-xl font-bold text-gray-900">
-                        {agentesData.distribucionClientes.total || 0}
-                      </p>
+                    <div>
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="text-gray-600">Activo</span>
+                        <span className="font-semibold">24%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-blue-500 h-2 rounded-full" style={{ width: '24%' }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="text-gray-600">Pdte. Firma</span>
+                        <span className="font-semibold">76%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-blue-500 h-2 rounded-full" style={{ width: '76%' }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="text-gray-600">...</span>
+                        <span className="font-semibold">24%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-blue-500 h-2 rounded-full" style={{ width: '24%' }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="text-gray-600">...</span>
+                        <span className="font-semibold">76%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-blue-500 h-2 rounded-full" style={{ width: '76%' }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="text-gray-600">...</span>
+                        <span className="font-semibold">24%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-blue-500 h-2 rounded-full" style={{ width: '24%' }} />
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* Sección de Posibles Renovaciones - GENERAL */}
-            {agentesData.posiblesRenovaciones && agentesData.posiblesRenovaciones.contratos && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Posibles Renovaciones</h3>
-                  <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
-                    Total: {agentesData.posiblesRenovaciones.total || 0}
-                  </span>
-                </div>
-
-                {(agentesData.posiblesRenovaciones.total || 0) > 0 ? (
-                  <>
-                    {/* Distribución mensual */}
-                    {agentesData.posiblesRenovaciones.distribucionMensual &&
-                     agentesData.posiblesRenovaciones.distribucionMensual.length > 0 && (
-                      <div className="mb-4">
-                        <h4 className="text-sm font-semibold mb-3">Distribución por mes</h4>
-                        <div className="h-48">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={agentesData.posiblesRenovaciones.distribucionMensual}>
-                              <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
-                              <YAxis />
-                              <Tooltip />
-                              <Bar dataKey="cantidad" fill="#3B82F6" />
-                            </BarChart>
-                          </ResponsiveContainer>
+              {/* Grid de 2 columnas: Distribución + Métricas adicionales */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {/* Distribución (Gráfica de Pastel con iconos) */}
+                {agentesData.distribucionClientes && (
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h3 className="text-lg font-semibold mb-4">Distribución</h3>
+                    <div className="flex items-center justify-center mb-4">
+                      <div className="relative">
+                        <ResponsiveContainer width={200} height={200}>
+                          <PieChart>
+                            <Pie
+                              data={[
+                                {
+                                  name: 'Particulares',
+                                  value: agentesData.distribucionClientes.particulares?.cantidad || 62,
+                                  color: '#EC4899'
+                                },
+                                {
+                                  name: 'Empresas',
+                                  value: agentesData.distribucionClientes.empresas?.cantidad || 6,
+                                  color: '#6366F1'
+                                },
+                                {
+                                  name: 'Otros',
+                                  value: 16,
+                                  color: '#8B5CF6'
+                                }
+                              ]}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={50}
+                              outerRadius={80}
+                              fill="#8884d8"
+                              dataKey="value"
+                            >
+                              {[
+                                { color: '#EC4899' },
+                                { color: '#6366F1' },
+                                { color: '#8B5CF6' }
+                              ].map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                          </PieChart>
+                        </ResponsiveContainer>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="flex items-center justify-center space-x-2">
+                              <span className="text-2xl">👤</span>
+                              <span className="text-2xl">👨‍💼</span>
+                              <span className="text-2xl">🏢</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    )}
-
-                    {/* Lista compacta de contratos */}
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      <h4 className="text-sm font-semibold mb-2 sticky top-0 bg-white">
-                        Próximos a expirar ({agentesData.posiblesRenovaciones.contratos.length})
-                      </h4>
-                      {agentesData.posiblesRenovaciones.contratos.slice(0, 5).map((contrato) => (
-                        <div key={contrato.id} className="border-l-4 border-blue-500 pl-3 py-2 bg-gray-50 rounded">
-                          <div className="flex justify-between items-start mb-1">
-                            <p className="text-sm font-medium text-gray-900">{contrato.cliente}</p>
-                            <span className={classNames(
-                              'text-xs font-semibold',
-                              contrato.diasRestantes <= 30 ? 'text-red-600' :
-                              contrato.diasRestantes <= 60 ? 'text-orange-600' :
-                              'text-green-600'
-                            )}>
-                              {contrato.diasRestantes}d
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <p className="text-xs text-gray-600">{contrato.agente} • {contrato.compania}</p>
-                            <span className={classNames(
-                              'px-2 py-0.5 text-xs rounded-full',
-                              contrato.tipo === 'Luz' ? 'bg-yellow-100 text-yellow-800' :
-                              contrato.tipo === 'Gas' ? 'bg-orange-100 text-orange-800' :
-                              'bg-blue-100 text-blue-800'
-                            )}>
-                              {contrato.tipo}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                      {agentesData.posiblesRenovaciones.contratos.length > 5 && (
-                        <p className="text-xs text-center text-gray-500 pt-2">
-                          +{agentesData.posiblesRenovaciones.contratos.length - 5} contratos más
-                        </p>
-                      )}
                     </div>
-                  </>
-                ) : (
-                  <div className="text-center py-8 text-gray-400 text-sm">
-                    No hay contratos próximos a renovar en los próximos 3 meses
+                    <div className="flex items-center justify-center space-x-4 text-sm">
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 bg-pink-500 rounded-full mr-2"></div>
+                        <span className="text-gray-600">62%</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 bg-indigo-500 rounded-full mr-2"></div>
+                        <span className="text-gray-600">6%</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                        <span className="text-gray-600">16%</span>
+                      </div>
+                    </div>
                   </div>
                 )}
-              </div>
-            )}
-          </div>
 
-          {/* Sección de Contratos por Compañía (Luz, Gas, Telefonía) */}
-          {agentesData.contratosPorCompania && (
-            <div className="bg-white rounded-lg shadow p-6 mb-6">
-              <h3 className="text-lg font-semibold mb-4">Contratos por Compañía</h3>
-
-              {/* Tabs para Luz, Gas, Telefonía */}
-              <div className="border-b border-gray-200 mb-4">
-                <nav className="-mb-px flex space-x-8">
-                  <button
-                    onClick={() => setActiveCompanyTab('luz')}
-                    className={classNames(
-                      activeCompanyTab === 'luz'
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                      'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm'
-                    )}
-                  >
-                    Luz ({agentesData.contratosPorCompania.luz?.length || 0})
-                  </button>
-                  <button
-                    onClick={() => setActiveCompanyTab('gas')}
-                    className={classNames(
-                      activeCompanyTab === 'gas'
-                        ? 'border-orange-500 text-orange-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                      'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm'
-                    )}
-                  >
-                    Gas ({agentesData.contratosPorCompania.gas?.length || 0})
-                  </button>
-                  <button
-                    onClick={() => setActiveCompanyTab('telefonia')}
-                    className={classNames(
-                      activeCompanyTab === 'telefonia'
-                        ? 'border-purple-500 text-purple-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                      'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm'
-                    )}
-                  >
-                    Telefonía ({agentesData.contratosPorCompania.telefonia?.length || 0})
-                  </button>
-                </nav>
-              </div>
-
-              {/* Gráfico de barras horizontal */}
-              <div className="h-96">
-                {(() => {
-                  let data = []
-                  let barColor = '#3B82F6'
-
-                  if (activeCompanyTab === 'gas') {
-                    data = agentesData.contratosPorCompania.gas || []
-                    barColor = '#F97316'
-                  } else if (activeCompanyTab === 'telefonia') {
-                    data = agentesData.contratosPorCompania.telefonia || []
-                    barColor = '#8B5CF6'
-                  } else {
-                    data = agentesData.contratosPorCompania.luz || []
-                    barColor = '#3B82F6'
-                  }
-
-                  if (data.length === 0) {
-                    return (
-                      <div className="flex items-center justify-center h-full text-gray-400">
-                        No hay datos disponibles para esta categoría
+                {/* Tiempo medio Activ */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-lg font-semibold mb-4">Tiempo medio Activ</h3>
+                  <div className="space-y-3">
+                    {agentesData.metricasAgregadas.tiemposActivacion?.slice(0, 4).map((tiempo, idx) => (
+                      <div key={idx} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-sm font-medium text-gray-900">{tiempo.promedioDias} días</span>
+                          <span className="text-sm text-gray-500">{tiempo.compania}</span>
+                        </div>
                       </div>
-                    )
-                  }
-
-                  return (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={data}
-                        layout="vertical"
-                        margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" />
-                        <YAxis
-                          dataKey="nombre"
-                          type="category"
-                          width={100}
-                          tick={{ fontSize: 12 }}
-                        />
-                        <Tooltip />
-                        <Bar dataKey="cantidad" fill={barColor} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  )
-                })()}
-              </div>
-
-              {/* Resumen total */}
-              <div className="mt-4 pt-4 border-t">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-600">Total de contratos:</span>
-                  <span className="text-2xl font-bold text-blue-600">
-                    {agentesData.contratosPorCompania.total || 0}
-                  </span>
+                    )) || [
+                      { dias: 4, empresa: 'Natargy' },
+                      { dias: 8, empresa: 'Endesa' },
+                      { dias: 2, empresa: 'Iberdrola' }
+                    ].map((item, idx) => (
+                      <div key={idx} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-sm font-medium text-gray-900">{item.dias} días</span>
+                          <span className="text-sm text-gray-500">{item.empresa}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* Gráficas de Métricas Agregadas - Promedio de todos los agentes */}
-          {agentesData.metricasAgregadas &&
-           agentesData.metricasAgregadas.cumplimientoObjetivo &&
-           agentesData.metricasAgregadas.historicoMensual && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Cumplimiento de Objetivo Promedio */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold mb-4">Cumplimiento de Objetivo (Promedio)</h3>
-                <div className="text-center mb-4">
-                  <p className="text-5xl font-bold text-blue-600">
-                    {agentesData.metricasAgregadas.cumplimientoObjetivo.porcentaje || 0}%
-                  </p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    {agentesData.metricasAgregadas.cumplimientoObjetivo.ventas || 0} / {agentesData.metricasAgregadas.cumplimientoObjetivo.objetivo || 0} contratos
-                  </p>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-4">
-                  <div
-                    className="bg-blue-600 h-4 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${Math.min(100, agentesData.metricasAgregadas.cumplimientoObjetivo.porcentaje || 0)}%`
-                    }}
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-2 text-center">
-                  Promedio de {agentesData.metricasAgregadas.totalAgentes || 0} agentes
-                </p>
-              </div>
-
-              {/* Histórico Mensual Promedio */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold mb-4">Histórico Mensual (Promedio por Agente)</h3>
-                <div className="h-64">
-                  {agentesData.metricasAgregadas.historicoMensual.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={agentesData.metricasAgregadas.historicoMensual}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="contratos" fill="#3B82F6" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-gray-400">
-                      No hay datos históricos disponibles
+              {/* Grid de 3 columnas: Total Clientes, Referidos, Contratos */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                {/* Total Clientes */}
+                {agentesData.distribucionClientes && (
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold text-gray-600">Total Clientes</span>
+                      <span className="text-blue-500 text-2xl">👥</span>
                     </div>
-                  )}
+                    <p className="text-4xl font-bold text-gray-900">
+                      {agentesData.distribucionClientes.total || 1340}
+                    </p>
+                  </div>
+                )}
+
+                {/* Referidos */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-gray-600">Referidos</span>
+                    <span className="text-blue-500 text-2xl">👤</span>
+                  </div>
+                  <p className="text-4xl font-bold text-gray-900">725</p>
+                </div>
+
+                {/* Contratos */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-gray-600">Contratos</span>
+                    <span className="text-blue-500 text-2xl">📄</span>
+                  </div>
+                  <p className="text-4xl font-bold text-gray-900">540</p>
                 </div>
               </div>
-            </div>
+
+              {/* Grid de 3 columnas: Publicidad, Otros, Ventas Carretera */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                {/* Publicidad */}
+                <div className="bg-white rounded-lg shadow p-6 border-2 border-gray-200">
+                  <h3 className="text-sm font-semibold text-gray-600 mb-4">Publicidad</h3>
+                  <div className="text-center">
+                    <p className="text-5xl font-bold text-gray-900 mb-2">72.8%</p>
+                    <p className="text-sm text-gray-500">margen</p>
+                  </div>
+                </div>
+
+                {/* Otros */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-sm font-semibold text-gray-600 mb-4">Otros</h3>
+                  <div className="flex items-center justify-center">
+                    <div className="relative w-32 h-32">
+                      <svg className="w-full h-full transform -rotate-90">
+                        <circle
+                          cx="64"
+                          cy="64"
+                          r="56"
+                          stroke="#E5E7EB"
+                          strokeWidth="8"
+                          fill="none"
+                        />
+                        <circle
+                          cx="64"
+                          cy="64"
+                          r="56"
+                          stroke="#3B82F6"
+                          strokeWidth="8"
+                          fill="none"
+                          strokeDasharray={`${2 * Math.PI * 56 * 0.199} ${2 * Math.PI * 56}`}
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-2xl font-bold">19.9%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Ventas Carretera */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-sm font-semibold text-gray-600 mb-4">Ventas Carretera</h3>
+                  <div className="flex items-center justify-center space-x-3">
+                    <span className="text-5xl">💎</span>
+                    <span className="text-5xl font-bold text-gray-900">122</span>
+                  </div>
+                </div>
+              </div>
+            </>
           )}
+
         </>
       )}
 
