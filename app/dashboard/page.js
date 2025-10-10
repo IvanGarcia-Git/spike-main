@@ -20,6 +20,13 @@ import {
 import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/20/solid'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import {
+  FaUser,
+  FaUsers,
+  FaBriefcase,
+  FaBuilding,
+  FaFileContract
+} from 'react-icons/fa'
+import {
   LineChart,
   Line,
   BarChart,
@@ -1338,9 +1345,9 @@ export default function Dashboard() {
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="text-center">
                             <div className="flex items-center justify-center space-x-2">
-                              <span className="text-2xl">👤</span>
-                              <span className="text-2xl">👨‍💼</span>
-                              <span className="text-2xl">🏢</span>
+                              <FaUser className="text-2xl text-pink-500" />
+                              <FaBriefcase className="text-2xl text-indigo-500" />
+                              <FaBuilding className="text-2xl text-purple-500" />
                             </div>
                           </div>
                         </div>
@@ -1367,22 +1374,19 @@ export default function Dashboard() {
                 <div className="bg-white rounded-lg shadow p-6">
                   <h3 className="text-lg font-semibold mb-4">Tiempo medio Activ</h3>
                   <div className="space-y-3">
-                    {agentesData.metricasAgregadas.tiemposActivacion?.slice(0, 4).map((tiempo, idx) => (
+                    {(agentesData.metricasAgregadas?.tiemposActivacion && agentesData.metricasAgregadas.tiemposActivacion.length > 0
+                      ? agentesData.metricasAgregadas.tiemposActivacion.slice(0, 4)
+                      : [
+                          { promedioDias: 4, compania: 'Natargy' },
+                          { promedioDias: 8, compania: 'Endesa' },
+                          { promedioDias: 2, compania: 'Iberdrola' },
+                          { promedioDias: 5, compania: 'Repsol' }
+                        ]
+                    ).map((tiempo, idx) => (
                       <div key={idx} className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                           <span className="text-sm font-medium text-gray-900">{tiempo.promedioDias} días</span>
                           <span className="text-sm text-gray-500">{tiempo.compania}</span>
-                        </div>
-                      </div>
-                    )) || [
-                      { dias: 4, empresa: 'Natargy' },
-                      { dias: 8, empresa: 'Endesa' },
-                      { dias: 2, empresa: 'Iberdrola' }
-                    ].map((item, idx) => (
-                      <div key={idx} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <span className="text-sm font-medium text-gray-900">{item.dias} días</span>
-                          <span className="text-sm text-gray-500">{item.empresa}</span>
                         </div>
                       </div>
                     ))}
@@ -1397,7 +1401,7 @@ export default function Dashboard() {
                   <div className="bg-white rounded-lg shadow p-6">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-semibold text-gray-600">Total Clientes</span>
-                      <span className="text-blue-500 text-2xl">👥</span>
+                      <FaUsers className="text-blue-500 text-2xl" />
                     </div>
                     <p className="text-4xl font-bold text-gray-900">
                       {agentesData.distribucionClientes.total || 1340}
@@ -1409,7 +1413,7 @@ export default function Dashboard() {
                 <div className="bg-white rounded-lg shadow p-6">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-semibold text-gray-600">Referidos</span>
-                    <span className="text-blue-500 text-2xl">👤</span>
+                    <FaUser className="text-blue-500 text-2xl" />
                   </div>
                   <p className="text-4xl font-bold text-gray-900">725</p>
                 </div>
@@ -1418,7 +1422,7 @@ export default function Dashboard() {
                 <div className="bg-white rounded-lg shadow p-6">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-semibold text-gray-600">Contratos</span>
-                    <span className="text-blue-500 text-2xl">📄</span>
+                    <FaFileContract className="text-blue-500 text-2xl" />
                   </div>
                   <p className="text-4xl font-bold text-gray-900">540</p>
                 </div>
@@ -1469,8 +1473,7 @@ export default function Dashboard() {
                 {/* Ventas Carretera */}
                 <div className="bg-white rounded-lg shadow p-6">
                   <h3 className="text-sm font-semibold text-gray-600 mb-4">Ventas Carretera</h3>
-                  <div className="flex items-center justify-center space-x-3">
-                    <span className="text-5xl">💎</span>
+                  <div className="flex items-center justify-center">
                     <span className="text-5xl font-bold text-gray-900">122</span>
                   </div>
                 </div>
