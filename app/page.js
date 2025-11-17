@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getCookie } from "cookies-next";
@@ -8,6 +9,8 @@ import EmailResetPasswordModal from "@/components/email-reset-password.modal";
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -27,8 +30,7 @@ export default function Login() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    console.log("🔐 Iniciando login con:", { username });
+    setIsLoading(true);
 
     try {
       const response = await fetch("/api/auth/login", {
@@ -39,28 +41,26 @@ export default function Login() {
         body: JSON.stringify({ username, password }),
       });
 
-      console.log("📡 Respuesta del servidor:", response.status, response.ok);
-
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ Login exitoso, datos:", data);
-        console.log("🍪 Verificando cookie...");
 
         // Pequeño delay para asegurar que la cookie se establezca
         await new Promise(resolve => setTimeout(resolve, 100));
 
         const token = getCookie("factura-token");
-        console.log("🍪 Cookie obtenida:", token ? "SÍ" : "NO");
 
-        router.push("/dashboard");
+        if (token) {
+          router.push("/dashboard");
+        }
       } else {
         const errorData = await response.json();
-        console.error("❌ Error en login:", errorData);
         alert("Nombre de usuario o contraseña incorrectos");
       }
     } catch (error) {
-      console.error("💥 Error enviando la solicitud:", error);
+      console.error("Error enviando la solicitud:", error);
       alert("Error de conexión. Verifica que el servidor esté funcionando.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -69,66 +69,169 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className={`bg-foreground shadow-md rounded-lg p-20 max-w-lg w-full ${isModalOpen ? "hidden" : "block"}`}>
-        <h2 className="text-3xl text-black font-bold text-center text-primary mb-8">
-          Inicio de sesión
-        </h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-6">
-            <label
-              className="block text-sm font-semibold text-black mb-2"
-              htmlFor="username"
-            >
-              Nombre de usuario
-            </label>
-            <input
-              id="username"
-              type="text"
-              placeholder="Nombre de usuario"
-              className="w-full text-black px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label
-              className="block text-sm text-black font-semibold mb-2"
-              htmlFor="password"
-            >
-              Contraseña
-            </label>
-            <input
-              id="password"
-              type="password"
-              placeholder="Contraseña"
-              className="w-full text-black px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <div className="mb-12">
+    <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center p-4 transition-colors duration-300">
+      {/* Login Card */}
+      <div className={`w-full max-w-md ${isModalOpen ? "hidden" : "block"}`}>
+        {/* Logo/Brand */}
+        <div className="text-center mb-8">
+          <h1 className="text-5xl font-bold tracking-wider text-slate-800 dark:text-slate-100 mb-2">
+            SPIKES
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400 text-sm">
+            Sistema de Gestión CRM/ERP
+          </p>
+        </div>
+
+        {/* Login Form Card */}
+        <div className="neumorphic-card p-8">
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 text-center mb-2">
+            Bienvenido
+          </h2>
+          <p className="text-center text-slate-600 dark:text-slate-400 mb-8">
+            Inicia sesión para continuar
+          </p>
+
+          <form onSubmit={handleSubmit}>
+            {/* Username Field */}
+            <div className="mb-6">
+              <label
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+                htmlFor="username"
+              >
+                Nombre de usuario
+              </label>
+              <div className="relative">
+                <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                  person
+                </span>
+                <input
+                  id="username"
+                  type="text"
+                  placeholder="Ingresa tu usuario"
+                  className="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            {/* Password Field */}
+            <div className="mb-4">
+              <label
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+                htmlFor="password"
+              >
+                Contraseña
+              </label>
+              <div className="relative">
+                <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                  lock
+                </span>
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Ingresa tu contraseña"
+                  className="w-full neumorphic-card-inset pl-12 pr-12 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                  disabled={isLoading}
+                >
+                  <span className="material-icons-outlined text-xl">
+                    {showPassword ? "visibility_off" : "visibility"}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Forgot Password Link */}
+            <div className="mb-8 text-right">
+              <button
+                type="button"
+                onClick={openModal}
+                className="text-sm font-medium text-primary hover:underline transition-all"
+                disabled={isLoading}
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
+
+            {/* Submit Button */}
             <button
-              type="button"
-              onClick={openModal}
-              className="block text-sm text-black font-semibold mb-2"
+              type="submit"
+              className="w-full neumorphic-button active bg-primary text-white py-3 rounded-lg font-semibold hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all duration-200 flex items-center justify-center"
+              disabled={isLoading}
             >
-              ¿Has olvidado tu contraseña?
+              {isLoading ? (
+                <>
+                  <span className="material-icons-outlined animate-spin mr-2">
+                    refresh
+                  </span>
+                  Iniciando sesión...
+                </>
+              ) : (
+                <>
+                  <span className="material-icons-outlined mr-2">login</span>
+                  Iniciar Sesión
+                </>
+              )}
             </button>
+          </form>
+
+          {/* Additional Info */}
+          <div className="mt-6 text-center">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              © 2025 Spikes CRM/ERP. Todos los derechos reservados.
+            </p>
           </div>
-          <button
-            type="submit"
-            className="w-full bg-[#faca15] text-black py-3 rounded-full font-semibold hover:bg-gray-300 transition-colors duration-200"
-          >
-            Accede a tu cuenta
-          </button>
-        </form>
+        </div>
+
+        {/* Features */}
+        <div className="mt-8 grid grid-cols-3 gap-4">
+          <div className="text-center">
+            <div className="w-12 h-12 mx-auto mb-2 rounded-lg neumorphic-card flex items-center justify-center">
+              <span className="material-icons-outlined text-primary">
+                security
+              </span>
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-400">
+              Seguro
+            </p>
+          </div>
+          <div className="text-center">
+            <div className="w-12 h-12 mx-auto mb-2 rounded-lg neumorphic-card flex items-center justify-center">
+              <span className="material-icons-outlined text-primary">
+                speed
+              </span>
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-400">
+              Rápido
+            </p>
+          </div>
+          <div className="text-center">
+            <div className="w-12 h-12 mx-auto mb-2 rounded-lg neumorphic-card flex items-center justify-center">
+              <span className="material-icons-outlined text-primary">
+                cloud_done
+              </span>
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-400">
+              En la nube
+            </p>
+          </div>
+        </div>
       </div>
+
+      {/* Reset Password Modal */}
       {isModalOpen && (
-        <div
-          className={`fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 `}>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 dark:bg-opacity-50 z-50 p-4">
           <EmailResetPasswordModal
             isModalOpen={isModalOpen}
             setIsModalOpen={setIsModalOpen}
