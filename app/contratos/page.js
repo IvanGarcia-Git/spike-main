@@ -17,7 +17,12 @@ import { toast } from "react-toastify";
 import { getNotificationDisplayProps } from "../../helpers/notification.helper";
 import ChangeStateModal from "@/components/change-state.modal";
 import ChangeChannelModal from "@/components/change-channel.modal";
-import PageHeader from "@/components/page-header.component";
+import {
+  NeumorphicCard,
+  NeumorphicButton,
+  NeumorphicInput,
+  ProfileAvatar,
+} from "@/components/neumorphic";
 
 const formatDateToYYYYMMDD = (date) => {
   if (!date) return "";
@@ -922,7 +927,25 @@ export default function Contracts() {
 
   return (
     <div className="p-6">
-      <PageHeader title="Gestión de Contratos" />
+      {/* Header según contratos.html */}
+      <header className="flex justify-between items-center mb-8">
+        <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Gestión de Contratos</h2>
+        <div className="flex items-center space-x-4">
+          <button className="p-3 rounded-full neumorphic-button">
+            <span className="material-icons-outlined">apps</span>
+          </button>
+          <button className="p-3 rounded-full neumorphic-button">
+            <span className="material-icons-outlined">settings</span>
+          </button>
+          <button className="p-3 rounded-full neumorphic-button">
+            <span className="material-icons-outlined">notifications</span>
+          </button>
+          <ProfileAvatar
+            name="Usuario"
+            size="md"
+          />
+        </div>
+      </header>
 
       {/* Search and Filters */}
       <div className="neumorphic-card p-6 mb-8">
@@ -936,8 +959,16 @@ export default function Contracts() {
         <div className="flex flex-wrap items-center justify-between gap-4 mt-6">
           <div className="flex items-center space-x-2">
             <button
+              className="flex items-center px-5 py-2 rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400"
+            >
+              <span className="material-icons-outlined mr-2 text-base">filter_alt</span>
+              <span>Búsqueda avanzada</span>
+            </button>
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
               onClick={exportToExcel}
-              className="px-5 py-2 rounded-lg neumorphic-button active font-semibold text-primary flex items-center"
+              className="flex items-center px-5 py-2 rounded-lg neumorphic-button active font-semibold text-primary"
             >
               <span className="material-icons-outlined mr-2 text-base">download</span>
               Exportar a Excel

@@ -16,6 +16,11 @@ import TelephonyContractForm from "@/components/telephony-contract-information.f
 import ContractsTypeModal from "@/components/contracts-type.modal";
 import ContractNewEventModal from "@/components/contract-new-event.modal";
 import { FaDownload } from "react-icons/fa";
+import {
+  NeumorphicCard,
+  NeumorphicButton,
+  ProfileAvatar,
+} from "@/components/neumorphic";
 
 
 export default function ContractDetail({ params }) {
@@ -311,17 +316,42 @@ export default function ContractDetail({ params }) {
 
   if (!contract) {
     return (
-      <div className="flex justify-center items-start bg-background min-h-screen">
-        <div className="w-full max-w-7xl bg-foreground text-black p-6 rounded-lg">
-          <h2 className="text-3xl font-bold mb-4">Cargando...</h2>
+      <div className="p-6 flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="neumorphic-card p-8 rounded-xl">
+            <span className="material-icons-outlined text-6xl text-primary animate-spin">
+              refresh
+            </span>
+            <p className="mt-4 text-slate-600 dark:text-slate-400">Cargando contrato...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto bg-foreground p-6 rounded-lg shadow-lg">
+    <div className="p-6">
+      {/* Header */}
+      <header className="flex justify-between items-center mb-8">
+        <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Detalle de Contrato</h2>
+        <div className="flex items-center space-x-4">
+          <button className="p-3 rounded-full neumorphic-button">
+            <span className="material-icons-outlined">apps</span>
+          </button>
+          <button className="p-3 rounded-full neumorphic-button">
+            <span className="material-icons-outlined">settings</span>
+          </button>
+          <button className="p-3 rounded-full neumorphic-button">
+            <span className="material-icons-outlined">notifications</span>
+          </button>
+          <ProfileAvatar
+            name="Usuario"
+            size="md"
+          />
+        </div>
+      </header>
+
+      <div className="neumorphic-card p-6">
         {/* Información general del cliente y contratos */}
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-6 mb-6">
@@ -375,17 +405,19 @@ export default function ContractDetail({ params }) {
             <RatesPricing contract={activeContract} />
 
             {/* Botón Duplicar Ficha */}
-            <div className="flex flex-col">
+            <div className="flex flex-col space-y-2">
               <button
                 onClick={openEventModal}
-                className="bg-white text-blue-600 px-4 py-2 rounded-full mb-2  hover:bg-gray-100 border border-blue-600"
+                className="flex items-center px-5 py-2 rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400"
               >
+                <span className="material-icons-outlined mr-2 text-base">event</span>
                 Añadir evento
               </button>
               <button
                 onClick={openModal}
-                className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700"
+                className="flex items-center px-5 py-2 rounded-lg neumorphic-button active bg-primary text-white font-semibold"
               >
+                <span className="material-icons-outlined mr-2 text-base">content_copy</span>
                 Duplicar Ficha
               </button>
             </div>
@@ -438,52 +470,55 @@ export default function ContractDetail({ params }) {
                 ))}
             </div>
 
-            <div className="border-t-2 pt-4 mt-10 text-black">
-              <h3 className="text-2xl font-bold mb-4">Comentarios</h3>
+            <div className="border-t border-slate-200 dark:border-slate-700 pt-6 mt-10">
+              <h3 className="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-100">Comentarios</h3>
               {
                 contract.comments?.length > 0 ? (
-                  <table key={contract.uuid} className="min-w-full bg-foreground">
-                    <thead className="bg-background">
-                      <tr>
-                        <th className="py-2 px-4">Fecha</th>
-                        <th className="py-2 px-4">Usuario</th>
-                        <th className="py-2 px-4">Comentario</th>
-                        <th className="py-2 px-4">Adjunto</th>
-                      </tr>
-                    </thead>
-                    <tbody className="text-gray-300 divide-y divide-gray-600">
-                      {contract.comments.map((comment, index) => (
-                        <tr key={index} className="bg-foreground hover:bg-background">
-                          <td className="py-2 px-4 text-center text-black">
-                            {new Date(comment.createdAt).toLocaleDateString()}
-                          </td>
-                          <td className="py-2 px-4 text-center text-black">
-                            {(comment.user?.name || "Usuario desconocido") +
-                              " " +
-                              (comment.user?.firstSurname || "")}
-                          </td>
-                          <td className="py-2 px-4 text-center text-black">
-                            {comment.text}
-                          </td>
-                          <td className="py-2 px-4 text-center flex justify-center items-center text-black">
-                            {comment.documentUri ? (
-                              <a
-                                href={comment.documentUri}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <FaDownload />
-                              </a>
-                            ) : (
-                              <span>No hay adjunto</span>
-                            )}
-                          </td>
+                  <div className="overflow-x-auto">
+                    <table key={contract.uuid} className="w-full text-left">
+                      <thead className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        <tr>
+                          <th className="p-3">Fecha</th>
+                          <th className="p-3">Usuario</th>
+                          <th className="p-3">Comentario</th>
+                          <th className="p-3">Adjunto</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {contract.comments.map((comment, index) => (
+                          <tr key={index} className="table-row-divider">
+                            <td className="p-3 text-slate-600 dark:text-slate-400">
+                              {new Date(comment.createdAt).toLocaleDateString()}
+                            </td>
+                            <td className="p-3 text-slate-600 dark:text-slate-400">
+                              {(comment.user?.name || "Usuario desconocido") +
+                                " " +
+                                (comment.user?.firstSurname || "")}
+                            </td>
+                            <td className="p-3 text-slate-600 dark:text-slate-400">
+                              {comment.text}
+                            </td>
+                            <td className="p-3 text-center">
+                              {comment.documentUri ? (
+                                <a
+                                  href={comment.documentUri}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center text-primary hover:text-primary/80"
+                                >
+                                  <FaDownload />
+                                </a>
+                              ) : (
+                                <span className="text-slate-400 dark:text-slate-500">No hay adjunto</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 ) : (
-                  <p key={contract.uuid} className="text-black">No hay comentarios para este contrato.</p>
+                  <p key={contract.uuid} className="text-slate-600 dark:text-slate-400">No hay comentarios para este contrato.</p>
                 )
               }
 
@@ -491,15 +526,18 @@ export default function ContractDetail({ params }) {
             </div>
 
             {/* Nuevo comentario */}
-            <div className="border-t-2 pt-4 mt-6 mb-12 text-black">
-              <h3 className="text-2xl font-bold mb-2">+ Nuevo Comentario</h3>
+            <div className="border-t border-slate-200 dark:border-slate-700 pt-6 mt-6 mb-12">
+              <h3 className="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-100 flex items-center">
+                <span className="material-icons-outlined mr-2">add_comment</span>
+                Nuevo Comentario
+              </h3>
               <textarea
                 placeholder="Escribe aquí..."
                 value={newComment.text}
                 onChange={(e) =>
                   setNewComment({ ...newComment, text: e.target.value })
                 }
-                className="w-full p-3 rounded-md border border-gray-300 mb-4 focus:outline-none focus:ring"
+                className="w-full neumorphic-card-inset p-4 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm bg-transparent mb-4 text-slate-700 dark:text-slate-300"
                 rows="4"
               ></textarea>
 
@@ -507,14 +545,15 @@ export default function ContractDetail({ params }) {
                 type="file"
                 ref={fileInputRef}
                 onChange={(e) => setFile(e.target.files[0])}
-                className="mb-4"
+                className="mb-4 text-slate-600 dark:text-slate-400"
               />
 
               <div className="flex justify-end">
                 <button
-                  className="bg-secondary text-white px-4 py-2 rounded-md hover:bg-secondaryHover"
+                  className="flex items-center px-5 py-2 rounded-lg neumorphic-button active bg-primary text-white font-semibold"
                   onClick={handleSubmitComment}
                 >
+                  <span className="material-icons-outlined mr-2 text-base">send</span>
                   Comentar
                 </button>
               </div>
@@ -522,23 +561,24 @@ export default function ContractDetail({ params }) {
 
             {activeContract && activeContract.expiresAt && (
               <>
-                <div className="flex justify-start items-center space-x-4 mt-4">
+                <div className="flex justify-start items-center space-x-4 mt-6 border-t border-slate-200 dark:border-slate-700 pt-6">
                   <button
                     onClick={toggleModal}
-                    className={`px-6 py-2 rounded-full text-black ${calculateDaysRemaining(activeContract.expiresAt) > 0
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700"
+                    className={`flex items-center px-6 py-2 rounded-lg font-semibold ${calculateDaysRemaining(activeContract.expiresAt) > 0
+                      ? "neumorphic-card bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed"
+                      : "neumorphic-button active bg-primary text-white hover:bg-primary/90"
                       }`}
                     disabled={calculateDaysRemaining(activeContract.expiresAt) > 0}
                   >
+                    <span className="material-icons-outlined mr-2 text-base">autorenew</span>
                     RENOVAR
                   </button>
 
-                  <div className="flex items-center space-x-2 bg-gray-300 px-4 py-2 text-black rounded-full">
-                    <span className="text-lg font-semibold">
+                  <div className="flex items-center space-x-3 neumorphic-card px-6 py-3 rounded-lg">
+                    <span className="text-2xl font-bold text-primary">
                       {calculateDaysRemaining(activeContract.expiresAt)}
                     </span>
-                    <span className="text-xs font-medium uppercase">Días restantes</span>
+                    <span className="text-xs font-medium uppercase text-slate-600 dark:text-slate-400">Días restantes</span>
                   </div>
                 </div>
 
