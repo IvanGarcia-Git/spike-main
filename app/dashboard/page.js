@@ -7,9 +7,55 @@ import PageHeader from "@/components/page-header.component";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("general");
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   const [dashboardData, setDashboardData] = useState({
+    stats: {
+      totalClientes: 0,
+      totalLeads: 0,
+      totalContratos: 0,
+      ingresosMes: 0
+    },
+    topAgentes: [],
+    ventasPorMes: [],
+  });
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/dashboard', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setDashboardData({
+          stats: data.stats || { totalClientes: 0, totalLeads: 0, totalContratos: 0, ingresosMes: 0 },
+          topAgentes: data.topAgentes || [],
+          ventasPorMes: data.ventasPorMes || [],
+        });
+      } else {
+        console.error('Failed to fetch dashboard data');
+        setDashboardData(generateFallbackData());
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setDashboardData(generateFallbackData());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateFallbackData = () => ({
+    stats: { totalClientes: 0, totalLeads: 0, totalContratos: 0, ingresosMes: 0 },
     topAgentes: [
       {
+        id: 1,
         name: "Carlos Garcia",
         role: "Salesman",
         ventas: 280,
@@ -20,6 +66,7 @@ export default function Dashboard() {
         color: "green",
       },
       {
+        id: 2,
         name: "Daniel Ken",
         role: "Salesman",
         ventas: 160,
@@ -30,6 +77,7 @@ export default function Dashboard() {
         color: "yellow",
       },
       {
+        id: 3,
         name: "Jennifer Tan",
         role: "Salesman",
         ventas: 124,
@@ -39,6 +87,20 @@ export default function Dashboard() {
         crecimiento: 31,
         color: "red",
       },
+    ],
+    ventasPorMes: [
+      { mes: "Ene", ventas: 50 },
+      { mes: "Feb", ventas: 75 },
+      { mes: "Mar", ventas: 10 },
+      { mes: "Abr", ventas: 70 },
+      { mes: "May", ventas: 40 },
+      { mes: "Jun", ventas: 30 },
+      { mes: "Jul", ventas: 65 },
+      { mes: "Ago", ventas: 20 },
+      { mes: "Sep", ventas: 5 },
+      { mes: "Oct", ventas: 35 },
+      { mes: "Nov", ventas: 85 },
+      { mes: "Dic", ventas: 80 },
     ],
   });
 
@@ -68,17 +130,36 @@ export default function Dashboard() {
     return colors[color] || "bg-primary";
   };
 
+  const filteredAgentes = dashboardData.topAgentes.filter((agente) =>
+    agente.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="neumorphic-card p-8 rounded-xl">
+            <span className="material-icons-outlined text-6xl text-primary animate-spin">
+              refresh
+            </span>
+            <p className="mt-4 text-slate-600 dark:text-slate-400">Cargando dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       <PageHeader title="Dashboard" />
 
       {/* Tabs */}
-      <div className="mb-6 flex space-x-2">
+      <div className="mb-6 flex space-x-2 overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-5 py-2 rounded-lg neumorphic-button font-semibold ${
+            className={`px-5 py-2 rounded-lg neumorphic-button font-semibold whitespace-nowrap ${
               activeTab === tab.id
                 ? "active text-primary"
                 : "font-medium text-slate-600 dark:text-slate-400"
@@ -91,8 +172,8 @@ export default function Dashboard() {
 
       {/* Top 3 Agentes Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {dashboardData.topAgentes.map((agente, idx) => (
-          <div key={idx} className="neumorphic-card p-6">
+        {dashboardData.topAgentes.slice(0, 3).map((agente, idx) => (
+          <div key={agente.id || idx} className="neumorphic-card p-6">
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center">
                 <div className="w-12 h-12 rounded-full neumorphic-card-inset p-1 flex items-center justify-center mr-4">
@@ -158,12 +239,14 @@ export default function Dashboard() {
               </span>
               <input
                 className="neumorphic-card-inset pl-10 pr-4 py-2 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm w-48 transition-all duration-300 bg-transparent"
-                placeholder="Search..."
+                placeholder="Buscar..."
                 type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <div className="neumorphic-card-inset rounded-lg">
-              <select className="bg-transparent border-none focus:ring-0 text-sm font-medium">
+              <select className="bg-transparent border-none focus:ring-0 text-sm font-medium py-2 px-3">
                 <option>10</option>
                 <option>20</option>
                 <option>50</option>
@@ -185,8 +268,8 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {dashboardData.topAgentes.map((agente, idx) => (
-                <tr key={idx} className="table-row-divider">
+              {filteredAgentes.map((agente, idx) => (
+                <tr key={agente.id || idx} className="table-row-divider">
                   <td className="p-3 font-semibold">{idx + 1}</td>
                   <td className="p-3">
                     <div className="flex items-center">
@@ -239,7 +322,7 @@ export default function Dashboard() {
         <div className="neumorphic-card p-6 col-span-1 md:col-span-2">
           <div className="flex justify-between items-center mb-4">
             <span className="text-4xl font-bold text-slate-800 dark:text-slate-100">
-              119
+              {Math.floor((new Date(new Date().getFullYear(), 11, 31) - new Date()) / (1000 * 60 * 60 * 24))}
             </span>
             <span className="font-semibold text-slate-600 dark:text-slate-400">
               Days Left
@@ -251,11 +334,11 @@ export default function Dashboard() {
           <div className="neumorphic-progress-track h-2.5">
             <div
               className="bg-primary h-full rounded-full"
-              style={{ width: "32.6%" }}
+              style={{ width: `${((new Date().getMonth() + 1) / 12) * 100}%` }}
             ></div>
           </div>
           <p className="text-right text-sm mt-2 text-slate-500 dark:text-slate-400">
-            119/365
+            {new Date().getMonth() + 1}/12 meses
           </p>
         </div>
         <div className="neumorphic-card p-6">
@@ -274,25 +357,12 @@ export default function Dashboard() {
           Ventas por Mes
         </h3>
         <div className="flex items-end h-64 space-x-2 sm:space-x-4">
-          {[
-            { mes: "Ene", altura: "50%" },
-            { mes: "Feb", altura: "75%" },
-            { mes: "Mar", altura: "10%" },
-            { mes: "Abr", altura: "70%" },
-            { mes: "May", altura: "40%" },
-            { mes: "Jun", altura: "30%" },
-            { mes: "Jul", altura: "65%" },
-            { mes: "Ago", altura: "20%" },
-            { mes: "Sep", altura: "5%" },
-            { mes: "Oct", altura: "35%" },
-            { mes: "Nov", altura: "85%" },
-            { mes: "Dic", altura: "80%" },
-          ].map((mes, idx) => (
+          {dashboardData.ventasPorMes.map((mes, idx) => (
             <div key={idx} className="flex-1 flex flex-col items-center justify-end">
               <div className="w-full bg-primary/20 dark:bg-primary/30 rounded-t-lg group">
                 <div
                   className="bg-primary rounded-t-lg w-full transition-all duration-300 group-hover:bg-teal-400"
-                  style={{ height: mes.altura }}
+                  style={{ height: `${mes.ventas}%` }}
                 ></div>
               </div>
               <p className="text-xs mt-2 text-slate-500 dark:text-slate-400">
