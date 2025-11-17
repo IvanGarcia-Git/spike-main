@@ -1,1451 +1,186 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Flame,
-  Lightbulb,
-  MoreVertical,
-  CircleDot,
-  Trash,
-  X,
-  CheckSquare,
-  Square,
-  ArrowLeft,
-  ArrowRight,
-  Download,
-  Edit2,
-  Edit3,
-  Trash2
-} from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
-import ComparativasHeader from '@/components/comparativas/Header';
-import { getRecentComparativas, deleteComparativa, createComparativa, getComparativaById } from '@/helpers/server-fetch.helper';
+import { useState, useEffect } from "react";
+import { getCookie } from "cookies-next";
+import PageHeader from "@/components/page-header.component";
 
-// Helper function to get JWT token from cookies
-const getJWTToken = () => {
-  if (typeof document !== 'undefined') {
-    const cookies = document.cookie.split(';');
-    const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('factura-token='));
-    return tokenCookie ? tokenCookie.split('=')[1] : null;
-  }
-  return null;
-};
-
-// Empty initial state - will be filled from backend or remain empty
-
-const ProgressDots = ({ step, totalSteps, invalidSteps = [] }) => (
-    <div className="flex justify-center gap-2">
-      {Array.from({ length: totalSteps }).map((_, index) => {
-        const stepNumber = index + 1;
-        const isInvalid = invalidSteps.includes(stepNumber);
-        const isActive = step === stepNumber;
-        
-        let colorClass = 'bg-gray-300'; // Default
-        if (isActive) {
-          colorClass = 'bg-blue-600';
-        } else if (isInvalid) {
-          colorClass = 'bg-red-500';
-        }
-
-        return (
-          <span
-            key={index}
-            className={`h-2 w-2 rounded-full ${colorClass} transition-colors duration-300`}
-          ></span>
-        );
-      })}
-    </div>
-);
-
-export default function ComparativasPage() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedItems, setSelectedItems] = useState([]);
-  const [comparisons, setComparisons] = useState([]); // Start with empty array
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [editingName, setEditingName] = useState('');
-  const [formStep, setFormStep] = useState(1);
-  const [supplyType, setSupplyType] = useState(null);
-
-  // Form state
-  const [customerType, setCustomerType] = useState(null);
-  const [selectedLightTariff, setSelectedLightTariff] = useState(null);
-  const [solarPanelActive, setSolarPanelActive] = useState(null);
-  const [comparativeExcedentes, setComparativeExcedentes] = useState('');
-  const [comparativePotencia, setComparativePotencia] = useState(Array(2).fill(''));
-  const [numDias, setNumDias] = useState('');
-  const [comparativeEnergy, setComparativeEnergy] = useState(Array(3).fill(''));
-  const [hasMainServices, setHasMainServices] = useState(null);
-  const [mainMaintenanceCost, setMainMaintenanceCost] = useState('');
-  const [currentBillAmount, setCurrentBillAmount] = useState('');
-  const [selectedGasTariff, setSelectedGasTariff] = useState(null);
-  const [gasEnergy, setGasEnergy] = useState('');
-  const [addClientBillData, setAddClientBillData] = useState(false);
-  
-  const [clientName, setClientName] = useState('');
-  const [clientPowerPrices, setClientPowerPrices] = useState(['', '']);
-  const [clientEnergyPrices, setClientEnergyPrices] = useState(['', '', '']);
-  const [clientSurplusPrice, setClientSurplusPrice] = useState('');
-  const [clientFixedPrice, setClientFixedPrice] = useState('');
-  const [clientGasEnergyPrice, setClientGasEnergyPrice] = useState('');
-  const [hasClientServices, setHasClientServices] = useState(null);
-  const [clientMaintenanceCost, setClientMaintenanceCost] = useState('');
-
-  const [maxStepReached, setMaxStepReached] = useState(1);
-  const [invalidSteps, setInvalidSteps] = useState([]);
-  const [isLoadingComparativas, setIsLoadingComparativas] = useState(true); // Start as loading
-  const [hasLoadedFromBackend, setHasLoadedFromBackend] = useState(false);
-
-  // Function to load comparativas from backend
-  const loadComparativas = async () => {
-    setIsLoadingComparativas(true);
-    try {
-      const token = getJWTToken();
-      if (!token) {
-        console.log('No token available for loading comparativas');
-        setIsLoadingComparativas(false);
-        return;
-      }
-
-      console.log('Loading comparativas from backend...');
-      const response = await getRecentComparativas(10, token);
-      
-      if (response && response.ok) {
-        const data = await response.json();
-        console.log('Loaded comparativas:', data);
-        
-        // Transform backend data to match frontend format
-        const transformedData = data.map(comparativa => {
-          // Calculate relative time
-          const createdDate = new Date(comparativa.createdAt);
-          const now = new Date();
-          const diffInMs = now - createdDate;
-          const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-          const diffInDays = Math.floor(diffInHours / 24);
-          
-          let lastAccessed;
-          if (diffInHours < 1) {
-            lastAccessed = 'hace menos de 1 hora';
-          } else if (diffInHours < 24) {
-            lastAccessed = `hace ${diffInHours} hora${diffInHours !== 1 ? 's' : ''}`;
-          } else if (diffInDays < 7) {
-            lastAccessed = `hace ${diffInDays} día${diffInDays !== 1 ? 's' : ''}`;
-          } else if (diffInDays < 30) {
-            const weeks = Math.floor(diffInDays / 7);
-            lastAccessed = `hace ${weeks} semana${weeks !== 1 ? 's' : ''}`;
-          } else {
-            const months = Math.floor(diffInDays / 30);
-            lastAccessed = `hace ${months} mes${months !== 1 ? 'es' : ''}`;
-          }
-          
-          return {
-            type: comparativa.comparisonType,
-            name: comparativa.clientName,
-            tariffType: comparativa.tariffType,
-            lastAccessed,
-            oldPrice: `${parseFloat(comparativa.calculatedOldPrice).toFixed(2)}€`,
-            newPrice: `${parseFloat(comparativa.calculatedNewPrice).toFixed(2)}€`,
-            id: comparativa.id,
-            uuid: comparativa.uuid,
-          };
-        });
-        
-        // Set backend data if available
-        if (transformedData.length > 0) {
-          setComparisons(transformedData);
-          setHasLoadedFromBackend(true);
-          console.log('Loaded comparativas from backend:', transformedData.length);
-        } else {
-          // No data in backend
-          console.log('No comparativas in backend');
-          setHasLoadedFromBackend(false);
-          setComparisons([]);
-        }
-      } else {
-        console.log('Failed to load comparativas from backend');
-        setHasLoadedFromBackend(false);
-        setComparisons([]);
-      }
-    } catch (error) {
-      console.log('Error loading comparativas from backend:', error);
-      setHasLoadedFromBackend(false);
-      setComparisons([]);
-    } finally {
-      setIsLoadingComparativas(false);
-    }
-  };
-
-  // Load comparativas from backend on component mount
-  useEffect(() => {
-    loadComparativas();
-  }, []);
-
-
-  useEffect(() => {
-    if (!selectedLightTariff) return;
-    const numPowerPeriods = selectedLightTariff === '2.0' ? 2 : 6;
-    const numEnergyPeriods = selectedLightTariff === '2.0' ? 3 : 6;
-    
-    const resizeArray = (current, newSize) => {
-        const newArray = Array(newSize).fill('');
-        for (let i = 0; i < Math.min(current.length, newSize); i++) {
-            newArray[i] = current[i] || '';
-        }
-        return newArray;
-    }
-
-    setComparativePotencia(current => resizeArray(current, numPowerPeriods));
-    setComparativeEnergy(current => resizeArray(current, numEnergyPeriods));
-    setClientPowerPrices(current => resizeArray(current, numPowerPeriods));
-    setClientEnergyPrices(current => resizeArray(current, numEnergyPeriods));
-
-  }, [selectedLightTariff]);
-
-  useEffect(() => {
-    if (formStep > maxStepReached) {
-      setMaxStepReached(formStep);
-    }
-  }, [formStep, maxStepReached]);
-
-  const nextStep = () => {
-    if (formStep < totalSteps) {
-        setFormStep(prev => prev + 1);
-    }
-  }
-
-  const validateStep = useCallback((step) => {
-    if (supplyType === 'luz') {
-        switch(step) {
-            case 1: return supplyType !== null;
-            case 2: return customerType !== null;
-            case 3: return selectedLightTariff !== null;
-            case 4: return solarPanelActive !== null && (!solarPanelActive || comparativeExcedentes.trim() !== '');
-            case 5: return comparativePotencia.every(p => p.trim() !== '' && !isNaN(parseFloat(p)));
-            case 6: return numDias.trim() !== '' && !isNaN(parseInt(numDias));
-            case 7: return comparativeEnergy.every(e => e.trim() !== '' && !isNaN(parseFloat(e)));
-            case 8: return clientName.trim() !== '';
-            case 9: return hasMainServices !== null && (!hasMainServices || (mainMaintenanceCost.trim() !== '' && !isNaN(parseFloat(mainMaintenanceCost))));
-            case 10: return currentBillAmount.trim() !== '' && !isNaN(parseFloat(currentBillAmount));
-            case 11: return true; // Decision step, always valid
-            case 12: return !addClientBillData || clientPowerPrices.every(p => p.trim() !== '' && !isNaN(parseFloat(p)));
-            case 13: return !addClientBillData || (clientEnergyPrices.every(e => e.trim() !== '' && !isNaN(parseFloat(e))) && (!solarPanelActive || (clientSurplusPrice.trim() !== '' && !isNaN(parseFloat(clientSurplusPrice)))));
-            case 14: return !addClientBillData || hasClientServices !== null && (!hasClientServices || (clientMaintenanceCost.trim() !== '' && !isNaN(parseFloat(clientMaintenanceCost))));
-            default: return true;
-        }
-    }
-    if (supplyType === 'gas') {
-        switch(step) {
-            case 1: return supplyType !== null;
-            case 2: return customerType !== null;
-            case 3: return selectedGasTariff !== null;
-            case 4: return numDias.trim() !== '' && !isNaN(parseInt(numDias));
-            case 5: return gasEnergy.trim() !== '' && !isNaN(parseFloat(gasEnergy));
-            case 6: return clientName.trim() !== '';
-            case 7: return hasMainServices !== null && (!hasMainServices || (mainMaintenanceCost.trim() !== '' && !isNaN(parseFloat(mainMaintenanceCost))));
-            case 8: return currentBillAmount.trim() !== '' && !isNaN(parseFloat(currentBillAmount));
-            case 9: return true; // Decision step
-            case 10: return !addClientBillData || (clientFixedPrice.trim() !== '' && !isNaN(parseFloat(clientFixedPrice)));
-            case 11: return !addClientBillData || (clientGasEnergyPrice.trim() !== '' && !isNaN(parseFloat(clientGasEnergyPrice)));
-            case 12: return !addClientBillData || hasClientServices !== null && (!hasClientServices || (clientMaintenanceCost.trim() !== '' && !isNaN(parseFloat(clientMaintenanceCost))));
-            default: return true;
-        }
-    }
-    return true;
-  }, [
-      supplyType, customerType, selectedLightTariff, solarPanelActive, comparativeExcedentes,
-      comparativePotencia, numDias, comparativeEnergy, hasMainServices, mainMaintenanceCost,
-      currentBillAmount, addClientBillData, clientName, clientPowerPrices, clientEnergyPrices,
-      clientSurplusPrice, hasClientServices, clientMaintenanceCost, selectedGasTariff,
-      gasEnergy, clientFixedPrice, clientGasEnergyPrice
+export default function Comparativas() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedType, setSelectedType] = useState("luz");
+  const [comparativas, setComparativas] = useState([
+    {
+      id: 1,
+      nombre: "TEST",
+      tarifa: "2.0 - hace 1 mes",
+      precioActual: "45.90€",
+      precioAnterior: "84.00€",
+      tipo: "luz",
+    },
+    {
+      id: 2,
+      nombre: "Cliente Gas S.L.",
+      tarifa: "RL.2 - hace 2 meses",
+      precioActual: "112.50€",
+      precioAnterior: "150.20€",
+      tipo: "gas",
+    },
+    {
+      id: 3,
+      nombre: "Empresa Luz",
+      tarifa: "3.0TD - hace 4 meses",
+      precioActual: "230.10€",
+      precioAnterior: "295.00€",
+      tipo: "luz",
+    },
+    {
+      id: 4,
+      nombre: "Hogar Familiar",
+      tarifa: "2.0TD - hace 5 meses",
+      precioActual: "65.75€",
+      precioAnterior: "92.30€",
+      tipo: "luz",
+    },
   ]);
 
-  const totalSteps = useMemo(() => {
-    if (!supplyType) return 1;
-    if (supplyType === 'luz') {
-      return addClientBillData ? 14 : 11;
-    } else { // gas
-      return addClientBillData ? 12 : 9;
-    }
-  }, [supplyType, addClientBillData]);
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
 
-  const isFormValid = useMemo(() => {
-    for (let i = 1; i < totalSteps; i++) { // Validate all steps except the last one with the button
-        if (!validateStep(i)) {
-            return false;
-        }
-    }
-    return true;
-  }, [totalSteps, validateStep]);
-
-  useEffect(() => {
-    const invalids = [];
-    const stepsToCheck = Math.min(maxStepReached, totalSteps);
-    for (let i = 1; i < stepsToCheck; i++) {
-        if (!validateStep(i)) {
-            invalids.push(i);
-        }
-    }
-    setInvalidSteps(invalids);
-  }, [formStep, maxStepReached, totalSteps, validateStep]);
-
-  const toggleSelection = (index) => {
-    setSelectedItems((prev) =>
-      prev.includes(index)
-        ? prev.filter((i) => i !== index)
-        : [...prev, index]
-    );
+  const getIconForType = (tipo) => {
+    return tipo === "luz" ? "lightbulb" : "local_fire_department";
   };
 
-  const handleToggleSelectionMode = () => {
-    setSelectionMode(true);
-  };
-
-  const handleCancelSelection = () => {
-    setSelectionMode(false);
-    setSelectedItems([]);
-  };
-
-  const handleExport = async (index) => {
-    const comp = comparisons[index];
-    
-    // Si tenemos el ID, obtenemos los datos completos del backend
-    if (comp.id) {
-      try {
-        const token = getJWTToken();
-        if (token) {
-          const response = await getComparativaById(comp.id, token);
-          if (response.ok) {
-            const fullData = await response.json();
-            
-            // Crear un objeto con los datos para el PDF
-            const pdfData = {
-              bestTariff: {
-                tariff: {
-                  companyName: comp.name || 'Sin nombre',
-                  type: comp.type || 'luz',
-                  tariffType: comp.tariffType || '2.0',
-                  customerType: fullData.customerType || 'particular',
-                },
-                totalCost: parseFloat(comp.newPrice?.replace('€', '').replace(',', '.')) || 0,
-                breakdown: {
-                  powerCosts: [],
-                  energyCosts: [],
-                  surplusCredit: 0,
-                  equipmentRental: 0,
-                  socialBonus: 0,
-                  electricityTax: 0,
-                  hydrocarbonTax: 0,
-                  vat: 0,
-                  fixedCost: 0,
-                  energyCost: 0
-                }
-              },
-              currentBillAmount: fullData.currentBillAmount || 0,
-              annualSaving: (fullData.savings || 0) * 12,
-              monthlySaving: fullData.savings || 0,
-              clientName: fullData.clientName || comp.name || 'Cliente',
-              showCurrentBill: false,
-              comparisonType: fullData.comparisonType || comp.type || 'luz',
-              potencias: fullData.potencias || [],
-              energias: fullData.energias || [],
-              excedentes: fullData.excedentes || 0,
-              energia: fullData.energia || 0,
-              numDias: fullData.numDias || 30,
-              clientPrices: {},
-              regulatedCosts: {
-                ihp: 0.5,
-                alquiler: 0.026712,
-                social: 0.038466,
-                hydrocarbon: 0.00234,
-                iva: 21
-              },
-            };
-            
-            // Guardar datos y marcar para descarga automática
-            sessionStorage.setItem('pdfDataForGeneration', JSON.stringify(pdfData));
-            sessionStorage.setItem('autoDownloadPDF', 'true');
-            router.push('/comparativas/personalizada');
-            
-            toast({
-              title: "Preparando exportación",
-              description: `Generando PDF de ${comp.name}...`
-            });
-          } else {
-            throw new Error('No se pudieron obtener los datos completos');
-          }
-        }
-      } catch (error) {
-        console.error('Error obteniendo datos de comparativa:', error);
-        toast({
-          title: "Error",
-          description: "No se pudo exportar la comparativa",
-          variant: "destructive"
-        });
-      }
-    } else {
-      // Si no tenemos ID, navegamos con los datos básicos
-      const oldPriceNum = parseFloat(comp.oldPrice?.replace('€', '').replace(',', '.')) || 0;
-      const newPriceNum = parseFloat(comp.newPrice?.replace('€', '').replace(',', '.')) || 0;
-      const estimatedSaving = oldPriceNum - newPriceNum;
-      
-      const pdfData = {
-        bestTariff: {
-          tariff: {
-            companyName: comp.name || 'Sin nombre',
-            type: comp.type || 'luz',
-            tariffType: comp.tariffType || '2.0',
-            customerType: 'particular',
-          },
-          totalCost: newPriceNum,
-          breakdown: {
-            powerCosts: [],
-            energyCosts: [],
-            surplusCredit: 0,
-            equipmentRental: 0,
-            socialBonus: 0,
-            electricityTax: 0,
-            hydrocarbonTax: 0,
-            vat: 0,
-            fixedCost: 0,
-            energyCost: 0
-          }
-        },
-        currentBillAmount: oldPriceNum,
-        annualSaving: estimatedSaving * 12,
-        monthlySaving: estimatedSaving,
-        clientName: comp.name || 'Cliente',
-        showCurrentBill: false,
-        comparisonType: comp.type || 'luz',
-        potencias: [],
-        energias: [],
-        excedentes: 0,
-        energia: 0,
-        numDias: 30,
-        clientPrices: {},
-        regulatedCosts: {
-          ihp: 0.5,
-          alquiler: 0.026712,
-          social: 0.038466,
-          hydrocarbon: 0.00234,
-          iva: 21
-        },
-      };
-      
-      sessionStorage.setItem('pdfDataForGeneration', JSON.stringify(pdfData));
-      sessionStorage.setItem('autoDownloadPDF', 'true');
-      router.push('/comparativas/personalizada');
-      
-      toast({
-        title: "Preparando exportación",
-        description: `Generando PDF de ${comp.name}...`
-      });
-    }
-  };
-
-  const handleRename = (index) => {
-    setEditingIndex(index);
-    setEditingName(comparisons[index].name);
-  };
-
-  const handleSaveRename = () => {
-    if (editingIndex !== null && editingName.trim()) {
-      const updatedComparisons = [...comparisons];
-      updatedComparisons[editingIndex].name = editingName.trim();
-      setComparisons(updatedComparisons);
-      
-      toast({
-        title: "Nombre actualizado",
-        description: `La comparativa ha sido renombrada a "${editingName.trim()}"`
-      });
-      
-      setEditingIndex(null);
-      setEditingName('');
-    }
-  };
-
-  const handleCancelRename = () => {
-    setEditingIndex(null);
-    setEditingName('');
-  };
-
-  const handleEdit = async (index) => {
-    const comp = comparisons[index];
-    
-    // Si tenemos el ID, obtenemos los datos completos del backend
-    if (comp.id) {
-      try {
-        const token = getJWTToken();
-        if (token) {
-          const response = await getComparativaById(comp.id, token);
-          if (response.ok) {
-            const fullData = await response.json();
-            
-            // Crear un objeto con los datos para personalizar
-            const pdfData = {
-              bestTariff: {
-                tariff: {
-                  companyName: comp.name || 'Sin nombre',
-                  type: comp.type || 'luz',
-                  tariffType: comp.tariffType || '2.0',
-                  customerType: fullData.customerType || 'particular',
-                },
-                totalCost: parseFloat(comp.newPrice?.replace('€', '').replace(',', '.')) || 0,
-                breakdown: {
-                  powerCosts: [],
-                  energyCosts: [],
-                  surplusCredit: 0,
-                  equipmentRental: 0,
-                  socialBonus: 0,
-                  electricityTax: 0,
-                  hydrocarbonTax: 0,
-                  vat: 0,
-                  fixedCost: 0,
-                  energyCost: 0
-                }
-              },
-              currentBillAmount: fullData.currentBillAmount || 0,
-              annualSaving: (fullData.savings || 0) * 12, // Estimación anual
-              monthlySaving: fullData.savings || 0,
-              clientName: fullData.clientName || comp.name || 'Cliente',
-              showCurrentBill: false,
-              comparisonType: fullData.comparisonType || comp.type || 'luz',
-              potencias: fullData.potencias || [],
-              energias: fullData.energias || [],
-              excedentes: fullData.excedentes || 0,
-              energia: fullData.energia || 0,
-              numDias: fullData.numDias || 30,
-              clientPrices: {},
-              regulatedCosts: {
-                ihp: 0.5,
-                alquiler: 0.026712,
-                social: 0.038466,
-                hydrocarbon: 0.00234,
-                iva: 21
-              },
-            };
-            
-            // Guardar datos en sessionStorage y navegar a la página personalizada
-            sessionStorage.setItem('pdfDataForGeneration', JSON.stringify(pdfData));
-            router.push('/comparativas/personalizada');
-            
-            toast({
-              title: "Abriendo editor",
-              description: `Personalizando comparativa de ${comp.name}...`
-            });
-          } else {
-            throw new Error('No se pudieron obtener los datos completos');
-          }
-        }
-      } catch (error) {
-        console.error('Error obteniendo datos de comparativa:', error);
-        toast({
-          title: "Error",
-          description: "No se pudo cargar la comparativa para editar",
-          variant: "destructive"
-        });
-      }
-    } else {
-      // Si no tenemos ID, navegamos con los datos básicos
-      const oldPriceNum = parseFloat(comp.oldPrice?.replace('€', '').replace(',', '.')) || 0;
-      const newPriceNum = parseFloat(comp.newPrice?.replace('€', '').replace(',', '.')) || 0;
-      const estimatedSaving = oldPriceNum - newPriceNum;
-      
-      const pdfData = {
-        bestTariff: {
-          tariff: {
-            companyName: comp.name || 'Sin nombre',
-            type: comp.type || 'luz',
-            tariffType: comp.tariffType || '2.0',
-            customerType: 'particular',
-          },
-          totalCost: newPriceNum,
-          breakdown: {
-            powerCosts: [],
-            energyCosts: [],
-            surplusCredit: 0,
-            equipmentRental: 0,
-            socialBonus: 0,
-            electricityTax: 0,
-            hydrocarbonTax: 0,
-            vat: 0,
-            fixedCost: 0,
-            energyCost: 0
-          }
-        },
-        currentBillAmount: oldPriceNum,
-        annualSaving: estimatedSaving * 12,
-        monthlySaving: estimatedSaving,
-        clientName: comp.name || 'Cliente',
-        showCurrentBill: false,
-        comparisonType: comp.type || 'luz',
-        potencias: [],
-        energias: [],
-        excedentes: 0,
-        energia: 0,
-        numDias: 30,
-        clientPrices: {},
-        regulatedCosts: {
-          ihp: 0.5,
-          alquiler: 0.026712,
-          social: 0.038466,
-          hydrocarbon: 0.00234,
-          iva: 21
-        },
-      };
-      
-      sessionStorage.setItem('pdfDataForGeneration', JSON.stringify(pdfData));
-      router.push('/comparativas/personalizada');
-      
-      toast({
-        title: "Abriendo editor",
-        description: `Personalizando comparativa de ${comp.name}...`
-      });
-    }
-  };
-
-  const handleDelete = async (index) => {
-    const comp = comparisons[index];
-    
-    try {
-      // Delete from backend if it has an ID
-      if (comp.id) {
-        const token = getJWTToken();
-        if (token) {
-          const response = await deleteComparativa(comp.id, token);
-          if (!response.ok) {
-            toast({
-              title: "Error al eliminar",
-              description: "No se pudo eliminar la comparativa del servidor",
-              variant: "destructive"
-            });
-            return;
-          }
-        }
-      }
-      
-      // Remove from local state
-      const updatedComparisons = comparisons.filter((_, i) => i !== index);
-      setComparisons(updatedComparisons);
-      
-      // Si el elemento estaba seleccionado, lo removemos de la selección
-      if (selectedItems.includes(index)) {
-        setSelectedItems(selectedItems.filter(i => i !== index));
-      }
-      
-      toast({
-        title: "Comparativa eliminada",
-        description: `${comp.name} ha sido eliminada correctamente`
-      });
-    } catch (error) {
-      console.error('Error deleting comparativa:', error);
-      toast({
-        title: "Error",
-        description: "Ocurrió un error al eliminar la comparativa",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDeleteSelected = () => {
-    const remaining = comparisons.filter((_, index) => !selectedItems.includes(index));
-    const deletedCount = selectedItems.length;
-    
-    setComparisons(remaining);
-    setSelectedItems([]);
-    setSelectionMode(false);
-    
-    toast({
-      title: "Comparativas eliminadas",
-      description: `${deletedCount} comparativa(s) han sido eliminadas`
-    });
-  };
-
-  const handleSupplyTypeSelection = (type) => {
-    setSupplyType(type);
-    nextStep();
-  };
-
-  const handleCustomerTypeSelection = (type) => {
-    setCustomerType(type);
-    nextStep();
-  };
-
-  const handleBack = () => {
-    if (formStep > 1) {
-      if ((formStep === 12 && supplyType === 'luz') || (formStep === 10 && supplyType === 'gas')) {
-        if(addClientBillData) setAddClientBillData(false);
-      }
-      setFormStep(formStep - 1);
-    }
-  };
-
-   const handleCalculate = async () => {
-    if (!isFormValid) {
-        toast({
-            title: "Formulario Incompleto",
-            description: "Por favor, revisa los pasos marcados en rojo y completa todos los campos.",
-        });
-        return;
-    }
-
-    // Calculate estimated prices for saving to database
-    const calculateEstimatedPrices = () => {
-      let oldPrice = parseFloat(currentBillAmount) || 0;
-      let newPrice = oldPrice * 0.85; // Default 15% savings estimate
-      
-      // More realistic calculation based on type
-      if (supplyType === 'luz') {
-        // Basic estimation logic for electricity
-        const avgPotencia = comparativePotencia.reduce((sum, p) => sum + parseFloat(p || 0), 0) / comparativePotencia.length;
-        const avgEnergia = comparativeEnergy.reduce((sum, e) => sum + parseFloat(e || 0), 0) / comparativeEnergy.length;
-        
-        // Rough estimate: potencia costs + energy costs
-        const potenciaCost = avgPotencia * 0.12 * parseInt(numDias); // €0.12/kW/day estimate
-        const energiaCost = avgEnergia * 0.15; // €0.15/kWh estimate
-        
-        if (potenciaCost + energiaCost > 0) {
-          oldPrice = potenciaCost + energiaCost;
-          newPrice = oldPrice * 0.82; // 18% savings estimate
-        }
-      } else if (supplyType === 'gas') {
-        // Basic estimation logic for gas
-        const gasConsumption = parseFloat(gasEnergy) || 0;
-        oldPrice = gasConsumption * 0.08; // €0.08/kWh estimate
-        newPrice = oldPrice * 0.88; // 12% savings estimate
-      }
-      
-      return { oldPrice, newPrice };
-    };
-
-    const { oldPrice, newPrice } = calculateEstimatedPrices();
-
-    // Prepare data for database
-    const comparativaData = {
-      clientName: clientName || 'Cliente Sin Nombre',
-      comparisonType: supplyType,
-      customerType: customerType === 'particular' ? 'particular' : 'empresa',
-      tariffType: supplyType === 'luz' ? selectedLightTariff : selectedGasTariff,
-      solarPanelActive: solarPanelActive || false,
-      excedentes: solarPanelActive ? parseFloat(comparativeExcedentes) : null,
-      potencias: supplyType === 'luz' ? comparativePotencia.map(p => parseFloat(p)) : null,
-      energias: supplyType === 'luz' ? comparativeEnergy.map(e => parseFloat(e)) : null,
-      numDias: parseInt(numDias, 10),
-      currentBillAmount: parseFloat(currentBillAmount),
-      hasMainServices,
-      mainMaintenanceCost: hasMainServices ? parseFloat(mainMaintenanceCost) : null,
-      hasClientServices: hasClientServices || false,
-      clientMaintenanceCost: hasClientServices ? parseFloat(clientMaintenanceCost) : null,
-      clientPowerPrices: addClientBillData && supplyType === 'luz' ? clientPowerPrices.map(p => parseFloat(p)) : null,
-      clientEnergyPrices: addClientBillData && supplyType === 'luz' ? clientEnergyPrices.map(e => parseFloat(e)) : null,
-      clientSurplusPrice: addClientBillData && solarPanelActive ? parseFloat(clientSurplusPrice) : null,
-      clientFixedPrice: addClientBillData && supplyType === 'gas' ? parseFloat(clientFixedPrice) : null,
-      clientGasEnergyPrice: addClientBillData && supplyType === 'gas' ? parseFloat(clientGasEnergyPrice) : null,
-      calculatedOldPrice: oldPrice,
-      calculatedNewPrice: newPrice,
-      savings: oldPrice - newPrice,
-    };
-
-    // Save to database
-    try {
-      const token = getJWTToken();
-      if (token) {
-        const response = await createComparativa(comparativaData, token);
-        if (response && response.ok) {
-          console.log('Comparativa saved to database');
-          // Reload comparativas list after saving
-          setTimeout(() => {
-            loadComparativas();
-          }, 500);
-        } else {
-          console.log('Failed to save comparativa to database');
-        }
-      }
-    } catch (error) {
-      console.error('Error saving comparativa:', error);
-    }
-
-    const comparisonData = {
-        // Common
-        comparisonType: supplyType,
-        customerType: customerType === 'particular' ? 'residencial' : 'empresa',
-        numDias: parseInt(numDias, 10),
-        currentBillAmount: parseFloat(currentBillAmount),
-        hasMainServices,
-        mainMaintenanceCost: hasMainServices ? parseFloat(mainMaintenanceCost) : 0,
-
-        // Client Bill Data
-        showCurrentBill: addClientBillData,
-        clientName,
-        hasClientServices,
-        clientMaintenanceCost: hasClientServices ? parseFloat(clientMaintenanceCost) : 0,
-        
-        // Light specific
-        ...(supplyType === 'luz' && {
-            selectedLightTariff,
-            solarPanelActive,
-            potencias: comparativePotencia.map(p => parseFloat(p)),
-            energias: comparativeEnergy.map(e => parseFloat(e)),
-            excedentes: solarPanelActive ? parseFloat(comparativeExcedentes) : 0,
-            clientPowerPrices: clientPowerPrices.map(p => parseFloat(p)),
-            clientEnergyPrices: clientEnergyPrices.map(e => parseFloat(e)),
-            clientSurplusPrice: solarPanelActive ? parseFloat(clientSurplusPrice) : 0,
-        }),
-
-        // Gas specific
-        ...(supplyType === 'gas' && {
-            selectedGasTariff,
-            energia: parseFloat(gasEnergy),
-            clientFixedPrice: parseFloat(clientFixedPrice),
-            clientGasEnergyPrice: parseFloat(clientGasEnergyPrice),
-        })
-    };
-
-    sessionStorage.setItem('comparisonData', JSON.stringify(comparisonData));
-    router.push('/comparativas/resultados');
-  };
-  
-  const renderFormStep = () => {
-     switch (formStep) {
-      case 1:
-        return (
-            <div className="flex gap-4">
-                <Button variant="outline" className="w-full" onClick={() => handleSupplyTypeSelection('luz')}>
-                  Luz
-                </Button>
-                <Button variant="outline" className="w-full" onClick={() => handleSupplyTypeSelection('gas')}>
-                  Gas
-                </Button>
-            </div>
-        );
-      case 2:
-        return (
-            <div className="flex flex-col gap-4">
-                <div className="flex gap-4">
-                <Button variant="outline" className="w-full" onClick={() => handleCustomerTypeSelection('particular')}>
-                    Particular/Autónomo
-                </Button>
-                <Button variant="outline" className="w-full" onClick={() => handleCustomerTypeSelection('empresa')}>
-                    Empresa
-                </Button>
-                </div>
-            </div>
-        );
-      default:
-        if (supplyType === 'luz') return renderLuzSteps();
-        if (supplyType === 'gas') return renderGasSteps();
-        return null;
-    }
-  }
-
-  const renderLuzSteps = () => {
-    switch (formStep) {
-        case 3:
-            return (
-                <div className="flex flex-col items-center">
-                    <Label className="text-base font-semibold">Tipo de Tarifa</Label>
-                    <RadioGroup 
-                        value={selectedLightTariff || ''}
-                        onValueChange={(v) => {
-                            setSelectedLightTariff(v);
-                            nextStep();
-                        }} 
-                        className="flex gap-4 mt-2"
-                    >
-                        {(['2.0', '3.0', '6.1']).map(val => (
-                            <div key={val}>
-                                <RadioGroupItem value={val} id={`t-${val}`} className="peer sr-only" />
-                                <Label htmlFor={`t-${val}`} className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-md border-2 border-gray-300 bg-white p-3 text-sm font-medium hover:bg-gray-50 peer-data-[state=checked]:border-blue-600 [&:has([data-state=checked])]:border-blue-600">
-                                    {val}
-                                </Label>
-                            </div>
-                        ))}
-                    </RadioGroup>
-                </div>
-            );
-        case 4:
-            return (
-                <div className="flex flex-col items-center">
-                    <Label className="text-base font-semibold">¿Tiene placas solares?</Label>
-                    <RadioGroup 
-                        value={solarPanelActive === null ? '' : (solarPanelActive ? 'yes' : 'no')}
-                        onValueChange={(v) => {
-                            const isActive = v === 'yes';
-                            setSolarPanelActive(isActive);
-                            if (!isActive) {
-                                nextStep();
-                            }
-                        }} 
-                        className="flex gap-4 mt-2"
-                    >
-                        <RadioGroupItem value="yes" id="solar-yes" />
-                        <Label htmlFor="solar-yes">Sí</Label>
-                        <RadioGroupItem value="no" id="solar-no" />
-                        <Label htmlFor="solar-no">No</Label>
-                    </RadioGroup>
-                    {solarPanelActive && (
-                      <div className="mt-4 w-full max-w-xs">
-                          <Label htmlFor="excedentes">Valor de Excedentes (kWh)</Label>
-                          <Input id="excedentes" className="h-8 mt-1" type="number" placeholder="kWh" value={comparativeExcedentes} onChange={(e) => setComparativeExcedentes(e.target.value)} />
-                      </div>
-                    )}
-                </div>
-            );
-        case 5:
-            return (
-                <div className="flex flex-col items-center w-full">
-                    <Label className="font-semibold text-base">Potencia</Label>
-                    <div className={`grid ${comparativePotencia.length > 3 ? 'grid-cols-3' : `grid-cols-2`} gap-2 mt-2 w-full max-w-md`}>
-                        {comparativePotencia.map((p, index) => (
-                            <Input key={`comp-potencia-${index}`} type="number" placeholder={`P${index + 1}`} className="h-8" value={p}
-                                onChange={(e) => {
-                                    const newPotencia = [...comparativePotencia];
-                                    newPotencia[index] = e.target.value;
-                                    setComparativePotencia(newPotencia);
-                                }}
-                            />
-                        ))}
-                    </div>
-                </div>
-            );
-        case 6:
-              return (
-                  <div className="flex flex-col items-center w-full">
-                      <Label className="font-semibold text-base">Nº Días</Label>
-                      <Input className="h-8 mt-2 w-full max-w-xs" type="number" placeholder="e.g. 30" value={numDias} onChange={(e) => setNumDias(e.target.value)} />
-                  </div>
-              );
-        case 7:
-            return (
-                <div className="flex flex-col items-center w-full">
-                    <Label className="font-semibold text-base">Energía</Label>
-                    <div className={`grid ${comparativeEnergy.length > 3 ? 'grid-cols-3' : 'grid-cols-3'} gap-2 mt-2 w-full max-w-md`}>
-                        {comparativeEnergy.map((e, index) => (
-                          <Input key={`comp-energia-${index}`} type="number" placeholder={`E${index + 1}`} className="h-8" value={e}
-                              onChange={(event) => {
-                                  const newEnergy = [...comparativeEnergy];
-                                  newEnergy[index] = event.target.value;
-                                  setComparativeEnergy(newEnergy);
-                              }}
-                          />
-                        ))}
-                    </div>
-                </div>
-            );
-        case 8:
-            return (
-                <div className="flex flex-col items-center w-full">
-                    <Label className="font-semibold text-base">Nombre Cliente</Label>
-                    <Input className="h-8 mt-2 w-full max-w-xs" placeholder="e.g. Juan Pérez" value={clientName} onChange={(e) => setClientName(e.target.value)} />
-                </div>
-            );
-        case 9:
-              return (
-                  <div className="flex flex-col items-center">
-                      <Label className="text-base font-semibold">¿Servicios adicionales?</Label>
-                      <RadioGroup 
-                          value={hasMainServices === null ? '' : (hasMainServices ? 'yes' : 'no')} 
-                          onValueChange={(v) => {
-                              const hasServices = v === 'yes';
-                              setHasMainServices(hasServices);
-                              if (!hasServices) {
-                                  nextStep();
-                              }
-                          }} 
-                          className="flex gap-4 mt-2"
-                      >
-                        <RadioGroupItem value="yes" id="main-serv-yes" />
-                        <Label htmlFor="main-serv-yes">Sí</Label>
-                        <RadioGroupItem value="no" id="main-serv-no" />
-                        <Label htmlFor="main-serv-no">No</Label>
-                      </RadioGroup>
-                      {hasMainServices && (
-                          <div className="mt-4 w-full max-w-xs">
-                              <Label htmlFor="main-maintenance">Importe Mantenimiento</Label>
-                              <Input id="main-maintenance" type="number" placeholder="e.g. 5.99" value={mainMaintenanceCost} className="h-8 mt-1" onChange={(e) => setMainMaintenanceCost(e.target.value)} />
-                          </div>
-                      )}
-                  </div>
-              );
-        case 10:
-            return (
-                <div className="flex flex-col items-center w-full">
-                    <Label className="font-semibold text-base">Importe Factura Actual</Label>
-                    <Input className="h-8 mt-2 w-full max-w-xs" type="number" placeholder="€" value={currentBillAmount} onChange={(e) => setCurrentBillAmount(e.target.value)} />
-                </div>
-            );
-        case 11:
-             return (
-                <div className="flex flex-col items-center gap-4">
-                    <Label className="text-base font-semibold text-center">¿Quieres añadir datos de la actual factura del cliente a la comparativa?</Label>
-                    <div className="flex gap-4">
-                        <Button variant="outline" onClick={() => { setAddClientBillData(true); nextStep(); }}>Sí</Button>
-                        <Button variant="outline" onClick={() => { setAddClientBillData(false); handleCalculate(); }}>No, Calcular</Button>
-                    </div>
-                </div>
-            );
-        case 12:
-            return (
-                <div className="flex flex-col items-center w-full">
-                    <Label className="font-semibold text-base">Precios Potencia Cliente (€/kW día)</Label>
-                    <div className={`grid ${clientPowerPrices.length > 3 ? 'grid-cols-3' : 'grid-cols-2'} gap-2 mt-2 w-full max-w-md`}>
-                        {clientPowerPrices.map((price, index) => (
-                            <Input key={`client-p-${index}`} type="number" placeholder={`P${index + 1}`} value={price} className="h-8"
-                                onChange={(e) => {
-                                    const newPrices = [...clientPowerPrices];
-                                    newPrices[index] = e.target.value;
-                                    setClientPowerPrices(newPrices);
-                                }}
-                            />
-                        ))}
-                    </div>
-                </div>
-            );
-        case 13:
-            return (
-                <div className="flex flex-col items-center w-full">
-                    <Label className="font-semibold text-base">Precios Energía Cliente (€/kWh)</Label>
-                    <div className={`grid ${clientEnergyPrices.length > 3 ? 'grid-cols-3' : 'grid-cols-2'} gap-2 mt-2 w-full max-w-md`}>
-                        {clientEnergyPrices.map((price, index) => (
-                            <Input key={`client-e-${index}`} type="number" placeholder={`E${index + 1}`} value={price} className="h-8"
-                                onChange={(e) => {
-                                    const newPrices = [...clientEnergyPrices];
-                                    newPrices[index] = e.target.value;
-                                    setClientEnergyPrices(newPrices);
-                                }}
-                            />
-                        ))}
-                    </div>
-                     {solarPanelActive && (
-                        <div className="mt-4 w-full max-w-xs">
-                            <Label htmlFor="client-surplus">Precio Excedente Cliente (€/kWh)</Label>
-                            <Input id="client-surplus" type="number" placeholder="Excedente" value={clientSurplusPrice} className="h-8 mt-1" onChange={(e) => setClientSurplusPrice(e.target.value)} />
-                        </div>
-                    )}
-                </div>
-            );
-         case 14:
-            return (
-                 <div className="flex flex-col items-center">
-                    <Label className="text-base font-semibold">¿Servicios adicionales cliente?</Label>
-                    <RadioGroup 
-                        value={hasClientServices === null ? '' : (hasClientServices ? 'yes' : 'no')} 
-                        onValueChange={(v) => {
-                            const hasServices = v === 'yes';
-                            setHasClientServices(hasServices);
-                            if (!hasServices) {
-                                handleCalculate();
-                            }
-                        }} 
-                        className="flex gap-4 mt-2"
-                    >
-                      <RadioGroupItem value="yes" id="client-serv-yes" />
-                      <Label htmlFor="client-serv-yes">Sí</Label>
-                      <RadioGroupItem value="no" id="client-serv-no" />
-                      <Label htmlFor="client-serv-no">No</Label>
-                    </RadioGroup>
-                    {hasClientServices && (
-                        <div className="mt-4 w-full max-w-xs">
-                            <Label htmlFor="client-maintenance">Importe Mantenimiento Cliente</Label>
-                            <Input id="client-maintenance" type="number" placeholder="e.g. 5.99" value={clientMaintenanceCost} className="h-8 mt-1" onChange={(e) => setClientMaintenanceCost(e.target.value)} />
-                        </div>
-                    )}
-                    <Button className="mt-4" disabled={!isFormValid} onClick={handleCalculate}>Calcular Comparativa</Button>
-                </div>
-            );
-        default:
-            return null;
-    }
-  }
-
-   const renderGasSteps = () => {
-    switch (formStep) {
-        case 3:
-            return (
-                <div className="flex flex-col items-center">
-                    <Label className="text-base font-semibold">Tipo de Tarifa</Label>
-                    <RadioGroup 
-                        value={selectedGasTariff || ''}
-                        onValueChange={(v) => {
-                            setSelectedGasTariff(v);
-                            nextStep();
-                        }} 
-                        className="flex gap-4 mt-2"
-                    >
-                        {(['RL.1', 'RL.2', 'RL.3']).map(val => (
-                            <div key={val}>
-                                <RadioGroupItem value={val} id={`t-gas-${val}`} className="peer sr-only" />
-                                <Label htmlFor={`t-gas-${val}`} className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-md border-2 border-gray-300 bg-white p-3 text-sm font-medium hover:bg-gray-50 peer-data-[state=checked]:border-blue-600 [&:has([data-state=checked])]:border-blue-600">
-                                    {val}
-                                </Label>
-                            </div>
-                        ))}
-                    </RadioGroup>
-                </div>
-            );
-        case 4:
-            return (
-                <div className="flex flex-col items-center w-full">
-                    <Label className="font-semibold text-base">Nº Días</Label>
-                    <Input className="h-8 mt-2 w-full max-w-xs" type="number" placeholder="e.g. 30" value={numDias} onChange={(e) => setNumDias(e.target.value)} />
-                </div>
-            );
-        case 5:
-            return (
-                <div className="flex flex-col items-center w-full">
-                    <Label className="font-semibold text-base">Energía (kWh)</Label>
-                    <Input className="h-8 mt-2 w-full max-w-xs" type="number" placeholder="kWh" value={gasEnergy} onChange={(e) => setGasEnergy(e.target.value)} />
-                </div>
-            );
-        case 6:
-             return (
-                <div className="flex flex-col items-center w-full">
-                    <Label className="font-semibold text-base">Nombre Cliente</Label>
-                    <Input className="h-8 mt-2 w-full max-w-xs" placeholder="e.g. Juan Pérez" value={clientName} onChange={(e) => setClientName(e.target.value)} />
-                </div>
-            );
-        case 7:
-            return (
-                <div className="flex flex-col items-center">
-                    <Label className="text-base font-semibold">¿Servicios adicionales?</Label>
-                    <RadioGroup 
-                        value={hasMainServices === null ? '' : (hasMainServices ? 'yes' : 'no')} 
-                        onValueChange={(v) => {
-                            const hasServices = v === 'yes';
-                            setHasMainServices(hasServices);
-                            if (!hasServices) {
-                                nextStep();
-                            }
-                        }} 
-                        className="flex gap-4 mt-2"
-                    >
-                        <RadioGroupItem value="yes" id="main-serv-yes-gas" />
-                        <Label htmlFor="main-serv-yes-gas">Sí</Label>
-                        <RadioGroupItem value="no" id="main-serv-no-gas" />
-                        <Label htmlFor="main-serv-no-gas">No</Label>
-                    </RadioGroup>
-                    {hasMainServices && (
-                        <div className="mt-4 w-full max-w-xs">
-                            <Label htmlFor="main-maintenance-gas">Importe Mantenimiento</Label>
-                            <Input id="main-maintenance-gas" type="number" placeholder="e.g. 5.99" value={mainMaintenanceCost} className="h-8 mt-1" onChange={(e) => setMainMaintenanceCost(e.target.value)} />
-                        </div>
-                    )}
-                </div>
-            );
-        case 8:
-            return (
-                <div className="flex flex-col items-center w-full">
-                    <Label className="font-semibold text-base">Importe Factura Actual</Label>
-                    <Input className="h-8 mt-2 w-full max-w-xs" type="number" placeholder="€" value={currentBillAmount} onChange={(e) => setCurrentBillAmount(e.target.value)} />
-                </div>
-            );
-        case 9:
-             return (
-                <div className="flex flex-col items-center gap-4">
-                    <Label className="text-base font-semibold text-center">¿Quieres añadir datos de la actual factura del cliente a la comparativa?</Label>
-                    <div className="flex gap-4">
-                        <Button variant="outline" onClick={() => { setAddClientBillData(true); nextStep(); }}>Sí</Button>
-                        <Button variant="outline" onClick={() => { setAddClientBillData(false); handleCalculate(); }}>No, Calcular</Button>
-                    </div>
-                </div>
-            );
-        case 10:
-            return (
-                <div className="flex flex-col items-center w-full">
-                    <Label className="font-semibold text-base">Término Fijo Cliente (€/día)</Label>
-                    <Input className="h-8 mt-2 w-full max-w-xs" type="number" placeholder="e.g. 0.20" value={clientFixedPrice} onChange={(e) => setClientFixedPrice(e.target.value)} />
-                </div>
-            );
-        case 11:
-            return (
-                <div className="flex flex-col items-center w-full">
-                    <Label className="font-semibold text-base">Precio Energía Cliente (€/kWh)</Label>
-                    <Input className="h-8 mt-2 w-full max-w-xs" type="number" placeholder="e.g. 0.08" value={clientGasEnergyPrice} onChange={(e) => setClientGasEnergyPrice(e.target.value)} />
-                </div>
-            );
-         case 12:
-            return (
-                 <div className="flex flex-col items-center">
-                    <Label className="text-base font-semibold">¿Servicios adicionales cliente?</Label>
-                    <RadioGroup 
-                        value={hasClientServices === null ? '' : (hasClientServices ? 'yes' : 'no')} 
-                        onValueChange={(v) => {
-                            const hasServices = v === 'yes';
-                            setHasClientServices(hasServices);
-                            if (!hasServices) {
-                                handleCalculate();
-                            }
-                        }} 
-                        className="flex gap-4 mt-2"
-                    >
-                      <RadioGroupItem value="yes" id="client-serv-yes-gas" />
-                      <Label htmlFor="client-serv-yes-gas">Sí</Label>
-                      <RadioGroupItem value="no" id="client-serv-no-gas" />
-                      <Label htmlFor="client-serv-no-gas">No</Label>
-                    </RadioGroup>
-                    {hasClientServices && (
-                        <div className="mt-4 w-full max-w-xs">
-                            <Label htmlFor="client-maintenance-gas">Importe Mantenimiento Cliente</Label>
-                            <Input id="client-maintenance-gas" type="number" placeholder="e.g. 5.99" value={clientMaintenanceCost} className="h-8 mt-1" onChange={(e) => setClientMaintenanceCost(e.target.value)} />
-                        </div>
-                    )}
-                    <Button className="mt-4" disabled={!isFormValid} onClick={handleCalculate}>Calcular Comparativa</Button>
-                </div>
-            );
-        default:
-            return null;
-    }
+  const getIconColorForType = (tipo) => {
+    return tipo === "luz" ? "text-primary" : "text-orange-400";
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
-      <ComparativasHeader />
-      <main className="flex-grow p-8">
-        <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Left Column */}
-          <div className="space-y-8">
-            <div>
-              <h1 className="text-4xl font-bold">Comparativas de Tarifas</h1>
-              <p className="text-gray-600 mt-2">Encuentra la mejor tarifa para tu cliente</p>
-            </div>
-            <Card className="bg-white border border-gray-200">
-              <CardHeader>
-                <CardTitle>¿Qué comparativa quieres hacer hoy?</CardTitle>
-              </CardHeader>
-              <CardContent className="min-h-[250px] flex items-center justify-center p-6">
-                {renderFormStep()}
-              </CardContent>
-              {formStep > 1 && (
-                  <div className="flex items-center justify-between gap-4 px-6 pb-6">
-                    <Button variant="ghost" size="icon" onClick={handleBack} disabled={formStep <= 1} className="h-8 w-8">
-                      <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                   
-                    <ProgressDots step={formStep} totalSteps={totalSteps} invalidSteps={invalidSteps} />
-                   
-                    <Button variant="ghost" size="icon" onClick={nextStep} disabled={formStep >= totalSteps || (supplyType === 'luz' && formStep === 11 && !addClientBillData) || (supplyType === 'gas' && formStep === 9 && !addClientBillData)} className="h-8 w-8">
-                        <ArrowRight className="h-4 w-4" />
-                    </Button>
-                </div>
-              )}
-            </Card>
-          </div>
+    <div className="p-6">
+      {/* Header with Nueva Comparativa button */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
+            Comparativas
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400 mt-2">
+            Historial de comparativas realizadas
+          </p>
+        </div>
+        <button
+          onClick={openModal}
+          className="neumorphic-button flex items-center justify-center p-4 rounded-lg bg-primary text-white font-semibold"
+        >
+          <span className="material-icons-outlined mr-2">add</span>
+          Nueva Comparativa
+        </button>
+      </div>
 
-          {/* Right Column */}
-          <div>
-            <Card className="bg-white border border-gray-200">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Últimas Comparativas</CardTitle>
-                 <div className="flex items-center gap-2">
-                  {selectionMode && selectedItems.length > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={handleDeleteSelected}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  )}
-                  
-                  {selectionMode ? (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={handleCancelSelection}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={handleToggleSelectionMode}
-                    >
-                      <CircleDot className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {isLoadingComparativas && (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="text-gray-500">Cargando comparativas...</div>
-                  </div>
-                )}
-                {!isLoadingComparativas && comparisons.length === 0 && (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="text-gray-500">No hay comparativas guardadas</div>
-                  </div>
-                )}
-                {!isLoadingComparativas && comparisons.length > 0 && (
-                <div className="space-y-4">
-                  {comparisons.map((comp, index) => {
-                    const isSelected = selectedItems.includes(index);
-                    const isEditing = editingIndex === index;
-                    
-                    return (
-                      <div
-                        key={index}
-                        className={`flex items-center gap-4 p-3 rounded-lg transition-colors ${
-                          isSelected ? 'bg-blue-50' : 'bg-gray-50'
-                        }`}
-                        onClick={() => selectionMode && toggleSelection(index)}
-                      >
-                        {selectionMode && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleSelection(index);
-                            }}
-                            className="p-1 cursor-pointer focus:outline-none"
-                            type="button"
-                          >
-                            {isSelected ? (
-                              <CheckSquare className="h-5 w-5 text-blue-600" />
-                            ) : (
-                              <Square className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                            )}
-                          </button>
-                        )}
-                        {comp.type === 'luz' ? (
-                          <Lightbulb className="h-6 w-6 text-yellow-400" />
-                        ) : (
-                          <Flame className="h-6 w-6 text-orange-500" />
-                        )}
-                        <div className="flex-grow">
-                          {isEditing ? (
-                            <div className="flex items-center gap-2">
-                              <Input
-                                value={editingName}
-                                onChange={(e) => setEditingName(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') handleSaveRename();
-                                  if (e.key === 'Escape') handleCancelRename();
-                                }}
-                                className="h-8"
-                                autoFocus
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSaveRename();
-                                }}
-                                className="h-8 px-2"
-                              >
-                                ✓
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCancelRename();
-                                }}
-                                className="h-8 px-2"
-                              >
-                                ✕
-                              </Button>
-                            </div>
-                          ) : (
-                            <>
-                              <p className="font-semibold">{comp.name}</p>
-                              <p className="text-sm text-gray-600">
-                                {comp.tariffType} &bull; {comp.lastAccessed}
-                              </p>
-                            </>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-lg">{comp.newPrice}</p>
-                          <p className="text-sm text-gray-600 line-through">
-                            {comp.oldPrice}
-                          </p>
-                        </div>
-                        {!selectionMode && !isEditing && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuItem 
-                                onSelect={(e) => {
-                                  e.preventDefault();
-                                  handleExport(index);
-                                }}
-                                className="cursor-pointer flex items-center gap-2"
-                              >
-                                <Download className="h-4 w-4" />
-                                <span>Exportar</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onSelect={(e) => {
-                                  e.preventDefault();
-                                  handleRename(index);
-                                }}
-                                className="cursor-pointer flex items-center gap-2"
-                              >
-                                <Edit2 className="h-4 w-4" />
-                                <span>Renombrar</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onSelect={(e) => {
-                                  e.preventDefault();
-                                  handleEdit(index);
-                                }}
-                                className="cursor-pointer flex items-center gap-2"
-                              >
-                                <Edit3 className="h-4 w-4" />
-                                <span>Editar</span>
-                              </DropdownMenuItem>
-                              <div className="my-1 h-px bg-gray-200"></div>
-                              <DropdownMenuItem 
-                                onSelect={(e) => {
-                                  e.preventDefault();
-                                  handleDelete(index);
-                                }}
-                                className="text-red-600 focus:text-red-600 cursor-pointer flex items-center gap-2"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                <span>Borrar</span>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                )}
-              </CardContent>
-            </Card>
+      {/* Section Header */}
+      <div className="flex justify-between items-center mb-6 mt-8">
+        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+          Últimas Comparativas
+        </h3>
+        <button className="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-colors">
+          <span className="material-icons-outlined text-xl">tune</span>
+        </button>
+      </div>
+
+      {/* Comparativas List */}
+      <div className="space-y-4">
+        {comparativas.map((comparativa) => (
+          <div
+            key={comparativa.id}
+            className="neumorphic-card p-4 flex items-center justify-between"
+          >
+            <div className="flex items-center">
+              <div className="w-10 h-10 rounded-lg neumorphic-card-inset flex items-center justify-center mr-4">
+                <span
+                  className={`material-icons-outlined ${getIconColorForType(
+                    comparativa.tipo
+                  )}`}
+                >
+                  {getIconForType(comparativa.tipo)}
+                </span>
+              </div>
+              <div>
+                <p className="font-semibold text-slate-800 dark:text-slate-100">
+                  {comparativa.nombre}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {comparativa.tarifa}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="font-bold text-slate-800 dark:text-slate-100">
+                {comparativa.precioActual}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 line-through">
+                {comparativa.precioAnterior}
+              </p>
+            </div>
+            <button className="text-slate-500 dark:text-slate-400 ml-2">
+              <span className="material-icons-outlined">more_vert</span>
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Ver más link */}
+      <div className="mt-4 text-center">
+        <a className="text-sm font-semibold text-primary hover:underline" href="#">
+          Ver más
+        </a>
+      </div>
+
+      {/* Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 dark:bg-opacity-50 flex justify-center items-center p-4 z-50">
+          <div className="neumorphic-card w-full max-w-lg p-8 relative">
+            <button
+              className="absolute top-4 right-4 p-2 rounded-full neumorphic-button"
+              onClick={closeModal}
+            >
+              <span className="material-icons-outlined">close</span>
+            </button>
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                Nueva Comparativa
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 mt-2">
+                ¿Qué comparativa quieres hacer hoy?
+              </p>
+            </div>
+            <div className="flex items-center justify-center space-x-8">
+              <button
+                onClick={() => setSelectedType("luz")}
+                className={`neumorphic-button flex flex-col items-center justify-center p-8 w-48 h-48 rounded-xl transition-colors duration-200 ${
+                  selectedType === "luz"
+                    ? "active text-primary"
+                    : "text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary"
+                }`}
+              >
+                <span className="material-icons-outlined text-6xl mb-2">
+                  lightbulb
+                </span>
+                <span className="font-semibold text-xl">Luz</span>
+              </button>
+              <button
+                onClick={() => setSelectedType("gas")}
+                className={`neumorphic-button flex flex-col items-center justify-center p-8 w-48 h-48 rounded-xl transition-colors duration-200 ${
+                  selectedType === "gas"
+                    ? "active text-primary"
+                    : "text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary"
+                }`}
+              >
+                <span className="material-icons-outlined text-6xl mb-2">
+                  local_fire_department
+                </span>
+                <span className="font-semibold text-xl">Gas</span>
+              </button>
+            </div>
           </div>
         </div>
-      </main>
+      )}
     </div>
   );
 }
