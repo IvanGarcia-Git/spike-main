@@ -301,49 +301,112 @@ export default function ContractSearch({
   };
 
   return (
-    <div className="bg-background p-4 rounded-lg mb-4">
-      <div className="flex flex-col items-center gap-4">
+    <div className="neumorphic-card p-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Buscador */}
-        <div className="w-full max-w-lg flex items-center p-2 rounded-lg">
+        <div className="relative">
+          <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
           <input
             type="text"
-            placeholder="Buscar..."
+            placeholder="Buscar por Nombre, Cliente..."
             value={searchText}
             onChange={handleTextBoxChange}
-            className="flex-grow px-4 py-2 bg-foreground text-black rounded-md focus:outline-none"
+            className="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm bg-transparent"
           />
-          <button className="text-black ml-2">
-            <i className="fas fa-search"></i>
+        </div>
+
+        {/* Filtros: Desde */}
+        <div className="relative">
+          <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">calendar_today</span>
+          <input
+            type="date"
+            name="from"
+            value={contractSearch.from || ""}
+            onChange={handleDateChange}
+            className="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm bg-transparent"
+          />
+        </div>
+
+        {/* Filtros: Hasta */}
+        <div className="relative">
+          <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">calendar_today</span>
+          <input
+            type="date"
+            name="to"
+            value={contractSearch.to || ""}
+            onChange={handleDateChange}
+            className="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm bg-transparent"
+          />
+        </div>
+
+        {/* Estado dropdown */}
+        <div className="neumorphic-card-inset rounded-lg">
+          <select
+            name="contractStateId"
+            className="w-full bg-transparent border-none focus:ring-0 text-sm font-medium py-3 px-4 text-slate-600 dark:text-slate-300"
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === "") {
+                setMultifilterSelected((prev) => ({ ...prev, contractStateIds: [] }));
+              } else {
+                const stateId = value === "DRAFT" ? "DRAFT" : parseInt(value);
+                handleMultifilterChange("contractStateIds", stateId);
+              }
+            }}
+          >
+            <option value="">Estado</option>
+            {allStateOptions.map((state) => (
+              <option key={state.id} value={state.id}>
+                {state.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        {/* Búsqueda avanzada button */}
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={toggleAdvancedSearch}
+            className="flex items-center px-5 py-2 rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400"
+          >
+            <span className="material-icons-outlined mr-2 text-base">filter_alt</span>
+            <span>Búsqueda avanzada</span>
           </button>
         </div>
 
-        {/* Filtros: Desde y Hasta */}
-        <div className="flex justify-center gap-6">
-          <div className="flex flex-col items-center">
-            <label className="text-black mb-2">Desde</label>
-            <input
-              type="date"
-              name="from"
-              value={contractSearch.from || ""} // Verificamos que el valor sea no nulo
-              onChange={handleDateChange} // Llamamos a la función que maneja el cambio de fecha
-              className="w-32 p-2 bg-foreground text-black rounded-md focus:outline-none"
-            />
-          </div>
+        {/* Action buttons */}
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleOrderChange}
+            className="px-5 py-2 rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400"
+          >
+            {contractSearch.order === "createdAt" ? "Fecha Creación" : "Fecha Actualización"}
+          </button>
 
-          <div className="flex flex-col items-center">
-            <label className="text-black mb-2">Hasta</label>
-            <input
-              type="date"
-              name="to"
-              value={contractSearch.to || ""}
-              onChange={handleDateChange}
-              className="w-32 p-2 bg-foreground text-black rounded-md focus:outline-none"
-            />
-          </div>
+          {userGroupId == 1 && (
+            <button
+              onClick={handleExportExcel}
+              className="px-5 py-2 rounded-lg neumorphic-button active font-semibold text-primary"
+            >
+              Exportar a Excel
+            </button>
+          )}
+
+          <button
+            onClick={handleClearFilters}
+            className="px-5 py-2 rounded-lg neumorphic-button font-medium text-red-500/80 dark:text-red-500/70"
+          >
+            Borrar filtros
+          </button>
         </div>
+      </div>
 
-        {/* Otros campos como Estado, Agente, Compañía */}
-        <div className="flex justify-between gap-6 mt-4 w-full">
+      {/* Advanced Search Section */}
+      {showAdvancedSearch && (
+        <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+          <div className="flex justify-between gap-6 mt-4 w-full">
           {/* Estado */}
           <div className="flex flex-col w-full">
             <label className="text-black mb-2">Estado</label>
@@ -439,284 +502,8 @@ export default function ContractSearch({
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="bg-foreground p-4 mt-4 rounded-lg shadow-md">
-        {/* Botón para alternar la búsqueda avanzada */}
-        <div
-          onClick={toggleAdvancedSearch}
-          className="flex justify-between items-center cursor-pointer"
-        >
-          <h2 className="text-black font-semibold">Búsqueda avanzada</h2>
-          <span className="text-blue-500 font-semibold">
-            {showAdvancedSearch ? "▲ Ocultar" : "▼ Mostrar"}
-          </span>
         </div>
-
-        {/* Contenido de búsqueda avanzada */}
-        {showAdvancedSearch && (
-          <div className="mt-4 grid grid-cols-2 gap-4">
-            {/* Columna 1 */}
-            <div>
-              <div className="flex flex-col mt-4">
-                <label className="block text-black">Tipo de Cliente</label>
-                <select
-                  name="customerType"
-                  value={contractSearch.customerType}
-                  onChange={handleInputChange}
-                  className="mt-2 p-2 bg-background text-black rounded-md focus:outline-none"
-                >
-                  <option value="">Seleccionar</option> <option value="B2C">Particular</option>
-                  <option value="B2B">Empresa</option>
-                </select>
-              </div>
-
-              <div className="flex flex-col mt-4">
-                {/* Tipo de Contrato */}
-                <label className="block text-black">Tipo de Contrato</label>
-                <select
-                  name="type"
-                  value={contractSearch.type}
-                  onChange={handleInputChange}
-                  className="mt-2 p-2 bg-background text-black rounded-md focus:outline-none"
-                >
-                  <option value="">Seleccionar</option> <option value="Luz">Luz</option>
-                  <option value="Gas">Gas</option>
-                  <option value="Telefonía">Telefonía</option>
-                </select>
-
-                {/* Checkbox para Placas */}
-                <label className="flex items-center text-black mt-4">
-                  <input
-                    type="checkbox"
-                    name="solarPlates"
-                    checked={contractSearch.solarPlates}
-                    onChange={handleInputChange}
-                    className="mr-2"
-                    disabled={contractSearch.type === "Gas"}
-                  />
-                  Placas
-                </label>
-              </div>
-              <div className="relative mt-4 w-full">
-                {/* Etiqueta */}
-                <label className="block text-black flex items-center mb-2">
-                  <FaSearch className="mr-2 text-gray-600" /> Buscar Provincia
-                </label>
-
-                {/* Input de búsqueda */}
-                <div className="flex items-center border rounded-md bg-background px-2 py-1">
-                  <FaSearch className="text-gray-500 mr-2" />
-                  <input
-                    type="text"
-                    value={searchProvince}
-                    onChange={(e) => setSearchProvince(e.target.value)}
-                    placeholder="Escribe para buscar..."
-                    className="w-full bg-transparent focus:outline-none text-black"
-                  />
-                </div>
-
-                {/* Lista desplegable */}
-                {provincesFiltered.length > 0 && searchProvince.length > 0 && (
-                  <ul className="absolute z-10 bg-background w-full border mt-1 rounded-md shadow-lg max-h-32 overflow-y-auto">
-                    {provincesFiltered.map((province) => (
-                      <li
-                        key={province}
-                        className={`px-4 py-2 cursor-pointer text-black hover:bg-gray-200 ${contractSearch.customerProvince === province
-                          ? "bg-gray-300 font-semibold"
-                          : ""
-                          }`}
-                        onClick={() => {
-                          setContractSearch((prev) => ({
-                            ...prev,
-                            customerProvince: province,
-                          }));
-                          setSearchProvince(province);
-                        }}
-                      >
-                        {province}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-
-            <div>
-              {/* Columna 2 */}
-
-              {/*FILTRO PRODUCTO*/}
-              <div className="flex flex-col mt-4">
-                <label className="block text-black mb-2">Producto</label>
-                <select
-                  name="product"
-                  value={contractSearch.product}
-                  onChange={handleInputChange}
-                  className="p-2 bg-background text-black rounded-md focus:outline-none"
-                >
-                  <option value="">Seleccione un producto</option>
-                  {products.map((product) => (
-                    <option key={product} value={product}>
-                      {product}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/*FILTRO POTENCIA TARIFA*/}
-              <div className="flex flex-col mt-4">
-                <label className="block text-black mb-2">Potencia de la tarifa</label>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">Desde</label>
-                    <input
-                      name="contractPowerFrom"
-                      type="number"
-                      value={contractSearch.contractPowerFrom}
-                      onChange={handleInputChange}
-                      className="p-2 bg-background text-black rounded-md focus:outline-none w-full"
-                      placeholder="Mínima..."
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">Hasta</label>
-                    <input
-                      name="contractPowerTo"
-                      type="number"
-                      value={contractSearch.contractPowerTo}
-                      onChange={handleInputChange}
-                      className="p-2 bg-background text-black rounded-md focus:outline-none w-full"
-                      placeholder="Máxima..."
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/*FILTRO TARIFA*/}
-              <div className="flex flex-col mt-4">
-                <label className="block text-black mb-2">Seleccione una tarifa</label>
-                <select
-                  name="rateId"
-                  value={contractSearch.rateId}
-                  onChange={handleInputChange}
-                  className="p-2 bg-background text-black rounded-md focus:outline-none"
-                >
-                  <option value="">Seleccione una tarifa</option>
-                  {rates.map((rate) => (
-                    <option key={rate.id} value={rate.id}>
-                      {rate.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/*FILTRO TIPO TARIFA*/}
-              <div className="flex flex-col mt-4">
-                <label className="block text-black mb-2">Tipo de Tarifa</label>
-                <select
-                  name="rateType"
-                  value={contractSearch.rateType}
-                  onChange={handleInputChange}
-                  className="p-2 bg-background text-black rounded-md focus:outline-none"
-                >
-                  <option value="">Seleccione un tipo de tarifa</option>
-                  {Object.values(rateTypesEnum).map((value, index) => (
-                    <option key={index} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {userGroupId == 1 && (
-                <div>
-                  {/* Estado del Pago */}
-                  <label className="block text-black mt-4">Estado del Pago</label>
-                  <div className="flex gap-2 mt-2">
-                    <label className="flex items-center text-black">
-                      <input
-                        type="checkbox"
-                        name="sinCobrar"
-                        checked={contractSearch.payed === false}
-                        onChange={() => handlePaymentStatusChange(false)}
-                        className="mr-2"
-                      />
-                      Sin Cobrar
-                    </label>
-                    <label className="flex items-center text-black">
-                      <input
-                        type="checkbox"
-                        name="cobrado"
-                        checked={contractSearch.payed === true}
-                        onChange={() => handlePaymentStatusChange(true)}
-                        className="mr-2"
-                      />
-                      Cobrado
-                    </label>
-                  </div>
-
-                  {/* Canal */}
-
-                  <label className="block text-black mt-4">Canal</label>
-                  <select
-                    name="channelId"
-                    value={contractSearch.channelId}
-                    onChange={handleInputChange}
-                    className="w-full px-2 py-1 mt-2 bg-background text-black border border-gray-200 rounded-md focus:outline-none"
-                  >
-                    <option value="">Seleccione un canal</option>
-                    <option value="null">No asignado</option>
-                    {channels.map((channel) => (
-                      <option key={channel.id} value={channel.id}>
-                        {channel.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="mt-6 flex justify-between">
-        <div className="flex space-x-4">
-          <button
-            onClick={handleOrderChange}
-            className="bg-foreground text-black px-4 py-2 rounded-md hover:bg-backgroundHover flex items-center"
-          >
-            {contractSearch.order === "createdAt" ? (
-              <FaSortAmountUpAlt className="mr-2" />
-            ) : (
-              <FaSortAmountDown className="mr-2" />
-            )}
-            {contractSearch.order === "createdAt" ? "Fecha Creación" : "Fecha Actualización"}
-          </button>
-
-          {userGroupId == 1 && (
-            <button
-              onClick={handleExportExcel}
-              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center"
-            >
-              {isMobile ? (
-                <FaFileExcel className="mr-2" />
-              ) : (
-                <>
-                  <FaFileExcel className="mr-2" /> Exportar a Excel
-                </>
-              )}
-
-            </button>
-          )}
-        </div>
-
-        <div className="flex space-x-4">
-          <button
-            onClick={handleClearFilters}
-            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
-          >
-            Borrar filtros
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

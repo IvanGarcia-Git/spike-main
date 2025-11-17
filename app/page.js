@@ -11,31 +11,6 @@ export default function Login() {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const getNotifications = async () => {
-    try {
-      const response = await fetch("/api/notifications", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const allNotifications = await response.json();
-
-        const unreadCount = allNotifications.filter(
-          (notification) => !notification.read
-        ).length;
-
-        localStorage.setItem("totalUnreadNotifications", unreadCount);
-      } else {
-        console.error("Error cargando la información de las notificaciones");
-      }
-    } catch (error) {
-      console.error("Error enviando la solicitud:", error);
-    }
-  };
-
   useEffect(() => {
     const token = getCookie("factura-token");
     if (token) {
@@ -53,6 +28,8 @@ export default function Login() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    console.log("🔐 Iniciando login con:", { username });
+
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
@@ -62,14 +39,28 @@ export default function Login() {
         body: JSON.stringify({ username, password }),
       });
 
+      console.log("📡 Respuesta del servidor:", response.status, response.ok);
+
       if (response.ok) {
-        await getNotifications();
+        const data = await response.json();
+        console.log("✅ Login exitoso, datos:", data);
+        console.log("🍪 Verificando cookie...");
+
+        // Pequeño delay para asegurar que la cookie se establezca
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        const token = getCookie("factura-token");
+        console.log("🍪 Cookie obtenida:", token ? "SÍ" : "NO");
+
         router.push("/dashboard");
       } else {
+        const errorData = await response.json();
+        console.error("❌ Error en login:", errorData);
         alert("Nombre de usuario o contraseña incorrectos");
       }
     } catch (error) {
-      console.error("Error enviando la solicitud:", error);
+      console.error("💥 Error enviando la solicitud:", error);
+      alert("Error de conexión. Verifica que el servidor esté funcionando.");
     }
   };
 

@@ -7,6 +7,7 @@ import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
 import { FiEdit, FiTrash } from "react-icons/fi";
 import UserModal from "@/components/new-user.modal";
 import Link from "next/link";
+import PageHeader from "@/components/page-header.component";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -219,85 +220,102 @@ export default function Users() {
   };
 
   return (
-    <div className="flex flex-col justify-start items-center bg-background min-h-screen p-8">
-      <div className="w-full max-w-6xl bg-foreground text-white p-6 rounded-lg overflow-x-auto">
-        <div className="mb-4 flex items-center space-x-4">
-          <input
-            type="text"
-            placeholder="Buscar..."
-            className="flex-grow px-4 py-2 rounded bg-background text-black focus:outline-none"
-            value={searchQuery}
-            onChange={handleSearch}
-          />
+    <div className="p-6">
+      <PageHeader title="Usuarios" />
+
+      {/* Search and Add Button */}
+      <div className="neumorphic-card p-6 mb-8">
+        <div className="flex justify-between items-center">
+          <div className="relative w-full max-w-sm">
+            <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+              search
+            </span>
+            <input
+              type="text"
+              placeholder="Buscar..."
+              className="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm bg-transparent text-slate-700 dark:text-slate-300"
+              value={searchQuery}
+              onChange={handleSearch}
+            />
+          </div>
           <button
             onClick={handleCreateUser}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 whitespace-nowrap"
+            className="px-5 py-3 rounded-lg neumorphic-button active font-semibold text-primary bg-primary/10 dark:bg-primary/20"
           >
             Añadir usuario
           </button>
         </div>
+      </div>
 
-        <table className="min-w-full bg-foreground text-black">
-          <thead className="bg-background">
-            <tr>
-              <th className="px-4 py-4 text-left"></th>
-              <th className="px-4 py-4 text-left">Nombre</th>
-              <th className="px-4 py-4 text-left">Email</th>
-              <th className="px-4 py-4 text-left">Rol</th>
-              <th className="px-4 py-4 text-left">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="text-gray-300 divide-y divide-gray-600">
-            {filteredUsers.map((user) => (
-              <tr key={user.id} className="bg-foreground hover:bg-background">
-                <td className="px-4 py-4 text-black">
-                  <img
-                    src={user.imageUri || "/avatar.png"}
-                    alt={`${user.name} ${user.firstSurname}`}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                </td>
-
-                <td className="px-4 py-4 text-black">
-                  <Link href={`/perfil?uuid=${user.uuid}`} className="hover:underline">
-                    {user.name} {user.firstSurname}
-                  </Link>
-                </td>
-
-                <td className="px-4 py-4 text-black">{user.email}</td>
-
-                <td className="px-4 py-4 text-black">
-                  <span
-                    className={`px-4 py-1 rounded-full text-sm ${
-                      getRolePill(user) === "Admin"
-                        ? "bg-red-700"
-                        : getRolePill(user) === "Supervisor"
-                        ? "bg-secondary"
-                        : "bg-blue-800"
-                    } text-white`}
-                  >
-                    {getRolePill(user)}
-                  </span>
-                </td>
-
-                <td className="px-4 py-4">
-                  <button
-                    className="text-blue-500 hover:text-blue-700 mr-4"
-                    onClick={() => handleEditUser(user)}
-                  >
-                    <FiEdit size={22} />
-                  </button>
-                  <button
-                    className="text-red-500 hover:text-red-700"
-                    onClick={() => handleDeleteUser(user.uuid)}
-                  >
-                    <FiTrash size={22} />
-                  </button>
-                </td>
+      {/* Users Table */}
+      <div className="neumorphic-card p-6">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <tr>
+                <th className="p-3 font-semibold">Nombre</th>
+                <th className="p-3 font-semibold">Email</th>
+                <th className="p-3 font-semibold">Rol</th>
+                <th className="p-3 font-semibold">Acciones</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredUsers.map((user) => (
+                <tr key={user.id} className="table-row-divider">
+                  <td className="p-3">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-full neumorphic-card p-0.5 flex items-center justify-center mr-3">
+                        <img
+                          src={user.imageUri || "/avatar.png"}
+                          alt={`${user.name} ${user.firstSurname}`}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      </div>
+                      <Link
+                        href={`/perfil?uuid=${user.uuid}`}
+                        className="font-medium text-slate-800 dark:text-slate-200 hover:text-primary transition"
+                      >
+                        {user.name} {user.firstSurname}
+                      </Link>
+                    </div>
+                  </td>
+                  <td className="p-3 font-medium text-slate-800 dark:text-slate-200">
+                    {user.email}
+                  </td>
+                  <td className="p-3">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        getRolePill(user) === "Admin"
+                          ? "bg-red-500/20 text-red-600 dark:text-red-400"
+                          : getRolePill(user) === "Supervisor"
+                          ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
+                          : "bg-blue-500/20 text-blue-600 dark:text-blue-400"
+                      }`}
+                    >
+                      {getRolePill(user)}
+                    </span>
+                  </td>
+                  <td className="p-3">
+                    <div className="flex space-x-2">
+                      <button
+                        className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-400"
+                        onClick={() => handleEditUser(user)}
+                      >
+                        <span className="material-icons-outlined text-lg">edit</span>
+                      </button>
+                      <button
+                        className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-400"
+                        onClick={() => handleDeleteUser(user.uuid)}
+                      >
+                        <span className="material-icons-outlined text-lg">delete</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal de creación/edición de usuario */}
