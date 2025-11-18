@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import { FiTrash } from "react-icons/fi";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import InvoiceDocument from "@/components/invoice-document";
 import InvoicePreview from "@/components/invoice-preview";
@@ -296,8 +295,6 @@ export default function EmitirFactura() {
         name: chosen?.name,
         address: overrideAddress || chosen?.address,
         nationalId: overrideId || chosen?.cif || chosen?.nationalId,
-        // phoneNumber: overridePhone || chosen?.representativePhone || chosen?.phoneNumber,
-        // email: chosen?.representativeEmail || "",
       };
     }
 
@@ -312,433 +309,513 @@ export default function EmitirFactura() {
   })();
 
   const canDownload = clientDetails && pdfFilename.trim() !== "" && invoiceNumber.trim() !== "";
+
   return (
     <div
-      className="flex justify-center items-start bg-background min-h-screen p-5 text-black"
+      className="min-h-screen p-6"
       suppressHydrationWarning
     >
-      <div className="w-full max-w-screen-xl bg-foreground rounded-lg p-5">
-        <div className="flex gap-5 flex-wrap md:flex-nowrap">
-          <div className="w-[calc(50%_-_10px)] md:flex-1">
-            <div className="flex items-start justify-between mb-1">
-              <p className="text-base font-bold">Contacto</p>
-              {!customInputMode && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCustomInputMode(true);
-                    setSelectedChannel("");
-                  }}
-                  className="w-8 h-4 text-lg leading-none text-black rounded-md bg-primary hover:bg-primary/90 flex items-center justify-center"
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 flex items-center">
+            <span className="material-icons-outlined text-primary mr-3">receipt_long</span>
+            Emitir Factura
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-2">
+            Genera y descarga facturas personalizadas
+          </p>
+        </div>
+
+        <div className="neumorphic-card p-6 rounded-xl space-y-6">
+          {/* Primera fila - Campos principales */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Contacto */}
+            <div className="lg:col-span-1">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Contacto
+                </label>
+                {!customInputMode && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomInputMode(true);
+                      setSelectedChannel("");
+                    }}
+                    className="neumorphic-button p-1.5 rounded-lg bg-primary text-white hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all"
+                  >
+                    <span className="material-icons-outlined text-sm">add</span>
+                  </button>
+                )}
+              </div>
+
+              {customInputMode ? (
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    placeholder="Nombre del cliente"
+                    value={customChannelName}
+                    onChange={(e) => {
+                      setCustomChannelName(e.target.value);
+                      setSelectedChannel(e.target.value);
+                    }}
+                    className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomInputMode(false);
+                      setCustomChannelName("");
+                      setSelectedChannel("");
+                    }}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Cancelar entrada personalizada
+                  </button>
+                </div>
+              ) : (
+                <select
+                  name="contact"
+                  id="contact"
+                  value={selectedChannel}
+                  onChange={(e) => setSelectedChannel(e.target.value)}
+                  className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                  +
-                </button>
+                  <option disabled value="">
+                    Seleccionar
+                  </option>
+                  {contactOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               )}
             </div>
 
-            {customInputMode ? (
-              <input
-                type="text"
-                placeholder="Escribe un nombre de canal"
-                value={customChannelName}
-                onChange={(e) => {
-                  setCustomChannelName(e.target.value);
-                  setSelectedChannel(e.target.value);
-                }}
-                className="w-full p-2 rounded-md bg-backgroundHoverBold"
-              />
-            ) : (
+            {/* Método de pago */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Método de pago
+              </label>
               <select
-                name="contact"
-                id="contact"
-                value={selectedChannel}
-                onChange={(e) => setSelectedChannel(e.target.value)}
-                className="w-full p-2 rounded-md bg-backgroundHoverBold"
+                name="paymentMethod"
+                id="paymentMethod"
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option disabled value="">
                   Seleccionar
                 </option>
-                {contactOptions.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
+                <option value="efectivo">Efectivo</option>
+                <option value="transferencia">Transferencia</option>
+                <option value="tarjeta">Tarjeta</option>
               </select>
-            )}
+            </div>
 
-            {customInputMode && (
-              <button
-                type="button"
-                onClick={() => {
-                  setCustomInputMode(false);
-                  setCustomChannelName("");
-                  setSelectedChannel("");
-                }}
-                className="mt-2 text-sm text-blue-600 hover:underline"
-              >
-                Cancelar entrada personalizada
-              </button>
-            )}
+            {/* Nº Factura */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Nº Factura
+              </label>
+              <input
+                type="text"
+                name="invoiceNumber"
+                id="invoiceNumber"
+                value={invoiceNumber}
+                onChange={(e) => setInvoiceNumber(e.target.value)}
+                placeholder="F00025"
+                className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
+              />
+            </div>
+
+            {/* Fecha emisión */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Fecha emisión
+              </label>
+              <input
+                type="date"
+                name="invoiceDate"
+                id="invoiceDate"
+                value={invoiceDate}
+                onChange={(e) => setInvoiceDate(e.target.value)}
+                className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+
+            {/* Fecha vencimiento */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Fecha vencimiento
+              </label>
+              <input
+                type="date"
+                name="invoiceDueDate"
+                id="invoiceDueDate"
+                value={invoiceDueDate}
+                onChange={(e) => setInvoiceDueDate(e.target.value)}
+                className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
           </div>
 
-          <div className="w-[calc(50%_-_10px)] md:flex-1">
-            <p className="text-base font-bold mb-1">Método de pago</p>
-            <select
-              name="paymentMethod"
-              id="paymentMethod"
-              value={paymentMethod}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-              className="w-full p-2 rounded-md cursor-pointer bg-backgroundHoverBold"
+          {/* Tabla de items */}
+          <div className="neumorphic-card-inset rounded-lg overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead>
+                  <tr className="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Concepto
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider w-24">
+                      Cantidad
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider w-32">
+                      Precio
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider w-32">
+                      Total
+                    </th>
+                    <th className="px-4 py-3 w-12">
+                      <span className="sr-only">Borrar</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-background-light dark:bg-background-dark divide-y divide-slate-200 dark:divide-slate-700">
+                  {items.map((item) => (
+                    <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="px-4 py-3">
+                        <input
+                          type="text"
+                          placeholder="Descripción del servicio o producto"
+                          value={item.concepto}
+                          onChange={(e) => handleItemChange(item.id, "concepto", e.target.value)}
+                          className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400 text-sm"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          type="number"
+                          value={item.cantidad}
+                          onChange={(e) => handleItemChange(item.id, "cantidad", e.target.value)}
+                          className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                          min="1"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          type="number"
+                          value={item.precio}
+                          onChange={(e) => handleItemChange(item.id, "precio", e.target.value)}
+                          className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                          min="0"
+                          step="0.01"
+                        />
+                      </td>
+                      <td className="px-4 py-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                        {(
+                          item.total +
+                          (item.total * (parseFloat(ivaPercentage) || 0)) / 100 -
+                          (item.total * (parseFloat(irpfPercentage) || 0)) / 100
+                        ).toFixed(2)} €
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => handleDeleteItem(item.id)}
+                          className="neumorphic-button p-2 rounded-lg text-red-500 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={items.length <= 1}
+                          aria-label="Borrar fila"
+                        >
+                          <span className="material-icons-outlined text-sm">delete</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Botón añadir fila */}
+          <div className="flex justify-end">
+            <button
+              onClick={handleAddItem}
+              className="neumorphic-button px-4 py-2 rounded-lg font-medium text-slate-700 dark:text-slate-300 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all flex items-center"
             >
-              <option disabled value="">
-                Seleccionar
-              </option>
-              <option value="efectivo">Efectivo</option>
-              <option value="transferencia">Transferencia</option>
-              <option value="tarjeta">Tarjeta</option>
-            </select>
+              <span className="material-icons-outlined mr-2 text-sm">add</span>
+              Añadir fila
+            </button>
           </div>
 
-          <div className="w-[calc(50%_-_10px)] md:flex-1">
-            <p className="text-base font-bold mb-1">Nº Factura</p>
-            <input
-              type="text"
-              name="invoiceNumber"
-              id="invoiceNumber"
-              value={invoiceNumber}
-              onChange={(e) => setInvoiceNumber(e.target.value)}
-              placeholder="F00025"
-              className="w-full p-2 rounded-md cursor-text bg-backgroundHoverBold"
-            />
-          </div>
-
-          <div className="w-[calc(50%_-_10px)] md:flex-1">
-            <p className="text-base font-bold mb-1">Fecha emisión</p>
-            <input
-              type="date"
-              name="invoiceDate"
-              id="invoiceDate"
-              value={invoiceDate}
-              onChange={(e) => setInvoiceDate(e.target.value)}
-              className="w-full p-2 rounded-md cursor-pointer bg-backgroundHoverBold"
-            />
-          </div>
-
-          <div className="w-[calc(50%_-_10px)] md:flex-1">
-            <p className="text-base font-bold mb-1">Fecha vencimiento</p>
-            <input
-              type="date"
-              name="invoiceDueDate"
-              id="invoiceDueDate"
-              value={invoiceDueDate}
-              onChange={(e) => setInvoiceDueDate(e.target.value)}
-              className="w-full p-2 rounded-md cursor-pointer bg-backgroundHoverBold"
-            />
-          </div>
-        </div>
-
-        <div className="overflow-x-auto mt-4">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-background">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-3 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Concepto
-                </th>
-                <th
-                  scope="col"
-                  className="px-3 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24"
-                >
-                  Cantidad
-                </th>
-                <th
-                  scope="col"
-                  className="px-3 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28"
-                >
-                  Precio
-                </th>
-                <th
-                  scope="col"
-                  className="px-3 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28"
-                >
-                  Total
-                </th>
-                <th scope="col" className="relative px-3 py-4 w-10">
-                  <span className="sr-only">Borrar</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white">
-              {/* divide-y divide-gray-200 */}
-              {items.map((item, index) => (
-                <tr key={item.id}>
-                  <td className="px-3 py-2 pl-0 whitespace-nowrap">
-                    <input
-                      type="text"
-                      placeholder="Descripción del servicio o producto"
-                      value={item.concepto}
-                      onChange={(e) => handleItemChange(item.id, "concepto", e.target.value)}
-                      className="w-full p-2 border rounded-md text-base"
-                    />
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap">
-                    <input
-                      type="number"
-                      value={item.cantidad}
-                      onChange={(e) => handleItemChange(item.id, "cantidad", e.target.value)}
-                      className="w-full p-2 border rounded-md text-base"
-                      min="1"
-                    />
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap">
-                    <input
-                      type="number"
-                      value={item.precio}
-                      onChange={(e) => handleItemChange(item.id, "precio", e.target.value)}
-                      className="w-full p-2 border rounded-md text-base"
-                      min="0"
-                      step="0.01"
-                    />
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-base text-gray-900">
-                    {(
-                      item.total +
-                      (item.total * (parseFloat(ivaPercentage) || 0)) / 100 -
-                      (item.total * (parseFloat(irpfPercentage) || 0)) / 100
-                    ).toFixed(2)}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-right text-base font-medium">
-                    <button
-                      onClick={() => handleDeleteItem(item.id)}
-                      className="text-red-600 hover:text-red-800 disabled:text-gray-400 disabled:cursor-not-allowed flex items-center"
-                      disabled={items.length <= 1}
-                      aria-label="Borrar fila"
-                    >
-                      <FiTrash size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="mt-4 text-end">
-          <button onClick={handleAddItem} className="bg-background py-2 px-4 rounded-md text-sm">
-            + <span className="ml-1">Añadir fila</span>
-          </button>
-        </div>
-
-        <div className="flex gap-5 flex-wrap md:flex-nowrap mt-2">
-          <div className="w-[calc(50%_-_10px)] md:flex-1">
-            <p className="text-base font-bold mb-1">IVA (%)</p>
-            <input
-              type="number"
-              id="ivaPercentage"
-              name="ivaPercentage"
-              value={ivaPercentage}
-              onChange={(e) => setIvaPercentage(parseFloat(e.target.value) || 0)}
-              className="w-full p-2 rounded-md cursor-text bg-backgroundHoverBold"
-              min="0"
-              step="1"
-              placeholder="21%"
-            />
-          </div>
-
-          <div className="w-[calc(50%_-_10px)] md:flex-1">
-            <p className="text-base font-bold mb-1">IRPF (%)</p>
-            <input
-              type="number"
-              id="irpfPercentage"
-              name="irpfPercentage"
-              value={irpfPercentage}
-              onChange={(e) => setIrpfPercentage(parseFloat(e.target.value) || 0)}
-              className="w-full p-2 rounded-md cursor-text bg-backgroundHoverBold"
-              min="0"
-              step="1"
-              placeholder="Ej: 15"
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-5 flex-wrap md:flex-nowrap mt-4">
-          <div className="w-[calc(33.33%_-_10px)] md:flex-1">
-            <p className="text-base font-bold mb-1">Dirección (opcional)</p>
-            <input
-              type="text"
-              value={overrideAddress}
-              onChange={(e) => setOverrideAddress(e.target.value)}
-              placeholder="Dirección completa"
-              className="w-full p-2 rounded-md cursor-text bg-backgroundHoverBold"
-            />
-          </div>
-
-          <div className="w-[calc(33.33%_-_10px)] md:flex-1">
-            <p className="text-base font-bold mb-1">CIF/DNI (opcional)</p>
-            <input
-              type="text"
-              value={overrideId}
-              onChange={(e) => setOverrideId(e.target.value)}
-              placeholder="CIF o DNI"
-              className="w-full p-2 rounded-md cursor-text bg-backgroundHoverBold"
-            />
-          </div>
-        </div>
-
-        <div className="mt-8 flex md:flex-nowrap flex-wrap gap-4 items-center">
-          <p className="self-end font-bold">Total importe factura</p>
-          <div className="flex md:gap-8 gap-4 items-center md:flex-nowrap flex-wrap">
-            <div className="text-center">
-              <p>Base</p>
-              <div className="py-1 px-4 rounded-3xl bg-background">{subtotal.toFixed(2)} €</div>
+          {/* IVA e IRPF */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                IVA (%)
+              </label>
+              <input
+                type="number"
+                id="ivaPercentage"
+                name="ivaPercentage"
+                value={ivaPercentage}
+                onChange={(e) => setIvaPercentage(parseFloat(e.target.value) || 0)}
+                className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
+                min="0"
+                step="1"
+                placeholder="21"
+              />
             </div>
 
-            <div className="text-center">
-              <p>IVA</p>
-              <div className="py-1 px-4 rounded-3xl bg-background">{totalIVA.toFixed(2)} €</div>
-            </div>
-
-            <div className="text-center">
-              <p>Retenciones</p>
-              <div className="py-1 px-4 rounded-3xl bg-background">{totalIRPF.toFixed(2)} €</div>
-            </div>
-
-            <div className="text-center">
-              <p>Total</p>
-              <div className="py-1 px-4 rounded-3xl bg-background">{grandTotal.toFixed(2)} €</div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                IRPF (%)
+              </label>
+              <input
+                type="number"
+                id="irpfPercentage"
+                name="irpfPercentage"
+                value={irpfPercentage}
+                onChange={(e) => setIrpfPercentage(parseFloat(e.target.value) || 0)}
+                className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
+                min="0"
+                step="1"
+                placeholder="15"
+              />
             </div>
           </div>
-        </div>
 
-        <div className="mt-8">
-          <p className="text-base font-bold mb-1">Logo de factura (opcional)</p>
-          <div className="flex items-center gap-4">
-            <input
-              type="file"
-              accept=".png,.jpg,.jpeg"
-              onChange={handleLogoChange}
-              className="w-full p-2 rounded-md cursor-pointer bg-backgroundHoverBold"
+          {/* Dirección y CIF opcionales */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Dirección (opcional)
+              </label>
+              <input
+                type="text"
+                value={overrideAddress}
+                onChange={(e) => setOverrideAddress(e.target.value)}
+                placeholder="Dirección completa"
+                className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                CIF/DNI (opcional)
+              </label>
+              <input
+                type="text"
+                value={overrideId}
+                onChange={(e) => setOverrideId(e.target.value)}
+                placeholder="CIF o DNI"
+                className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
+              />
+            </div>
+          </div>
+
+          {/* Totales */}
+          <div className="neumorphic-card-inset p-6 rounded-lg">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+              <p className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                Total importe factura
+              </p>
+              <div className="flex flex-wrap gap-4 flex-1">
+                <div className="flex-1 min-w-[120px]">
+                  <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Base</p>
+                  <div className="neumorphic-card px-4 py-2 rounded-lg text-center">
+                    <span className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                      {subtotal.toFixed(2)} €
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex-1 min-w-[120px]">
+                  <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">IVA</p>
+                  <div className="neumorphic-card px-4 py-2 rounded-lg text-center">
+                    <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                      +{totalIVA.toFixed(2)} €
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex-1 min-w-[120px]">
+                  <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Retenciones</p>
+                  <div className="neumorphic-card px-4 py-2 rounded-lg text-center">
+                    <span className="text-lg font-bold text-red-600 dark:text-red-400">
+                      -{totalIRPF.toFixed(2)} €
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex-1 min-w-[120px]">
+                  <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Total</p>
+                  <div className="neumorphic-card px-4 py-2 rounded-lg text-center bg-primary/10 dark:bg-primary/20">
+                    <span className="text-lg font-bold text-primary">
+                      {grandTotal.toFixed(2)} €
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Logo de factura */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Logo de factura (opcional)
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                type="file"
+                accept=".png,.jpg,.jpeg"
+                onChange={handleLogoChange}
+                className="flex-1 px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-primary/90"
+              />
+              {customLogo && (
+                <button
+                  onClick={() => setCustomLogo(null)}
+                  className="neumorphic-button p-2 rounded-lg text-red-500 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all"
+                  title="Eliminar logo"
+                >
+                  <span className="material-icons-outlined text-sm">delete</span>
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Formatos aceptados: PNG, JPG
+            </p>
+          </div>
+
+          {/* Notas */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Notas (opcional)
+            </label>
+            <textarea
+              rows={4}
+              name="notes"
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Añade notas adicionales para la factura..."
+              className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400 resize-none"
             />
-            {customLogo && (
-              <button
-                onClick={() => setCustomLogo(null)}
-                className="text-red-600 hover:text-red-800"
-                title="Eliminar logo"
-              >
-                <FiTrash size={20} />
-              </button>
-            )}
           </div>
-          <p className="text-xs text-gray-500 mt-1">Formatos aceptados: PNG, JPG</p>
-        </div>
 
-        <div className="mt-8">
-          <p className="text-base font-bold mb-1">Notas (opcional)</p>
-          <textarea
-            rows={5}
-            name="notes"
-            id="notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="w-full p-2 rounded-md cursor-text bg-backgroundHoverBold"
-          />
-        </div>
-
-        <div className="w-[calc(50%_-_10px)] md:flex-1 mb-4">
-          <p className="text-base font-bold mb-1">IBAN</p>
-          <input
-            type="text"
-            name="ibanNumber"
-            id="ibanNumber"
-            value={ibanNumber}
-            onChange={(e) => setIbanNumber(e.target.value)}
-            placeholder="ESXX XXXX XXXX XXXX XXXX XXXX"
-            className="w-full p-2 rounded-md cursor-text bg-backgroundHoverBold"
-          />
-        </div>
-
-        <InvoicePreview
-          issuer={INVOICE_ISSUER}
-          client={clientDetails}
-          invoiceNumber={invoiceNumber}
-          ibanNumber={ibanNumber}
-          invoiceDate={invoiceDate}
-          invoiceDueDate={invoiceDueDate}
-          paymentMethod={paymentMethod}
-          items={items}
-          ivaPercentage={ivaPercentage}
-          irpfPercentage={irpfPercentage}
-          subtotal={subtotal}
-          totalIVA={totalIVA}
-          totalIRPF={totalIRPF}
-          grandTotal={grandTotal}
-          notes={notes}
-          customLogo={customLogo}
-        />
-
-        <div className="mt-8 p-4 border border-dashed border-gray-400 rounded-lg bg-gray-50 flex flex-col md:flex-row gap-4 max-w-3xl mx-auto">
-          <div className="flex-grow">
-            <label htmlFor="pdfFilename" className="block text-sm font-medium text-gray-700 mb-1">
-              Nombre archivo PDF
+          {/* IBAN */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              IBAN
             </label>
             <input
               type="text"
-              id="pdfFilename"
-              name="pdfFilename"
-              value={pdfFilename}
-              onChange={(e) => setPdfFilename(e.target.value)}
-              placeholder="Ej: Factura_F0025_ClienteX.pdf"
-              className="w-full p-2 border border-gray-300 rounded-md text-sm"
+              name="ibanNumber"
+              id="ibanNumber"
+              value={ibanNumber}
+              onChange={(e) => setIbanNumber(e.target.value)}
+              placeholder="ESXX XXXX XXXX XXXX XXXX XXXX"
+              className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
             />
           </div>
 
-          {isClient && (
-            <PDFDownloadLink
-              document={
-                <InvoiceDocument
-                  issuer={INVOICE_ISSUER}
-                  client={clientDetails}
-                  invoiceNumber={invoiceNumber}
-                  ibanNumber={ibanNumber}
-                  invoiceDate={invoiceDate}
-                  invoiceDueDate={invoiceDueDate}
-                  paymentMethod={paymentMethod}
-                  items={items}
-                  ivaPercentage={ivaPercentage}
-                  irpfPercentage={irpfPercentage}
-                  subtotal={subtotal}
-                  totalIVA={totalIVA}
-                  totalIRPF={totalIRPF}
-                  grandTotal={grandTotal}
-                  notes={notes}
-                  customLogo={customLogo}
+          {/* Vista previa de la factura */}
+          <InvoicePreview
+            issuer={INVOICE_ISSUER}
+            client={clientDetails}
+            invoiceNumber={invoiceNumber}
+            ibanNumber={ibanNumber}
+            invoiceDate={invoiceDate}
+            invoiceDueDate={invoiceDueDate}
+            paymentMethod={paymentMethod}
+            items={items}
+            ivaPercentage={ivaPercentage}
+            irpfPercentage={irpfPercentage}
+            subtotal={subtotal}
+            totalIVA={totalIVA}
+            totalIRPF={totalIRPF}
+            grandTotal={grandTotal}
+            notes={notes}
+            customLogo={customLogo}
+          />
+
+          {/* Descargar PDF */}
+          <div className="neumorphic-card-inset p-6 rounded-lg">
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-end">
+              <div className="flex-1">
+                <label htmlFor="pdfFilename" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Nombre archivo PDF
+                </label>
+                <input
+                  type="text"
+                  id="pdfFilename"
+                  name="pdfFilename"
+                  value={pdfFilename}
+                  onChange={(e) => setPdfFilename(e.target.value)}
+                  placeholder="Factura_F0025_ClienteX.pdf"
+                  className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
                 />
-              }
-              fileName={pdfFilename.endsWith(".pdf") ? pdfFilename : `${pdfFilename}.pdf`}
-              className={`mt-2 md:mt-0 md:self-end px-5 py-2 rounded-md text-white font-semibold text-sm ${
-                canDownload
-                  ? "bg-blue-600 hover:bg-blue-700 cursor-pointer"
-                  : "bg-gray-400 cursor-not-allowed"
-              }`}
-              style={!canDownload ? { pointerEvents: "none" } : {}}
-              aria-disabled={!canDownload}
-            >
-              {({ loading }) => (loading ? "Generando PDF..." : "Descargar PDF")}
-            </PDFDownloadLink>
-          )}
-          {!isClient && (
-            <div className="mt-2 md:mt-0 md:self-end px-5 py-2 rounded-md text-white font-semibold text-sm bg-gray-400 cursor-not-allowed">
-              Descargar PDF
+              </div>
+
+              {isClient && (
+                <PDFDownloadLink
+                  document={
+                    <InvoiceDocument
+                      issuer={INVOICE_ISSUER}
+                      client={clientDetails}
+                      invoiceNumber={invoiceNumber}
+                      ibanNumber={ibanNumber}
+                      invoiceDate={invoiceDate}
+                      invoiceDueDate={invoiceDueDate}
+                      paymentMethod={paymentMethod}
+                      items={items}
+                      ivaPercentage={ivaPercentage}
+                      irpfPercentage={irpfPercentage}
+                      subtotal={subtotal}
+                      totalIVA={totalIVA}
+                      totalIRPF={totalIRPF}
+                      grandTotal={grandTotal}
+                      notes={notes}
+                      customLogo={customLogo}
+                    />
+                  }
+                  fileName={pdfFilename.endsWith(".pdf") ? pdfFilename : `${pdfFilename}.pdf`}
+                  className={`neumorphic-button px-6 py-3 rounded-lg font-semibold transition-all inline-flex items-center ${
+                    canDownload
+                      ? "bg-primary text-white hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark"
+                      : "bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed"
+                  }`}
+                  style={!canDownload ? { pointerEvents: "none" } : {}}
+                  aria-disabled={!canDownload}
+                >
+                  {({ loading }) => (
+                    <>
+                      <span className="material-icons-outlined mr-2">
+                        {loading ? "refresh" : "download"}
+                      </span>
+                      {loading ? "Generando PDF..." : "Descargar PDF"}
+                    </>
+                  )}
+                </PDFDownloadLink>
+              )}
+              {!isClient && (
+                <div className="neumorphic-button px-6 py-3 rounded-lg bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed inline-flex items-center">
+                  <span className="material-icons-outlined mr-2">download</span>
+                  Descargar PDF
+                </div>
+              )}
             </div>
-          )}
+            {!canDownload && isClient && (
+              <p className="text-xs text-red-500 mt-2 flex items-center">
+                <span className="material-icons-outlined text-sm mr-1">error</span>
+                Requiere Contacto, Nº Factura y Nombre de archivo
+              </p>
+            )}
+          </div>
         </div>
-        {!canDownload && isClient && (
-          <p className="text-xs text-red-600 mt-1 w-full md:w-auto text-center md:text-left max-w-3xl mx-auto">
-            (Requiere Contacto, Nº Factura y Nombre de archivo)
-          </p>
-        )}
       </div>
     </div>
   );
