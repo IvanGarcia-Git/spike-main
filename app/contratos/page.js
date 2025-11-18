@@ -487,6 +487,7 @@ export default function Contracts() {
   const [contractUuid, setContractUuid] = useState(null);
 
   const [isManager, setIsManager] = useState(false);
+  const [userGroupId, setUserGroupId] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
@@ -531,11 +532,13 @@ export default function Contracts() {
 
     if (!jwtToken) {
       setIsManager(false);
+      setUserGroupId(null);
       return;
     }
 
     const payload = jose.decodeJwt(jwtToken);
     setIsManager(payload.isManager || false);
+    setUserGroupId(payload.groupId || null);
   };
 
   const getContracts = async (page, entriesPerPage) => {
@@ -948,109 +951,86 @@ export default function Contracts() {
       </header>
 
       {/* Search and Filters */}
-      <div className="neumorphic-card p-6 mb-8">
-        <SearchBox
-          onSearch={getFilteredContracts}
-          contractStates={contractStates}
-          channels={channels}
-        />
+      <SearchBox
+        onSearch={getFilteredContracts}
+        onClearFilters={handleClearFilters}
+        setContractsOrder={setColumnsOrder}
+        onExportExcel={exportToExcel}
+        contractStates={contractStates}
+        channels={channels}
+        isManager={isManager}
+        userGroupId={userGroupId}
+      />
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mt-6">
-          <div className="flex items-center space-x-2">
+      {/* Batch Actions */}
+      {selectedContracts.length > 0 && (
+        <div className="mb-8">
+          <div className="relative inline-block" ref={dropdownDesktopRef}>
             <button
-              className="flex items-center px-5 py-2 rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400"
+              onClick={toggleDesktop}
+              className="px-5 py-2 rounded-lg neumorphic-button active bg-primary text-white font-semibold flex items-center"
             >
-              <span className="material-icons-outlined mr-2 text-base">filter_alt</span>
-              <span>Búsqueda avanzada</span>
+              <span className="material-icons-outlined mr-2">more_horiz</span>
+              Acciones ({selectedContracts.length})
             </button>
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={exportToExcel}
-              className="flex items-center px-5 py-2 rounded-lg neumorphic-button active font-semibold text-primary"
-            >
-              <span className="material-icons-outlined mr-2 text-base">download</span>
-              Exportar a Excel
-            </button>
-            {isFiltersApplied && (
-              <button
-                onClick={handleClearFilters}
-                className="px-5 py-2 rounded-lg neumorphic-button font-medium text-red-500/80 dark:text-red-500/70"
-              >
-                Borrar filtros
-              </button>
+
+            {isDesktopDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-56 neumorphic-card rounded-lg shadow-lg z-10">
+                <button
+                  onClick={() => {
+                    setIsStateChangeModalOpen(true);
+                    setIsDesktopDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-t-lg flex items-center"
+                >
+                  <span className="material-icons-outlined mr-2 text-primary">edit</span>
+                  Cambiar Estado
+                </button>
+                <button
+                  onClick={() => {
+                    setIsChannelChangeModalOpen(true);
+                    setIsDesktopDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800/50 flex items-center"
+                >
+                  <span className="material-icons-outlined mr-2 text-primary">alt_route</span>
+                  Cambiar Canal
+                </button>
+                <button
+                  onClick={() => {
+                    setIsAddToLiquidationOpen(true);
+                    setIsDesktopDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800/50 flex items-center"
+                >
+                  <span className="material-icons-outlined mr-2 text-primary">attach_money</span>
+                  Añadir a Liquidación
+                </button>
+                <button
+                  onClick={() => {
+                    setIsReassignModalOpen(true);
+                    setIsDesktopDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800/50 flex items-center"
+                >
+                  <span className="material-icons-outlined mr-2 text-primary">person_add</span>
+                  Reasignar
+                </button>
+                <button
+                  onClick={() => {
+                    handleDeleteContracts();
+                    setIsDesktopDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-b-lg flex items-center text-red-500"
+                >
+                  <span className="material-icons-outlined mr-2">delete</span>
+                  Eliminar
+                </button>
+              </div>
             )}
           </div>
-
-          {selectedContracts.length > 0 && (
-            <div className="relative" ref={dropdownDesktopRef}>
-              <button
-                onClick={toggleDesktop}
-                className="px-5 py-2 rounded-lg neumorphic-button active bg-primary text-white font-semibold flex items-center"
-              >
-                <span className="material-icons-outlined mr-2">more_horiz</span>
-                Acciones ({selectedContracts.length})
-              </button>
-
-              {isDesktopDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 neumorphic-card rounded-lg shadow-lg z-10">
-                  <button
-                    onClick={() => {
-                      setIsStateChangeModalOpen(true);
-                      setIsDesktopDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-t-lg flex items-center"
-                  >
-                    <span className="material-icons-outlined mr-2 text-primary">edit</span>
-                    Cambiar Estado
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsChannelChangeModalOpen(true);
-                      setIsDesktopDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800/50 flex items-center"
-                  >
-                    <span className="material-icons-outlined mr-2 text-primary">alt_route</span>
-                    Cambiar Canal
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsAddToLiquidationOpen(true);
-                      setIsDesktopDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800/50 flex items-center"
-                  >
-                    <span className="material-icons-outlined mr-2 text-primary">attach_money</span>
-                    Añadir a Liquidación
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsReassignModalOpen(true);
-                      setIsDesktopDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800/50 flex items-center"
-                  >
-                    <span className="material-icons-outlined mr-2 text-primary">person_add</span>
-                    Reasignar
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleDeleteContracts();
-                      setIsDesktopDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-b-lg flex items-center text-red-500"
-                  >
-                    <span className="material-icons-outlined mr-2">delete</span>
-                    Eliminar
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
         </div>
-      </div>
+      )}
 
       {/* Contracts Table */}
       <div className="neumorphic-card p-6">

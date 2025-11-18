@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/page-header.component";
+import NuevaComparativaModal from "@/components/comparativas/nueva-comparativa.modal";
 
 export default function ComparativasPage() {
   const router = useRouter();
@@ -56,13 +57,6 @@ export default function ComparativasPage() {
       iconColor: "text-primary",
     },
   ];
-
-  const handleTypeSelection = (type) => {
-    setSelectedType(type);
-    setIsModalOpen(false);
-    // Redirigir a la página personalizada para crear la comparativa
-    router.push(`/comparativas/personalizada?type=${type}`);
-  };
 
   const handleVerMas = () => {
     // En el futuro, cargar más comparativas
@@ -150,63 +144,10 @@ export default function ComparativasPage() {
       </div>
 
       {/* Modal Nueva Comparativa */}
-      {isModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-30 dark:bg-opacity-50 flex justify-center items-center p-4 z-50"
-          onClick={() => setIsModalOpen(false)}
-        >
-          <div
-            className="neumorphic-card w-full max-w-lg p-8 relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="absolute top-4 right-4 p-2 rounded-full neumorphic-button hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all"
-            >
-              <span className="material-icons-outlined">close</span>
-            </button>
-
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-                Nueva Comparativa
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400 mt-2">
-                ¿Qué comparativa quieres hacer hoy?
-              </p>
-            </div>
-
-            <div className="flex items-center justify-center space-x-8">
-              <button
-                onClick={() => handleTypeSelection("luz")}
-                className={`neumorphic-button flex flex-col items-center justify-center p-8 w-48 h-48 rounded-xl transition-all duration-200 ${
-                  selectedType === "luz"
-                    ? "active text-primary"
-                    : "text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary"
-                }`}
-              >
-                <span className="material-icons-outlined text-6xl mb-2">
-                  lightbulb
-                </span>
-                <span className="font-semibold text-xl">Luz</span>
-              </button>
-
-              <button
-                onClick={() => handleTypeSelection("gas")}
-                className={`neumorphic-button flex flex-col items-center justify-center p-8 w-48 h-48 rounded-xl transition-all duration-200 ${
-                  selectedType === "gas"
-                    ? "active text-orange-400"
-                    : "text-slate-600 dark:text-slate-400 hover:text-orange-400 dark:hover:text-orange-400"
-                }`}
-              >
-                <span className="material-icons-outlined text-6xl mb-2">
-                  local_fire_department
-                </span>
-                <span className="font-semibold text-xl">Gas</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <NuevaComparativaModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 }
