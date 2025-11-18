@@ -85,7 +85,7 @@ function LegalTitleForms({ formData, setFormData, currentStep, nextStep, documen
         const selectedType = e.target.value;
         setDocumentType(selectedType);
 
-        if (formData[ownerKey] && formData[ownerKey].data !== undefined) {        
+        if (formData[ownerKey] && formData[ownerKey].data !== undefined) {
             setFormData(prevData => ({
                 ...prevData,
                 [ownerKey]: {
@@ -118,44 +118,46 @@ function LegalTitleForms({ formData, setFormData, currentStep, nextStep, documen
     const renderOwnerForm = (type, currentOwner, stringCurrentOwner) => {
         if (type == 'Particular') {
             return (
-                <div className="space-y-4">
-                    <div className="mb-4">
-                        <label className="block text-black mb-2" htmlFor="name">
+                <div className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="name">
                             Nombre
                         </label>
                         <input
                             type="text"
                             id="name"
                             name="name"
-                            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
                             value={currentOwner?.data?.name}
                             onChange={(e) => handleOwnerDataFieldChange(e, stringCurrentOwner)}
+                            placeholder="Introduce el nombre"
                         />
                     </div>
 
-                    <div className="mb-4">
-                        <label className="block text-black mb-2" htmlFor="surnames">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="surnames">
                             Apellidos
                         </label>
                         <input
                             type="text"
                             id="surnames"
                             name="surnames"
-                            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
                             value={currentOwner?.data?.surnames}
                             onChange={(e) => handleOwnerDataFieldChange(e, stringCurrentOwner)}
+                            placeholder="Introduce los apellidos"
                         />
                     </div>
 
-                    <div className="mb-4 flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                            <label className="text-black" htmlFor="documentType">
+                    <div className="flex flex-col md:flex-row gap-4">
+                        <div className="md:w-48">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="documentType">
                                 Tipo de documento
                             </label>
                             <select
                                 id="documentType"
                                 name="documentType"
-                                className="px-3 py-2 rounded bg-backgroundHoverBold text-black border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                                 onChange={(e) => handleSelectChange(e, stringCurrentOwner)}
                                 defaultValue={documentType}
                             >
@@ -163,15 +165,16 @@ function LegalTitleForms({ formData, setFormData, currentStep, nextStep, documen
                                 <option value="NIE">NIE</option>
                             </select>
                         </div>
+
                         <div className="flex-1">
-                            <label className="sr-only" htmlFor="documentInput">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="documentInput">
                                 Número de documento
                             </label>
                             <input
                                 type="text"
                                 id="documentInput"
                                 name="nationalId"
-                                className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
                                 value={currentOwner?.data?.nationalId}
                                 onChange={(e) => handleOwnerDataFieldChange(e, stringCurrentOwner)}
                                 placeholder="Ingrese el número"
@@ -179,8 +182,8 @@ function LegalTitleForms({ formData, setFormData, currentStep, nextStep, documen
                         </div>
 
                         {documentType === "NIE" && (
-                            <div className="flex-2">
-                                <label className="sr-only" htmlFor="nationality">
+                            <div className="flex-1">
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="nationality">
                                     Nacionalidad
                                 </label>
                                 <input
@@ -188,78 +191,79 @@ function LegalTitleForms({ formData, setFormData, currentStep, nextStep, documen
                                     id="nationality"
                                     name="nationality"
                                     list="countryList"
-                                    className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
                                     value={currentOwner?.data?.nationality}
                                     onChange={(e) => handleOwnerDataFieldChange(e, stringCurrentOwner)}
                                     onBlur={handleBlur}
                                     placeholder="Seleccione un país"
                                 />
-                                <datalist
-                                    id="countryList"
-                                >
+                                <datalist id="countryList">
                                     {countries.map((country) => (
-                                        <option key={country.code} value={country.name} className="px-4 py-2 hover:bg-gray-200" />
+                                        <option key={country.code} value={country.name} />
                                     ))}
                                 </datalist>
                             </div>
                         )}
-
                     </div>
 
-                    <div className="mb-4">
-                        <label className="block text-black mb-2" htmlFor="address">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="address">
                             Dirección
                         </label>
                         <input
                             type="text"
                             id="address"
                             name="address"
-                            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
                             value={currentOwner?.data?.address}
                             onChange={(e) => handleOwnerDataFieldChange(e, stringCurrentOwner)}
+                            placeholder="Introduce la dirección completa"
                         />
                     </div>
 
-                    <div className="mb-4 space-y-4 sm:space-y-0 sm:flex sm:space-x-4">
-                        <div className="w-full sm:flex-1">
-                            <label className="block text-black mb-2" htmlFor="zipcode">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="zipcode">
                                 Código Postal
                             </label>
                             <input
                                 type="text"
                                 id="zipcode"
                                 name="zipcode"
-                                className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
                                 value={currentOwner?.data?.zipcode}
                                 onChange={(e) => handleOwnerDataFieldChange(e, stringCurrentOwner)}
+                                placeholder="28001"
                             />
                         </div>
 
-                        <div className="w-full sm:flex-1">
-                            <label className="block text-black mb-2" htmlFor="province">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="province">
                                 Provincia
                             </label>
                             <input
                                 type="text"
                                 id="province"
                                 name="province"
-                                className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
                                 value={currentOwner?.data?.province}
                                 onChange={(e) => handleOwnerDataFieldChange(e, stringCurrentOwner)}
+                                placeholder="Madrid"
                             />
                         </div>
 
-                        <div className="w-full sm:flex-1">
-                            <label className="block text-black mb-2" htmlFor="populace">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="populace">
                                 Población
                             </label>
                             <input
                                 type="text"
                                 id="populace"
                                 name="populace"
-                                className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
                                 value={currentOwner?.data?.populace}
                                 onChange={(e) => handleOwnerDataFieldChange(e, stringCurrentOwner)}
+                                placeholder="Madrid"
                             />
                         </div>
                     </div>
@@ -267,74 +271,80 @@ function LegalTitleForms({ formData, setFormData, currentStep, nextStep, documen
             );
         } else {
             return (
-                <div className="space-y-4">
-                    <div className="mb-4">
-                        <label className="block text-black mb-2" htmlFor="companyName">
-                            Nombre
+                <div className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="companyName">
+                            Nombre de la Empresa
                         </label>
                         <input
                             type="text"
                             id="companyName"
                             name="companyName"
-                            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
                             value={currentOwner?.data?.companyName}
                             onChange={(e) => handleOwnerDataFieldChange(e, stringCurrentOwner)}
+                            placeholder="Nombre de la empresa"
                         />
                     </div>
 
-                    <div className="mb-4">
-                        <label className="block text-black mb-2 mt-7" htmlFor="surnames">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="cif">
                             CIF
                         </label>
                         <input
                             type="text"
                             id="cif"
                             name="cif"
-                            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
                             value={currentOwner?.data?.cif}
                             onChange={(e) => handleOwnerDataFieldChange(e, stringCurrentOwner)}
+                            placeholder="A12345678"
                         />
                     </div>
 
-                    <div className="mb-4">
-                        <label className="block text-black mb-2 mt-7" htmlFor="fiscalAddress">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="fiscalAddress">
                             Dirección Fiscal
                         </label>
                         <input
                             type="text"
                             id="fiscalAddress"
                             name="fiscalAddress"
-                            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
                             value={currentOwner?.data?.fiscalAddress}
                             onChange={(e) => handleOwnerDataFieldChange(e, stringCurrentOwner)}
+                            placeholder="Dirección fiscal completa"
                         />
                     </div>
+
                      {stringCurrentOwner === 'newOwner' && (
                         <>
-                        <div className="mb-4">
-                            <label className="block text-black mb-2 mt-7" htmlFor="representativeName">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="representativeName">
                                 Nombre del Representante Legal
                             </label>
                             <input
                                 type="text"
                                 id="representativeName"
                                 name="representativeName"
-                                className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
                                 value={currentOwner?.data?.representativeName}
                                 onChange={(e) => handleOwnerDataFieldChange(e, stringCurrentOwner)}
+                                placeholder="Nombre del representante"
                             />
                         </div>
-                        <div className="mb-4">
-                            <label className="block text-black mb-2 mt-7" htmlFor="representativeNationalId">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="representativeNationalId">
                                 DNI del Representante Legal
                             </label>
                             <input
                                 type="text"
                                 id="representativeNationalId"
                                 name="representativeNationalId"
-                                className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
                                 value={currentOwner?.data?.representativeNationalId}
                                 onChange={(e) => handleOwnerDataFieldChange(e, stringCurrentOwner)}
+                                placeholder="12345678A"
                             />
                         </div>
                         </>
@@ -348,13 +358,17 @@ function LegalTitleForms({ formData, setFormData, currentStep, nextStep, documen
         switch (currentStep) {
             case 1:
                 return (
-                    <div className="bg-background p-6 rounded-lg mb-7">
-                        <div className='w-full flex flex-col items-center justify-center mt-10'>
-                            <h2 className="text-xl font-semibold mb-4">Tipo De Relación Jurídica</h2>
-                            <p className="mb-4">Selecciona el tipo de relación entre las partes:</p>
+                    <div className="py-8">
+                        <div className='w-full flex flex-col items-center justify-center mb-12'>
+                            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3 flex items-center">
+                                <span className="material-icons-outlined text-primary mr-2">gavel</span>
+                                Tipo De Relación Jurídica
+                            </h2>
+                            <p className="text-slate-600 dark:text-slate-400">Selecciona el tipo de relación entre las partes</p>
                         </div>
-                        <div className="space-y-2 flex flex-wrap gap-10 items-center justify-around mt-20 pb-28">
-                            <button className='bg-yellow-400 px-20 py-10 shadow-md hover:bg-yellow-500 rounded-md font-bold text-white hover:cursor-pointer transition duration-200 ease-in-out'
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <button
+                                className='neumorphic-button p-8 rounded-xl font-semibold text-slate-700 dark:text-slate-300 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all flex flex-col items-center gap-3'
                                 onClick={() => {
                                     setFormData(prevFormData => ({
                                         ...prevFormData,
@@ -363,9 +377,11 @@ function LegalTitleForms({ formData, setFormData, currentStep, nextStep, documen
                                     nextStep();
                                 }}
                             >
-                                Particular - Particular
+                                <span className="material-icons-outlined text-5xl text-primary">person</span>
+                                <span>Particular - Particular</span>
                             </button>
-                            <button className='bg-yellow-400 px-20 py-10 shadow-md hover:bg-yellow-500 rounded-md font-bold text-white hover:cursor-pointer transition duration-200 ease-in-out'
+                            <button
+                                className='neumorphic-button p-8 rounded-xl font-semibold text-slate-700 dark:text-slate-300 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all flex flex-col items-center gap-3'
                                 onClick={() => {
                                     setFormData(prevFormData => ({
                                         ...prevFormData,
@@ -374,9 +390,11 @@ function LegalTitleForms({ formData, setFormData, currentStep, nextStep, documen
                                     nextStep();
                                 }}
                             >
-                                Particular - Empresa
+                                <span className="material-icons-outlined text-5xl text-primary">business</span>
+                                <span>Particular - Empresa</span>
                             </button>
-                            <button className='bg-yellow-400 px-20 py-10 shadow-md hover:bg-yellow-500 rounded-md font-bold text-white hover:cursor-pointer transition duration-200 ease-in-out'
+                            <button
+                                className='neumorphic-button p-8 rounded-xl font-semibold text-slate-700 dark:text-slate-300 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all flex flex-col items-center gap-3'
                                 onClick={() => {
                                     setFormData(prevFormData => ({
                                         ...prevFormData,
@@ -385,9 +403,11 @@ function LegalTitleForms({ formData, setFormData, currentStep, nextStep, documen
                                     nextStep();
                                 }}
                             >
-                                Empresa - Empresa
+                                <span className="material-icons-outlined text-5xl text-primary">corporate_fare</span>
+                                <span>Empresa - Empresa</span>
                             </button>
-                            <button className='bg-yellow-400 px-20 py-10 shadow-md hover:bg-yellow-500 rounded-md font-bold text-white hover:cursor-pointer transition duration-200 ease-in-out'
+                            <button
+                                className='neumorphic-button p-8 rounded-xl font-semibold text-slate-700 dark:text-slate-300 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all flex flex-col items-center gap-3'
                                 onClick={() => {
                                     setFormData(prevFormData => ({
                                         ...prevFormData,
@@ -396,77 +416,92 @@ function LegalTitleForms({ formData, setFormData, currentStep, nextStep, documen
                                     nextStep();
                                 }}
                             >
-                                Empresa - Particular
+                                <span className="material-icons-outlined text-5xl text-primary">swap_horiz</span>
+                                <span>Empresa - Particular</span>
                             </button>
                         </div>
                     </div>
                 );
             case 2:
                 return (
-                    <form className="bg-background p-6 rounded-lg mb-7">
-                        <h2 className="text-xl font-semibold mb-4">Datos del Antiguo Titular</h2>
+                    <div className="neumorphic-card-inset p-6 rounded-xl">
+                        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center">
+                            <span className="material-icons-outlined text-primary mr-2">person_outline</span>
+                            Datos del Antiguo Titular
+                        </h2>
                         {renderOwnerForm(formData.oldOwner.type, formData.oldOwner, "oldOwner")}
-                    </form>
+                    </div>
                 );
             case 3:
                 return (
-                    <form className="bg-background p-6 rounded-lg mb-7">
-                        <h2 className="text-xl font-semibold mb-4">Datos del Nuevo Titular</h2>
+                    <div className="neumorphic-card-inset p-6 rounded-xl">
+                        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center">
+                            <span className="material-icons-outlined text-primary mr-2">person_add</span>
+                            Datos del Nuevo Titular
+                        </h2>
                         {renderOwnerForm(formData.newOwner.type, formData.newOwner, "newOwner")}
-                    </form>
+                    </div>
                 );
             case 4:
                 return (
-                    <form className="bg-background p-6 rounded-lg mb-7">
-                        <h2 className="text-xl font-semibold mb-4">Detalles de la Firma</h2>
-                        <div className="space-y-4">
-                            <div className="w-full sm:flex-1">
-                                <label className="block text-black mb-2" htmlFor="signatureDate">
+                    <div className="neumorphic-card-inset p-6 rounded-xl">
+                        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center">
+                            <span className="material-icons-outlined text-primary mr-2">edit_document</span>
+                            Detalles de la Firma
+                        </h2>
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="signatureDate">
                                     Fecha de la Firma
                                 </label>
                                 <input
                                     type="date"
                                     id="signatureDate"
                                     name="signatureDate"
-                                    className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                                     value={formData.signatureDate}
                                     onChange={handleTopLevelInputChange}
                                 />
                             </div>
-                            <div className="w-full sm:flex-1">
-                                <label className="block text-black mb-2 mt-7" htmlFor="signatureDate">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="signatureProvince">
                                     Provincia de la Firma
                                 </label>
                                 <input
                                     type="text"
                                     id="signatureProvince"
                                     name="signatureProvince"
-                                    className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
                                     value={formData.signatureProvince}
                                     onChange={handleTopLevelInputChange}
+                                    placeholder="Madrid"
                                 />
                             </div>
-                            <div className="w-full sm:flex-1">
-                                <label className="block text-black mb-2 mt-7" htmlFor="serviceAddress">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="serviceAddress">
                                     Dirección del Suministro
                                 </label>
                                 <input
                                     type="text"
                                     id="serviceAddress"
                                     name="serviceAddress"
-                                    className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
                                     value={formData.serviceAddress}
                                     onChange={handleTopLevelInputChange}
+                                    placeholder="Dirección completa del suministro"
                                 />
                             </div>
                         </div>
-                    </form>
+                    </div>
                 );
             case 5:
                 return (
                     <div>
-                        <h2 className="text-xl font-semibold mb-4">Previsualización del Contrato</h2>
-                        <div className="bg-gray-100 p-4 rounded-md whitespace-pre-wrap font-sans flex flex-wrap items-center justify-center gap-4 py-10">
+                        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center">
+                            <span className="material-icons-outlined text-primary mr-2">preview</span>
+                            Previsualización del Contrato
+                        </h2>
+                        <div className="neumorphic-card-inset p-6 rounded-xl">
                             <LegalTittlePreview formData={formData} documentType={documentType} />
                         </div>
                         <div
@@ -483,7 +518,12 @@ function LegalTitleForms({ formData, setFormData, currentStep, nextStep, documen
                     </div>
                 );
             default:
-                return <div>Paso desconocido</div>;
+                return (
+                    <div className="text-center py-12">
+                        <span className="material-icons-outlined text-6xl text-slate-300 dark:text-slate-600 mb-4 block">error_outline</span>
+                        <p className="text-slate-600 dark:text-slate-400">Paso desconocido</p>
+                    </div>
+                );
         }
     };
 

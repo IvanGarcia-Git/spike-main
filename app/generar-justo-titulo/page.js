@@ -67,7 +67,7 @@ function GenerarJustoTitulo() {
                         "Por favor, introduce una población."
                     );
                     return;
-                } 
+                }
             } else {
                 if (currentOwner?.data?.companyName === '') {
                     alert(
@@ -183,77 +183,126 @@ function GenerarJustoTitulo() {
     };
 
     return (
-        <div
-            className="flex justify-center items-start bg-background min-h-screen p-5 text-black"
-        >
-            <div className="w-full max-w-screen-xl bg-foreground rounded-lg p-5">
-                <div className="mb-6">
-                    <div className="flex justify-center items-center mb-3 space-x-2 w-full">
-
-                        {Array.from({ length: 5 }).map((_, index) => (
-                            <div
-                                key={index}
-                                className={`w-16 h-1.5 rounded-full ${index + 1 <= currentStep ? 'bg-blue-500' : 'bg-gray-300'
-                                    }`}
-                            ></div>
-                        ))}
-                    </div>
-
-                    {/* Texto del Paso Actual */}
-                    <div className="text-center text-gray-600 text-xs">
-                        Paso {currentStep} de 5
-                    </div>
+        <div className="min-h-screen p-6">
+            <div className="max-w-7xl mx-auto">
+                {/* Header */}
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 flex items-center">
+                        <span className="material-icons-outlined text-primary mr-3">description</span>
+                        Generar Justo Título
+                    </h1>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">
+                        Crea documentos legales de transferencia de titularidad
+                    </p>
                 </div>
 
-                <LegalTitleForms formData={formData} setFormData={setFormData} currentStep={currentStep} nextStep={nextStep} documentType={documentType} setDocumentType={setDocumentType} printableAreaRef={printableAreaRef}/>
+                <div className="neumorphic-card p-8 rounded-xl">
+                    {/* Progress Steps */}
+                    <div className="mb-8">
+                        <div className="flex justify-between items-center mb-4">
+                            {Array.from({ length: 5 }).map((_, index) => (
+                                <div key={index} className="flex items-center flex-1">
+                                    <div className="flex flex-col items-center flex-1">
+                                        <div
+                                            className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
+                                                index + 1 <= currentStep
+                                                    ? 'bg-primary text-white shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark'
+                                                    : 'neumorphic-card-inset text-slate-400 dark:text-slate-600'
+                                            }`}
+                                        >
+                                            {index + 1}
+                                        </div>
+                                        <span className={`text-xs mt-2 font-medium ${
+                                            index + 1 <= currentStep
+                                                ? 'text-primary'
+                                                : 'text-slate-400 dark:text-slate-600'
+                                        }`}>
+                                            Paso {index + 1}
+                                        </span>
+                                    </div>
+                                    {index < 4 && (
+                                        <div className={`h-1 flex-1 mx-2 rounded-full transition-all ${
+                                            index + 1 < currentStep
+                                                ? 'bg-primary'
+                                                : 'bg-slate-200 dark:bg-slate-700'
+                                        }`}></div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
 
-                {/* Botones de navegación */}
-                <div className="mt-6 flex justify-between">
-                    {currentStep > 1 && (
-                        <button
-                            onClick={prevStep}
-                            className="px-4 py-2 bg-red-500 font-bold text-white rounded hover:bg-red-600"
-                        >
-                            Anterior
-                        </button>
-                    )}
+                        <div className="text-center">
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                                Paso <span className="font-bold text-primary">{currentStep}</span> de <span className="font-bold">5</span>
+                            </p>
+                        </div>
+                    </div>
 
-                    {currentStep === 2 && (
-                        <button
-                            onClick={() => nextStep(formData.oldOwner)}
-                            className={'px-4 py-2 rounded bg-yellow-400 font-bold text-white hover:bg-yellow-500'}
-                        >
-                            Siguiente
-                        </button>
-                    )}
+                    {/* Form Content */}
+                    <LegalTitleForms
+                        formData={formData}
+                        setFormData={setFormData}
+                        currentStep={currentStep}
+                        nextStep={nextStep}
+                        documentType={documentType}
+                        setDocumentType={setDocumentType}
+                        printableAreaRef={printableAreaRef}
+                    />
 
-                    {currentStep === 3 && (
-                        <button
-                            onClick={() => nextStep(formData.newOwner)}
-                            className={'px-4 py-2 rounded bg-yellow-400 font-bold text-white hover:bg-yellow-500'}
-                        >
-                            Siguiente
-                        </button>
-                    )}
+                    {/* Navigation Buttons */}
+                    <div className="mt-8 flex justify-between items-center gap-4">
+                        {currentStep > 1 && (
+                            <button
+                                onClick={prevStep}
+                                className="neumorphic-button px-6 py-3 rounded-lg font-semibold text-slate-700 dark:text-slate-300 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all flex items-center"
+                            >
+                                <span className="material-icons-outlined mr-2">arrow_back</span>
+                                Anterior
+                            </button>
+                        )}
 
-                    {currentStep === 4 && (
-                        <button
-                            onClick={nextStep}
-                            className={'px-4 py-2 rounded bg-yellow-400 font-bold text-white hover:bg-yellow-500'}
-                        >
-                            Previsualizacion
-                        </button>
-                    )}
+                        <div className="flex-1"></div>
 
-                    {currentStep === 5 && (
-                        <button
-                            onClick={handleDownloadPdf}
-                            className="px-4 py-2 bg-orange-400 font-bold rounded text-white hover:bg-orange-500"
-                        >
-                            Descargar PDF
-                        </button>
-                    )}
+                        {currentStep === 2 && (
+                            <button
+                                onClick={() => nextStep(formData.oldOwner)}
+                                className="neumorphic-button px-6 py-3 rounded-lg bg-primary text-white font-semibold hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all flex items-center"
+                            >
+                                Siguiente
+                                <span className="material-icons-outlined ml-2">arrow_forward</span>
+                            </button>
+                        )}
 
+                        {currentStep === 3 && (
+                            <button
+                                onClick={() => nextStep(formData.newOwner)}
+                                className="neumorphic-button px-6 py-3 rounded-lg bg-primary text-white font-semibold hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all flex items-center"
+                            >
+                                Siguiente
+                                <span className="material-icons-outlined ml-2">arrow_forward</span>
+                            </button>
+                        )}
+
+                        {currentStep === 4 && (
+                            <button
+                                onClick={nextStep}
+                                className="neumorphic-button px-6 py-3 rounded-lg bg-primary text-white font-semibold hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all flex items-center"
+                            >
+                                <span className="material-icons-outlined mr-2">visibility</span>
+                                Previsualización
+                            </button>
+                        )}
+
+                        {currentStep === 5 && (
+                            <button
+                                onClick={handleDownloadPdf}
+                                className="neumorphic-button px-6 py-3 rounded-lg bg-green-600 text-white font-semibold hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all flex items-center"
+                            >
+                                <span className="material-icons-outlined mr-2">download</span>
+                                Descargar PDF
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
