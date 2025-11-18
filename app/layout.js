@@ -6,6 +6,7 @@ import * as jose from "jose";
 import localFont from "next/font/local";
 import { getCookie } from "cookies-next";
 import Sidebar from "@/components/Sidebar";
+import TopBar from "@/components/TopBar";
 import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
@@ -85,10 +86,16 @@ export default function RootLayout({ children }) {
                 <Sidebar userGroupId={userGroupId} isManager={isManager} />
               )}
 
-              {/* Main content */}
-              <main className="flex-1 overflow-y-auto">
-                {children}
-              </main>
+              {/* Main content area with TopBar */}
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Top Bar */}
+                <TopBar />
+
+                {/* Main content */}
+                <main className="flex-1 overflow-y-auto">
+                  {children}
+                </main>
+              </div>
             </div>
           ) : (
             <div className="w-full h-screen">

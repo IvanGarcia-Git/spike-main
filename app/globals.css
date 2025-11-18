@@ -58,6 +58,16 @@ body {
   @apply shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark;
 }
 
+/* Ensure Material Icons are perfectly centered in circular buttons */
+.neumorphic-button .material-icons-outlined,
+button.rounded-full .material-icons-outlined {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  vertical-align: middle;
+}
+
 .neumorphic-progress-track {
   @apply bg-background-light dark:bg-background-dark shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark rounded-full overflow-hidden;
 }
