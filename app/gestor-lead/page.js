@@ -3,7 +3,6 @@ import { format } from "date-fns";
 import { useState, useEffect } from "react";
 import { getCookie } from "cookies-next";
 import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
-import { FiChevronDown, FiSearch } from "react-icons/fi";
 import EditAndCreateLeadSheet from "@/components/edit-and-create-leadSheet.modal";
 import * as jose from "jose";
 import CommunicationModal from "@/components/communication.modal";
@@ -53,18 +52,18 @@ export default function LeadDetailPage() {
   };
 
   const usefulOptions = [
-    { id: leadStatesIds.Venta, label: "Venta" },
-    { id: leadStatesIds.AgendaPersonal, label: "Agenda personal" },
-    { id: leadStatesIds.EveningShift, label: "Por la tarde" },
-    { id: leadStatesIds.MorningShift, label: "Por la mañana" },
-    { id: leadStatesIds.AgendarUsuario, label: "Agendar a comp" },
+    { id: leadStatesIds.Venta, label: "Venta", icon: "shopping_cart" },
+    { id: leadStatesIds.AgendaPersonal, label: "Agenda personal", icon: "event" },
+    { id: leadStatesIds.EveningShift, label: "Por la tarde", icon: "wb_twilight" },
+    { id: leadStatesIds.MorningShift, label: "Por la mañana", icon: "wb_sunny" },
+    { id: leadStatesIds.AgendarUsuario, label: "Agendar a comp", icon: "person_add" },
   ];
 
   const notUsefulOptions = [
-    { id: leadStatesIds.NoContesta, label: "No contesta" },
-    { id: leadStatesIds.NoInteresa, label: "No interesa" },
-    { id: leadStatesIds.NoMejorar, label: "No se puede mejorar" },
-    { id: leadStatesIds.Erroneo, label: "No existe/Bono Social" },
+    { id: leadStatesIds.NoContesta, label: "No contesta", icon: "phone_missed" },
+    { id: leadStatesIds.NoInteresa, label: "No interesa", icon: "block" },
+    { id: leadStatesIds.NoMejorar, label: "No se puede mejorar", icon: "close" },
+    { id: leadStatesIds.Erroneo, label: "No existe/Bono Social", icon: "error_outline" },
   ];
 
   const fetchLeadData = async () => {
@@ -319,80 +318,84 @@ export default function LeadDetailPage() {
     return (
       <div
         className={`w-full ${!removeWidthClass ? "md:w-3/6" : ""
-          } bg-foreground rounded-lg shadow-lg p-4`}
+          } neumorphic-card p-6 rounded-xl`}
       >
-        <h2 className="text-xl font-bold text-black mb-4">
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center">
+          <span className="material-icons-outlined text-primary mr-2">history</span>
           Historial de Llamadas
         </h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-backgroundHover text-black rounded-lg shadow">
+        <div className="overflow-x-auto neumorphic-card-inset rounded-lg">
+          <table className="min-w-full">
             <thead>
-              <tr className="bg-blue-200 text-gray-700">
-                <th className="px-4 py-2 text-left text-sm font-semibold">
+              <tr className="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                   Fecha
                 </th>
-                <th className="px-4 py-2 text-center text-sm font-semibold">
+                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                   Nombre
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-semibold">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                   Teléfono
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-semibold">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                   Observaciones
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-semibold">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                   Fuente
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-semibold">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                   Resultado
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="bg-background-light dark:bg-background-dark">
               {leadsHistory && leadsHistory.length > 0 ? (
                 leadsHistory.map((leadHistory, index) => (
-                  <tr key={index} className="bg-gray-100 even:bg-gray-200">
-                    <td className="px-4 py-2 text-sm">
+                  <tr key={index} className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
                       {
                         new Date(leadHistory.lead.createdAt)
                           .toISOString()
                           .split("T")[0]
                       }
                     </td>
-                    <td className="text-center px-4 py-2 text-sm">
+                    <td className="text-center px-4 py-3 text-sm">
                       <button
                         onClick={() =>
                           handleAssignLeadToUser(leadHistory.lead.id)
                         }
-                        className="text-blue-600 hover:underline focus:outline-none"
+                        className="text-primary hover:underline focus:outline-none font-medium transition-colors"
                       >
                         {leadHistory.lead.fullName}
                       </button>
                     </td>
-                    <td className="px-4 py-2 text-sm">
+                    <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
                       {leadHistory.lead.phoneNumber}
                     </td>
-                    <td className="px-4 py-2 text-sm">
+                    <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
                       {leadHistory.observations}
                     </td>
-                    <td className="px-4 py-2 text-sm">
+                    <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
                       {leadHistory.lead?.campaign?.name || "Sin campaña"}
                     </td>
-                    <td className="px-4 py-2 text-sm">
-                      <span
-                        className="inline-block w-3 h-3 rounded-full mr-2"
-                        style={{
-                          backgroundColor: leadHistory.leadState.colorHex,
-                        }}
-                      ></span>
-                      {leadHistory.leadState.name}
+                    <td className="px-4 py-3 text-sm">
+                      <div className="flex items-center">
+                        <span
+                          className="inline-block w-3 h-3 rounded-full mr-2"
+                          style={{
+                            backgroundColor: leadHistory.leadState.colorHex,
+                          }}
+                        ></span>
+                        <span className="text-slate-700 dark:text-slate-300">{leadHistory.leadState.name}</span>
+                      </div>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="text-center py-4 text-gray-600">
-                    No hay historial disponible
+                  <td colSpan="6" className="text-center py-8">
+                    <span className="material-icons-outlined text-4xl text-slate-300 dark:text-slate-600 mb-2 block">inbox</span>
+                    <span className="text-slate-500 dark:text-slate-400">No hay historial disponible</span>
                   </td>
                 </tr>
               )}
@@ -405,30 +408,38 @@ export default function LeadDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p className="text-gray-500 text-lg">Cargando...</p>
+      <div className="flex flex-col justify-center items-center min-h-screen">
+        <div className="neumorphic-card p-8 rounded-xl">
+          <span className="material-icons-outlined text-primary text-5xl mb-4 block animate-spin">refresh</span>
+          <p className="text-slate-600 dark:text-slate-400 text-lg font-medium">Cargando...</p>
+        </div>
       </div>
     );
   }
 
   if (!lead) {
     return (
-      <div className="flex flex-col justify-center items-center min-h-screen space-y-8 mt-8">
+      <div className="flex flex-col justify-center items-center min-h-screen space-y-8 p-6">
         {/* Mensaje y botón arriba */}
-        <div className="w-full text-center">
-          <p className="text-red-400 text-lg font-semibold">
-            Actualmente no tienes ningún lead, prueba a buscar uno nuevo.
+        <div className="neumorphic-card p-12 rounded-xl text-center max-w-2xl">
+          <span className="material-icons-outlined text-6xl text-slate-300 dark:text-slate-600 mb-4 block">search_off</span>
+          <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-2">
+            No tienes ningún lead asignado
+          </h3>
+          <p className="text-slate-600 dark:text-slate-400 mb-6">
+            Solicita un nuevo lead para comenzar a trabajar
           </p>
           <button
             onClick={handleSearchNewLead}
-            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-600"
+            className="neumorphic-button bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all inline-flex items-center"
           >
+            <span className="material-icons-outlined mr-2">add_circle</span>
             Solicitar Nuevo Lead
           </button>
         </div>
 
         {/* Lead History abajo */}
-        <div className="w-full md:w-3/4">
+        <div className="w-full max-w-6xl">
           <LeadHistory removeWidthClass={true} />
         </div>
       </div>
@@ -448,135 +459,160 @@ export default function LeadDetailPage() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row justify-center items-start bg-background p-2 gap-6">
+    <div className="flex flex-col md:flex-row justify-center items-start p-6 gap-6">
       {/* Lead History */}
       <LeadHistory />
 
       {/* Lead Details */}
-      <div className="w-full md:w-3/6 space-y-4 ">
-        <div className="bg-foreground shadow-lg p-4 space-y-4 rounded-lg">
-          {/* Lead Basic Info */}
-          <div className="space-y-2">
-            <div className="text-2xl text-gray-800 font-semibold">
-              {lead.fullName}
-            </div>
-            <div className="text-2xl font-bold text-gray-800">
-              {lead.phoneNumber}
+      <div className="w-full md:w-3/6 space-y-6">
+        {/* Main Lead Card */}
+        <div className="neumorphic-card p-6 rounded-xl space-y-6">
+          {/* Lead Header */}
+          <div className="space-y-3">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+                  {lead.fullName}
+                </h1>
+                <div className="flex items-center text-2xl font-semibold text-primary">
+                  <span className="material-icons-outlined mr-2">phone</span>
+                  {lead.phoneNumber}
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Tags */}
           <div className="flex flex-wrap gap-2">
-            <span className="bg-green-200 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">
+            <span className="neumorphic-card-inset px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center">
+              <span className="material-icons-outlined text-sm mr-1 text-primary">campaign</span>
               {lead?.campaign?.name || "Sin campaña"}
             </span>
             {lead.campaign?.sector && (
-              <span className="bg-purple-200 text-purple-700 px-3 py-1 rounded-full text-sm font-semibold">
+              <span className="neumorphic-card-inset px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center">
+                <span className="material-icons-outlined text-sm mr-1 text-purple-500">category</span>
                 {lead.campaign.sector}
               </span>
             )}
-            {/* Source Tag */}
             {lead.campaign?.source && (
-              <span
-                className={`px-3 py-1 rounded-full text-sm font-semibold ${lead.campaign.source === "Meta"
-                    ? "bg-blue-200 text-blue-700"
-                    : lead.campaign.source === "TikTok"
-                      ? "bg-pink-200 text-pink-700"
-                      : lead.campaign.source === "Landing"
-                        ? "bg-yellow-200 text-yellow-700"
-                        : "bg-gray-200 text-gray-700"
-                  }`}
-              >
+              <span className="neumorphic-card-inset px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center">
+                <span className="material-icons-outlined text-sm mr-1 text-blue-500">source</span>
                 {lead.campaign.source}
               </span>
             )}
-            <span className="bg-blue-200 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">
+            <span className="neumorphic-card-inset px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center">
+              <span className="material-icons-outlined text-sm mr-1 text-green-500">description</span>
               Factura: {lead.billUri ? "Sí" : "No"}
             </span>
-            <span className="bg-yellow-200 text-yellow-700 px-3 py-1 rounded-full text-sm font-semibold">
+            <span className="neumorphic-card-inset px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center">
+              <span className="material-icons-outlined text-sm mr-1 text-orange-500">schedule</span>
               {format(
                 new Date(lead.createdAt).toISOString().split("T")[0],
                 "dd-MM-yyyy"
               )}{" "}
-              {new Date(lead.createdAt).toISOString().split("T")[1].slice(0, 8)}{" "}
+              {new Date(lead.createdAt).toISOString().split("T")[1].slice(0, 8)}
             </span>
           </div>
 
           {/* Observations Input */}
-          <div className="flex flex-col">
-            <label className="text-sm text-gray-600">
-              Escribir observaciones...{" "}
-              <span className="text-red-500">(obligatorio)</span>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Observaciones <span className="text-red-500">*</span>
             </label>
             <textarea
-              placeholder="Escribir observaciones..."
+              placeholder="Escribe tus observaciones sobre el contacto..."
               value={observation}
               onChange={(e) => setObservation(e.target.value)}
-              className="mt-1 p-2 h-24 bg-gray-100 text-black rounded-md focus:outline-none resize-none"
+              className="w-full px-4 py-3 h-24 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400 resize-none"
             />
-            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+            {error && (
+              <div className="flex items-center text-red-500 text-sm mt-2">
+                <span className="material-icons-outlined text-sm mr-1">error</span>
+                {error}
+              </div>
+            )}
           </div>
 
-          <div className="flex flex-wrap items-center justify-start gap-4 mb-4">
+          {/* Action Buttons */}
+          <div className="flex flex-wrap items-center gap-3">
             <button
-              className="flex items-center bg-green-200 text-green-700 px-4 py-2 rounded-full font-semibold hover:bg-green-300 transition-all duration-300"
+              className={`neumorphic-button px-4 py-3 rounded-lg font-semibold transition-all flex items-center ${
+                showUsefulOptions
+                  ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark"
+                  : "text-green-600 dark:text-green-500"
+              }`}
               onClick={() => {
                 setShowUsefulOptions((prev) => !prev);
                 setShowNotUsefulOptions(false);
               }}
             >
-              Útil{" "}
-              <FiChevronDown
-                className={`ml-2 transform ${showUsefulOptions ? "rotate-180" : "rotate-0"
-                  }`}
-              />
+              <span className="material-icons-outlined mr-2">check_circle</span>
+              Útil
+              <span className={`material-icons-outlined ml-2 transition-transform ${showUsefulOptions ? "rotate-180" : ""}`}>
+                expand_more
+              </span>
             </button>
+
             <button
-              className="flex items-center bg-red-200 text-red-700 px-4 py-2 rounded-full font-semibold hover:bg-red-300 transition-all duration-300"
+              className={`neumorphic-button px-4 py-3 rounded-lg font-semibold transition-all flex items-center ${
+                showNotUsefulOptions
+                  ? "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark"
+                  : "text-red-600 dark:text-red-500"
+              }`}
               onClick={() => {
                 setShowNotUsefulOptions((prev) => !prev);
                 setShowUsefulOptions(false);
               }}
             >
-              No Útil{" "}
-              <FiChevronDown
-                className={`ml-2 transform ${showNotUsefulOptions ? "rotate-180" : "rotate-0"
-                  }`}
-              />
+              <span className="material-icons-outlined mr-2">cancel</span>
+              No Útil
+              <span className={`material-icons-outlined ml-2 transition-transform ${showNotUsefulOptions ? "rotate-180" : ""}`}>
+                expand_more
+              </span>
             </button>
+
             <button
               onClick={handleSubmit}
-              className={`bg-blue-500 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-600 transition-all duration-300 ${!observation || !selectedOption
+              className={`neumorphic-button px-6 py-3 rounded-lg bg-primary text-white font-semibold transition-all flex items-center ${
+                !observation || !selectedOption
                   ? "opacity-50 cursor-not-allowed"
-                  : ""
-                }`}
+                  : "hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark"
+              }`}
               disabled={!observation || !selectedOption}
             >
+              <span className="material-icons-outlined mr-2">save</span>
               Codificar
             </button>
+
             <button
               onClick={handleEditOrCreateLeadSheet}
-              className="bg-yellow-200 text-yellow-700 px-4 py-2 rounded-full font-semibold hover:bg-yellow-300 transition-all duration-300 w-full sm:w-auto"
+              className="neumorphic-button px-4 py-3 rounded-lg font-semibold text-slate-700 dark:text-slate-300 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all flex items-center flex-1 sm:flex-initial"
             >
-              Crear/Ver ficha de cliente
+              <span className="material-icons-outlined mr-2">assignment</span>
+              Ficha de cliente
             </button>
           </div>
 
           {/* Options for Useful */}
           {showUsefulOptions && (
-            <div className="flex flex-col gap-2 mb-4 text-black">
+            <div className="space-y-2 neumorphic-card-inset p-4 rounded-lg">
               {usefulOptions.map((option) => (
                 <button
                   key={option.id}
                   onClick={() => {
                     setSelectedOption(option.id);
                   }}
-                  className={`px-4 py-2 rounded-md text-left ${selectedOption === option.id
-                      ? "bg-green-300 text-green-800 hover:bg-green-400 "
-                      : "bg-background hover:bg-gray-200"
-                    }`}
+                  className={`w-full px-4 py-3 rounded-lg text-left font-medium transition-all flex items-center ${
+                    selectedOption === option.id
+                      ? "bg-primary text-white shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark"
+                      : "bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  }`}
                 >
+                  <span className="material-icons-outlined mr-3">{option.icon}</span>
                   {option.label}
+                  {selectedOption === option.id && (
+                    <span className="material-icons-outlined ml-auto">check</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -584,54 +620,56 @@ export default function LeadDetailPage() {
 
           {/* Options for Not Useful */}
           {showNotUsefulOptions && (
-            <div className="flex flex-col gap-2 mb-4 text-black">
+            <div className="space-y-2 neumorphic-card-inset p-4 rounded-lg">
               {notUsefulOptions.map((option) => (
                 <button
                   key={option.id}
                   onClick={() => {
                     setSelectedOption(option.id);
                   }}
-                  className={`px-4 py-2 rounded-md text-left  ${selectedOption === option.id
-                      ? "bg-red-300 text-red-800 hover:bg-red-400 "
-                      : "bg-background hover:bg-gray-200"
-                    }`}
+                  className={`w-full px-4 py-3 rounded-lg text-left font-medium transition-all flex items-center ${
+                    selectedOption === option.id
+                      ? "bg-red-500 text-white shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark"
+                      : "bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  }`}
                 >
+                  <span className="material-icons-outlined mr-3">{option.icon}</span>
                   {option.label}
+                  {selectedOption === option.id && (
+                    <span className="material-icons-outlined ml-auto">check</span>
+                  )}
                 </button>
               ))}
             </div>
           )}
 
+          {/* Agenda Personal Section */}
           {selectedOption === leadStatesIds.AgendaPersonal && (
-            <>
-              <hr />
-              <div className="flex flex-col space-y-4 mt-4">
-                <div>
-                  <label className="block text-gray-700 text-sm font-bold mb-2">
-                    Fecha y hora de inicio de la llamada
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="text-black p-2 border rounded-md bg-white focus:outline-none"
-                    placeholder="Selecciona fecha y hora de inicio"
-                  />
-                </div>
-              </div>
-            </>
+            <div className="neumorphic-card-inset p-4 rounded-lg space-y-3">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center">
+                <span className="material-icons-outlined text-sm mr-2 text-primary">event</span>
+                Fecha y hora de inicio de la llamada
+              </label>
+              <input
+                type="datetime-local"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
           )}
 
+          {/* Agendar Usuario Section */}
           {selectedOption === leadStatesIds.AgendarUsuario && (
-            <div className="flex flex-col">
-              <label className="text-sm text-gray-600">
-                Selecciona un usuario:
+            <div className="neumorphic-card-inset p-4 rounded-lg space-y-3">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center">
+                <span className="material-icons-outlined text-sm mr-2 text-primary">person</span>
+                Selecciona un usuario
               </label>
-
               <select
                 value={selectedUserId || ""}
                 onChange={(e) => setSelectedUserId(e.target.value)}
-                className="mt-1 p-2 bg-gray-100 text-black rounded-md focus:outline-none"
+                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="">Seleccionar usuario</option>
                 {users.map((user) => (
@@ -647,50 +685,61 @@ export default function LeadDetailPage() {
             </div>
           )}
         </div>
-        <div className="bg-foreground shadow-lg p-4 space-y-4 rounded-lg">
-          <h2 className="text-xl font-bold text-black mb-4">
+
+        {/* Lead History Card */}
+        <div className="neumorphic-card p-6 rounded-xl space-y-6">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center">
+            <span className="material-icons-outlined text-primary mr-2">timeline</span>
             Historial del Lead
           </h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-backgroundHover text-black rounded-lg shadow">
+
+          <div className="overflow-x-auto neumorphic-card-inset rounded-lg">
+            <table className="min-w-full">
               <thead>
-                <tr className="bg-blue-200 text-gray-700">
-                  <th className="px-4 py-2 text-left text-sm font-semibold">
+                <tr className="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                     Fecha
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                     Agente
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                     Observación
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                     Resultado
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="bg-background-light dark:bg-background-dark">
                 {lead.leadLogs && lead.leadLogs.length > 0 ? (
                   lead.leadLogs.map((log) => (
-                    <tr key={log.id} className="bg-gray-100 even:bg-gray-200">
-                      <td className="px-4 py-2 text-sm">
+                    <tr key={log.id} className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
                         {new Date(log.createdAt).toISOString().split("T")[0]}
                       </td>
-                      <td className="px-4 py-2 text-sm">{log.user.username}</td>
-                      <td className="px-4 py-2 text-sm">{log.observations}</td>
-                      <td className="px-4 py-2 text-sm">
-                        <span
-                          className="inline-block w-3 h-3 rounded-full mr-2"
-                          style={{ backgroundColor: log.leadState.colorHex }}
-                        ></span>
-                        {log.leadState.name}
+                      <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300 font-medium">
+                        {log.user.username}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                        {log.observations}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <div className="flex items-center">
+                          <span
+                            className="inline-block w-3 h-3 rounded-full mr-2"
+                            style={{ backgroundColor: log.leadState.colorHex }}
+                          ></span>
+                          <span className="text-slate-700 dark:text-slate-300">{log.leadState.name}</span>
+                        </div>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4" className="text-center py-4 text-gray-600">
-                      No hay historial disponible
+                    <td colSpan="4" className="text-center py-8">
+                      <span className="material-icons-outlined text-4xl text-slate-300 dark:text-slate-600 mb-2 block">inbox</span>
+                      <span className="text-slate-500 dark:text-slate-400">No hay historial disponible</span>
                     </td>
                   </tr>
                 )}
@@ -698,24 +747,30 @@ export default function LeadDetailPage() {
             </table>
           </div>
 
-          <div className="w-full mt-4 flex justify-center">
+          {/* Attachments Button */}
+          <div className="flex justify-center pt-4">
             {lead.billUri ? (
               <a
                 href={lead.billUri}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-blue-500 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-600 w-full md:w-auto flex items-center justify-center"
+                className="neumorphic-button bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all inline-flex items-center"
               >
-                <FiSearch className="mr-2" /> Ver Adjuntos
+                <span className="material-icons-outlined mr-2">attach_file</span>
+                Ver Adjuntos
               </a>
             ) : (
-              <p className="text-gray-600 font-semibold">
-                No hay adjuntos disponibles
-              </p>
+              <div className="neumorphic-card-inset px-6 py-3 rounded-lg">
+                <span className="text-slate-500 dark:text-slate-400 font-medium flex items-center">
+                  <span className="material-icons-outlined mr-2">block</span>
+                  No hay adjuntos disponibles
+                </span>
+              </div>
             )}
           </div>
         </div>
       </div>
+
       {/* Modal */}
       {isEditModalOpen && (
         <div
@@ -730,7 +785,7 @@ export default function LeadDetailPage() {
               leadId: lead.id,
             }}
             mode={mode}
-            onRefreshLead={refreshLead} // refrescar el objeto lead.leadSheet
+            onRefreshLead={refreshLead}
           />
         </div>
       )}
