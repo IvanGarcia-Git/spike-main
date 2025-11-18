@@ -2,15 +2,6 @@ import { useState, useEffect } from "react";
 import GroupUsersModal from "./group-users.modal";
 import { authFetch } from "@/helpers/server-fetch.helper";
 import { getCookie } from "cookies-next";
-import {
-  MdContactPhone,
-  MdLocalOffer,
-  MdEvent,
-  MdLocationOff,
-  MdNotInterested,
-} from "react-icons/md";
-import { FaUser } from "react-icons/fa";
-import { FiPlus } from "react-icons/fi";
 
 export default function EditAndCreateGroupModal({
   isModalOpen,
@@ -72,65 +63,99 @@ export default function EditAndCreateGroupModal({
 
   return (
     <div
-      className={`bg-foreground text-black p-6 rounded-lg shadow-lg w-full max-w-lg ${
+      className={`neumorphic-card bg-background-light dark:bg-background-dark p-6 rounded-xl w-full max-w-2xl ${
         isModalOpen ? "" : "hidden"
       }`}
     >
-      <h2 className="text-lg font-bold mb-4">
-        {mode === "create" ? "Crear Nuevo Grupo" : "Editar Grupo"}
-      </h2>
-      <div
-        style={{ maxHeight: "80vh", overflowY: "auto" }}
-        className="scrollable-modal-content"
-      >
-        {mode === "edit" && (
-          <>
-            <div className="mb-4 flex items-center">
-              <div className="relative w-full h-4 bg-gray-200 rounded-full">
-                {/* Barra de progreso verde que muestra el porcentaje de contactos realizados */}
-                <div
-                  className="absolute top-0 left-0 h-4 bg-green-500 rounded-full"
-                  style={{ width: `${newGroup.stats?.contactedPercent || 0}%` }}
-                ></div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+          {mode === "create" ? "Crear Nuevo Grupo" : "Editar Grupo"}
+        </h2>
+        <button
+          onClick={() => setIsModalOpen(false)}
+          className="neumorphic-button p-2 rounded-lg transition-all hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark"
+        >
+          <span className="material-icons-outlined text-slate-600 dark:text-slate-400">close</span>
+        </button>
+      </div>
 
-                <div className="absolute w-full h-full flex items-center justify-center">
-                  <span className="text-black text-sm">
-                    {newGroup.stats.contactedLeadsCount}/
-                    {newGroup.stats.leadsCount}
-                  </span>
-                </div>
-              </div>
-              <p className="ml-2 text-sm font-bold text-gray-700">
+      <div
+        style={{ maxHeight: "70vh", overflowY: "auto" }}
+        className="scrollable-modal-content pr-2"
+      >
+        {/* Progress bar for edit mode */}
+        {mode === "edit" && (
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                Progreso de contacto
+              </span>
+              <span className="text-xs font-bold text-primary">
                 {newGroup.stats.contactedPercent}%
-              </p>
+              </span>
             </div>
-          </>
+            <div className="neumorphic-progress-track h-3 relative">
+              <div
+                className="bg-gradient-to-r from-primary to-primary-light h-full rounded-full transition-all duration-500"
+                style={{ width: `${newGroup.stats?.contactedPercent || 0}%` }}
+              ></div>
+              <div className="absolute w-full h-full flex items-center justify-center">
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {newGroup.stats.contactedLeadsCount}/{newGroup.stats.leadsCount}
+                </span>
+              </div>
+            </div>
+          </div>
         )}
 
-        {/* Shift Selection with Radio Buttons */}
-        <div className="mb-4 flex justify-around">
-          {["morning", "evening", "all"].map((option) => (
-            <label key={option} className="flex items-center space-x-2">
-              <input
-                type="radio"
-                value={option}
-                checked={newGroup.shift === option}
-                onChange={(e) =>
-                  setNewGroup({
-                    ...newGroup,
-                    shift: e.target.value,
-                  })
-                }
-                className="text-blue-500 focus:ring-blue-500"
-              />
-              <span className="text-gray-700">{shiftLabels[option]}</span>
-            </label>
-          ))}
+        {/* Shift Selection */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+            Turno de trabajo
+          </label>
+          <div className="flex gap-3">
+            {["morning", "evening", "all"].map((option) => (
+              <label
+                key={option}
+                className={`flex-1 neumorphic-button p-3 rounded-lg cursor-pointer transition-all ${
+                  newGroup.shift === option
+                    ? "active shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark"
+                    : ""
+                }`}
+              >
+                <input
+                  type="radio"
+                  value={option}
+                  checked={newGroup.shift === option}
+                  onChange={(e) =>
+                    setNewGroup({
+                      ...newGroup,
+                      shift: e.target.value,
+                    })
+                  }
+                  className="hidden"
+                />
+                <div className="flex items-center justify-center">
+                  <span className="material-icons-outlined text-sm mr-2 text-slate-600 dark:text-slate-400">
+                    schedule
+                  </span>
+                  <span className={`text-sm font-medium ${
+                    newGroup.shift === option
+                      ? "text-primary"
+                      : "text-slate-600 dark:text-slate-400"
+                  }`}>
+                    {shiftLabels[option]}
+                  </span>
+                </div>
+              </label>
+            ))}
+          </div>
         </div>
 
         {/* Group Name */}
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Nombre del grupo
           </label>
           <input
@@ -142,13 +167,14 @@ export default function EditAndCreateGroupModal({
                 name: e.target.value,
               })
             }
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-500"
+            placeholder="Ingresa el nombre del grupo"
+            className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
           />
         </div>
 
         {/* Description */}
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Descripción del Grupo
           </label>
           <textarea
@@ -159,147 +185,186 @@ export default function EditAndCreateGroupModal({
                 description: e.target.value,
               })
             }
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-500"
+            placeholder="Describe el propósito o características del grupo"
+            rows={3}
+            className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400 resize-none"
           />
         </div>
 
         {mode === "edit" && (
           <>
-            {/* Integrantes List in Box */}
-            <div className="relative mb-4 p-4 bg-gray-100 rounded-lg">
-              <h5 className="text-gray-700 text-sm font-bold mb-2">
-                Integrantes
-              </h5>
-              <ul className="text-gray-600">
-                {newGroup.groupUsers.length > 0 ? (
-                  newGroup.groupUsers.map((userWrapper, index) => (
-                    <li key={index} className="flex items-center mb-2">
-                      <FaUser className="text-gray-700 mr-2" />
-                      <span>
+            {/* Integrantes Section */}
+            <div className="relative mb-6 neumorphic-card-inset p-4 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <h5 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center">
+                  <span className="material-icons-outlined text-lg mr-2 text-primary">group</span>
+                  Integrantes
+                </h5>
+                <button
+                  onClick={() => setIsGroupUsersModalOpen(true)}
+                  className="neumorphic-button p-2 rounded-lg bg-primary text-white hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all"
+                  aria-label="Editar Integrantes"
+                >
+                  <span className="material-icons-outlined text-sm">add</span>
+                </button>
+              </div>
+
+              {newGroup.groupUsers.length > 0 ? (
+                <div className="space-y-2">
+                  {newGroup.groupUsers.map((userWrapper, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center p-2 rounded-lg bg-background-light dark:bg-background-dark"
+                    >
+                      <div className="w-8 h-8 rounded-full neumorphic-card flex items-center justify-center mr-3">
+                        <span className="material-icons-outlined text-sm text-primary">person</span>
+                      </div>
+                      <span className="text-sm text-slate-700 dark:text-slate-300">
                         {userWrapper.user.name} {userWrapper.user.firstSurname}
                       </span>
-                    </li>
-                  ))
-                ) : (
-                  <li>No hay integrantes en este grupo</li>
-                )}
-              </ul>
-
-              {/* Botón para abrir el modal de edición de usuarios */}
-              <button
-                onClick={() => setIsGroupUsersModalOpen(true)}
-                className="absolute top-2 right-2 bg-blue-400 text-white p-2 rounded-full hover:bg-blue-500/80 z-10"
-                aria-label="Editar Integrantes"
-              >
-                <FiPlus size={12} />
-              </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">
+                  No hay integrantes en este grupo
+                </p>
+              )}
             </div>
 
-            {/* Stats and Campaigns Columns */}
-            <div className="mb-4 grid grid-cols-2 gap-4">
-              <div className="mb-4">
-                <h5 className="text-gray-700 text-sm font-bold mb-2">
+            {/* Stats and Campaigns Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {/* Statistics Column */}
+              <div className="neumorphic-card-inset p-4 rounded-lg">
+                <h5 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4 flex items-center">
+                  <span className="material-icons-outlined text-lg mr-2 text-primary">bar_chart</span>
                   Estadísticas
                 </h5>
-                <div className="flex flex-col items-start text-left">
-                  <div className="flex items-center m-2 text-green-500">
-                    <MdContactPhone size={20} className="mr-2" />
-                    <span className="text-lg font-semibold mr-1">
-                      {newGroup.stats.porContactar}
-                    </span>
-                    <div className="h-4 border-l border-gray-400"></div>
-                    <span className="text-lg font-semibold ml-1">
-                      {newGroup.stats.porContactarPercent}%
-                    </span>
-                    <span className="ml-2 text-xs text-gray-500">
-                      Por Contactar
-                    </span>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-background-light dark:bg-background-dark">
+                    <div className="flex items-center">
+                      <span className="material-icons-outlined text-green-500 text-lg mr-2">contact_phone</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Por Contactar</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                        {newGroup.stats.porContactar}
+                      </span>
+                      <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                      <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                        {newGroup.stats.porContactarPercent}%
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center m-2 text-blue-500">
-                    <MdLocalOffer size={20} className="mr-2" />
-                    <span className="text-lg font-semibold mr-1">
-                      {newGroup.stats.venta}
-                    </span>
-                    <div className="h-4 border-l border-gray-400"></div>
-                    <span className="text-lg font-semibold ml-1">
-                      {newGroup.stats.ventaPercent}%
-                    </span>
-                    <span className="ml-2 text-xs text-gray-500">Venta</span>
+
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-background-light dark:bg-background-dark">
+                    <div className="flex items-center">
+                      <span className="material-icons-outlined text-blue-500 text-lg mr-2">local_offer</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Venta</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                        {newGroup.stats.venta}
+                      </span>
+                      <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                      <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                        {newGroup.stats.ventaPercent}%
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center m-2 text-purple-500">
-                    <MdEvent size={20} className="mr-2" />
-                    <span className="text-lg font-semibold mr-1">
-                      {newGroup.stats.agendado}
-                    </span>
-                    <div className="h-4 border-l border-gray-400"></div>
-                    <span className="text-lg font-semibold ml-1">
-                      {newGroup.stats.agendadoPercent}%
-                    </span>
-                    <span className="ml-2 text-xs text-gray-500">Agendado</span>
+
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-background-light dark:bg-background-dark">
+                    <div className="flex items-center">
+                      <span className="material-icons-outlined text-purple-500 text-lg mr-2">event</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Agendado</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                        {newGroup.stats.agendado}
+                      </span>
+                      <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                      <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                        {newGroup.stats.agendadoPercent}%
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center m-2 text-orange-500">
-                    <MdLocationOff size={20} className="mr-2" />
-                    <span className="text-lg font-semibold mr-1">
-                      {newGroup.stats.ilocalizable}
-                    </span>
-                    <div className="h-4 border-l border-gray-400"></div>
-                    <span className="text-lg font-semibold ml-1">
-                      {newGroup.stats.ilocalizablePercent}%
-                    </span>
-                    <span className="ml-2 text-xs text-gray-500">
-                      Ilocalizable
-                    </span>
+
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-background-light dark:bg-background-dark">
+                    <div className="flex items-center">
+                      <span className="material-icons-outlined text-orange-500 text-lg mr-2">location_off</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Ilocalizable</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                        {newGroup.stats.ilocalizable}
+                      </span>
+                      <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                      <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                        {newGroup.stats.ilocalizablePercent}%
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center m-2 text-red-500">
-                    <MdNotInterested size={20} className="mr-2" />
-                    <span className="text-lg font-semibold mr-1">
-                      {newGroup.stats.noInteresa}
-                    </span>
-                    <div className="h-4 border-l border-gray-400"></div>
-                    <span className="text-lg font-semibold ml-1">
-                      {newGroup.stats.noInteresaPercent}%
-                    </span>
-                    <span className="ml-2 text-xs text-gray-500">
-                      No Interesa
-                    </span>
+
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-background-light dark:bg-background-dark">
+                    <div className="flex items-center">
+                      <span className="material-icons-outlined text-red-500 text-lg mr-2">block</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">No Interesa</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                        {newGroup.stats.noInteresa}
+                      </span>
+                      <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                      <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                        {newGroup.stats.noInteresaPercent}%
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Campaigns Column */}
-              <div className="mb-4">
-                <h5 className="text-gray-700 text-sm font-bold mb-2">
+              <div className="neumorphic-card-inset p-4 rounded-lg">
+                <h5 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4 flex items-center">
+                  <span className="material-icons-outlined text-lg mr-2 text-primary">campaign</span>
                   Campañas Vinculadas
                 </h5>
-                <ul className="text-gray-600">
-                  {newGroup.groupCampaigns.length > 0 ? (
-                    newGroup.groupCampaigns.map((campaignWrapper, index) => (
-                      <li key={index} className="flex items-center mb-2">
-                        <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-                        <b>{campaignWrapper.campaign?.name || "Sin campaña"}</b>
-                      </li>
-                    ))
-                  ) : (
-                    <li>No hay campañas vinculadas</li>
-                  )}
-                </ul>
+                {newGroup.groupCampaigns.length > 0 ? (
+                  <div className="space-y-2">
+                    {newGroup.groupCampaigns.map((campaignWrapper, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center p-2 rounded-lg bg-background-light dark:bg-background-dark"
+                      >
+                        <span className="w-2 h-2 bg-primary rounded-full mr-3"></span>
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                          {campaignWrapper.campaign?.name || "Sin campaña"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">
+                    No hay campañas vinculadas
+                  </p>
+                )}
               </div>
             </div>
           </>
         )}
 
-        {/* Save Button */}
-        <div className="flex justify-end">
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
           <button
             type="button"
-            className="bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700"
+            className="neumorphic-button px-6 py-3 rounded-lg font-medium text-slate-600 dark:text-slate-400 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all"
             onClick={() => setIsModalOpen(false)}
           >
             Cancelar
           </button>
           <button
             onClick={handleSaveChanges}
-            className="bg-secondary text-white px-4 py-2 rounded hover:bg-secondaryHover"
+            className="neumorphic-button px-6 py-3 rounded-lg bg-primary text-white font-semibold hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all"
           >
             Guardar cambios
           </button>

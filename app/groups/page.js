@@ -4,15 +4,6 @@ import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
 import { getCookie } from "cookies-next";
 import EditAndCreateGroupModal from "@/components/edit-and-create-group.modal";
 
-import {
-  MdContactPhone,
-  MdLocalOffer,
-  MdEvent,
-  MdLocationOff,
-  MdNotInterested,
-  MdMoreVert,
-} from "react-icons/md";
-
 export default function Groups() {
   const [groups, setGroups] = useState([]);
   const [menuOpen, setMenuOpen] = useState(null);
@@ -109,41 +100,75 @@ export default function Groups() {
   };
 
   return (
-    <div className="relative bg-background p-4">
-      <div className="absolute top-4 right-4 z-10">
+    <div className="p-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
+            Grupos
+          </h3>
+          <p className="text-slate-600 dark:text-slate-400 mt-2">
+            Gestiona tus equipos de trabajo
+          </p>
+        </div>
         <button
           onClick={handleNewGroup}
-          className="flex items-center space-x-2 hover:bg-secondaryHover text-white px-4 py-2 rounded-lg shadow-md bg-secondary"
+          className="neumorphic-button flex items-center justify-center p-4 rounded-lg bg-primary text-white font-semibold hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all"
         >
-          <span>Nuevo Grupo</span>
+          <span className="material-icons-outlined mr-2">add</span>
+          Nuevo Grupo
         </button>
       </div>
-      <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {groups.map((group, index) => (
-          <div key={index} className="relative p-4">
-            <div className="bg-white text-black rounded-lg p-6 shadow-md relative">
-              {/* Botón de menú desplegable */}
+
+      {/* Grid de grupos */}
+      {groups.length === 0 ? (
+        <div className="neumorphic-card p-12 text-center">
+          <span className="material-icons-outlined text-6xl text-slate-300 dark:text-slate-600 mb-4 block">
+            groups
+          </span>
+          <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-2">
+            No hay grupos disponibles
+          </h3>
+          <p className="text-slate-600 dark:text-slate-400">
+            Crea un nuevo grupo para comenzar
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {groups.map((group, index) => (
+            <div key={index} className="neumorphic-card p-6 relative">
+              {/* Menú de opciones */}
               <div className="absolute top-4 right-4">
                 <button
                   onClick={() => handleMenuToggle(index)}
-                  className="text-gray-700 hover:text-gray-900 rounded-full focus:outline-none p-2"
+                  className="neumorphic-button p-2 rounded-lg transition-all hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark"
                 >
-                  <MdMoreVert size={20} />
+                  <span className="material-icons-outlined text-slate-600 dark:text-slate-400">
+                    more_vert
+                  </span>
                 </button>
 
-                {/* Menú desplegable */}
+                {/* Dropdown menu */}
                 {menuOpen === index && (
-                  <div className="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg z-20 border border-gray-200">
+                  <div className="absolute right-0 mt-2 w-40 neumorphic-card p-2 z-20">
                     <button
-                      onClick={() => handleEdit(group.group.uuid)}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg"
+                      onClick={() => {
+                        handleEdit(group.group.uuid);
+                        setMenuOpen(null);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg flex items-center transition-colors"
                     >
+                      <span className="material-icons-outlined text-sm mr-2">edit</span>
                       Editar
                     </button>
                     <button
-                      onClick={() => handleDeleteGroup(group.group.uuid)}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-b-lg"
+                      onClick={() => {
+                        handleDeleteGroup(group.group.uuid);
+                        setMenuOpen(null);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg flex items-center transition-colors"
                     >
+                      <span className="material-icons-outlined text-sm mr-2">delete</span>
                       Eliminar
                     </button>
                   </div>
@@ -151,12 +176,17 @@ export default function Groups() {
               </div>
 
               {/* Contenido del grupo */}
-              <h3 className="text-xl font-bold mb-2">{group.group.name}</h3>
-              <p className="text-sm mb-2 text-gray-600">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2 pr-10">
+                {group.group.name}
+              </h3>
+              <p className="text-sm mb-4 text-slate-600 dark:text-slate-400">
                 {group.group.description}
               </p>
-              <div className="flex items-center mb-4">
-                <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-1 rounded">
+
+              {/* Badge de turno */}
+              <div className="flex items-center mb-6">
+                <span className="neumorphic-card-inset px-3 py-1 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center">
+                  <span className="material-icons-outlined text-sm mr-1">schedule</span>
                   {group.group.shift === "morning"
                     ? "Mañana"
                     : group.group.shift === "evening"
@@ -165,101 +195,155 @@ export default function Groups() {
                 </span>
               </div>
 
-              {/* Section de estadísticas */}
-              <div className="flex flex-wrap items-center justify-around mb-4 text-center">
-                <div className="flex flex-col items-center m-2 text-green-500">
-                  <MdContactPhone size={20} className="mb-1" />
-                  <span className="text-lg font-semibold">
-                    {group.stats.porContactar}
-                  </span>
-                  <span className="inline-block w-1 h-1 bg-gray-400 rounded-full"></span>
-                  <span className="text-lg font-semibold">
-                    {group.stats.porContactarPercent}%
-                  </span>
-                  <span className="text-xs text-gray-500">Por Contactar</span>
+              {/* Estadísticas */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {/* Por Contactar */}
+                <div className="neumorphic-card-inset p-3 rounded-lg text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <span className="material-icons-outlined text-green-500 text-xl">
+                      contact_phone
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-center gap-1 mb-1">
+                    <span className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                      {group.stats.porContactar}
+                    </span>
+                    <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                    <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                      {group.stats.porContactarPercent}%
+                    </span>
+                  </div>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Por Contactar</span>
                 </div>
-                <div className="flex flex-col items-center m-2 text-blue-500">
-                  <MdLocalOffer size={20} className="mb-1" />
-                  <span className="text-lg font-semibold">
-                    {group.stats.venta}
-                  </span>
-                  <span className="inline-block w-1 h-1 bg-gray-400 rounded-full"></span>
-                  <span className="text-lg font-semibold">
-                    {group.stats.ventaPercent}%
-                  </span>
-                  <span className="text-xs text-gray-500">Venta</span>
+
+                {/* Venta */}
+                <div className="neumorphic-card-inset p-3 rounded-lg text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <span className="material-icons-outlined text-blue-500 text-xl">
+                      local_offer
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-center gap-1 mb-1">
+                    <span className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                      {group.stats.venta}
+                    </span>
+                    <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                    <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                      {group.stats.ventaPercent}%
+                    </span>
+                  </div>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Venta</span>
                 </div>
-                <div className="flex flex-col items-center m-2 text-purple-500">
-                  <MdEvent size={20} className="mb-1" />
-                  <span className="text-lg font-semibold">
-                    {group.stats.agendado}
-                  </span>
-                  <span className="inline-block w-1 h-1 bg-gray-400 rounded-full"></span>
-                  <span className="text-lg font-semibold">
-                    {group.stats.agendadoPercent}%
-                  </span>
-                  <span className="text-xs text-gray-500">Agendado</span>
+
+                {/* Agendado */}
+                <div className="neumorphic-card-inset p-3 rounded-lg text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <span className="material-icons-outlined text-purple-500 text-xl">
+                      event
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-center gap-1 mb-1">
+                    <span className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                      {group.stats.agendado}
+                    </span>
+                    <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                    <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                      {group.stats.agendadoPercent}%
+                    </span>
+                  </div>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Agendado</span>
                 </div>
-                <div className="flex flex-col items-center m-2 text-orange-500">
-                  <MdLocationOff size={20} className="mb-1" />
-                  <span className="text-lg font-semibold">
-                    {group.stats.ilocalizable}
-                  </span>
-                  <span className="inline-block w-1 h-1 bg-gray-400 rounded-full"></span>
-                  <span className="text-lg font-semibold">
-                    {group.stats.ilocalizablePercent}%
-                  </span>
-                  <span className="text-xs text-gray-500">Ilocalizable</span>
+
+                {/* Ilocalizable */}
+                <div className="neumorphic-card-inset p-3 rounded-lg text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <span className="material-icons-outlined text-orange-500 text-xl">
+                      location_off
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-center gap-1 mb-1">
+                    <span className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                      {group.stats.ilocalizable}
+                    </span>
+                    <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                    <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                      {group.stats.ilocalizablePercent}%
+                    </span>
+                  </div>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Ilocalizable</span>
                 </div>
-                <div className="flex flex-col items-center m-2 text-red-500">
-                  <MdNotInterested size={20} className="mb-1" />
-                  <span className="text-lg font-semibold">
-                    {group.stats.noInteresa}
-                  </span>
-                  <span className="inline-block w-1 h-1 bg-gray-400 rounded-full"></span>
-                  <span className="text-lg font-semibold">
-                    {group.stats.noInteresaPercent}%
-                  </span>
-                  <span className="text-xs text-gray-500">No interesa</span>
+
+                {/* No Interesa - Full width */}
+                <div className="col-span-2 neumorphic-card-inset p-3 rounded-lg text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <span className="material-icons-outlined text-red-500 text-xl">
+                      block
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-center gap-1 mb-1">
+                    <span className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                      {group.stats.noInteresa}
+                    </span>
+                    <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                    <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                      {group.stats.noInteresaPercent}%
+                    </span>
+                  </div>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">No interesa</span>
                 </div>
               </div>
 
               {/* Barra de progreso */}
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4 relative">
-                <div
-                  className="bg-green-500 h-2.5 rounded-full"
-                  style={{ width: `${group.stats.contactedPercent}%` }}
-                ></div>
-                <span className="absolute top-[-1rem] right-0 text-xs font-semibold text-gray-700">
-                  {group.stats.contactedPercent}%
-                </span>
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                    Progreso de contacto
+                  </span>
+                  <span className="text-xs font-bold text-primary">
+                    {group.stats.contactedPercent}%
+                  </span>
+                </div>
+                <div className="neumorphic-progress-track h-2">
+                  <div
+                    className="bg-gradient-to-r from-primary to-primary-light h-full rounded-full transition-all duration-500"
+                    style={{ width: `${group.stats.contactedPercent}%` }}
+                  ></div>
+                </div>
               </div>
 
-              {/* Sección de usuarios y fecha */}
-              <div className="flex items-center justify-between text-sm text-gray-600">
-                <div className="flex -space-x-3 items-center ml-4">
+              {/* Footer con usuarios y fecha */}
+              <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-700">
+                <div className="flex -space-x-2">
                   {group.group.groupUsers.slice(0, 3).map((user, idx) => (
-                    <img
+                    <div
                       key={idx}
-                      className="inline-block bg-background rounded-full w-8 h-8 bg-surface-400 shadow-md border border-white"
-                      src="avatar.png"
-                      alt={`User ${user.userId}`}
-                    />
+                      className="neumorphic-card w-8 h-8 rounded-full flex items-center justify-center border-2 border-background-light dark:border-background-dark overflow-hidden"
+                    >
+                      <img
+                        className="w-full h-full object-cover"
+                        src="/avatar.png"
+                        alt={`User ${user.userId}`}
+                      />
+                    </div>
                   ))}
                   {group.group.groupUsers.length > 3 && (
-                    <div className="inline-block bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center text-gray-600 font-medium border border-white">
-                      +{group.group.groupUsers.length - 3}
+                    <div className="neumorphic-card-inset w-8 h-8 rounded-full flex items-center justify-center border-2 border-background-light dark:border-background-dark">
+                      <span className="text-xs font-bold text-primary">
+                        +{group.group.groupUsers.length - 3}
+                      </span>
                     </div>
                   )}
                 </div>
-                <div className="text-xs">
+                <div className="flex items-center text-xs text-slate-500 dark:text-slate-400">
+                  <span className="material-icons-outlined text-sm mr-1">calendar_today</span>
                   {new Date(group.group.createdAt).toLocaleDateString("es-ES")}
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
+
       {/* Modal */}
       {isEditModalOpen && (
         <div
