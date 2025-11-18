@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { getCookie } from "cookies-next";
 import { authFetch, authGetFetch } from "@/helpers/server-fetch.helper";
-import { FiSearch, FiPlus, FiX, FiTrash, FiPaperclip, FiDownload } from "react-icons/fi";
 import GroupLinkModal from "./group-link.modal";
 import * as XLSX from "xlsx";
 
@@ -101,11 +100,16 @@ const LeadDocumentsModal = ({ lead, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4">
-      <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl text-black">
-        <div className="flex justify-between items-center mb-4 pb-4 border-b">
-          <h3 className="text-lg font-bold">Documentos de: {lead.fullName}</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-800">
-            <FiX size={24} />
+      <div className="neumorphic-card p-6 w-full max-w-2xl">
+        <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-200 dark:border-slate-700">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+            Documentos de: {lead.fullName}
+          </h3>
+          <button
+            onClick={onClose}
+            className="neumorphic-button p-2 rounded-lg transition-all hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark"
+          >
+            <span className="material-icons-outlined">close</span>
           </button>
         </div>
         <div className="mb-4">
@@ -119,32 +123,32 @@ const LeadDocumentsModal = ({ lead, onClose }) => {
           <button
             onClick={handleUploadClick}
             disabled={isUploading}
-            className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:bg-blue-300 transition-colors"
+            className="w-full neumorphic-button bg-primary text-white px-4 py-3 rounded-lg font-semibold hover:bg-primary-dark disabled:opacity-50 transition-all"
           >
             {isUploading ? "Subiendo..." : "Subir Nuevos Documentos"}
           </button>
         </div>
         <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
           {isLoading ? (
-            <p>Cargando documentos...</p>
+            <p className="text-center text-slate-600 dark:text-slate-400 py-4">Cargando documentos...</p>
           ) : documents.length > 0 ? (
             documents.map((doc) => (
               <div
                 key={doc.uuid}
-                className="flex justify-between items-center p-3 bg-gray-100 rounded-md"
+                className="neumorphic-card-inset flex justify-between items-center p-3 rounded-lg"
               >
-                <span className="truncate pr-4">{doc.originalName}</span>
+                <span className="truncate pr-4 text-slate-800 dark:text-slate-100">{doc.originalName}</span>
                 <button
                   onClick={() => handleDownload(doc.uuid)}
-                  className="p-1 text-blue-600 hover:text-blue-800"
+                  className="neumorphic-button p-2 rounded-lg text-primary transition-all"
                   title={`Descargar ${doc.originalName}`}
                 >
-                  <FiDownload size={18} />
+                  <span className="material-icons-outlined">download</span>
                 </button>
               </div>
             ))
           ) : (
-            <p className="text-center text-gray-500 py-4">No hay documentos para este lead.</p>
+            <p className="text-center text-slate-500 dark:text-slate-400 py-4">No hay documentos para este lead.</p>
           )}
         </div>
       </div>
@@ -516,35 +520,30 @@ export default function CampaignCard({
     return null;
   }
 
-  // Don't hide campaigns without leads - show them with empty state
-  // if (filteredLeads.length === 0) {
-  //   return null;
-  // }
-
   return (
-    <div className="p-4 bg-foreground text-black rounded-lg shadow-md mb-6">
+    <div className="neumorphic-card p-6 mb-6">
       {/* Encabezado de la card */}
-      <div className="flex flex-wrap items-center gap-2 w-full justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <h2 className="text-xl font-bold text-black">{campaign.name}</h2>
+      <div className="flex flex-wrap items-center gap-3 justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">{campaign.name}</h2>
           <div className="flex gap-2">
             <span
-              className={`text-white px-2 py-1 rounded-md text-sm ${
-                campaign.type === "Automatic" ? "bg-purple-500" : "bg-green-500"
+              className={`px-3 py-1 rounded-lg text-sm font-semibold ${
+                campaign.type === "Automatic" ? "bg-purple-500 text-white" : "bg-green-500 text-white"
               }`}
             >
               {campaign.type === "Automatic" ? "Automática" : campaign.type}
             </span>
             {campaign.source && (
               <span
-                className={`px-2 py-1 rounded-md text-sm font-semibold ${
+                className={`px-3 py-1 rounded-lg text-sm font-semibold ${
                   campaign.source === "Meta"
                     ? "bg-blue-500 text-white"
                     : campaign.source === "TikTok"
                     ? "bg-pink-500 text-white"
                     : campaign.source === "Landing"
                     ? "bg-secondary text-white"
-                    : "bg-gray-500 text-white"
+                    : "bg-slate-500 text-white"
                 }`}
               >
                 {campaign.source}
@@ -555,37 +554,33 @@ export default function CampaignCard({
         <button
           onClick={handleDeleteCampaign}
           disabled={campaign.uuid == "no-campaign-uuid"}
-          className="p-2 text-red-500 rounded-full transition-colors 
-                   hover:text-red-700 hover:bg-red-100 
-                   disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          className="neumorphic-button p-2 rounded-lg text-red-500 transition-all hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark disabled:opacity-40 disabled:cursor-not-allowed"
           title={campaign.uuid == "no-campaign-uuid" ? "No se puede eliminar" : "Eliminar campaña"}
         >
-          <FiTrash size={18} />
+          <span className="material-icons-outlined">delete</span>
         </button>
       </div>
 
-      {/* Barra de búsqueda */}
-      <div className="w-full flex items-center mb-4">
-        <div className="flex-grow relative">
-          <FiSearch className="absolute top-3 left-3 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Buscar en campaña"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            className="w-full pl-10 pr-4 py-2 bg-gray-100 text-black rounded-full focus:outline-none focus:bg-white"
-          />
-        </div>
+      {/* Barra de búsqueda local */}
+      <div className="relative mb-4">
+        <span className="material-icons-outlined absolute top-3 left-3 text-slate-400">search</span>
+        <input
+          type="text"
+          placeholder="Buscar en campaña"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          className="w-full pl-10 pr-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+        />
       </div>
 
-      {/* Filtros */}
-      <div className="w-full flex flex-wrap items-center mb-2 gap-4">
+      {/* Filtros locales */}
+      <div className="flex flex-wrap items-center mb-4 gap-4">
         <div className="flex items-center">
-          <label className="mr-2 text-sm text-gray-600">Asignado:</label>
+          <label className="mr-2 text-sm text-slate-600 dark:text-slate-400">Asignado:</label>
           <select
             value={assignedFilter === true ? "Si" : assignedFilter === false ? "No" : ""}
             onChange={handleAssignedFilterChange}
-            className="px-2 py-1 bg-gray-100 text-black rounded-md focus:outline-none"
+            className="px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">Todos</option>
             <option value="Si">Sí</option>
@@ -594,11 +589,11 @@ export default function CampaignCard({
         </div>
 
         <div className="flex items-center">
-          <label className="mr-2 text-sm text-gray-600">Con Factura:</label>
+          <label className="mr-2 text-sm text-slate-600 dark:text-slate-400">Con Factura:</label>
           <select
             value={billFilter === true ? "Si" : billFilter === false ? "No" : ""}
             onChange={handleBillFilterChange}
-            className="px-2 py-1 bg-gray-100 text-black rounded-md focus:outline-none"
+            className="px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">Todos</option>
             <option value="Si">Sí</option>
@@ -608,23 +603,23 @@ export default function CampaignCard({
       </div>
 
       {/* Tabla de leads con scroll interno */}
-      <div className="overflow-x-auto max-h-[600px] overflow-y-auto mb-4">
-        <table className="min-w-full bg-foreground text-black table-fixed">
-          <thead className="bg-background">
+      <div className="overflow-x-auto max-h-[600px] overflow-y-auto mb-4 neumorphic-card-inset rounded-lg">
+        <table className="min-w-full text-slate-800 dark:text-slate-100 table-fixed">
+          <thead className="bg-background-light dark:bg-background-dark sticky top-0">
             <tr>
-              <th className="px-4 py-2 text-left min-w-36">Fecha</th>
-              <th className="px-4 py-2 text-left min-w-44">Nombre</th>
-              <th className="px-4 py-2 text-left min-w-36">Teléfono</th>
-              <th className="px-4 py-2 text-left min-w-56">Agente</th>
-              <th className="px-4 py-2 text-center">Docs</th>
-              <th className="px-4 py-2 text-center"></th>
+              <th className="px-4 py-3 text-left font-semibold min-w-36">Fecha</th>
+              <th className="px-4 py-3 text-left font-semibold min-w-44">Nombre</th>
+              <th className="px-4 py-3 text-left font-semibold min-w-36">Teléfono</th>
+              <th className="px-4 py-3 text-left font-semibold min-w-56">Agente</th>
+              <th className="px-4 py-3 text-center font-semibold">Docs</th>
+              <th className="px-4 py-3 text-center font-semibold"></th>
             </tr>
           </thead>
           <tbody>
             {filteredLeads.map((lead) => (
-              <tr key={lead.id} className="bg-foreground hover:bg-background">
+              <tr key={lead.id} className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                 <td
-                  className="px-4 py-2 flex items-center cursor-pointer"
+                  className="px-4 py-3 cursor-pointer"
                   onClick={(e) => handleCellClick(e, lead.id, "createdAt")}
                 >
                   {isEditing === lead.id ? (
@@ -638,7 +633,7 @@ export default function CampaignCard({
                       }
                       onChange={handleInputChange}
                       onBlur={handleSaveChanges}
-                      className="bg-gray-100 px-2 py-3 rounded-md text-center text-s w-full"
+                      className="neumorphic-card-inset px-3 py-2 rounded-lg text-center text-sm w-full bg-transparent"
                     />
                   ) : (
                     new Date(lead.createdAt).toLocaleDateString()
@@ -646,7 +641,7 @@ export default function CampaignCard({
                 </td>
 
                 <td
-                  className="px-4 py-2 items-center cursor-pointer"
+                  className="px-4 py-3 cursor-pointer"
                   onClick={(e) => handleCellClick(e, lead.id, "fullName")}
                 >
                   {isEditing === lead.id ? (
@@ -656,7 +651,7 @@ export default function CampaignCard({
                       value={editableLead.fullName || ""}
                       onChange={handleInputChange}
                       onBlur={handleSaveChanges}
-                      className="bg-gray-100 px-2 py-3 rounded-md text-s w-full"
+                      className="neumorphic-card-inset px-3 py-2 rounded-lg text-sm w-full bg-transparent"
                     />
                   ) : (
                     lead.fullName
@@ -664,7 +659,7 @@ export default function CampaignCard({
                 </td>
 
                 <td
-                  className="px-4 py-2 cursor-pointer"
+                  className="px-4 py-3 cursor-pointer"
                   onClick={(e) => handleCellClick(e, lead.id, "phoneNumber")}
                 >
                   {isEditing === lead.id ? (
@@ -674,7 +669,7 @@ export default function CampaignCard({
                       value={editableLead.phoneNumber || ""}
                       onChange={handleInputChange}
                       onBlur={handleSaveChanges}
-                      className="bg-gray-100 px-2 py-1 rounded-md text-s w-full"
+                      className="neumorphic-card-inset px-3 py-2 rounded-lg text-sm w-full bg-transparent"
                     />
                   ) : (
                     lead.phoneNumber
@@ -682,7 +677,7 @@ export default function CampaignCard({
                 </td>
 
                 <td
-                  className="px-4 py-2 cursor-pointer"
+                  className="px-4 py-3 cursor-pointer"
                   onClick={(e) => handleCellClick(e, lead.id, "assignedUserName")}
                 >
                   {isEditing === lead.id ? (
@@ -716,7 +711,7 @@ export default function CampaignCard({
                             handleSaveChanges(e);
                           }
                         }}
-                        className="bg-gray-100 px-2 py-1 rounded-md text-center text-s w-full"
+                        className="neumorphic-card-inset px-3 py-2 rounded-lg text-center text-sm w-full bg-transparent"
                       />
                       <datalist id="userOptions">
                         <option value="null">No asignado</option>
@@ -733,19 +728,22 @@ export default function CampaignCard({
                   )}
                 </td>
 
-                <td className="px-4 py-2 text-center">
+                <td className="px-4 py-3 text-center">
                   <button
                     onClick={() => setViewingLeadDocs(lead)}
-                    className="p-1 text-blue-500 hover:text-blue-700"
+                    className="neumorphic-button p-2 rounded-lg text-primary transition-all"
                     title="Ver/Añadir documentos"
                   >
-                    <FiPaperclip size={18} />
+                    <span className="material-icons-outlined">attach_file</span>
                   </button>
                 </td>
 
-                <td className="px-4 py-2 text-center cursor-pointer">
-                  <button onClick={() => handleDeleteLead(lead.uuid)} className="text-red-500">
-                    <FiTrash size={22} />
+                <td className="px-4 py-3 text-center">
+                  <button
+                    onClick={() => handleDeleteLead(lead.uuid)}
+                    className="neumorphic-button p-2 rounded-lg text-red-500 transition-all"
+                  >
+                    <span className="material-icons-outlined">delete</span>
                   </button>
                 </td>
               </tr>
@@ -755,59 +753,58 @@ export default function CampaignCard({
       </div>
 
       {/* Botones de acción */}
-      <div className="flex justify-between items-center mt-4 flex-wrap gap-4">
-        {/* Botón para abrir el modal de nuevo lead */}
+      <div className="flex justify-between items-center mt-6 flex-wrap gap-4">
         <button
           onClick={openNewLeadModal}
-          className="text-red-500 flex items-center hover:text-red-700"
+          className="neumorphic-button flex items-center text-primary font-semibold px-4 py-2 rounded-lg transition-all"
         >
-          <FiPlus className="mr-2" />
-          Lead
+          <span className="material-icons-outlined mr-2">add</span>
+          Nuevo Lead
         </button>
 
         {!allLeadsFetched && filteredLeads.length > 9 && (
           <button
             onClick={fetchAllLeads}
-            className="bg-blue-500 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-600"
+            className="neumorphic-button bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all"
           >
             Mostrar todos
           </button>
         )}
 
-        {/* Botón de "Vincular a grupo" */}
-        <div>
-          <button
-            className="text-white bg-yellow-300 px-4 py-2 rounded-full font-semibold hover:bg-yellow-400"
-            onClick={handleOpenModal}
-          >
-            Vincular a grupo
-          </button>
+        <button
+          className="neumorphic-button bg-secondary text-white px-4 py-2 rounded-lg font-semibold hover:bg-secondary/90 transition-all"
+          onClick={handleOpenModal}
+        >
+          Vincular a grupo
+        </button>
 
-          <GroupLinkModal
-            isOpen={isGroupLinkModalOpen}
-            onClose={handleCloseModal}
-            groupCampaigns={campaign.groupCampaigns || []}
-            campaignId={campaign.id}
-          />
-        </div>
+        <GroupLinkModal
+          isOpen={isGroupLinkModalOpen}
+          onClose={handleCloseModal}
+          groupCampaigns={campaign.groupCampaigns || []}
+          campaignId={campaign.id}
+        />
       </div>
 
-      {/* Modal */}
+      {/* Modal de crear/editar lead */}
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 lg:ml-72">
-          <div className="bg-white p-4 rounded-lg shadow-lg w-[85%] max-w-5xl">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-semibold">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 lg:ml-72 p-4">
+          <div className="neumorphic-card p-6 w-[95%] max-w-5xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
                 {editableLead.id ? "Editar Lead" : "Crear Nuevo Lead"}
               </h3>
-              <button onClick={handleModalClose} className="text-gray-500">
-                <FiX size={20} />
+              <button
+                onClick={handleModalClose}
+                className="neumorphic-button p-2 rounded-lg transition-all"
+              >
+                <span className="material-icons-outlined">close</span>
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               {/* Fecha */}
-              <div className="flex flex-col items-start">
-                <label className="block text-xs font-medium">Fecha</label>
+              <div className="flex flex-col">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Fecha</label>
                 <input
                   type="date"
                   name="createdAt"
@@ -817,43 +814,43 @@ export default function CampaignCard({
                       : ""
                   }
                   onChange={handleInputChange}
-                  className="bg-gray-100 px-2 py-1 rounded-md text-center text-xs w-full"
+                  className="neumorphic-card-inset px-3 py-2 rounded-lg text-center text-sm w-full bg-transparent"
                 />
               </div>
 
               {/* Nombre */}
-              <div className="flex flex-col items-start">
-                <label className="block text-xs font-medium">Nombre</label>
+              <div className="flex flex-col">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nombre</label>
                 <input
                   type="text"
                   name="fullName"
                   value={editableLead.fullName || ""}
                   onChange={handleInputChange}
-                  className="bg-gray-100 px-2 py-1 rounded-md text-xs w-full"
+                  className="neumorphic-card-inset px-3 py-2 rounded-lg text-sm w-full bg-transparent"
                 />
               </div>
 
               {/* Teléfono */}
-              <div className="flex flex-col items-start">
-                <label className="block text-xs font-medium">Teléfono</label>
+              <div className="flex flex-col">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Teléfono</label>
                 <input
                   type="text"
                   name="phoneNumber"
                   value={editableLead.phoneNumber || ""}
                   onChange={handleInputChange}
-                  className="bg-gray-100 px-2 py-1 rounded-md text-xs w-full"
+                  className="neumorphic-card-inset px-3 py-2 rounded-lg text-sm w-full bg-transparent"
                 />
               </div>
 
               {/* Factura */}
-              <div className="flex flex-col items-start">
-                <label className="block text-xs font-medium">Factura</label>
+              <div className="flex flex-col">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Factura</label>
                 {editableLead.billUri ? (
                   <a
                     href={`${editableLead.billUri}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-gray-100 px-2 py-1 rounded-md text-center text-xs text-blue-500 underline w-full"
+                    className="neumorphic-card-inset px-3 py-2 rounded-lg text-center text-sm text-primary underline w-full"
                   >
                     Ver archivo
                   </a>
@@ -863,16 +860,15 @@ export default function CampaignCard({
                       type="file"
                       name="billFile"
                       onChange={handleFileUpload}
-                      className="bg-gray-100 rounded-md text-xs cursor-pointer"
-                      style={{ width: "auto", maxWidth: "120px" }}
+                      className="neumorphic-card-inset rounded-lg text-sm cursor-pointer w-full p-2"
                     />
                   </div>
                 )}
               </div>
 
               {/* Gestor */}
-              <div className="flex flex-col items-start">
-                <label className="block text-xs font-medium">Gestor</label>
+              <div className="flex flex-col">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Gestor</label>
                 <select
                   value={editableLead.assignedUserName || ""}
                   onChange={(e) => {
@@ -883,7 +879,7 @@ export default function CampaignCard({
                       assignedUserName: selectedValue === "null" ? null : selectedValue,
                     });
                   }}
-                  className="bg-gray-100 px-2 py-1 rounded-md text-center text-xs w-full"
+                  className="neumorphic-card-inset px-3 py-2 rounded-lg text-center text-sm w-full bg-transparent"
                 >
                   <option value="null">No asignado</option>
                   {allUsers.map((user) => {
@@ -899,10 +895,10 @@ export default function CampaignCard({
                 </select>
               </div>
             </div>
-            <div className={`flex mt-4 ${!editableLead.id ? "justify-center" : "justify-end"}`}>
+            <div className={`flex mt-6 ${!editableLead.id ? "justify-center" : "justify-end"}`}>
               <button
                 onClick={handleSaveChanges}
-                className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 text-sm"
+                className="neumorphic-button bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-dark transition-all"
               >
                 Crear Lead
               </button>
