@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spikes - Sistema de Diseño Neumórfico</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Custom Tailwind Config -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#14b8a6',
+            'primary-dark': '#0f766e',
+            'primary-light': '#5eead4',
+            'background-light': '#F0F2F5',
+            'background-dark': '#1a1c23',
+            'card-dark': '#2E3039',
+            'divider-light': '#E2E4E7',
+            'divider-dark': '#252830',
+          },
+          fontFamily: {
+            sans: ['Poppins', 'sans-serif'],
+          },
+          boxShadow: {
+            'neumorphic-light': '3px 3px 6px #d9dbde, -3px -3px 6px #ffffff',
+            'neumorphic-dark': '3px 3px 6px #15171c, -3px -3px 6px #1f212a',
+            'neumorphic-inset-light': 'inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff',
+            'neumorphic-inset-dark': 'inset 2px 2px 4px #15171c, inset -2px -2px 4px #1f212a',
+            'neumorphic-light-sm': '2px 2px 4px #d9dbde, -2px -2px 4px #ffffff',
+            'neumorphic-dark-sm': '2px 2px 4px #15171c, -2px -2px 4px #1f212a',
+            'neumorphic-light-lg': '5px 5px 10px #d9dbde, -5px -5px 10px #ffffff',
+            'neumorphic-dark-lg': '5px 5px 10px #15171c, -5px -5px 10px #1f212a',
+            'neumorphic-light-hover': '4px 4px 8px #d9dbde, -4px -4px 8px #ffffff',
+            'neumorphic-dark-hover': '4px 4px 8px #15171c, -4px -4px 8px #1f212a',
+          },
+          borderRadius: {
+            DEFAULT: '1rem',
+            sm: '0.5rem',
+            md: '0.75rem',
+            lg: '1.25rem',
+            xl: '1.5rem',
+            '2xl': '2rem',
+          },
+        }
+      }
+    }
+  </script>
+
+  <!-- Custom Styles -->
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .neumorphic-card {
+      background: #F0F2F5;
+      box-shadow: 3px 3px 6px #d9dbde, -3px -3px 6px #ffffff;
+      border-radius: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .dark .neumorphic-card {
+      background: #1a1c23;
+      box-shadow: 3px 3px 6px #15171c, -3px -3px 6px #1f212a;
+    }
+
+    .neumorphic-card-inset {
+      background: #F0F2F5;
+      box-shadow: inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff;
+      border-radius: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .dark .neumorphic-card-inset {
+      background: #1a1c23;
+      box-shadow: inset 2px 2px 4px #15171c, inset -2px -2px 4px #1f212a;
+    }
+
+    .neumorphic-button {
+      box-shadow: 3px 3px 6px #d9dbde, -3px -3px 6px #ffffff;
+      transition: all 0.2s ease;
+    }
+
+    .dark .neumorphic-button {
+      box-shadow: 3px 3px 6px #15171c, -3px -3px 6px #1f212a;
+    }
+
+    .neumorphic-button:hover {
+      box-shadow: inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff;
+    }
+
+    .dark .neumorphic-button:hover {
+      box-shadow: inset 2px 2px 4px #15171c, inset -2px -2px 4px #1f212a;
+    }
+
+    .neumorphic-button.active {
+      box-shadow: inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff;
+    }
+
+    .dark .neumorphic-button.active {
+      box-shadow: inset 2px 2px 4px #15171c, inset -2px -2px 4px #1f212a;
+    }
+
+    .neumorphic-progress-track {
+      background: #F0F2F5;
+      box-shadow: inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .dark .neumorphic-progress-track {
+      background: #1a1c23;
+      box-shadow: inset 2px 2px 4px #15171c, inset -2px -2px 4px #1f212a;
+    }
+
+    .table-row-divider {
+      border-top: 1px solid #E2E4E7;
+    }
+
+    .dark .table-row-divider {
+      border-top: 1px solid #252830;
+    }
+
+    .color-swatch {
+      width: 60px;
+      height: 60px;
+      border-radius: 0.75rem;
+      box-shadow: 2px 2px 4px #d9dbde, -2px -2px 4px #ffffff;
+    }
+
+    .dark .color-swatch {
+      box-shadow: 2px 2px 4px #15171c, -2px -2px 4px #1f212a;
+    }
+
+    .code-block {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.875rem;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #F0F2F5;
+    }
+
+    .dark ::-webkit-scrollbar-track {
+      background: #1a1c23;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .dark ::-webkit-scrollbar-thumb {
+      background: #475569;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .dark ::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+  </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark transition-colors duration-300">
+
+  <!-- Header -->
+  <header class="neumorphic-card mx-6 mt-6 p-4 sticky top-0 z-50">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Spikes Design System</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Neumorphic Design Guide v1.0</p>
+      </div>
+      <div class="flex items-center space-x-3">
+        <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-full neumorphic-button flex items-center justify-center text-slate-600 dark:text-slate-300">
+          <span id="theme-icon" class="material-icons-outlined">dark_mode</span>
+        </button>
+        <a href="showcase.html" class="px-4 py-2 rounded-lg bg-primary text-white font-medium neumorphic-button hover:bg-primary/90">
+          Ver Showcase
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex max-w-screen-2xl mx-auto p-6 gap-6">
+    <!-- Sidebar Navigation -->
+    <nav class="w-64 sidebar">
+      <div class="neumorphic-card p-4">
+        <h2 class="font-bold text-slate-800 dark:text-slate-100 mb-4">Contenido</h2>
+        <ul class="space-y-2">
+          <li><a href="#introduction" class="block px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors">Introducción</a></li>
+          <li><a href="#design-tokens" class="block px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors">Design Tokens</a></li>
+          <li><a href="#colors" class="block px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors">Colores</a></li>
+          <li><a href="#typography" class="block px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors">Tipografía</a></li>
+          <li><a href="#shadows" class="block px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors">Sombras</a></li>
+          <li><a href="#spacing" class="block px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors">Espaciado</a></li>
+          <li><a href="#border-radius" class="block px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors">Border Radius</a></li>
+          <li><a href="#components" class="block px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors">Componentes</a></li>
+          <li class="pl-3">
+            <ul class="space-y-2 mt-2">
+              <li><a href="#buttons" class="block px-3 py-2 rounded-lg text-xs text-slate-500 dark:text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors">Botones</a></li>
+              <li><a href="#cards" class="block px-3 py-2 rounded-lg text-xs text-slate-500 dark:text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors">Cards</a></li>
+              <li><a href="#inputs" class="block px-3 py-2 rounded-lg text-xs text-slate-500 dark:text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors">Inputs</a></li>
+              <li><a href="#navigation" class="block px-3 py-2 rounded-lg text-xs text-slate-500 dark:text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors">Navegación</a></li>
+              <li><a href="#tables" class="block px-3 py-2 rounded-lg text-xs text-slate-500 dark:text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors">Tablas</a></li>
+              <li><a href="#modals" class="block px-3 py-2 rounded-lg text-xs text-slate-500 dark:text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors">Modales</a></li>
+              <li><a href="#progress" class="block px-3 py-2 rounded-lg text-xs text-slate-500 dark:text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors">Progress Bars</a></li>
+            </ul>
+          </li>
+          <li><a href="#patterns" class="block px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors">Patrones</a></li>
+          <li><a href="#guidelines" class="block px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors">Guidelines</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 space-y-8">
+
+      <!-- Introduction -->
+      <section id="introduction" class="neumorphic-card p-8">
+        <h2 class="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4">Introducción</h2>
+        <p class="text-slate-600 dark:text-slate-400 mb-4">
+          Bienvenido al Sistema de Diseño de Spikes. Este documento define los principios, tokens y componentes
+          que conforman nuestro lenguaje visual neumórfico.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <div class="neumorphic-card-inset p-4">
+            <span class="material-icons-outlined text-3xl text-primary mb-2">palette</span>
+            <h3 class="font-semibold text-slate-800 dark:text-slate-200 mb-1">Neumorfismo</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Diseño moderno con profundidad y elegancia</p>
+          </div>
+          <div class="neumorphic-card-inset p-4">
+            <span class="material-icons-outlined text-3xl text-primary mb-2">devices</span>
+            <h3 class="font-semibold text-slate-800 dark:text-slate-200 mb-1">Responsive</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Adaptable a todos los dispositivos</p>
+          </div>
+          <div class="neumorphic-card-inset p-4">
+            <span class="material-icons-outlined text-3xl text-primary mb-2">dark_mode</span>
+            <h3 class="font-semibold text-slate-800 dark:text-slate-200 mb-1">Modo Oscuro</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Soporte completo para temas claros y oscuros</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Design Tokens -->
+      <section id="design-tokens" class="neumorphic-card p-8">
+        <h2 class="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4">Design Tokens</h2>
+        <p class="text-slate-600 dark:text-slate-400 mb-6">
+          Los design tokens son los valores fundamentales que definen nuestro sistema de diseño.
+        </p>
+      </section>
+
+      <!-- Colors -->
+      <section id="colors" class="neumorphic-card p-8">
+        <h2 class="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4">Colores</h2>
+
+        <!-- Primary Colors -->
+        <h3 class="text-xl font-semibold text-slate-700 dark:text-slate-200 mb-4 mt-6">Colores Primarios</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <div class="color-swatch mb-2" style="background-color: #14b8a6;"></div>
+            <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Primary</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">#14b8a6</p>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">primary</code>
+          </div>
+          <div>
+            <div class="color-swatch mb-2" style="background-color: #0f766e;"></div>
+            <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Primary Dark</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">#0f766e</p>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">primary-dark</code>
+          </div>
+          <div>
+            <div class="color-swatch mb-2" style="background-color: #5eead4;"></div>
+            <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Primary Light</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">#5eead4</p>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">primary-light</code>
+          </div>
+          <div>
+            <div class="color-swatch mb-2" style="background-color: #faca15;"></div>
+            <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Secondary</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">#faca15</p>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">secondary</code>
+          </div>
+        </div>
+
+        <!-- Background Colors -->
+        <h3 class="text-xl font-semibold text-slate-700 dark:text-slate-200 mb-4 mt-8">Colores de Fondo</h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div>
+            <div class="color-swatch mb-2" style="background-color: #F0F2F5;"></div>
+            <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Background Light</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">#F0F2F5</p>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">bg-background-light</code>
+          </div>
+          <div>
+            <div class="color-swatch mb-2" style="background-color: #1a1c23;"></div>
+            <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Background Dark</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">#1a1c23</p>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">bg-background-dark</code>
+          </div>
+          <div>
+            <div class="color-swatch mb-2" style="background-color: #2E3039;"></div>
+            <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Card Dark</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">#2E3039</p>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">bg-card-dark</code>
+          </div>
+        </div>
+
+        <!-- Status Colors -->
+        <h3 class="text-xl font-semibold text-slate-700 dark:text-slate-200 mb-4 mt-8">Colores de Estado</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <div class="color-swatch mb-2" style="background-color: #10b981;"></div>
+            <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Success</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">#10b981</p>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">text-green-500</code>
+          </div>
+          <div>
+            <div class="color-swatch mb-2" style="background-color: #f59e0b;"></div>
+            <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Warning</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">#f59e0b</p>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">text-yellow-500</code>
+          </div>
+          <div>
+            <div class="color-swatch mb-2" style="background-color: #ef4444;"></div>
+            <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Danger</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">#ef4444</p>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">text-red-500</code>
+          </div>
+          <div>
+            <div class="color-swatch mb-2" style="background-color: #3b82f6;"></div>
+            <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Info</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">#3b82f6</p>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">text-blue-500</code>
+          </div>
+        </div>
+      </section>
+
+      <!-- Typography -->
+      <section id="typography" class="neumorphic-card p-8">
+        <h2 class="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4">Tipografía</h2>
+        <p class="text-slate-600 dark:text-slate-400 mb-6">
+          Utilizamos la fuente <strong>Poppins</strong> para toda la interfaz.
+        </p>
+
+        <div class="space-y-4">
+          <div class="flex items-baseline space-x-4">
+            <div class="w-24 text-sm text-slate-500">Display 1</div>
+            <div class="text-5xl font-bold text-slate-800 dark:text-slate-100">48px Bold</div>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">text-5xl font-bold</code>
+          </div>
+          <div class="flex items-baseline space-x-4">
+            <div class="w-24 text-sm text-slate-500">Heading 1</div>
+            <div class="text-4xl font-bold text-slate-800 dark:text-slate-100">36px Bold</div>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">text-4xl font-bold</code>
+          </div>
+          <div class="flex items-baseline space-x-4">
+            <div class="w-24 text-sm text-slate-500">Heading 2</div>
+            <div class="text-3xl font-bold text-slate-800 dark:text-slate-100">30px Bold</div>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">text-3xl font-bold</code>
+          </div>
+          <div class="flex items-baseline space-x-4">
+            <div class="w-24 text-sm text-slate-500">Heading 3</div>
+            <div class="text-2xl font-semibold text-slate-800 dark:text-slate-100">24px Semibold</div>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">text-2xl font-semibold</code>
+          </div>
+          <div class="flex items-baseline space-x-4">
+            <div class="w-24 text-sm text-slate-500">Heading 4</div>
+            <div class="text-xl font-semibold text-slate-800 dark:text-slate-100">20px Semibold</div>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">text-xl font-semibold</code>
+          </div>
+          <div class="flex items-baseline space-x-4">
+            <div class="w-24 text-sm text-slate-500">Body</div>
+            <div class="text-base text-slate-600 dark:text-slate-400">16px Regular</div>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">text-base</code>
+          </div>
+          <div class="flex items-baseline space-x-4">
+            <div class="w-24 text-sm text-slate-500">Small</div>
+            <div class="text-sm text-slate-600 dark:text-slate-400">14px Regular</div>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">text-sm</code>
+          </div>
+          <div class="flex items-baseline space-x-4">
+            <div class="w-24 text-sm text-slate-500">Extra Small</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">12px Regular</div>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">text-xs</code>
+          </div>
+        </div>
+
+        <div class="mt-8">
+          <h3 class="text-xl font-semibold text-slate-700 dark:text-slate-200 mb-4">Font Weights</h3>
+          <div class="space-y-2">
+            <div class="flex items-center space-x-4">
+              <div class="w-24 text-sm text-slate-500">Light</div>
+              <div class="font-light text-slate-800 dark:text-slate-100">The quick brown fox</div>
+              <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">font-light (300)</code>
+            </div>
+            <div class="flex items-center space-x-4">
+              <div class="w-24 text-sm text-slate-500">Regular</div>
+              <div class="font-normal text-slate-800 dark:text-slate-100">The quick brown fox</div>
+              <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">font-normal (400)</code>
+            </div>
+            <div class="flex items-center space-x-4">
+              <div class="w-24 text-sm text-slate-500">Medium</div>
+              <div class="font-medium text-slate-800 dark:text-slate-100">The quick brown fox</div>
+              <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">font-medium (500)</code>
+            </div>
+            <div class="flex items-center space-x-4">
+              <div class="w-24 text-sm text-slate-500">Semibold</div>
+              <div class="font-semibold text-slate-800 dark:text-slate-100">The quick brown fox</div>
+              <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">font-semibold (600)</code>
+            </div>
+            <div class="flex items-center space-x-4">
+              <div class="w-24 text-sm text-slate-500">Bold</div>
+              <div class="font-bold text-slate-800 dark:text-slate-100">The quick brown fox</div>
+              <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">font-bold (700)</code>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Shadows -->
+      <section id="shadows" class="neumorphic-card p-8">
+        <h2 class="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4">Sombras Neumórficas</h2>
+        <p class="text-slate-600 dark:text-slate-400 mb-6">
+          Las sombras neumórficas crean la ilusión de profundidad y elevación.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3">Elevadas (Raised)</h3>
+            <div class="space-y-4">
+              <div>
+                <div class="h-20 bg-background-light dark:bg-background-dark shadow-neumorphic-light dark:shadow-neumorphic-dark rounded-xl flex items-center justify-center mb-2">
+                  <span class="text-sm text-slate-600 dark:text-slate-400">Default</span>
+                </div>
+                <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded block">shadow-neumorphic-light</code>
+                <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded block mt-1">3px 3px 6px #d9dbde, -3px -3px 6px #ffffff</code>
+              </div>
+              <div>
+                <div class="h-20 bg-background-light dark:bg-background-dark shadow-neumorphic-light-sm dark:shadow-neumorphic-dark-sm rounded-xl flex items-center justify-center mb-2">
+                  <span class="text-sm text-slate-600 dark:text-slate-400">Small</span>
+                </div>
+                <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded block">shadow-neumorphic-light-sm</code>
+              </div>
+              <div>
+                <div class="h-20 bg-background-light dark:bg-background-dark shadow-neumorphic-light-lg dark:shadow-neumorphic-dark-lg rounded-xl flex items-center justify-center mb-2">
+                  <span class="text-sm text-slate-600 dark:text-slate-400">Large</span>
+                </div>
+                <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded block">shadow-neumorphic-light-lg</code>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3">Hundidas (Inset)</h3>
+            <div class="space-y-4">
+              <div>
+                <div class="h-20 bg-background-light dark:bg-background-dark shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark rounded-xl flex items-center justify-center mb-2">
+                  <span class="text-sm text-slate-600 dark:text-slate-400">Inset</span>
+                </div>
+                <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded block">shadow-neumorphic-inset-light</code>
+                <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded block mt-1">inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff</code>
+              </div>
+              <div>
+                <div class="h-20 bg-background-light dark:bg-background-dark shadow-neumorphic-light-hover dark:shadow-neumorphic-dark-hover rounded-xl flex items-center justify-center mb-2">
+                  <span class="text-sm text-slate-600 dark:text-slate-400">Hover</span>
+                </div>
+                <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded block">shadow-neumorphic-light-hover</code>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8 neumorphic-card-inset p-4">
+          <h4 class="font-semibold text-slate-700 dark:text-slate-200 mb-2">Nota Importante</h4>
+          <p class="text-sm text-slate-600 dark:text-slate-400">
+            Las sombras neumórficas funcionan mejor sobre fondos que coincidan exactamente con el color base.
+            Siempre usa <code class="bg-slate-200 dark:bg-slate-700 px-1 rounded">bg-background-light</code> o
+            <code class="bg-slate-200 dark:bg-slate-700 px-1 rounded">bg-background-dark</code> según el tema.
+          </p>
+        </div>
+      </section>
+
+      <!-- Spacing -->
+      <section id="spacing" class="neumorphic-card p-8">
+        <h2 class="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4">Espaciado</h2>
+        <p class="text-slate-600 dark:text-slate-400 mb-6">
+          Sistema de espaciado consistente basado en múltiplos de 4px.
+        </p>
+
+        <div class="space-y-3">
+          <div class="flex items-center">
+            <div class="w-32 text-sm text-slate-600 dark:text-slate-400">0.25rem (4px)</div>
+            <div class="h-4 bg-primary" style="width: 4px;"></div>
+            <code class="ml-4 text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">p-1, m-1</code>
+          </div>
+          <div class="flex items-center">
+            <div class="w-32 text-sm text-slate-600 dark:text-slate-400">0.5rem (8px)</div>
+            <div class="h-4 bg-primary" style="width: 8px;"></div>
+            <code class="ml-4 text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">p-2, m-2</code>
+          </div>
+          <div class="flex items-center">
+            <div class="w-32 text-sm text-slate-600 dark:text-slate-400">0.75rem (12px)</div>
+            <div class="h-4 bg-primary" style="width: 12px;"></div>
+            <code class="ml-4 text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">p-3, m-3</code>
+          </div>
+          <div class="flex items-center">
+            <div class="w-32 text-sm text-slate-600 dark:text-slate-400">1rem (16px)</div>
+            <div class="h-4 bg-primary" style="width: 16px;"></div>
+            <code class="ml-4 text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">p-4, m-4</code>
+          </div>
+          <div class="flex items-center">
+            <div class="w-32 text-sm text-slate-600 dark:text-slate-400">1.5rem (24px)</div>
+            <div class="h-4 bg-primary" style="width: 24px;"></div>
+            <code class="ml-4 text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">p-6, m-6</code>
+          </div>
+          <div class="flex items-center">
+            <div class="w-32 text-sm text-slate-600 dark:text-slate-400">2rem (32px)</div>
+            <div class="h-4 bg-primary" style="width: 32px;"></div>
+            <code class="ml-4 text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">p-8, m-8</code>
+          </div>
+        </div>
+      </section>
+
+      <!-- Border Radius -->
+      <section id="border-radius" class="neumorphic-card p-8">
+        <h2 class="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4">Border Radius</h2>
+        <p class="text-slate-600 dark:text-slate-400 mb-6">
+          Bordes redondeados que complementan el estilo neumórfico.
+        </p>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <div class="h-20 w-full bg-primary rounded-sm mb-2"></div>
+            <p class="text-sm font-medium">Small</p>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">rounded-sm (0.5rem)</code>
+          </div>
+          <div>
+            <div class="h-20 w-full bg-primary rounded-md mb-2"></div>
+            <p class="text-sm font-medium">Medium</p>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">rounded-md (0.75rem)</code>
+          </div>
+          <div>
+            <div class="h-20 w-full bg-primary rounded-lg mb-2"></div>
+            <p class="text-sm font-medium">Large</p>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">rounded-lg (1rem)</code>
+          </div>
+          <div>
+            <div class="h-20 w-full bg-primary rounded-xl mb-2"></div>
+            <p class="text-sm font-medium">Extra Large</p>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">rounded-xl (1.5rem)</code>
+          </div>
+          <div>
+            <div class="h-20 w-full bg-primary rounded-2xl mb-2"></div>
+            <p class="text-sm font-medium">2XL</p>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">rounded-2xl (2rem)</code>
+          </div>
+          <div>
+            <div class="h-20 w-20 bg-primary rounded-full mb-2"></div>
+            <p class="text-sm font-medium">Full</p>
+            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">rounded-full</code>
+          </div>
+        </div>
+      </section>
+
+      <!-- Components Section Header -->
+      <section id="components" class="neumorphic-card p-8">
+        <h2 class="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4">Componentes</h2>
+        <p class="text-slate-600 dark:text-slate-400">
+          Componentes reutilizables construidos con nuestro lenguaje de diseño neumórfico.
+        </p>
+      </section>
+
+      <!-- Buttons -->
+      <section id="buttons" class="neumorphic-card p-8">
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-4">Botones</h2>
+
+        <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3 mt-6">Botones Primarios</h3>
+        <div class="flex flex-wrap gap-4 mb-6">
+          <button class="px-6 py-3 rounded-lg bg-primary text-white font-semibold neumorphic-button">
+            Primary Button
+          </button>
+          <button class="px-6 py-3 rounded-lg bg-primary text-white font-semibold neumorphic-button flex items-center gap-2">
+            <span class="material-icons-outlined">add</span>
+            Con Icono
+          </button>
+          <button class="px-6 py-3 rounded-lg bg-primary/20 text-primary font-semibold neumorphic-button">
+            Secondary
+          </button>
+        </div>
+        <div class="code-block">
+          <pre>&lt;button class="px-6 py-3 rounded-lg bg-primary text-white font-semibold neumorphic-button"&gt;
+  Primary Button
+&lt;/button&gt;</pre>
+        </div>
+
+        <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3 mt-6">Botones Neumórficos</h3>
+        <div class="flex flex-wrap gap-4 mb-6">
+          <button class="px-6 py-3 rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400">
+            Default
+          </button>
+          <button class="px-6 py-3 rounded-lg neumorphic-button active font-medium text-primary">
+            Active
+          </button>
+          <button class="px-6 py-3 rounded-lg neumorphic-button font-medium text-slate-400 cursor-not-allowed" disabled>
+            Disabled
+          </button>
+        </div>
+        <div class="code-block">
+          <pre>&lt;button class="px-6 py-3 rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400"&gt;
+  Default
+&lt;/button&gt;
+
+&lt;!-- Active state --&gt;
+&lt;button class="px-6 py-3 rounded-lg neumorphic-button active font-medium text-primary"&gt;
+  Active
+&lt;/button&gt;</pre>
+        </div>
+
+        <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3 mt-6">Botones Icon</h3>
+        <div class="flex flex-wrap gap-4 mb-6">
+          <button class="w-12 h-12 rounded-full neumorphic-button flex items-center justify-center text-slate-600 dark:text-slate-400">
+            <span class="material-icons-outlined">search</span>
+          </button>
+          <button class="w-12 h-12 rounded-full neumorphic-button flex items-center justify-center bg-primary text-white">
+            <span class="material-icons-outlined">add</span>
+          </button>
+          <button class="w-12 h-12 rounded-lg neumorphic-button flex items-center justify-center text-slate-600 dark:text-slate-400">
+            <span class="material-icons-outlined">settings</span>
+          </button>
+          <button class="w-10 h-10 rounded-full neumorphic-button flex items-center justify-center text-slate-600 dark:text-slate-400">
+            <span class="material-icons-outlined text-xl">favorite</span>
+          </button>
+        </div>
+        <div class="code-block">
+          <pre>&lt;button class="w-12 h-12 rounded-full neumorphic-button flex items-center justify-center text-slate-600 dark:text-slate-400"&gt;
+  &lt;span class="material-icons-outlined"&gt;search&lt;/span&gt;
+&lt;/button&gt;</pre>
+        </div>
+
+        <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3 mt-6">Tamaños</h3>
+        <div class="flex flex-wrap items-center gap-4 mb-6">
+          <button class="px-3 py-1.5 rounded-lg neumorphic-button font-medium text-sm text-slate-600 dark:text-slate-400">
+            Small
+          </button>
+          <button class="px-4 py-2 rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400">
+            Medium
+          </button>
+          <button class="px-6 py-3 rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400">
+            Large
+          </button>
+        </div>
+      </section>
+
+      <!-- Cards -->
+      <section id="cards" class="neumorphic-card p-8">
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-4">Cards</h2>
+
+        <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3 mt-6">Card Elevada</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div class="neumorphic-card p-6">
+            <h4 class="font-semibold text-slate-800 dark:text-slate-200 mb-2">Card Title</h4>
+            <p class="text-sm text-slate-600 dark:text-slate-400">
+              Esta es una card neumórfica elevada con sombras que crean profundidad.
+            </p>
+          </div>
+          <div class="neumorphic-card p-6">
+            <div class="flex items-center mb-4">
+              <div class="w-12 h-12 rounded-full neumorphic-card-inset flex items-center justify-center mr-4">
+                <span class="material-icons-outlined text-primary">person</span>
+              </div>
+              <div>
+                <h4 class="font-semibold text-slate-800 dark:text-slate-200">John Doe</h4>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Usuario</p>
+              </div>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-400">
+              Card con avatar y contenido estructurado.
+            </p>
+          </div>
+        </div>
+        <div class="code-block">
+          <pre>&lt;div class="neumorphic-card p-6"&gt;
+  &lt;h4 class="font-semibold text-slate-800 dark:text-slate-200 mb-2"&gt;Card Title&lt;/h4&gt;
+  &lt;p class="text-sm text-slate-600 dark:text-slate-400"&gt;
+    Esta es una card neumórfica elevada.
+  &lt;/p&gt;
+&lt;/div&gt;</pre>
+        </div>
+
+        <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3 mt-6">Card Inset (Hundida)</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div class="neumorphic-card-inset p-6">
+            <h4 class="font-semibold text-slate-800 dark:text-slate-200 mb-2">Inset Card</h4>
+            <p class="text-sm text-slate-600 dark:text-slate-400">
+              Esta card tiene sombras inset, creando un efecto hundido.
+            </p>
+          </div>
+          <div class="neumorphic-card-inset p-6">
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <span class="text-sm text-slate-600 dark:text-slate-400">Item 1</span>
+                <span class="font-medium text-slate-800 dark:text-slate-200">$100</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-sm text-slate-600 dark:text-slate-400">Item 2</span>
+                <span class="font-medium text-slate-800 dark:text-slate-200">$200</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="code-block">
+          <pre>&lt;div class="neumorphic-card-inset p-6"&gt;
+  &lt;h4 class="font-semibold text-slate-800 dark:text-slate-200 mb-2"&gt;Inset Card&lt;/h4&gt;
+  &lt;p class="text-sm text-slate-600 dark:text-slate-400"&gt;
+    Esta card tiene sombras inset.
+  &lt;/p&gt;
+&lt;/div&gt;</pre>
+        </div>
+      </section>
+
+      <!-- Inputs -->
+      <section id="inputs" class="neumorphic-card p-8">
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-4">Inputs y Formularios</h2>
+
+        <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3 mt-6">Text Inputs</h3>
+        <div class="space-y-4 mb-6 max-w-md">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Nombre
+            </label>
+            <input
+              type="text"
+              placeholder="Ingresa tu nombre..."
+              class="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Con Icono
+            </label>
+            <div class="relative">
+              <span class="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                search
+              </span>
+              <input
+                type="text"
+                placeholder="Buscar..."
+                class="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="code-block">
+          <pre>&lt;input
+  type="text"
+  placeholder="Ingresa tu nombre..."
+  class="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+/&gt;
+
+&lt;!-- Con icono --&gt;
+&lt;div class="relative"&gt;
+  &lt;span class="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"&gt;
+    search
+  &lt;/span&gt;
+  &lt;input
+    type="text"
+    class="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg..."
+  /&gt;
+&lt;/div&gt;</pre>
+        </div>
+
+        <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3 mt-6">Textarea</h3>
+        <div class="mb-6 max-w-md">
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Mensaje
+          </label>
+          <textarea
+            rows="4"
+            placeholder="Escribe tu mensaje..."
+            class="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+          ></textarea>
+        </div>
+
+        <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3 mt-6">Select</h3>
+        <div class="mb-6 max-w-md">
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Opciones
+          </label>
+          <div class="neumorphic-card-inset rounded-lg">
+            <select class="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200">
+              <option>Opción 1</option>
+              <option>Opción 2</option>
+              <option>Opción 3</option>
+            </select>
+          </div>
+        </div>
+
+        <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3 mt-6">Checkbox</h3>
+        <div class="space-y-3 mb-6">
+          <div class="flex items-center">
+            <input type="checkbox" id="check1" class="mr-2" checked />
+            <label for="check1" class="text-sm text-slate-700 dark:text-slate-300">Opción 1 (Checked)</label>
+          </div>
+          <div class="flex items-center">
+            <input type="checkbox" id="check2" class="mr-2" />
+            <label for="check2" class="text-sm text-slate-700 dark:text-slate-300">Opción 2</label>
+          </div>
+        </div>
+        <div class="code-block">
+          <pre>&lt;input type="checkbox" id="check1" class="mr-2" /&gt;
+&lt;label for="check1" class="text-sm text-slate-700 dark:text-slate-300"&gt;Opción 1&lt;/label&gt;</pre>
+        </div>
+      </section>
+
+      <!-- Navigation -->
+      <section id="navigation" class="neumorphic-card p-8">
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-4">Navegación</h2>
+
+        <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3 mt-6">Tabs</h3>
+        <div class="flex space-x-2 mb-6">
+          <button class="px-5 py-2 rounded-lg neumorphic-button active font-semibold text-primary">
+            Tab 1
+          </button>
+          <button class="px-5 py-2 rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400">
+            Tab 2
+          </button>
+          <button class="px-5 py-2 rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400">
+            Tab 3
+          </button>
+        </div>
+        <div class="code-block">
+          <pre>&lt;!-- Active tab --&gt;
+&lt;button class="px-5 py-2 rounded-lg neumorphic-button active font-semibold text-primary"&gt;
+  Tab 1
+&lt;/button&gt;
+
+&lt;!-- Inactive tab --&gt;
+&lt;button class="px-5 py-2 rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400"&gt;
+  Tab 2
+&lt;/button&gt;</pre>
+        </div>
+
+        <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3 mt-6">Sidebar Navigation</h3>
+        <div class="max-w-xs">
+          <nav class="space-y-1">
+            <button class="w-full flex items-center p-3 rounded-lg bg-primary/10 transition-colors">
+              <span class="material-icons-outlined mr-3 text-primary">home</span>
+              <span class="font-medium text-primary">Inicio</span>
+            </button>
+            <button class="w-full flex items-center p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              <span class="material-icons-outlined mr-3 text-slate-500">dashboard</span>
+              <span class="font-medium text-slate-600 dark:text-slate-400">Dashboard</span>
+            </button>
+            <button class="w-full flex items-center p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              <span class="material-icons-outlined mr-3 text-slate-500">settings</span>
+              <span class="font-medium text-slate-600 dark:text-slate-400">Settings</span>
+            </button>
+          </nav>
+        </div>
+      </section>
+
+      <!-- Tables -->
+      <section id="tables" class="neumorphic-card p-8">
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-4">Tablas</h2>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <tr>
+                <th class="p-3">Nombre</th>
+                <th class="p-3">Email</th>
+                <th class="p-3">Rol</th>
+                <th class="p-3">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="table-row-divider">
+                <td class="p-3 font-medium text-slate-800 dark:text-slate-200">John Doe</td>
+                <td class="p-3 text-slate-600 dark:text-slate-400">john@example.com</td>
+                <td class="p-3 text-slate-600 dark:text-slate-400">Admin</td>
+                <td class="p-3">
+                  <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Activo</span>
+                </td>
+              </tr>
+              <tr class="table-row-divider">
+                <td class="p-3 font-medium text-slate-800 dark:text-slate-200">Jane Smith</td>
+                <td class="p-3 text-slate-600 dark:text-slate-400">jane@example.com</td>
+                <td class="p-3 text-slate-600 dark:text-slate-400">User</td>
+                <td class="p-3">
+                  <span class="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">Pendiente</span>
+                </td>
+              </tr>
+              <tr class="table-row-divider">
+                <td class="p-3 font-medium text-slate-800 dark:text-slate-200">Bob Johnson</td>
+                <td class="p-3 text-slate-600 dark:text-slate-400">bob@example.com</td>
+                <td class="p-3 text-slate-600 dark:text-slate-400">User</td>
+                <td class="p-3">
+                  <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Activo</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-block mt-6">
+          <pre>&lt;table class="w-full text-left"&gt;
+  &lt;thead class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider"&gt;
+    &lt;tr&gt;
+      &lt;th class="p-3"&gt;Nombre&lt;/th&gt;
+      &lt;th class="p-3"&gt;Email&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr class="table-row-divider"&gt;
+      &lt;td class="p-3 font-medium text-slate-800 dark:text-slate-200"&gt;John Doe&lt;/td&gt;
+      &lt;td class="p-3 text-slate-600 dark:text-slate-400"&gt;john@example.com&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</pre>
+        </div>
+      </section>
+
+      <!-- Modals -->
+      <section id="modals" class="neumorphic-card p-8">
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-4">Modales</h2>
+        <p class="text-slate-600 dark:text-slate-400 mb-6">
+          Los modales utilizan el mismo estilo neumórfico con un backdrop oscuro.
+        </p>
+
+        <button onclick="openModal()" class="px-6 py-3 rounded-lg bg-primary text-white font-semibold neumorphic-button">
+          Abrir Modal
+        </button>
+
+        <div class="code-block mt-6">
+          <pre>&lt;!-- Modal Container --&gt;
+&lt;div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"&gt;
+  &lt;div class="neumorphic-card p-6 w-full max-w-md"&gt;
+    &lt;!-- Header --&gt;
+    &lt;div class="flex items-center justify-between mb-6"&gt;
+      &lt;h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100"&gt;
+        Título del Modal
+      &lt;/h2&gt;
+      &lt;button class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"&gt;
+        &lt;span class="material-icons-outlined"&gt;close&lt;/span&gt;
+      &lt;/button&gt;
+    &lt;/div&gt;
+
+    &lt;!-- Content --&gt;
+    &lt;p class="text-slate-600 dark:text-slate-400 mb-6"&gt;
+      Contenido del modal...
+    &lt;/p&gt;
+
+    &lt;!-- Actions --&gt;
+    &lt;div class="flex gap-3"&gt;
+      &lt;button class="flex-1 neumorphic-button px-6 py-3 rounded-lg bg-primary text-white font-semibold"&gt;
+        Confirmar
+      &lt;/button&gt;
+      &lt;button class="flex-1 neumorphic-button px-6 py-3 rounded-lg text-slate-600 dark:text-slate-400 font-semibold"&gt;
+        Cancelar
+      &lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+        </div>
+      </section>
+
+      <!-- Progress -->
+      <section id="progress" class="neumorphic-card p-8">
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-4">Progress Bars</h2>
+
+        <div class="space-y-6">
+          <div>
+            <div class="flex justify-between mb-2">
+              <span class="text-sm text-slate-600 dark:text-slate-400">Progreso</span>
+              <span class="text-sm font-medium text-slate-800 dark:text-slate-200">75%</span>
+            </div>
+            <div class="neumorphic-progress-track h-2.5">
+              <div class="bg-primary h-full rounded-full" style="width: 75%"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between mb-2">
+              <span class="text-sm text-slate-600 dark:text-slate-400">Con etiqueta</span>
+              <span class="text-sm font-medium text-slate-800 dark:text-slate-200">86%</span>
+            </div>
+            <div class="neumorphic-progress-track h-4">
+              <div class="bg-primary h-full rounded-full flex items-center justify-center text-white text-xs font-bold" style="width: 86%">
+                86%
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between mb-2">
+              <span class="text-sm text-slate-600 dark:text-slate-400">Múltiples colores</span>
+            </div>
+            <div class="neumorphic-progress-track h-2.5">
+              <div class="bg-green-500 h-full rounded-full" style="width: 45%"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between mb-2">
+              <span class="text-sm text-slate-600 dark:text-slate-400">Amarillo</span>
+            </div>
+            <div class="neumorphic-progress-track h-2.5">
+              <div class="bg-yellow-500 h-full rounded-full" style="width: 60%"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between mb-2">
+              <span class="text-sm text-slate-600 dark:text-slate-400">Rojo</span>
+            </div>
+            <div class="neumorphic-progress-track h-2.5">
+              <div class="bg-red-500 h-full rounded-full" style="width: 30%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-block mt-6">
+          <pre>&lt;div class="neumorphic-progress-track h-2.5"&gt;
+  &lt;div class="bg-primary h-full rounded-full" style="width: 75%"&gt;&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- Con etiqueta dentro --&gt;
+&lt;div class="neumorphic-progress-track h-4"&gt;
+  &lt;div class="bg-primary h-full rounded-full flex items-center justify-center text-white text-xs font-bold" style="width: 86%"&gt;
+    86%
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+        </div>
+      </section>
+
+      <!-- Patterns -->
+      <section id="patterns" class="neumorphic-card p-8">
+        <h2 class="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4">Patrones de Diseño</h2>
+
+        <h3 class="text-xl font-semibold text-slate-700 dark:text-slate-200 mb-3 mt-6">Stat Cards</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div class="neumorphic-card p-6">
+            <div class="flex items-center justify-between mb-4">
+              <span class="material-icons-outlined text-4xl text-green-500">trending_up</span>
+              <div class="text-right">
+                <p class="text-xs text-slate-500 dark:text-slate-400">Ingresos</p>
+                <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">€25,840</p>
+              </div>
+            </div>
+          </div>
+          <div class="neumorphic-card p-6">
+            <div class="flex items-center justify-between mb-4">
+              <span class="material-icons-outlined text-4xl text-blue-500">people</span>
+              <div class="text-right">
+                <p class="text-xs text-slate-500 dark:text-slate-400">Usuarios</p>
+                <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">1,248</p>
+              </div>
+            </div>
+          </div>
+          <div class="neumorphic-card p-6">
+            <div class="flex items-center justify-between mb-4">
+              <span class="material-icons-outlined text-4xl text-purple-500">star</span>
+              <div class="text-right">
+                <p class="text-xs text-slate-500 dark:text-slate-400">Rating</p>
+                <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">4.8</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="text-xl font-semibold text-slate-700 dark:text-slate-200 mb-3 mt-6">Lista con Avatares</h3>
+        <div class="neumorphic-card p-6 mb-6">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <div class="w-10 h-10 rounded-full neumorphic-card-inset flex items-center justify-center mr-3">
+                  <span class="material-icons-outlined text-primary">person</span>
+                </div>
+                <div>
+                  <p class="font-medium text-slate-800 dark:text-slate-200">John Doe</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Administrator</p>
+                </div>
+              </div>
+              <button class="w-8 h-8 rounded-full neumorphic-button flex items-center justify-center">
+                <span class="material-icons-outlined text-slate-500 text-sm">more_vert</span>
+              </button>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <div class="w-10 h-10 rounded-full neumorphic-card-inset flex items-center justify-center mr-3">
+                  <span class="material-icons-outlined text-primary">person</span>
+                </div>
+                <div>
+                  <p class="font-medium text-slate-800 dark:text-slate-200">Jane Smith</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Manager</p>
+                </div>
+              </div>
+              <button class="w-8 h-8 rounded-full neumorphic-button flex items-center justify-center">
+                <span class="material-icons-outlined text-slate-500 text-sm">more_vert</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Guidelines -->
+      <section id="guidelines" class="neumorphic-card p-8">
+        <h2 class="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4">Guidelines de Uso</h2>
+
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-xl font-semibold text-slate-700 dark:text-slate-200 mb-3">✓ Hacer</h3>
+            <ul class="space-y-2 text-slate-600 dark:text-slate-400">
+              <li class="flex items-start">
+                <span class="material-icons-outlined text-green-500 mr-2">check_circle</span>
+                <span>Usar fondos que coincidan exactamente con los colores de fondo definidos</span>
+              </li>
+              <li class="flex items-start">
+                <span class="material-icons-outlined text-green-500 mr-2">check_circle</span>
+                <span>Mantener el espaciado consistente usando el sistema de espaciado</span>
+              </li>
+              <li class="flex items-start">
+                <span class="material-icons-outlined text-green-500 mr-2">check_circle</span>
+                <span>Usar border-radius consistentes para mantener la armonía visual</span>
+              </li>
+              <li class="flex items-start">
+                <span class="material-icons-outlined text-green-500 mr-2">check_circle</span>
+                <span>Implementar estados hover/active para feedback visual</span>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="text-xl font-semibold text-slate-700 dark:text-slate-200 mb-3">✗ Evitar</h3>
+            <ul class="space-y-2 text-slate-600 dark:text-slate-400">
+              <li class="flex items-start">
+                <span class="material-icons-outlined text-red-500 mr-2">cancel</span>
+                <span>No usar sombras neumórficas sobre fondos que no coincidan exactamente</span>
+              </li>
+              <li class="flex items-start">
+                <span class="material-icons-outlined text-red-500 mr-2">cancel</span>
+                <span>Evitar mezclar múltiples estilos de sombras en un mismo componente</span>
+              </li>
+              <li class="flex items-start">
+                <span class="material-icons-outlined text-red-500 mr-2">cancel</span>
+                <span>No abusar del contraste - el neumorfismo requiere sutileza</span>
+              </li>
+              <li class="flex items-start">
+                <span class="material-icons-outlined text-red-500 mr-2">cancel</span>
+                <span>Evitar anidar muchos niveles de cards neumórficas</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="neumorphic-card-inset p-6 mt-6">
+            <h4 class="font-semibold text-slate-700 dark:text-slate-200 mb-2">
+              <span class="material-icons-outlined align-middle mr-2">lightbulb</span>
+              Tip Pro
+            </h4>
+            <p class="text-sm text-slate-600 dark:text-slate-400">
+              Para un mejor efecto neumórfico, asegúrate de que el color de fondo del elemento coincida
+              exactamente con el color de fondo del contenedor padre. Esto crea la ilusión de profundidad óptima.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="neumorphic-card p-6 text-center mt-12">
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+          © 2025 Spikes CRM/ERP. Design System v1.0
+        </p>
+        <p class="text-xs text-slate-400 dark:text-slate-500 mt-2">
+          Construido con Tailwind CSS y amor por el neumorfismo
+        </p>
+      </footer>
+    </main>
+  </div>
+
+  <!-- Modal Example (Hidden by default) -->
+  <div id="exampleModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 hidden">
+    <div class="neumorphic-card p-6 w-full max-w-md">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
+          Modal de Ejemplo
+        </h2>
+        <button onclick="closeModal()" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+          <span class="material-icons-outlined">close</span>
+        </button>
+      </div>
+
+      <p class="text-slate-600 dark:text-slate-400 mb-6">
+        Este es un ejemplo de modal neumórfico. Los modales utilizan el mismo diseño que el resto
+        de la aplicación para mantener la consistencia visual.
+      </p>
+
+      <div class="flex gap-3">
+        <button onclick="closeModal()" class="flex-1 neumorphic-button px-6 py-3 rounded-lg bg-primary text-white font-semibold">
+          Aceptar
+        </button>
+        <button onclick="closeModal()" class="flex-1 neumorphic-button px-6 py-3 rounded-lg text-slate-600 dark:text-slate-400 font-semibold">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dark mode toggle
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
+      const icon = document.getElementById('theme-icon');
+      icon.textContent = document.documentElement.classList.contains('dark') ? 'light_mode' : 'dark_mode';
+    }
+
+    // Modal functions
+    function openModal() {
+      document.getElementById('exampleModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('exampleModal').classList.add('hidden');
+    }
+
+    // Smooth scroll for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Highlight active section in sidebar
+    window.addEventListener('scroll', () => {
+      const sections = document.querySelectorAll('section[id]');
+      const navLinks = document.querySelectorAll('nav a[href^="#"]');
+
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.clientHeight;
+        if (pageYOffset >= sectionTop - 200) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('text-primary', 'bg-primary/10');
+        if (link.getAttribute('href') === `#${current}`) {
+          link.classList.add('text-primary', 'bg-primary/10');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

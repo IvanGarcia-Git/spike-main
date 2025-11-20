@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spikes - Component Showcase</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Custom Tailwind Config -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#14b8a6',
+            'primary-dark': '#0f766e',
+            'primary-light': '#5eead4',
+            'background-light': '#F0F2F5',
+            'background-dark': '#1a1c23',
+            'card-dark': '#2E3039',
+            'divider-light': '#E2E4E7',
+            'divider-dark': '#252830',
+          },
+          fontFamily: {
+            sans: ['Poppins', 'sans-serif'],
+          },
+          boxShadow: {
+            'neumorphic-light': '3px 3px 6px #d9dbde, -3px -3px 6px #ffffff',
+            'neumorphic-dark': '3px 3px 6px #15171c, -3px -3px 6px #1f212a',
+            'neumorphic-inset-light': 'inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff',
+            'neumorphic-inset-dark': 'inset 2px 2px 4px #15171c, inset -2px -2px 4px #1f212a',
+            'neumorphic-light-sm': '2px 2px 4px #d9dbde, -2px -2px 4px #ffffff',
+            'neumorphic-dark-sm': '2px 2px 4px #15171c, -2px -2px 4px #1f212a',
+            'neumorphic-light-lg': '5px 5px 10px #d9dbde, -5px -5px 10px #ffffff',
+            'neumorphic-dark-lg': '5px 5px 10px #15171c, -5px -5px 10px #1f212a',
+            'neumorphic-light-hover': '4px 4px 8px #d9dbde, -4px -4px 8px #ffffff',
+            'neumorphic-dark-hover': '4px 4px 8px #15171c, -4px -4px 8px #1f212a',
+          },
+          borderRadius: {
+            DEFAULT: '1rem',
+            sm: '0.5rem',
+            md: '0.75rem',
+            lg: '1.25rem',
+            xl: '1.5rem',
+            '2xl': '2rem',
+          },
+        }
+      }
+    }
+  </script>
+
+  <!-- Custom Styles -->
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .neumorphic-card {
+      background: #F0F2F5;
+      box-shadow: 3px 3px 6px #d9dbde, -3px -3px 6px #ffffff;
+      border-radius: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .dark .neumorphic-card {
+      background: #1a1c23;
+      box-shadow: 3px 3px 6px #15171c, -3px -3px 6px #1f212a;
+    }
+
+    .neumorphic-card-inset {
+      background: #F0F2F5;
+      box-shadow: inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff;
+      border-radius: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .dark .neumorphic-card-inset {
+      background: #1a1c23;
+      box-shadow: inset 2px 2px 4px #15171c, inset -2px -2px 4px #1f212a;
+    }
+
+    .neumorphic-button {
+      box-shadow: 3px 3px 6px #d9dbde, -3px -3px 6px #ffffff;
+      transition: all 0.2s ease;
+    }
+
+    .dark .neumorphic-button {
+      box-shadow: 3px 3px 6px #15171c, -3px -3px 6px #1f212a;
+    }
+
+    .neumorphic-button:hover:not(:disabled) {
+      box-shadow: inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff;
+    }
+
+    .dark .neumorphic-button:hover:not(:disabled) {
+      box-shadow: inset 2px 2px 4px #15171c, inset -2px -2px 4px #1f212a;
+    }
+
+    .neumorphic-button.active {
+      box-shadow: inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff;
+    }
+
+    .dark .neumorphic-button.active {
+      box-shadow: inset 2px 2px 4px #15171c, inset -2px -2px 4px #1f212a;
+    }
+
+    .neumorphic-progress-track {
+      background: #F0F2F5;
+      box-shadow: inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .dark .neumorphic-progress-track {
+      background: #1a1c23;
+      box-shadow: inset 2px 2px 4px #15171c, inset -2px -2px 4px #1f212a;
+    }
+
+    .table-row-divider {
+      border-top: 1px solid #E2E4E7;
+    }
+
+    .dark .table-row-divider {
+      border-top: 1px solid #252830;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #F0F2F5;
+    }
+
+    .dark ::-webkit-scrollbar-track {
+      background: #1a1c23;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .dark ::-webkit-scrollbar-thumb {
+      background: #475569;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .dark ::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+
+    /* Sidebar transition */
+    .sidebar {
+      transition: width 0.3s ease;
+    }
+
+    .sidebar.collapsed {
+      width: 4rem;
+    }
+
+    .sidebar-content {
+      transition: opacity 0.3s ease;
+    }
+
+    .sidebar.collapsed .sidebar-content {
+      opacity: 0;
+      display: none;
+    }
+
+    /* Notification toast */
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .toast {
+      animation: slideIn 0.3s ease-out;
+    }
+  </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark transition-colors duration-300">
+
+  <div class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar w-64 bg-background-light dark:bg-background-dark p-4 overflow-y-auto">
+      <div class="neumorphic-card p-4 mb-4">
+        <div class="flex items-center justify-between mb-4">
+          <div class="sidebar-content">
+            <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100">Showcase</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Componentes</p>
+          </div>
+          <button onclick="toggleSidebar()" class="w-10 h-10 rounded-lg neumorphic-button flex items-center justify-center text-slate-600 dark:text-slate-400">
+            <span class="material-icons-outlined" id="sidebar-icon">menu_open</span>
+          </button>
+        </div>
+
+        <nav class="sidebar-content space-y-1">
+          <button onclick="showSection('dashboard')" class="nav-link w-full flex items-center p-3 rounded-lg hover:bg-primary/10 transition-colors">
+            <span class="material-icons-outlined mr-3 text-slate-500">dashboard</span>
+            <span class="font-medium text-slate-600 dark:text-slate-400">Dashboard</span>
+          </button>
+          <button onclick="showSection('forms')" class="nav-link w-full flex items-center p-3 rounded-lg hover:bg-primary/10 transition-colors">
+            <span class="material-icons-outlined mr-3 text-slate-500">description</span>
+            <span class="font-medium text-slate-600 dark:text-slate-400">Formularios</span>
+          </button>
+          <button onclick="showSection('cards')" class="nav-link w-full flex items-center p-3 rounded-lg hover:bg-primary/10 transition-colors">
+            <span class="material-icons-outlined mr-3 text-slate-500">view_agenda</span>
+            <span class="font-medium text-slate-600 dark:text-slate-400">Cards</span>
+          </button>
+          <button onclick="showSection('tables')" class="nav-link w-full flex items-center p-3 rounded-lg hover:bg-primary/10 transition-colors">
+            <span class="material-icons-outlined mr-3 text-slate-500">table_chart</span>
+            <span class="font-medium text-slate-600 dark:text-slate-400">Tablas</span>
+          </button>
+          <button onclick="showSection('modals')" class="nav-link w-full flex items-center p-3 rounded-lg hover:bg-primary/10 transition-colors">
+            <span class="material-icons-outlined mr-3 text-slate-500">web_asset</span>
+            <span class="font-medium text-slate-600 dark:text-slate-400">Modales</span>
+          </button>
+          <button onclick="showSection('notifications')" class="nav-link w-full flex items-center p-3 rounded-lg hover:bg-primary/10 transition-colors">
+            <span class="material-icons-outlined mr-3 text-slate-500">notifications</span>
+            <span class="font-medium text-slate-600 dark:text-slate-400">Notificaciones</span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="sidebar-content neumorphic-card p-4">
+        <h3 class="font-semibold text-slate-800 dark:text-slate-100 mb-3 text-sm">Enlaces</h3>
+        <a href="design-system.html" class="block px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors mb-1">
+          Design System
+        </a>
+        <a href="/" class="block px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors">
+          Volver a la App
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto">
+      <!-- Header -->
+      <header class="neumorphic-card m-6 p-4 sticky top-0 z-40">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Component Showcase</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Ejemplos interactivos de componentes</p>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-full neumorphic-button flex items-center justify-center text-slate-600 dark:text-slate-300">
+              <span id="theme-icon" class="material-icons-outlined">dark_mode</span>
+            </button>
+            <button class="w-10 h-10 rounded-full neumorphic-button flex items-center justify-center text-slate-600 dark:text-slate-300">
+              <span class="material-icons-outlined">settings</span>
+            </button>
+            <button class="w-10 h-10 rounded-full neumorphic-button flex items-center justify-center bg-primary text-white relative">
+              <span class="material-icons-outlined">notifications</span>
+              <span class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-background-light dark:border-background-dark"></span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content Sections -->
+      <div class="p-6">
+
+        <!-- Dashboard Section -->
+        <div id="section-dashboard" class="content-section">
+          <h2 class="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-6">Dashboard Components</h2>
+
+          <!-- Stat Cards -->
+          <h3 class="text-xl font-semibold text-slate-700 dark:text-slate-200 mb-4">Stat Cards</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="neumorphic-card p-6">
+              <div class="flex items-center justify-between mb-4">
+                <span class="material-icons-outlined text-4xl text-green-500">trending_up</span>
+                <div class="text-right">
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Ingresos</p>
+                  <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">€25,840</p>
+                  <p class="text-xs text-green-500 flex items-center justify-end mt-1">
+                    <span class="material-icons-outlined text-sm">arrow_upward</span>
+                    15%
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="neumorphic-card p-6">
+              <div class="flex items-center justify-between mb-4">
+                <span class="material-icons-outlined text-4xl text-blue-500">people</span>
+                <div class="text-right">
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Usuarios</p>
+                  <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">1,248</p>
+                  <p class="text-xs text-blue-500 flex items-center justify-end mt-1">
+                    <span class="material-icons-outlined text-sm">arrow_upward</span>
+                    8%
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="neumorphic-card p-6">
+              <div class="flex items-center justify-between mb-4">
+                <span class="material-icons-outlined text-4xl text-yellow-500">shopping_cart</span>
+                <div class="text-right">
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Ventas</p>
+                  <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">453</p>
+                  <p class="text-xs text-red-500 flex items-center justify-end mt-1">
+                    <span class="material-icons-outlined text-sm">arrow_downward</span>
+                    3%
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="neumorphic-card p-6">
+              <div class="flex items-center justify-between mb-4">
+                <span class="material-icons-outlined text-4xl text-purple-500">star</span>
+                <div class="text-right">
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Rating</p>
+                  <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">4.8</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    de 5.0
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress Cards -->
+          <h3 class="text-xl font-semibold text-slate-700 dark:text-slate-200 mb-4">Progress Cards</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="neumorphic-card p-6">
+              <div class="flex items-center mb-4">
+                <div class="w-12 h-12 rounded-full neumorphic-card-inset p-1 flex items-center justify-center mr-4">
+                  <span class="material-icons-outlined text-3xl text-primary">person</span>
+                </div>
+                <div>
+                  <p class="font-semibold text-slate-800 dark:text-slate-100">Carlos Garcia</p>
+                  <p class="text-sm text-slate-500 dark:text-slate-400">Vendedor</p>
+                </div>
+              </div>
+              <div class="space-y-1 text-xs text-slate-500 dark:text-slate-400 mb-2">
+                <div class="flex justify-between">
+                  <span>Ventas</span>
+                  <span>280/140</span>
+                </div>
+              </div>
+              <div class="neumorphic-progress-track h-2.5 mb-2">
+                <div class="h-full rounded-full bg-green-500" style="width: 92%"></div>
+              </div>
+              <div class="flex justify-between items-center">
+                <p class="font-bold text-lg text-slate-800 dark:text-slate-200">$1570</p>
+                <p class="text-sm text-green-500 flex items-center">
+                  <span class="material-icons-outlined text-base">arrow_upward</span>
+                  20%
+                </p>
+              </div>
+            </div>
+
+            <div class="neumorphic-card p-6">
+              <div class="flex items-center mb-4">
+                <div class="w-12 h-12 rounded-full neumorphic-card-inset p-1 flex items-center justify-center mr-4">
+                  <span class="material-icons-outlined text-3xl text-primary">person</span>
+                </div>
+                <div>
+                  <p class="font-semibold text-slate-800 dark:text-slate-100">Daniel Ken</p>
+                  <p class="text-sm text-slate-500 dark:text-slate-400">Vendedor</p>
+                </div>
+              </div>
+              <div class="space-y-1 text-xs text-slate-500 dark:text-slate-400 mb-2">
+                <div class="flex justify-between">
+                  <span>Ventas</span>
+                  <span>160/140</span>
+                </div>
+              </div>
+              <div class="neumorphic-progress-track h-2.5 mb-2">
+                <div class="h-full rounded-full bg-yellow-500" style="width: 75%"></div>
+              </div>
+              <div class="flex justify-between items-center">
+                <p class="font-bold text-lg text-slate-800 dark:text-slate-200">$800</p>
+                <p class="text-sm text-green-500 flex items-center">
+                  <span class="material-icons-outlined text-base">arrow_upward</span>
+                  4%
+                </p>
+              </div>
+            </div>
+
+            <div class="neumorphic-card p-6">
+              <div class="flex items-center mb-4">
+                <div class="w-12 h-12 rounded-full neumorphic-card-inset p-1 flex items-center justify-center mr-4">
+                  <span class="material-icons-outlined text-3xl text-primary">person</span>
+                </div>
+                <div>
+                  <p class="font-semibold text-slate-800 dark:text-slate-100">Jennifer Tan</p>
+                  <p class="text-sm text-slate-500 dark:text-slate-400">Vendedor</p>
+                </div>
+              </div>
+              <div class="space-y-1 text-xs text-slate-500 dark:text-slate-400 mb-2">
+                <div class="flex justify-between">
+                  <span>Ventas</span>
+                  <span>124/140</span>
+                </div>
+              </div>
+              <div class="neumorphic-progress-track h-2.5 mb-2">
+                <div class="h-full rounded-full bg-red-500" style="width: 45%"></div>
+              </div>
+              <div class="flex justify-between items-center">
+                <p class="font-bold text-lg text-slate-800 dark:text-slate-200">$650</p>
+                <p class="text-sm text-green-500 flex items-center">
+                  <span class="material-icons-outlined text-base">arrow_upward</span>
+                  31%
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart Example -->
+          <h3 class="text-xl font-semibold text-slate-700 dark:text-slate-200 mb-4">Gráficos Simples</h3>
+          <div class="neumorphic-card p-6 mb-8">
+            <h4 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6">Ventas por Mes</h4>
+            <div class="flex items-end h-64 space-x-2 sm:space-x-4">
+              <div class="flex-1 flex flex-col items-center justify-end">
+                <div class="w-full bg-primary/20 dark:bg-primary/30 rounded-t-lg group relative">
+                  <div class="bg-primary rounded-t-lg w-full transition-all duration-300 group-hover:bg-teal-400" style="height: 100px"></div>
+                </div>
+                <p class="text-xs mt-2 text-slate-500 dark:text-slate-400">Ene</p>
+              </div>
+              <div class="flex-1 flex flex-col items-center justify-end">
+                <div class="w-full bg-primary/20 dark:bg-primary/30 rounded-t-lg group relative">
+                  <div class="bg-primary rounded-t-lg w-full transition-all duration-300 group-hover:bg-teal-400" style="height: 150px"></div>
+                </div>
+                <p class="text-xs mt-2 text-slate-500 dark:text-slate-400">Feb</p>
+              </div>
+              <div class="flex-1 flex flex-col items-center justify-end">
+                <div class="w-full bg-primary/20 dark:bg-primary/30 rounded-t-lg group relative">
+                  <div class="bg-primary rounded-t-lg w-full transition-all duration-300 group-hover:bg-teal-400" style="height: 20px"></div>
+                </div>
+                <p class="text-xs mt-2 text-slate-500 dark:text-slate-400">Mar</p>
+              </div>
+              <div class="flex-1 flex flex-col items-center justify-end">
+                <div class="w-full bg-primary/20 dark:bg-primary/30 rounded-t-lg group relative">
+                  <div class="bg-primary rounded-t-lg w-full transition-all duration-300 group-hover:bg-teal-400" style="height: 140px"></div>
+                </div>
+                <p class="text-xs mt-2 text-slate-500 dark:text-slate-400">Abr</p>
+              </div>
+              <div class="flex-1 flex flex-col items-center justify-end">
+                <div class="w-full bg-primary/20 dark:bg-primary/30 rounded-t-lg group relative">
+                  <div class="bg-primary rounded-t-lg w-full transition-all duration-300 group-hover:bg-teal-400" style="height: 80px"></div>
+                </div>
+                <p class="text-xs mt-2 text-slate-500 dark:text-slate-400">May</p>
+              </div>
+              <div class="flex-1 flex flex-col items-center justify-end">
+                <div class="w-full bg-primary/20 dark:bg-primary/30 rounded-t-lg group relative">
+                  <div class="bg-primary rounded-t-lg w-full transition-all duration-300 group-hover:bg-teal-400" style="height: 60px"></div>
+                </div>
+                <p class="text-xs mt-2 text-slate-500 dark:text-slate-400">Jun</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Forms Section -->
+        <div id="section-forms" class="content-section hidden">
+          <h2 class="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-6">Formularios</h2>
+
+          <div class="neumorphic-card p-8 max-w-2xl">
+            <h3 class="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-6">Ejemplo de Formulario</h3>
+
+            <form class="space-y-6">
+              <!-- Text Input -->
+              <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Nombre Completo *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Juan Pérez"
+                  class="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+                />
+              </div>
+
+              <!-- Email Input with Icon -->
+              <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Email *
+                </label>
+                <div class="relative">
+                  <span class="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                    email
+                  </span>
+                  <input
+                    type="email"
+                    placeholder="juan@ejemplo.com"
+                    class="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+                  />
+                </div>
+              </div>
+
+              <!-- Select -->
+              <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Departamento
+                </label>
+                <div class="neumorphic-card-inset rounded-lg">
+                  <select class="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200">
+                    <option>Seleccionar...</option>
+                    <option>Ventas</option>
+                    <option>Marketing</option>
+                    <option>Soporte</option>
+                    <option>Desarrollo</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Textarea -->
+              <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Mensaje
+                </label>
+                <textarea
+                  rows="4"
+                  placeholder="Escribe tu mensaje aquí..."
+                  class="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+                ></textarea>
+              </div>
+
+              <!-- Checkbox Group -->
+              <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                  Intereses
+                </label>
+                <div class="space-y-2">
+                  <div class="flex items-center">
+                    <input type="checkbox" id="interes1" class="mr-2" />
+                    <label for="interes1" class="text-sm text-slate-700 dark:text-slate-300">Newsletter semanal</label>
+                  </div>
+                  <div class="flex items-center">
+                    <input type="checkbox" id="interes2" class="mr-2" checked />
+                    <label for="interes2" class="text-sm text-slate-700 dark:text-slate-300">Ofertas especiales</label>
+                  </div>
+                  <div class="flex items-center">
+                    <input type="checkbox" id="interes3" class="mr-2" />
+                    <label for="interes3" class="text-sm text-slate-700 dark:text-slate-300">Actualizaciones de producto</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Submit Buttons -->
+              <div class="flex gap-3 pt-4">
+                <button type="submit" class="flex-1 px-6 py-3 rounded-lg bg-primary text-white font-semibold neumorphic-button hover:bg-primary/90">
+                  Enviar
+                </button>
+                <button type="button" class="flex-1 px-6 py-3 rounded-lg text-slate-600 dark:text-slate-400 font-semibold neumorphic-button">
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Cards Section -->
+        <div id="section-cards" class="content-section hidden">
+          <h2 class="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-6">Cards Variadas</h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Note Card -->
+            <div class="neumorphic-card p-4 flex flex-col justify-between h-44 group hover:shadow-lg transition-shadow relative">
+              <div class="absolute top-0 left-0 right-0 h-1 rounded-t-lg bg-blue-500"></div>
+              <div class="mt-2">
+                <div class="flex items-start justify-between mb-2">
+                  <h4 class="font-semibold text-slate-800 dark:text-slate-200 line-clamp-2 flex-1">
+                    Reunión de Equipo
+                  </h4>
+                  <button class="ml-2 text-slate-400 hover:text-yellow-500 transition-colors">
+                    <span class="material-icons-outlined text-lg">star</span>
+                  </button>
+                </div>
+                <p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-3">
+                  Revisar los objetivos del Q4 y planificar la estrategia para el próximo trimestre.
+                </p>
+              </div>
+              <div class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-700">
+                <p class="text-xs text-slate-400">12/11/2025</p>
+                <div class="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button class="p-1 text-slate-500 hover:text-primary transition-colors">
+                    <span class="material-icons-outlined text-lg">edit</span>
+                  </button>
+                  <button class="p-1 text-slate-500 hover:text-red-500 transition-colors">
+                    <span class="material-icons-outlined text-lg">delete</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- User Card -->
+            <div class="neumorphic-card p-6">
+              <div class="flex items-center mb-4">
+                <div class="w-16 h-16 rounded-full neumorphic-card-inset flex items-center justify-center mr-4">
+                  <span class="material-icons-outlined text-4xl text-primary">person</span>
+                </div>
+                <div class="flex-1">
+                  <h4 class="font-semibold text-slate-800 dark:text-slate-200">Ana García</h4>
+                  <p class="text-sm text-slate-500 dark:text-slate-400">Product Manager</p>
+                  <div class="flex items-center mt-1">
+                    <span class="material-icons-outlined text-green-500 text-sm mr-1">circle</span>
+                    <span class="text-xs text-green-500">En línea</span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <button class="flex-1 px-4 py-2 rounded-lg neumorphic-button text-sm font-medium text-slate-600 dark:text-slate-400">
+                  Mensaje
+                </button>
+                <button class="w-10 h-10 rounded-lg neumorphic-button flex items-center justify-center">
+                  <span class="material-icons-outlined text-slate-500">more_vert</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Product Card -->
+            <div class="neumorphic-card p-6">
+              <div class="w-full h-32 neumorphic-card-inset rounded-lg mb-4 flex items-center justify-center">
+                <span class="material-icons-outlined text-6xl text-slate-400">image</span>
+              </div>
+              <h4 class="font-semibold text-slate-800 dark:text-slate-200 mb-2">Producto Premium</h4>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                Descripción breve del producto destacado.
+              </p>
+              <div class="flex items-center justify-between">
+                <span class="text-2xl font-bold text-primary">€99</span>
+                <button class="px-4 py-2 rounded-lg bg-primary text-white font-medium neumorphic-button">
+                  Comprar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tables Section -->
+        <div id="section-tables" class="content-section hidden">
+          <h2 class="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-6">Tablas</h2>
+
+          <div class="neumorphic-card p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100">
+                Lista de Usuarios
+              </h3>
+              <div class="flex items-center space-x-3">
+                <div class="relative">
+                  <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                    search
+                  </span>
+                  <input
+                    class="neumorphic-card-inset pl-10 pr-4 py-2 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm w-48 transition-all duration-300 bg-transparent"
+                    placeholder="Buscar..."
+                    type="text"
+                  />
+                </div>
+                <button class="px-4 py-2 rounded-lg bg-primary text-white font-medium neumorphic-button flex items-center gap-2">
+                  <span class="material-icons-outlined">add</span>
+                  Nuevo
+                </button>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <tr>
+                    <th class="p-3">
+                      <input type="checkbox" />
+                    </th>
+                    <th class="p-3">Usuario</th>
+                    <th class="p-3">Email</th>
+                    <th class="p-3">Rol</th>
+                    <th class="p-3">Estado</th>
+                    <th class="p-3">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="table-row-divider">
+                    <td class="p-3">
+                      <input type="checkbox" />
+                    </td>
+                    <td class="p-3">
+                      <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full neumorphic-card p-0.5 flex items-center justify-center mr-3">
+                          <span class="material-icons-outlined text-xl text-slate-500">person</span>
+                        </div>
+                        <div>
+                          <p class="font-medium text-slate-800 dark:text-slate-200">John Doe</p>
+                          <p class="text-xs text-slate-500 dark:text-slate-400">ID: 1234</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="p-3 text-slate-600 dark:text-slate-400">john@example.com</td>
+                    <td class="p-3">
+                      <span class="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-700">Admin</span>
+                    </td>
+                    <td class="p-3">
+                      <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Activo</span>
+                    </td>
+                    <td class="p-3">
+                      <div class="flex space-x-1">
+                        <button class="w-8 h-8 rounded-lg neumorphic-button flex items-center justify-center">
+                          <span class="material-icons-outlined text-slate-500 text-sm">edit</span>
+                        </button>
+                        <button class="w-8 h-8 rounded-lg neumorphic-button flex items-center justify-center">
+                          <span class="material-icons-outlined text-slate-500 text-sm">delete</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="table-row-divider">
+                    <td class="p-3">
+                      <input type="checkbox" />
+                    </td>
+                    <td class="p-3">
+                      <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full neumorphic-card p-0.5 flex items-center justify-center mr-3">
+                          <span class="material-icons-outlined text-xl text-slate-500">person</span>
+                        </div>
+                        <div>
+                          <p class="font-medium text-slate-800 dark:text-slate-200">Jane Smith</p>
+                          <p class="text-xs text-slate-500 dark:text-slate-400">ID: 1235</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="p-3 text-slate-600 dark:text-slate-400">jane@example.com</td>
+                    <td class="p-3">
+                      <span class="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">Usuario</span>
+                    </td>
+                    <td class="p-3">
+                      <span class="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">Pendiente</span>
+                    </td>
+                    <td class="p-3">
+                      <div class="flex space-x-1">
+                        <button class="w-8 h-8 rounded-lg neumorphic-button flex items-center justify-center">
+                          <span class="material-icons-outlined text-slate-500 text-sm">edit</span>
+                        </button>
+                        <button class="w-8 h-8 rounded-lg neumorphic-button flex items-center justify-center">
+                          <span class="material-icons-outlined text-slate-500 text-sm">delete</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="table-row-divider">
+                    <td class="p-3">
+                      <input type="checkbox" />
+                    </td>
+                    <td class="p-3">
+                      <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full neumorphic-card p-0.5 flex items-center justify-center mr-3">
+                          <span class="material-icons-outlined text-xl text-slate-500">person</span>
+                        </div>
+                        <div>
+                          <p class="font-medium text-slate-800 dark:text-slate-200">Bob Johnson</p>
+                          <p class="text-xs text-slate-500 dark:text-slate-400">ID: 1236</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="p-3 text-slate-600 dark:text-slate-400">bob@example.com</td>
+                    <td class="p-3">
+                      <span class="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">Usuario</span>
+                    </td>
+                    <td class="p-3">
+                      <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Activo</span>
+                    </td>
+                    <td class="p-3">
+                      <div class="flex space-x-1">
+                        <button class="w-8 h-8 rounded-lg neumorphic-button flex items-center justify-center">
+                          <span class="material-icons-outlined text-slate-500 text-sm">edit</span>
+                        </button>
+                        <button class="w-8 h-8 rounded-lg neumorphic-button flex items-center justify-center">
+                          <span class="material-icons-outlined text-slate-500 text-sm">delete</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="flex items-center justify-between mt-4">
+              <div class="text-sm text-slate-500 dark:text-slate-400">
+                Mostrando 3 de 10 usuarios
+              </div>
+              <div class="flex gap-2">
+                <button class="w-8 h-8 rounded-lg neumorphic-button flex items-center justify-center" disabled>
+                  <span class="material-icons-outlined text-slate-400 text-sm">chevron_left</span>
+                </button>
+                <button class="w-8 h-8 rounded-lg neumorphic-button active flex items-center justify-center">
+                  <span class="text-sm font-medium text-primary">1</span>
+                </button>
+                <button class="w-8 h-8 rounded-lg neumorphic-button flex items-center justify-center">
+                  <span class="text-sm font-medium text-slate-600 dark:text-slate-400">2</span>
+                </button>
+                <button class="w-8 h-8 rounded-lg neumorphic-button flex items-center justify-center">
+                  <span class="material-icons-outlined text-slate-600 dark:text-slate-400 text-sm">chevron_right</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modals Section -->
+        <div id="section-modals" class="content-section hidden">
+          <h2 class="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-6">Modales</h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="neumorphic-card p-6">
+              <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Modal Básico</h3>
+              <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                Modal simple con título, contenido y botones de acción.
+              </p>
+              <button onclick="openBasicModal()" class="px-6 py-3 rounded-lg bg-primary text-white font-semibold neumorphic-button">
+                Abrir Modal
+              </button>
+            </div>
+
+            <div class="neumorphic-card p-6">
+              <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Modal de Confirmación</h3>
+              <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                Modal para confirmar acciones destructivas o importantes.
+              </p>
+              <button onclick="openConfirmModal()" class="px-6 py-3 rounded-lg bg-red-500 text-white font-semibold neumorphic-button">
+                Abrir Confirmación
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notifications Section -->
+        <div id="section-notifications" class="content-section hidden">
+          <h2 class="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-6">Notificaciones</h2>
+
+          <div class="neumorphic-card p-6">
+            <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Toast Notifications</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+              Click en los botones para ver diferentes tipos de notificaciones toast.
+            </p>
+            <div class="flex flex-wrap gap-3">
+              <button onclick="showToast('success', 'Operación exitosa', 'Los cambios se guardaron correctamente')" class="px-4 py-2 rounded-lg bg-green-500 text-white font-medium neumorphic-button">
+                Éxito
+              </button>
+              <button onclick="showToast('error', 'Error', 'No se pudo completar la operación')" class="px-4 py-2 rounded-lg bg-red-500 text-white font-medium neumorphic-button">
+                Error
+              </button>
+              <button onclick="showToast('warning', 'Advertencia', 'Esta acción requiere confirmación')" class="px-4 py-2 rounded-lg bg-yellow-500 text-white font-medium neumorphic-button">
+                Advertencia
+              </button>
+              <button onclick="showToast('info', 'Información', 'Hay 3 nuevas actualizaciones disponibles')" class="px-4 py-2 rounded-lg bg-blue-500 text-white font-medium neumorphic-button">
+                Info
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 space-y-3 max-w-sm">
+  </div>
+
+  <!-- Modals -->
+  <!-- Basic Modal -->
+  <div id="basicModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 hidden">
+    <div class="neumorphic-card p-6 w-full max-w-md">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
+          Modal de Ejemplo
+        </h2>
+        <button onclick="closeBasicModal()" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+          <span class="material-icons-outlined">close</span>
+        </button>
+      </div>
+
+      <p class="text-slate-600 dark:text-slate-400 mb-6">
+        Este es un modal neumórfico básico. Los modales son útiles para mostrar contenido importante
+        que requiere la atención del usuario.
+      </p>
+
+      <div class="flex gap-3">
+        <button onclick="closeBasicModal()" class="flex-1 px-6 py-3 rounded-lg bg-primary text-white font-semibold neumorphic-button">
+          Aceptar
+        </button>
+        <button onclick="closeBasicModal()" class="flex-1 px-6 py-3 rounded-lg text-slate-600 dark:text-slate-400 font-semibold neumorphic-button">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div id="confirmModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 hidden">
+    <div class="neumorphic-card p-6 w-full max-w-md">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
+          Confirmar Acción
+        </h2>
+        <button onclick="closeConfirmModal()" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+          <span class="material-icons-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="flex items-start mb-6">
+        <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mr-4">
+          <span class="material-icons-outlined text-red-500">warning</span>
+        </div>
+        <div>
+          <p class="font-medium text-slate-800 dark:text-slate-200 mb-2">
+            ¿Estás seguro?
+          </p>
+          <p class="text-sm text-slate-600 dark:text-slate-400">
+            Esta acción no se puede deshacer. ¿Deseas continuar?
+          </p>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <button onclick="closeConfirmModal()" class="flex-1 px-6 py-3 rounded-lg bg-red-500 text-white font-semibold neumorphic-button">
+          Eliminar
+        </button>
+        <button onclick="closeConfirmModal()" class="flex-1 px-6 py-3 rounded-lg text-slate-600 dark:text-slate-400 font-semibold neumorphic-button">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dark mode toggle
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
+      const icon = document.getElementById('theme-icon');
+      icon.textContent = document.documentElement.classList.contains('dark') ? 'light_mode' : 'dark_mode';
+    }
+
+    // Sidebar toggle
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const icon = document.getElementById('sidebar-icon');
+      sidebar.classList.toggle('collapsed');
+      icon.textContent = sidebar.classList.contains('collapsed') ? 'menu' : 'menu_open';
+    }
+
+    // Section navigation
+    function showSection(sectionName) {
+      // Hide all sections
+      document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.add('hidden');
+      });
+
+      // Show selected section
+      document.getElementById(`section-${sectionName}`).classList.remove('hidden');
+
+      // Update nav links
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('bg-primary/10');
+        link.querySelector('.material-icons-outlined').classList.remove('text-primary');
+        link.querySelector('.material-icons-outlined').classList.add('text-slate-500');
+        link.querySelector('span:last-child').classList.remove('text-primary');
+        link.querySelector('span:last-child').classList.add('text-slate-600', 'dark:text-slate-400');
+      });
+
+      // Highlight active link
+      const activeLink = event.target.closest('.nav-link');
+      if (activeLink) {
+        activeLink.classList.add('bg-primary/10');
+        activeLink.querySelector('.material-icons-outlined').classList.remove('text-slate-500');
+        activeLink.querySelector('.material-icons-outlined').classList.add('text-primary');
+        activeLink.querySelector('span:last-child').classList.remove('text-slate-600', 'dark:text-slate-400');
+        activeLink.querySelector('span:last-child').classList.add('text-primary');
+      }
+
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Modal functions
+    function openBasicModal() {
+      document.getElementById('basicModal').classList.remove('hidden');
+    }
+
+    function closeBasicModal() {
+      document.getElementById('basicModal').classList.add('hidden');
+    }
+
+    function openConfirmModal() {
+      document.getElementById('confirmModal').classList.remove('hidden');
+    }
+
+    function closeConfirmModal() {
+      document.getElementById('confirmModal').classList.add('hidden');
+    }
+
+    // Toast notification function
+    function showToast(type, title, message) {
+      const container = document.getElementById('toast-container');
+
+      const icons = {
+        success: 'check_circle',
+        error: 'error',
+        warning: 'warning',
+        info: 'info'
+      };
+
+      const colors = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        warning: 'bg-yellow-500',
+        info: 'bg-blue-500'
+      };
+
+      const toast = document.createElement('div');
+      toast.className = 'toast neumorphic-card p-4 flex items-start space-x-3 w-full';
+      toast.innerHTML = `
+        <div class="w-10 h-10 rounded-full ${colors[type]} flex items-center justify-center flex-shrink-0">
+          <span class="material-icons-outlined text-white">${icons[type]}</span>
+        </div>
+        <div class="flex-1">
+          <h4 class="font-semibold text-slate-800 dark:text-slate-200">${title}</h4>
+          <p class="text-sm text-slate-600 dark:text-slate-400">${message}</p>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+          <span class="material-icons-outlined text-lg">close</span>
+        </button>
+      `;
+
+      container.appendChild(toast);
+
+      // Auto remove after 5 seconds
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(400px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 5000);
+    }
+
+    // Initialize - show dashboard by default
+    document.addEventListener('DOMContentLoaded', () => {
+      showSection('dashboard');
+    });
+  </script>
+</body>
+</html>
