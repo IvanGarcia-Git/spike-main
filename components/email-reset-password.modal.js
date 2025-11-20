@@ -63,25 +63,67 @@ export default function EmailResetPasswordModal({
     }
 
     return (
-        <div className={`bg-foreground text-black p-10 rounded-lg shadow-lg w-full max-w-lg`}>
-            <h2 className="text-3xl text-black font-bold text-center text-primary mt-5 mb-8">
-                Restablecer contraseña
-            </h2>
-            <p className="block text-base font-semibold text-black mb-8">
+        <div className="w-full max-w-md neumorphic-card p-8">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                    Restablecer contraseña
+                </h2>
+                <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                >
+                    <span className="material-icons-outlined">close</span>
+                </button>
+            </div>
+
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
                 Por favor, introduce tu correo electrónico para restablecer tu contraseña:
             </p>
-            <input
-                placeholder="Escribe aquí tu correo..."
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={`w-full text-black px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${userNotFound ? "mb-3" : "mb-12"}`}
-            />
-            <p className={`block text-base font-semibold text-red-500 ${messageError ? "ml-1 mb-14" : "hidden"}`}>
-                {messageError}
-            </p>
-            <div className="flex justify-end gap-4">
-                <button onClick={() => setIsModalOpen(false)} className="w-full bg-[#ff3737] text-white py-3 rounded-full font-semibold hover:bg-red-600 transition-colors duration-200">Cancelar</button>
-                <button onClick={handleSendEmail} className="w-full bg-[#faca15] text-white py-3 rounded-full font-semibold hover:bg-[#ffdb58] transition-colors duration-200">Enviar</button>
+
+            {/* Email Input */}
+            <div className="mb-6">
+                <label
+                    className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+                    htmlFor="reset-email"
+                >
+                    Correo electrónico
+                </label>
+                <div className="relative">
+                    <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                        email
+                    </span>
+                    <input
+                        id="reset-email"
+                        type="email"
+                        placeholder="Escribe aquí tu correo..."
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+                    />
+                </div>
+                {messageError && (
+                    <p className="text-sm text-red-500 dark:text-red-400 mt-2 ml-1">
+                        {messageError}
+                    </p>
+                )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+                <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="flex-1 neumorphic-button py-3 rounded-lg font-semibold text-slate-700 dark:text-slate-300 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all duration-200"
+                >
+                    Cancelar
+                </button>
+                <button
+                    onClick={handleSendEmail}
+                    className="flex-1 neumorphic-button active bg-primary text-white py-3 rounded-lg font-semibold hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                    <span className="material-icons-outlined text-sm">send</span>
+                    Enviar
+                </button>
             </div>
         </div>
     );
