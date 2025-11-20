@@ -97,20 +97,20 @@
       box-shadow: 3px 3px 6px #15171c, -3px -3px 6px #1f212a;
     }
 
-    .neumorphic-button:hover {
-      box-shadow: inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff;
+    .neumorphic-button:hover:not(:disabled) {
+      box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2), inset -1px -1px 3px rgba(255, 255, 255, 0.1);
     }
 
-    .dark .neumorphic-button:hover {
-      box-shadow: inset 2px 2px 4px #15171c, inset -2px -2px 4px #1f212a;
+    .dark .neumorphic-button:hover:not(:disabled) {
+      box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.5), inset -1px -1px 3px rgba(255, 255, 255, 0.05);
     }
 
     .neumorphic-button.active {
-      box-shadow: inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff;
+      box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2), inset -1px -1px 3px rgba(255, 255, 255, 0.1);
     }
 
     .dark .neumorphic-button.active {
-      box-shadow: inset 2px 2px 4px #15171c, inset -2px -2px 4px #1f212a;
+      box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.5), inset -1px -1px 3px rgba(255, 255, 255, 0.05);
     }
 
     .neumorphic-progress-track {
@@ -131,6 +131,19 @@
 
     .dark .table-row-divider {
       border-top: 1px solid #252830;
+    }
+
+    /* Modal specific styles */
+    .modal-card {
+      background: #F0F2F5;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.05);
+      border-radius: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .dark .modal-card {
+      background: #1a1c23;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
     }
 
     .color-swatch {
@@ -199,7 +212,7 @@
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Spikes Design System</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400">Neumorphic Design Guide v1.0</p>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Neumorphic Design Guide v1.1</p>
       </div>
       <div class="flex items-center space-x-3">
         <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-full neumorphic-button flex items-center justify-center text-slate-600 dark:text-slate-300">
@@ -286,7 +299,7 @@
 
         <!-- Primary Colors -->
         <h3 class="text-xl font-semibold text-slate-700 dark:text-slate-200 mb-4 mt-6">Colores Primarios</h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div>
             <div class="color-swatch mb-2" style="background-color: #14b8a6;"></div>
             <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Primary</p>
@@ -304,12 +317,6 @@
             <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Primary Light</p>
             <p class="text-xs text-slate-500 dark:text-slate-400">#5eead4</p>
             <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">primary-light</code>
-          </div>
-          <div>
-            <div class="color-swatch mb-2" style="background-color: #faca15;"></div>
-            <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Secondary</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400">#faca15</p>
-            <code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">secondary</code>
           </div>
         </div>
 
@@ -762,7 +769,7 @@
             <input
               type="text"
               placeholder="Ingresa tu nombre..."
-              class="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+              class="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
             />
           </div>
           <div>
@@ -776,7 +783,7 @@
               <input
                 type="text"
                 placeholder="Buscar..."
-                class="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+                class="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
               />
             </div>
           </div>
@@ -785,7 +792,7 @@
           <pre>&lt;input
   type="text"
   placeholder="Ingresa tu nombre..."
-  class="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+  class="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
 /&gt;
 
 &lt;!-- Con icono --&gt;
@@ -808,7 +815,7 @@
           <textarea
             rows="4"
             placeholder="Escribe tu mensaje..."
-            class="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+            class="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
           ></textarea>
         </div>
 
@@ -965,7 +972,7 @@
         <div class="code-block mt-6">
           <pre>&lt;!-- Modal Container --&gt;
 &lt;div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"&gt;
-  &lt;div class="neumorphic-card p-6 w-full max-w-md"&gt;
+  &lt;div class="modal-card p-6 w-full max-w-md"&gt;
     &lt;!-- Header --&gt;
     &lt;div class="flex items-center justify-between mb-6"&gt;
       &lt;h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100"&gt;
@@ -1199,7 +1206,7 @@
       <!-- Footer -->
       <footer class="neumorphic-card p-6 text-center mt-12">
         <p class="text-sm text-slate-500 dark:text-slate-400">
-          © 2025 Spikes CRM/ERP. Design System v1.0
+          © 2025 Spikes CRM/ERP. Design System v1.1
         </p>
         <p class="text-xs text-slate-400 dark:text-slate-500 mt-2">
           Construido con Tailwind CSS y amor por el neumorfismo
@@ -1210,7 +1217,7 @@
 
   <!-- Modal Example (Hidden by default) -->
   <div id="exampleModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 hidden">
-    <div class="neumorphic-card p-6 w-full max-w-md">
+    <div class="modal-card p-6 w-full max-w-md">
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
           Modal de Ejemplo

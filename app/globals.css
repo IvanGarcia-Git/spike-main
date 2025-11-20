@@ -51,11 +51,23 @@ body {
 }
 
 .neumorphic-button {
-  @apply shadow-neumorphic-light dark:shadow-neumorphic-dark hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all duration-200;
+  @apply shadow-neumorphic-light dark:shadow-neumorphic-dark transition-all duration-200;
+}
+
+.neumorphic-button:hover:not(:disabled) {
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2), inset -1px -1px 3px rgba(255, 255, 255, 0.1);
+}
+
+.dark .neumorphic-button:hover:not(:disabled) {
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.5), inset -1px -1px 3px rgba(255, 255, 255, 0.05);
 }
 
 .neumorphic-button.active {
-  @apply shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark;
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2), inset -1px -1px 3px rgba(255, 255, 255, 0.1);
+}
+
+.dark .neumorphic-button.active {
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.5), inset -1px -1px 3px rgba(255, 255, 255, 0.05);
 }
 
 /* Ensure Material Icons are perfectly centered in circular buttons */
@@ -78,6 +90,16 @@ button.rounded-full .material-icons-outlined {
 
 .dark .table-row-divider {
   border-top: 1px solid #252830;
+}
+
+/* Modal specific styles - without white glow */
+.modal-card {
+  @apply bg-background-light dark:bg-background-dark rounded-xl transition-all duration-300;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.dark .modal-card {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 /* Input date calendar picker */

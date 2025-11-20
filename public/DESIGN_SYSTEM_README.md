@@ -59,7 +59,6 @@ Contiene:
 primary: #14b8a6      /* Teal 500 */
 primary-dark: #0f766e  /* Teal 700 */
 primary-light: #5eead4 /* Teal 300 */
-secondary: #faca15    /* Yellow */
 ```
 
 #### Fondos
@@ -204,7 +203,7 @@ rounded-full: 9999px
 <input
   type="text"
   placeholder="Placeholder..."
-  class="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+  class="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
 />
 ```
 
@@ -216,7 +215,7 @@ rounded-full: 9999px
   </span>
   <input
     type="text"
-    class="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+    class="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
   />
 </div>
 ```
@@ -255,7 +254,7 @@ rounded-full: 9999px
 
 ```html
 <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-  <div class="neumorphic-card p-6 w-full max-w-md">
+  <div class="modal-card p-6 w-full max-w-md">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
@@ -313,6 +312,7 @@ rounded-full: 9999px
 .neumorphic-button           /* Botón con efecto hover */
 .neumorphic-button.active    /* Estado activo del botón */
 .neumorphic-progress-track   /* Track de progreso */
+.modal-card                  /* Modal con sombra oscura sin resplandor */
 .table-row-divider          /* Divisor de filas de tabla */
 ```
 
@@ -463,6 +463,18 @@ Y en `globals.css`:
 .dark .table-row-divider {
   border-top: 1px solid #252830;
 }
+
+/* Modal specific styles */
+.modal-card {
+  background: #F0F2F5;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  border-radius: 1rem;
+}
+
+.dark .modal-card {
+  background: #1a1c23;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
 ```
 
 ## 📖 Recursos Adicionales
@@ -483,6 +495,12 @@ Y en `globals.css`:
 4. **Experimenta**: Crea tus propios componentes siguiendo los patrones establecidos
 
 ## 📝 Versiones
+
+- **v1.1** - Mejoras en efectos y sombras (Actual)
+  - Eliminado color secundario amarillo
+  - Reemplazado resplandor de inputs por efecto neumórfico puro (sin `focus:ring`)
+  - Reemplazadas sombras de modales con sombra oscura sin resplandor blanco
+  - Nueva clase `.modal-card` para modales con sombras mejoradas
 
 - **v1.0** - Sistema de diseño inicial con componentes principales
   - Cards (elevadas e inset)

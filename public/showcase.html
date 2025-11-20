@@ -98,19 +98,19 @@
     }
 
     .neumorphic-button:hover:not(:disabled) {
-      box-shadow: inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff;
+      box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2), inset -1px -1px 3px rgba(255, 255, 255, 0.1);
     }
 
     .dark .neumorphic-button:hover:not(:disabled) {
-      box-shadow: inset 2px 2px 4px #15171c, inset -2px -2px 4px #1f212a;
+      box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.5), inset -1px -1px 3px rgba(255, 255, 255, 0.05);
     }
 
     .neumorphic-button.active {
-      box-shadow: inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff;
+      box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2), inset -1px -1px 3px rgba(255, 255, 255, 0.1);
     }
 
     .dark .neumorphic-button.active {
-      box-shadow: inset 2px 2px 4px #15171c, inset -2px -2px 4px #1f212a;
+      box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.5), inset -1px -1px 3px rgba(255, 255, 255, 0.05);
     }
 
     .neumorphic-progress-track {
@@ -131,6 +131,19 @@
 
     .dark .table-row-divider {
       border-top: 1px solid #252830;
+    }
+
+    /* Modal specific styles */
+    .modal-card {
+      background: #F0F2F5;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.05);
+      border-radius: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .dark .modal-card {
+      background: #1a1c23;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
     }
 
     /* Custom scrollbar */
@@ -492,7 +505,7 @@
                 <input
                   type="text"
                   placeholder="Juan Pérez"
-                  class="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+                  class="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
                 />
               </div>
 
@@ -508,7 +521,7 @@
                   <input
                     type="email"
                     placeholder="juan@ejemplo.com"
-                    class="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+                    class="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
                   />
                 </div>
               </div>
@@ -537,7 +550,7 @@
                 <textarea
                   rows="4"
                   placeholder="Escribe tu mensaje aquí..."
-                  class="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+                  class="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
                 ></textarea>
               </div>
 
@@ -668,7 +681,7 @@
                     search
                   </span>
                   <input
-                    class="neumorphic-card-inset pl-10 pr-4 py-2 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm w-48 transition-all duration-300 bg-transparent"
+                    class="neumorphic-card-inset pl-10 pr-4 py-2 rounded-lg border-none focus:outline-none text-sm w-48 transition-all duration-300 bg-transparent"
                     placeholder="Buscar..."
                     type="text"
                   />
@@ -883,7 +896,7 @@
   <!-- Modals -->
   <!-- Basic Modal -->
   <div id="basicModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 hidden">
-    <div class="neumorphic-card p-6 w-full max-w-md">
+    <div class="modal-card p-6 w-full max-w-md">
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
           Modal de Ejemplo
@@ -911,7 +924,7 @@
 
   <!-- Confirm Modal -->
   <div id="confirmModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 hidden">
-    <div class="neumorphic-card p-6 w-full max-w-md">
+    <div class="modal-card p-6 w-full max-w-md">
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
           Confirmar Acción
