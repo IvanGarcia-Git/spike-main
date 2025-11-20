@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import PageHeader from "@/components/page-header.component";
 
 export default function Notas() {
   const [activeSection, setActiveSection] = useState("todas");
@@ -257,7 +256,6 @@ export default function Notas() {
   if (loading) {
     return (
       <div className="p-6">
-        <PageHeader title="Notas" />
         <div className="flex items-center justify-center h-64">
           <div className="text-slate-500">Cargando notas...</div>
         </div>
@@ -267,8 +265,6 @@ export default function Notas() {
 
   return (
     <div className="p-6">
-      <PageHeader title="Notas" />
-
       <div className="flex space-x-6">
         {/* Main Content - 3/4 width */}
         <div className="w-3/4 space-y-8">

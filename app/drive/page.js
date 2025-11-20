@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import PageHeader from "@/components/page-header.component";
 
 export default function Drive() {
   const [activeSection, setActiveSection] = useState("mi-unidad");
@@ -290,7 +289,6 @@ export default function Drive() {
   if (loading) {
     return (
       <div className="p-6">
-        <PageHeader title="Drive" />
         <div className="flex items-center justify-center h-64">
           <div className="text-slate-500">Cargando archivos...</div>
         </div>
@@ -300,8 +298,6 @@ export default function Drive() {
 
   return (
     <div className="p-6">
-      <PageHeader title="Drive" />
-
       <div className="flex space-x-6">
         {/* Sidebar */}
         <div className="w-64 flex-shrink-0">

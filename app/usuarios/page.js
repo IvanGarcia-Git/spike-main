@@ -7,7 +7,6 @@ import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
 import { FiEdit, FiTrash } from "react-icons/fi";
 import UserModal from "@/components/new-user.modal";
 import Link from "next/link";
-import PageHeader from "@/components/page-header.component";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -221,8 +220,6 @@ export default function Users() {
 
   return (
     <div className="p-6">
-      <PageHeader title="Usuarios" />
-
       {/* Search and Add Button */}
       <div className="neumorphic-card p-6 mb-8">
         <div className="flex justify-between items-center">

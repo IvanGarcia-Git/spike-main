@@ -23,7 +23,6 @@ import { getNotificationDisplayProps } from "../../helpers/notification.helper";
 import GlobalLoadingOverlay from "@/components/global-loading.overlay";
 import ConfirmDeleteTaskModal from "@/components/confirm-delete-task-modal";
 import SendTaskModal from "@/components/send-task.modal";
-import PageHeader from "@/components/page-header.component";
 
 export default function Agenda() {
   const [calendarDate, setCalendarDate] = useState(new Date());
@@ -415,8 +414,6 @@ export default function Agenda() {
       }}
     >
       <div className="p-6">
-        <PageHeader title="Agenda Personal" />
-
         <div className="grid grid-cols-12 gap-6">
           {/* Columna Izquierda - Agenda Clientes y Recordatorios */}
           <div className="col-span-12 lg:col-span-4 space-y-6">

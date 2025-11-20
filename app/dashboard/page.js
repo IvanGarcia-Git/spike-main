@@ -11,7 +11,6 @@ import {
   ProgressTrack,
   StatsCard,
   DataTable,
-  ProfileAvatar,
 } from "@/components/neumorphic";
 
 export default function Dashboard() {
@@ -193,26 +192,6 @@ export default function Dashboard() {
 
   return (
     <div className="p-6">
-      {/* Header según dashboard.html */}
-      <header className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Dashboard</h2>
-        <div className="flex items-center space-x-4">
-          <button className="p-3 rounded-full shadow-neumorphic-light dark:shadow-neumorphic-dark hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all duration-200">
-            <span className="material-icons-outlined">apps</span>
-          </button>
-          <button className="p-3 rounded-full shadow-neumorphic-light dark:shadow-neumorphic-dark hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all duration-200">
-            <span className="material-icons-outlined">settings</span>
-          </button>
-          <button className="p-3 rounded-full shadow-neumorphic-light dark:shadow-neumorphic-dark hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all duration-200">
-            <span className="material-icons-outlined">notifications</span>
-          </button>
-          <ProfileAvatar
-            name="Usuario"
-            size="md"
-          />
-        </div>
-      </header>
-
       {/* Tabs */}
       <div className="mb-6 flex space-x-2">
         {tabs.map((tab) => (

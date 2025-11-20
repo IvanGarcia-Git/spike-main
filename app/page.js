@@ -72,24 +72,16 @@ export default function Login() {
     <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center p-4 transition-colors duration-300">
       {/* Login Card */}
       <div className={`w-full max-w-md ${isModalOpen ? "hidden" : "block"}`}>
-        {/* Logo/Brand */}
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold tracking-wider text-slate-800 dark:text-slate-100 mb-2">
-            SPIKES
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400 text-sm">
-            Sistema de Gestión CRM/ERP
-          </p>
-        </div>
-
         {/* Login Form Card */}
         <div className="neumorphic-card p-8">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 text-center mb-2">
-            Bienvenido
-          </h2>
-          <p className="text-center text-slate-600 dark:text-slate-400 mb-8">
-            Inicia sesión para continuar
-          </p>
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            <img
+              src="/images/logo.svg"
+              alt="SPIKES Logo"
+              className="h-20 w-auto"
+            />
+          </div>
 
           <form onSubmit={handleSubmit}>
             {/* Username Field */}
@@ -190,40 +182,6 @@ export default function Login() {
           <div className="mt-6 text-center">
             <p className="text-xs text-slate-500 dark:text-slate-400">
               © 2025 Spikes CRM/ERP. Todos los derechos reservados.
-            </p>
-          </div>
-        </div>
-
-        {/* Features */}
-        <div className="mt-8 grid grid-cols-3 gap-4">
-          <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-2 rounded-lg neumorphic-card flex items-center justify-center">
-              <span className="material-icons-outlined text-primary">
-                security
-              </span>
-            </div>
-            <p className="text-xs text-slate-600 dark:text-slate-400">
-              Seguro
-            </p>
-          </div>
-          <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-2 rounded-lg neumorphic-card flex items-center justify-center">
-              <span className="material-icons-outlined text-primary">
-                speed
-              </span>
-            </div>
-            <p className="text-xs text-slate-600 dark:text-slate-400">
-              Rápido
-            </p>
-          </div>
-          <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-2 rounded-lg neumorphic-card flex items-center justify-center">
-              <span className="material-icons-outlined text-primary">
-                cloud_done
-              </span>
-            </div>
-            <p className="text-xs text-slate-600 dark:text-slate-400">
-              En la nube
             </p>
           </div>
         </div>

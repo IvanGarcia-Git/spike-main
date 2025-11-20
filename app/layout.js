@@ -89,7 +89,7 @@ export default function RootLayout({ children }) {
               {/* Main content area with TopBar */}
               <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Top Bar */}
-                <TopBar />
+                <TopBar userGroupId={userGroupId} isManager={isManager} />
 
                 {/* Main content */}
                 <main className="flex-1 overflow-y-auto">

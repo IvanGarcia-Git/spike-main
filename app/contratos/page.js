@@ -21,7 +21,6 @@ import {
   NeumorphicCard,
   NeumorphicButton,
   NeumorphicInput,
-  ProfileAvatar,
 } from "@/components/neumorphic";
 
 const formatDateToYYYYMMDD = (date) => {
@@ -930,26 +929,6 @@ export default function Contracts() {
 
   return (
     <div className="p-6">
-      {/* Header según contratos.html */}
-      <header className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Gestión de Contratos</h2>
-        <div className="flex items-center space-x-4">
-          <button className="p-3 rounded-full neumorphic-button">
-            <span className="material-icons-outlined">apps</span>
-          </button>
-          <button className="p-3 rounded-full neumorphic-button">
-            <span className="material-icons-outlined">settings</span>
-          </button>
-          <button className="p-3 rounded-full neumorphic-button">
-            <span className="material-icons-outlined">notifications</span>
-          </button>
-          <ProfileAvatar
-            name="Usuario"
-            size="md"
-          />
-        </div>
-      </header>
-
       {/* Search and Filters */}
       <SearchBox
         onSearch={getFilteredContracts}

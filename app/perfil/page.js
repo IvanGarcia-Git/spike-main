@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import PageHeader from "@/components/page-header.component";
 
 export default function Perfil() {
   const [activeTab, setActiveTab] = useState("info-personal");
@@ -91,7 +90,6 @@ export default function Perfil() {
   if (loading) {
     return (
       <div className="p-6">
-        <PageHeader title="Perfil" />
         <div className="flex items-center justify-center h-64">
           <div className="text-slate-500">Cargando perfil...</div>
         </div>
@@ -101,8 +99,6 @@ export default function Perfil() {
 
   return (
     <div className="p-6">
-      <PageHeader title="Perfil" />
-
       <div className="grid grid-cols-12 gap-6">
         {/* Left Column - Profile Picture and Navigation */}
         <div className="col-span-12 lg:col-span-4 flex flex-col items-center">

@@ -6,7 +6,7 @@ import { getCookie, deleteCookie } from "cookies-next";
 import { authGetFetch } from "@/helpers/server-fetch.helper";
 import * as jose from "jose";
 
-export default function TopBar() {
+export default function TopBar({ userGroupId, isManager }) {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isAppsOpen, setIsAppsOpen] = useState(false);
@@ -93,7 +93,7 @@ export default function TopBar() {
             </button>
 
             {isAppsOpen && (
-              <div className="absolute right-0 mt-4 w-72 neumorphic-card bg-background-light dark:bg-background-dark rounded-xl shadow-xl p-4 z-50">
+              <div className="absolute right-0 mt-4 w-80 neumorphic-card bg-background-light dark:bg-background-dark rounded-xl shadow-xl p-4 z-50 max-h-[80vh] overflow-y-auto">
                 <div className="mb-3">
                   <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-3">
                     Aplicaciones
@@ -101,15 +101,63 @@ export default function TopBar() {
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   <Link
+                    href="/dashboard"
+                    className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                    onClick={() => setIsAppsOpen(false)}
+                  >
+                    <span className="material-icons-outlined text-primary text-2xl">
+                      dashboard
+                    </span>
+                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                      Dashboard
+                    </span>
+                  </Link>
+                  <Link
                     href="/contratos"
                     className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
                     onClick={() => setIsAppsOpen(false)}
                   >
                     <span className="material-icons-outlined text-primary text-2xl">
-                      description
+                      receipt_long
                     </span>
                     <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
                       Contratos
+                    </span>
+                  </Link>
+                  <Link
+                    href="/comparativas"
+                    className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                    onClick={() => setIsAppsOpen(false)}
+                  >
+                    <span className="material-icons-outlined text-primary text-2xl">
+                      compare_arrows
+                    </span>
+                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                      Comparativas
+                    </span>
+                  </Link>
+                  <Link
+                    href="/notas"
+                    className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                    onClick={() => setIsAppsOpen(false)}
+                  >
+                    <span className="material-icons-outlined text-primary text-2xl">
+                      note_alt
+                    </span>
+                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                      Notas
+                    </span>
+                  </Link>
+                  <Link
+                    href="/agenda"
+                    className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                    onClick={() => setIsAppsOpen(false)}
+                  >
+                    <span className="material-icons-outlined text-primary text-2xl">
+                      book
+                    </span>
+                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                      Agenda
                     </span>
                   </Link>
                   <Link
@@ -118,10 +166,62 @@ export default function TopBar() {
                     onClick={() => setIsAppsOpen(false)}
                   >
                     <span className="material-icons-outlined text-primary text-2xl">
-                      people
+                      person_check
                     </span>
                     <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
-                      Leads
+                      Gestor Leads
+                    </span>
+                  </Link>
+                  {userGroupId === 1 && (
+                    <>
+                      <Link
+                        href="/campaigns"
+                        className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                        onClick={() => setIsAppsOpen(false)}
+                      >
+                        <span className="material-icons-outlined text-primary text-2xl">
+                          campaign
+                        </span>
+                        <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                          Campañas
+                        </span>
+                      </Link>
+                      <Link
+                        href="/groups"
+                        className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                        onClick={() => setIsAppsOpen(false)}
+                      >
+                        <span className="material-icons-outlined text-primary text-2xl">
+                          groups
+                        </span>
+                        <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                          Grupos
+                        </span>
+                      </Link>
+                      <Link
+                        href="/emitir-factura"
+                        className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                        onClick={() => setIsAppsOpen(false)}
+                      >
+                        <span className="material-icons-outlined text-primary text-2xl">
+                          receipt_long
+                        </span>
+                        <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                          Factura
+                        </span>
+                      </Link>
+                    </>
+                  )}
+                  <Link
+                    href="/generar-justo-titulo"
+                    className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                    onClick={() => setIsAppsOpen(false)}
+                  >
+                    <span className="material-icons-outlined text-primary text-2xl">
+                      receipt_long
+                    </span>
+                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                      Justo Título
                     </span>
                   </Link>
                   <Link
@@ -137,7 +237,7 @@ export default function TopBar() {
                     </span>
                   </Link>
                   <Link
-                    href="/drive"
+                    href="/drive?section=precios"
                     className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
                     onClick={() => setIsAppsOpen(false)}
                   >
@@ -149,42 +249,42 @@ export default function TopBar() {
                     </span>
                   </Link>
                   <Link
-                    href="/liquidacion"
+                    href="/liquidaciones"
                     className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
                     onClick={() => setIsAppsOpen(false)}
                   >
                     <span className="material-icons-outlined text-primary text-2xl">
-                      account_balance
+                      payments
                     </span>
                     <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
-                      Liquidación
+                      Liquidaciones
                     </span>
                   </Link>
-                  <Link
-                    href="/campaigns"
-                    className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
-                    onClick={() => setIsAppsOpen(false)}
-                  >
-                    <span className="material-icons-outlined text-primary text-2xl">
-                      campaign
-                    </span>
-                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
-                      Campañas
-                    </span>
-                  </Link>
+                  {isManager && (
+                    <Link
+                      href="/usuarios"
+                      className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                      onClick={() => setIsAppsOpen(false)}
+                    >
+                      <span className="material-icons-outlined text-primary text-2xl">
+                        manage_accounts
+                      </span>
+                      <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                        Usuarios
+                      </span>
+                    </Link>
+                  )}
                 </div>
               </div>
             )}
           </div>
 
           {/* Settings Button */}
-          <Link href="/configuracion">
-            <button className="w-12 h-12 rounded-full neumorphic-button flex items-center justify-center hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all">
-              <span className="material-icons-outlined text-slate-600 dark:text-slate-300">
-                settings
-              </span>
-            </button>
-          </Link>
+          <button className="w-12 h-12 rounded-full neumorphic-button flex items-center justify-center hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all">
+            <span className="material-icons-outlined text-slate-600 dark:text-slate-300">
+              settings
+            </span>
+          </button>
 
           {/* Notifications Button */}
           <div ref={notificationsRef} className="relative">

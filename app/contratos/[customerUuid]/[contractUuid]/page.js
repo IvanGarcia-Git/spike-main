@@ -19,7 +19,6 @@ import { FaDownload } from "react-icons/fa";
 import {
   NeumorphicCard,
   NeumorphicButton,
-  ProfileAvatar,
 } from "@/components/neumorphic";
 
 
@@ -331,26 +330,6 @@ export default function ContractDetail({ params }) {
 
   return (
     <div className="p-6">
-      {/* Header */}
-      <header className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Detalle de Contrato</h2>
-        <div className="flex items-center space-x-4">
-          <button className="p-3 rounded-full neumorphic-button">
-            <span className="material-icons-outlined">apps</span>
-          </button>
-          <button className="p-3 rounded-full neumorphic-button">
-            <span className="material-icons-outlined">settings</span>
-          </button>
-          <button className="p-3 rounded-full neumorphic-button">
-            <span className="material-icons-outlined">notifications</span>
-          </button>
-          <ProfileAvatar
-            name="Usuario"
-            size="md"
-          />
-        </div>
-      </header>
-
       <div className="neumorphic-card p-6">
         {/* Información general del cliente y contratos */}
         <div className="flex justify-between items-center">

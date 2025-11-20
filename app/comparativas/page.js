@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import PageHeader from "@/components/page-header.component";
 import NuevaComparativaModal from "@/components/comparativas/nueva-comparativa.modal";
 
 export default function ComparativasPage() {

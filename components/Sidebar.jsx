@@ -62,8 +62,8 @@ export default function Sidebar({ userGroupId, isManager }) {
   );
 
   return (
-    <aside className="w-64 flex-shrink-0 p-4">
-      <div className="flex flex-col h-full bg-background-light dark:bg-background-dark rounded-xl p-6">
+    <aside className="w-64 flex-shrink-0 p-4 overflow-x-hidden">
+      <div className="flex flex-col h-full bg-background-light dark:bg-background-dark rounded-xl p-6 overflow-x-hidden">
         {/* Logo */}
         <div className="flex items-center mb-10 p-2 h-8">
           <span className="text-2xl font-bold tracking-wider text-primary">
@@ -72,7 +72,7 @@ export default function Sidebar({ userGroupId, isManager }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-grow space-y-2 overflow-y-auto">
+        <nav className="flex-grow space-y-2 overflow-y-auto overflow-x-hidden">
           {/* Dashboard */}
           <MenuItem
             href="/dashboard"
