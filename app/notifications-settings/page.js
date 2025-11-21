@@ -430,8 +430,8 @@ export default function NotificationsSettings() {
   };
 
   return (
-    <div className="flex flex-col items-center bg-gray-100 min-h-screen p-6">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">
+    <div className="flex flex-col items-center min-h-screen p-6">
+      <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-8">
         Acciones que notifican a cada usuario
       </h1>
 
@@ -441,15 +441,15 @@ export default function NotificationsSettings() {
         } w-full max-w-6xl h-full`}
       >
         {/* Usuarios */}
-        <div className="p-6 bg-white text-black rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold text-center mb-4">Usuarios</h2>
-          <div className="flex-grow border border-gray-300 rounded-lg p-4 bg-gray-50 shadow-sm overflow-hidden">
-            <div className="h-full overflow-y-auto border border-gray-200 rounded bg-white">
+        <div className="p-6 neumorphic-card rounded-lg">
+          <h2 className="text-2xl font-bold text-center mb-4 text-slate-800 dark:text-slate-100">Usuarios</h2>
+          <div className="flex-grow rounded-lg p-4 neumorphic-card-inset overflow-hidden">
+            <div className="h-full overflow-y-auto rounded neumorphic-card">
               {users.length > 0 ? (
                 users.map((user) => (
                   <label
                     key={user.id}
-                    className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer border-b last:border-none"
+                    className="flex items-center px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer border-b last:border-none"
                   >
                     <input
                       type="checkbox"
@@ -457,20 +457,20 @@ export default function NotificationsSettings() {
                       onChange={() => handleCheckboxChange(user.id, "user")}
                       className="mr-2"
                     />
-                    <span className="text-gray-900">{user.name}</span>
+                    <span className="text-slate-800 dark:text-slate-200">{user.name}</span>
                   </label>
                 ))
               ) : (
-                <div className="p-4 text-center text-gray-600">No se encontraron usuarios.</div>
+                <div className="p-4 text-center text-slate-500 dark:text-slate-400">No se encontraron usuarios.</div>
               )}
             </div>
           </div>
         </div>
 
         {/* Acciones */}
-        <div className="p-6 bg-white text-black rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold text-center mb-4">Acciones</h2>
-          <div className="border rounded-lg p-4 bg-gray-50 shadow-sm">
+        <div className="p-6 neumorphic-card rounded-lg">
+          <h2 className="text-2xl font-bold text-center mb-4 text-slate-800 dark:text-slate-100">Acciones</h2>
+          <div className="rounded-lg p-4 neumorphic-card-inset">
             {options.map((option) => (
               <div key={option.id} className="flex justify-between items-center mb-4 flex-wrap">
                 {/* Contenedor para el checkbox de Acción */}
@@ -488,7 +488,7 @@ export default function NotificationsSettings() {
 
                 {/* Contenedor para el checkbox de Email */}
                 <div className={`${option.checked ? "flex" : "hidden"} items-center`}>
-                  <label className="flex items-center text-sm text-gray-700">
+                  <label className="flex items-center text-sm text-slate-700 dark:text-slate-300">
                     Email:
                     <input
                       type="checkbox"
@@ -507,7 +507,7 @@ export default function NotificationsSettings() {
                       type="number"
                       value={option.months}
                       onChange={(e) => handleInputChange(option.id, "months", e.target.value)}
-                      className="mx-2 p-1 border rounded"
+                      className="mx-2 p-1 neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent"
                       min={1}
                     />
                     <span>meses de activación</span>
@@ -516,7 +516,7 @@ export default function NotificationsSettings() {
               </div>
             ))}
             <div className="pt-3 border-t mt-4">
-              <div className="font-semibold text-black transition flex items-center">
+              <div className="font-semibold text-slate-800 dark:text-slate-100 transition flex items-center">
                 <input
                   type="checkbox"
                   className="mr-3 h-4 w-4"
@@ -532,35 +532,39 @@ export default function NotificationsSettings() {
               {multiStateChange.enabled && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start my-4 pl-7">
                   <div>
-                    <label className="text-gray-700 block mb-1 text-sm">Pasa de:</label>
-                    <Select
-                      isMulti
-                      options={states.map((s) => ({ value: s.name, label: s.name }))}
-                      value={multiStateChange.fromStates}
-                      onChange={(selected) =>
-                        setMultiStateChange((prev) => ({ ...prev, fromStates: selected || [] }))
-                      }
-                      className="basic-multi-select"
-                      classNamePrefix="select"
-                      placeholder="Selecciona..."
-                    />
+                    <label className="text-slate-700 dark:text-slate-300 block mb-1 text-sm">Pasa de:</label>
+                    <div className="neumorphic-card-inset rounded-lg">
+                      <Select
+                        isMulti
+                        options={states.map((s) => ({ value: s.name, label: s.name }))}
+                        value={multiStateChange.fromStates}
+                        onChange={(selected) =>
+                          setMultiStateChange((prev) => ({ ...prev, fromStates: selected || [] }))
+                        }
+                        className="basic-multi-select"
+                        classNamePrefix="select"
+                        placeholder="Selecciona..."
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label className="text-gray-700 block mb-1 text-sm">a:</label>
-                    <Select
-                      isMulti
-                      options={states.map((s) => ({ value: s.name, label: s.name }))}
-                      value={multiStateChange.toStates}
-                      onChange={(selected) =>
-                        setMultiStateChange((prev) => ({ ...prev, toStates: selected || [] }))
-                      }
-                      className="basic-multi-select"
-                      classNamePrefix="select"
-                      placeholder="Selecciona..."
-                    />
+                    <label className="text-slate-700 dark:text-slate-300 block mb-1 text-sm">a:</label>
+                    <div className="neumorphic-card-inset rounded-lg">
+                      <Select
+                        isMulti
+                        options={states.map((s) => ({ value: s.name, label: s.name }))}
+                        value={multiStateChange.toStates}
+                        onChange={(selected) =>
+                          setMultiStateChange((prev) => ({ ...prev, toStates: selected || [] }))
+                        }
+                        className="basic-multi-select"
+                        classNamePrefix="select"
+                        placeholder="Selecciona..."
+                      />
+                    </div>
                   </div>
                   <div className="md:col-span-2 flex items-center mt-2">
-                    <label className="flex items-center text-sm text-gray-700">
+                    <label className="flex items-center text-sm text-slate-700 dark:text-slate-300">
                       Notificar por Email:
                       <input
                         type="checkbox"
@@ -585,9 +589,9 @@ export default function NotificationsSettings() {
                     disabled={!(option.fromState && option.toState)}
                   />
 
-                  <label className="text-gray-700">Pasa de</label>
+                  <label className="text-slate-700 dark:text-slate-300">Pasa de</label>
                   <select
-                    className="p-2 border rounded w-[40%]"
+                    className="p-2 neumorphic-card-inset rounded w-[40%] px-4 py-3 border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent"
                     value={option.fromState}
                     onChange={(e) => {
                       const newFromState = e.target.value;
@@ -618,9 +622,9 @@ export default function NotificationsSettings() {
                     ))}
                   </select>
 
-                  <label className="text-gray-700">a</label>
+                  <label className="text-slate-700 dark:text-slate-300">a</label>
                   <select
-                    className="p-2 border rounded w-[40%]"
+                    className="p-2 neumorphic-card-inset rounded w-[40%] px-4 py-3 border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent"
                     value={option.toState}
                     onChange={(e) => {
                       const newToState = e.target.value;
@@ -656,7 +660,7 @@ export default function NotificationsSettings() {
                   </select>
 
                   <div className={`${option.checked ? "flex" : "hidden"} items-center`}>
-                    <label className="flex items-center text-sm text-gray-700">
+                    <label className="flex items-center text-sm text-slate-700 dark:text-slate-300">
                       Email:
                       <input
                         type="checkbox"
@@ -672,7 +676,7 @@ export default function NotificationsSettings() {
           </div>
           <button
             onClick={handleSave}
-            className="mt-4 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600"
+            className="mt-4 w-full bg-primary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
           >
             Guardar
           </button>

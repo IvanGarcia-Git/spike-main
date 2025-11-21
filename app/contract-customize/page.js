@@ -176,10 +176,10 @@ const ConfigureColumnsPage = () => {
   const TabButton = ({ tabName, label }) => (
     <button
       onClick={() => setActiveTab(tabName)}
-      className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+      className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
         activeTab === tabName
-          ? "bg-blue-600 text-white shadow-md"
-          : "bg-white text-gray-700 hover:bg-gray-100"
+          ? "bg-primary text-white shadow-md"
+          : "shadow-neumorphic-light dark:shadow-neumorphic-dark hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark text-slate-700 dark:text-slate-300"
       }`}
     >
       {label}
@@ -188,36 +188,38 @@ const ConfigureColumnsPage = () => {
 
   return (
     <DndProvider backend={MultiBackend} options={BACKEND_OPTIONS}>
-      <div className="flex flex-col gap-4 p-4 min-h-screen justify-start bg-gray-50">
-        <h2 className="text-2xl font-bold text-gray-800">{config.title}</h2>
+      <div className="flex flex-col gap-4 p-4 min-h-screen justify-start bg-background">
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{config.title}</h2>
 
-        <div className="flex text-gray-800 items-center gap-4 mb-4">
+        <div className="flex text-slate-800 dark:text-slate-100 items-center gap-4 mb-4">
           <label htmlFor="userSelector" className="text-lg font-bold">
             Usuario:
           </label>
-          <select
-            id="userSelector"
-            className="p-2 border border-gray-300 rounded-md shadow-sm w-full md:w-1/4 bg-white"
-            value={selectedUserId || ""}
-            onChange={(e) => setSelectedUserId(e.target.value)}
-          >
-            <option value="" disabled>
-              Selecciona un usuario
-            </option>
-            {users.map((user) => (
-              <option key={user.id} value={user.id}>{`${user.name} ${user.firstSurname}`}</option>
-            ))}
-          </select>
+          <div className="neumorphic-card-inset rounded-lg w-full md:w-1/4">
+            <select
+              id="userSelector"
+              className="p-2 bg-transparent border-none w-full focus:ring-2 focus:ring-primary focus:ring-opacity-50 rounded-lg text-slate-800 dark:text-slate-100"
+              value={selectedUserId || ""}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+            >
+              <option value="" disabled>
+                Selecciona un usuario
+              </option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>{`${user.name} ${user.firstSurname}`}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <div className="flex gap-2 p-1 bg-gray-200 rounded-lg w-min">
+        <div className="flex gap-2 p-1 neumorphic-card rounded-lg w-min">
           <TabButton tabName="contracts" label="Contratos" />
           <TabButton tabName="liquidations" label="Liquidaciones" />
         </div>
 
         {selectedUserId ? (
           isLoading ? (
-            <p className="text-gray-800">Cargando configuración...</p>
+            <p className="text-slate-800 dark:text-slate-100">Cargando configuración...</p>
           ) : (
             <>
               <div className="flex flex-col md:flex-row gap-4">
@@ -234,14 +236,14 @@ const ConfigureColumnsPage = () => {
               </div>
               <button
                 onClick={saveConfiguration}
-                className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-md shadow-md self-start hover:bg-blue-700"
+                className="mt-4 bg-primary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium self-start"
               >
                 Guardar Configuración
               </button>
             </>
           )
         ) : (
-          <p className="text-gray-600 mt-4">Por favor, selecciona un usuario para empezar.</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-4">Por favor, selecciona un usuario para empezar.</p>
         )}
       </div>
     </DndProvider>
@@ -259,7 +261,7 @@ const ColumnsOrder = ({ columnsOrder, setColumnsOrder, allColumns }) => {
   };
 
   return (
-    <div className="w-full text-black md:w-1/2 bg-white p-4 rounded-md shadow-md border border-gray-200">
+    <div className="w-full text-slate-800 dark:text-slate-100 md:w-1/2 neumorphic-card p-4 rounded-md">
       <h3 className="text-lg font-bold mb-4">Orden de las Columnas</h3>
       <div>
         {columnsOrder.map((column, index) => (
@@ -302,18 +304,18 @@ const ColumnItem = ({ column, index, moveColumn, allColumns }) => {
   return (
     <div
       ref={ref}
-      className={`flex text-gray-800 items-center p-2 bg-gray-50 border mb-2 rounded-md shadow-sm cursor-grab ${
+      className={`flex text-slate-800 dark:text-slate-100 items-center p-2 neumorphic-card-inset border-none mb-2 rounded-md cursor-grab ${
         isDragging ? "opacity-40" : ""
       }`}
     >
-      <MdOutlineDragHandle className="mr-2 text-gray-500" />
+      <MdOutlineDragHandle className="mr-2 text-slate-500 dark:text-slate-400" />
       <span>{columnLabel}</span>
     </div>
   );
 };
 
 const ColumnSelector = ({ allColumns, selectedColumns, handleCheckboxChange }) => (
-  <div className="w-full text-black md:w-1/2 bg-white p-4 rounded-md shadow-md border border-gray-200">
+  <div className="w-full text-slate-800 dark:text-slate-100 md:w-1/2 neumorphic-card p-4 rounded-md">
     <h3 className="text-lg font-bold mb-4">Seleccionar Columnas</h3>
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {allColumns.map((column) => (
@@ -323,7 +325,7 @@ const ColumnSelector = ({ allColumns, selectedColumns, handleCheckboxChange }) =
             id={`checkbox-${column.value}`}
             checked={selectedColumns.includes(column.value)}
             onChange={() => handleCheckboxChange(column.value)}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
           />
           <label htmlFor={`checkbox-${column.value}`}>{column.label}</label>
         </div>

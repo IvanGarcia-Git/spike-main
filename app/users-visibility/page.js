@@ -186,7 +186,7 @@ export default function UsersVisibility() {
             className={`px-6 py-2 text-sm font-medium ${
               activeTab === "Tareas"
                 ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-600"
+                : "text-slate-600 dark:text-slate-400"
             }`}
             onClick={() => setActiveTab("Tareas")}
           >
@@ -196,7 +196,7 @@ export default function UsersVisibility() {
             className={`px-6 py-2 text-sm font-medium ${
               activeTab === "Leads"
                 ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-600"
+                : "text-slate-600 dark:text-slate-400"
             }`}
             onClick={() => setActiveTab("Leads")}
           >
@@ -211,18 +211,18 @@ export default function UsersVisibility() {
           <div className="flex flex-col md:flex-row justify-center items-start">
             {/* Sección Tareas */}
             <div className="w-full md:w-1/2 p-4">
-              <div className="bg-foreground text-black rounded-lg p-6">
+              <div className="neumorphic-card text-slate-800 dark:text-slate-100 rounded-lg p-6">
                 <h2 className="text-2xl font-bold mb-4">
                   Visibilidad de Agentes
                 </h2>
-                <p className="mb-4 text-gray-700">
+                <p className="mb-4 text-slate-700 dark:text-slate-300">
                   En esta sección se pueden configurar los usuarios que estarán
                   disponibles para que los agentes asignen tareas.
                 </p>
                 <div className="mb-4 flex justify-between">
                   <div className="mb-4">
                     <label
-                      className="block text-black mb-2"
+                      className="block text-slate-800 dark:text-slate-100 mb-2"
                       htmlFor="assigneeUserId"
                     >
                       Dirigido a:
@@ -230,7 +230,7 @@ export default function UsersVisibility() {
                     <select
                       id="assigneeUserId"
                       name="assigneeUserId"
-                      className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
+                      className="w-full px-4 py-2 rounded bg-background text-slate-800 dark:text-slate-100 focus:outline-none"
                       value={selectedAgentId}
                       onChange={(e) => {
                         const agentId = e.target.value;
@@ -255,7 +255,7 @@ export default function UsersVisibility() {
             {/* Usuarios */}
             {selectedAgentId && (
               <div className="w-full md:w-1/2 p-4">
-                <div className="bg-foreground text-black rounded-lg p-6">
+                <div className="neumorphic-card text-slate-800 dark:text-slate-100 rounded-lg p-6">
                   <h2 className="text-2xl font-bold mb-4">Usuarios</h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 overflow-auto">
                     {allUsers.map((user) => (
@@ -277,7 +277,7 @@ export default function UsersVisibility() {
                         />
                         <label
                           htmlFor={`user-${user.id}`}
-                          className="text-black"
+                          className="text-slate-800 dark:text-slate-100"
                         >
                           {user.name}
                         </label>
@@ -298,18 +298,18 @@ export default function UsersVisibility() {
           <div className="flex flex-col md:flex-row justify-center items-start">
             {/* Sección Tareas */}
             <div className="w-full md:w-1/2 p-4">
-              <div className="bg-foreground text-black rounded-lg p-6">
+              <div className="neumorphic-card text-slate-800 dark:text-slate-100 rounded-lg p-6">
                 <h2 className="text-2xl font-bold mb-4">
                   Compartir Leads
                 </h2>
-                <p className="mb-4 text-gray-700">
+                <p className="mb-4 text-slate-700 dark:text-slate-300">
                   En esta sección se pueden configurar los usuarios a los que
                   les podrán enviar Leads en el Gestor.
                 </p>
                 <div className="mb-4 flex justify-between">
                   <div className="mb-4">
                     <label
-                      className="block text-black mb-2"
+                      className="block text-slate-800 dark:text-slate-100 mb-2"
                       htmlFor="assigneeUserId"
                     >
                       Dirigido a:
@@ -317,7 +317,7 @@ export default function UsersVisibility() {
                     <select
                       id="assignToUserId"
                       name="assignToUserId"
-                      className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
+                      className="w-full px-4 py-2 rounded bg-background text-slate-800 dark:text-slate-100 focus:outline-none"
                       value={selectedUserId}
                       onChange={(e) => {
                         const userId = e.target.value;
@@ -342,7 +342,7 @@ export default function UsersVisibility() {
             {/* Usuarios */}
             {selectedUserId && (
               <div className="w-full md:w-1/2 p-4">
-                <div className="bg-foreground text-black rounded-lg p-6">
+                <div className="neumorphic-card text-slate-800 dark:text-slate-100 rounded-lg p-6">
                   <h2 className="text-2xl font-bold mb-4">Usuarios</h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 overflow-auto">
                     {allUsers.map((user) => (
@@ -376,7 +376,7 @@ export default function UsersVisibility() {
                         />
                         <label
                           htmlFor={`user-${user.id}`}
-                          className="text-black"
+                          className="text-slate-800 dark:text-slate-100"
                         >
                           {user.name}
                         </label>

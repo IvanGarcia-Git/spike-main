@@ -186,12 +186,12 @@ export default function States() {
   };
 
   return (
-    <div className="flex justify-center items-start bg-background min-h-screen p-5">
-      <div className="w-full max-w-4xl mx-auto p-4 bg-foreground text-black rounded-lg mt-24">
+    <div className="flex justify-center items-start min-h-screen p-5">
+      <div className="w-full max-w-4xl mx-auto p-4 neumorphic-card rounded-lg mt-24">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-black">Estados de Contratos</h2>
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Estados de Contratos</h2>
           <button
-            className="bg-secondary text-white px-4 py-2 rounded flex items-center hover:bg-secondaryHover"
+            className="bg-secondary text-white px-4 py-2 rounded flex items-center hover:bg-secondaryHover shadow-md hover:shadow-lg transition-all"
             onClick={openModal}
           >
             <FiPlus className="mr-2" />
@@ -199,21 +199,23 @@ export default function States() {
           </button>
         </div>
         <div className="flex justify-start items-center mb-6">
-          <h2 className="text-xl text-black">Estado por defecto</h2>
-          <select
-            className="ml-4 px-2 py-1 rounded bg-background text-black focus:outline-none"
-            value={selectedDefaultStateId}
-            onChange={(e) => saveDefaultState(e.target.value)}
-          >
-            <option value="" disabled>
-              Selecciona un estado
-            </option>
-            {states.map((state) => (
-              <option key={state.id} value={state.id}>
-                {state.name}
+          <h2 className="text-xl text-slate-800 dark:text-slate-100">Estado por defecto</h2>
+          <div className="ml-4 neumorphic-card-inset rounded-lg">
+            <select
+              className="px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+              value={selectedDefaultStateId}
+              onChange={(e) => saveDefaultState(e.target.value)}
+            >
+              <option value="" disabled>
+                Selecciona un estado
               </option>
-            ))}
-          </select>
+              {states.map((state) => (
+                <option key={state.id} value={state.id}>
+                  {state.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Modal */}
@@ -223,37 +225,37 @@ export default function States() {
               isModalOpen ? "lg:ml-72" : ""
             }`}
           >
-            <div className="bg-foreground text-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-              <h3 className="text-xl font-bold mb-4 text-black">Crear nuevo estado</h3>
+            <div className="neumorphic-card p-6 rounded-xl w-full max-w-lg">
+              <h3 className="text-xl font-bold mb-4 text-slate-800 dark:text-slate-100">Crear nuevo estado</h3>
               <form onSubmit={handleAddState}>
                 <div className="mb-4">
-                  <label className="block text-black mb-2" htmlFor="name">
+                  <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="name">
                     Nombre del Estado
                   </label>
                   <input
                     type="text"
                     id="name"
-                    className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
+                    className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
                     value={newState.name}
                     onChange={(e) => setNewState({ ...newState, name: e.target.value })}
                     required
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block text-black mb-2" htmlFor="description">
+                  <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="description">
                     Descripción
                   </label>
                   <input
                     type="text"
                     id="description"
-                    className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
+                    className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
                     value={newState.extraInfo}
                     onChange={(e) => setNewState({ ...newState, extraInfo: e.target.value })}
                     required
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block mb-2 text-black" htmlFor="color">
+                  <label className="block mb-2 text-slate-700 dark:text-slate-300" htmlFor="color">
                     Color del Estado
                   </label>
                   <input
@@ -264,17 +266,17 @@ export default function States() {
                     onChange={(e) => setNewState({ ...newState, colorHex: e.target.value })}
                   />
                 </div>
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-2">
                   <button
                     type="button"
-                    className="bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700"
+                    className="bg-red-600 text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
                     onClick={closeModal}
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="bg-secondary text-white px-4 py-2 rounded hover:bg-secondaryHover"
+                    className="bg-secondary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
                   >
                     Guardar
                   </button>
@@ -284,104 +286,106 @@ export default function States() {
           </div>
         )}
 
-        <table className="min-w-full bg-foreground text-black">
-          <thead className="bg-background">
-            <tr>
-              <th className="px-4 py-2 text-left text-black">Nombre del Estado</th>
-              <th className="px-4 py-2 text-left text-black">Descripción</th>
-              <th className="px-4 py-2 text-center text-black">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {states.map((state) => (
-              <tr key={state.id} className="bg-foreground hover:bg-background">
-                <td className="px-4 py-2 flex items-center text-black">
-                  {editingState === state.id ? (
-                    <div className="flex items-center w-full">
+        <div className="neumorphic-card rounded-lg overflow-hidden">
+          <table className="min-w-full">
+            <thead className="neumorphic-card-inset">
+              <tr>
+                <th className="px-4 py-2 text-left text-slate-700 dark:text-slate-300">Nombre del Estado</th>
+                <th className="px-4 py-2 text-left text-slate-700 dark:text-slate-300">Descripción</th>
+                <th className="px-4 py-2 text-center text-slate-700 dark:text-slate-300">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {states.map((state) => (
+                <tr key={state.id} className="hover:bg-slate-100 dark:hover:bg-slate-800">
+                  <td className="px-4 py-2 flex items-center text-slate-800 dark:text-slate-200">
+                    {editingState === state.id ? (
+                      <div className="flex items-center w-full">
+                        <input
+                          type="color"
+                          className="w-6 h-6 rounded-full mr-2 border-none cursor-pointer"
+                          value={editingData.colorHex}
+                          onChange={(e) =>
+                            setEditingData({ ...editingData, colorHex: e.target.value })
+                          }
+                          onKeyDown={(e) => handleKeyPress(e, state.id)}
+                        />
+                        <input
+                          type="text"
+                          className="flex-1 px-4 py-3 rounded-lg neumorphic-card-inset border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+                          value={editingData.name}
+                          onChange={(e) => setEditingData({ ...editingData, name: e.target.value })}
+                          onKeyDown={(e) => handleKeyPress(e, state.id)}
+                          autoFocus
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <span
+                          className="inline-block w-3 h-3 rounded-full mr-2"
+                          style={{ backgroundColor: state.colorHex }}
+                        ></span>
+                        {state.name}
+                      </>
+                    )}
+                  </td>
+                  <td className="px-4 py-2 text-slate-800 dark:text-slate-200">
+                    {editingState === state.id ? (
                       <input
-                        type="color"
-                        className="w-6 h-6 rounded-full mr-2 border-none cursor-pointer"
-                        value={editingData.colorHex}
+                        type="text"
+                        className="w-full px-4 py-3 rounded-lg neumorphic-card-inset border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+                        value={editingData.extraInfo}
                         onChange={(e) =>
-                          setEditingData({ ...editingData, colorHex: e.target.value })
+                          setEditingData({ ...editingData, extraInfo: e.target.value })
                         }
                         onKeyDown={(e) => handleKeyPress(e, state.id)}
                       />
-                      <input
-                        type="text"
-                        className="flex-1 px-2 py-1 rounded bg-background text-black focus:outline-none"
-                        value={editingData.name}
-                        onChange={(e) => setEditingData({ ...editingData, name: e.target.value })}
-                        onKeyDown={(e) => handleKeyPress(e, state.id)}
-                        autoFocus
-                      />
-                    </div>
-                  ) : (
-                    <>
-                      <span
-                        className="inline-block w-3 h-3 rounded-full mr-2"
-                        style={{ backgroundColor: state.colorHex }}
-                      ></span>
-                      {state.name}
-                    </>
-                  )}
-                </td>
-                <td className="px-4 py-2 text-black">
-                  {editingState === state.id ? (
-                    <input
-                      type="text"
-                      className="w-full px-2 py-1 rounded bg-background text-black focus:outline-none"
-                      value={editingData.extraInfo}
-                      onChange={(e) =>
-                        setEditingData({ ...editingData, extraInfo: e.target.value })
-                      }
-                      onKeyDown={(e) => handleKeyPress(e, state.id)}
-                    />
-                  ) : (
-                    state.extraInfo
-                  )}
-                </td>
-                <td className="px-4 py-2 text-center text-black">
-                  <div className="flex justify-center items-center space-x-2">
-                    {editingState === state.id ? (
-                      <>
-                        <button
-                          className="text-green-500 hover:text-green-700"
-                          onClick={() => handleSaveEdit(state.id)}
-                          title="Guardar cambios"
-                        >
-                          <FiSave size={18} />
-                        </button>
-                        <button
-                          className="text-gray-500 hover:text-gray-700 text-lg"
-                          onClick={handleCancelEdit}
-                          title="Cancelar edición"
-                        >
-                          ✕
-                        </button>
-                      </>
                     ) : (
-                      <button
-                        className="text-blue-500 hover:text-blue-700"
-                        onClick={() => handleEditState(state)}
-                        title="Editar estado"
-                      >
-                        <FiEdit size={18} />
-                      </button>
+                      state.extraInfo
                     )}
-                    <button
-                      className="text-red-500 hover:text-red-700"
-                      onClick={() => handleDeleteState(state.id)}
-                      title="Eliminar estado"
-                    >
-                      <FiTrash size={18} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    <div className="flex justify-center items-center space-x-2">
+                      {editingState === state.id ? (
+                        <>
+                          <button
+                            className="text-green-500 hover:text-green-700"
+                            onClick={() => handleSaveEdit(state.id)}
+                            title="Guardar cambios"
+                          >
+                            <FiSave size={18} />
+                          </button>
+                          <button
+                            className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 text-lg"
+                            onClick={handleCancelEdit}
+                            title="Cancelar edición"
+                          >
+                            ✕
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          className="text-blue-500 hover:text-blue-700"
+                          onClick={() => handleEditState(state)}
+                          title="Editar estado"
+                        >
+                          <FiEdit size={18} />
+                        </button>
+                      )}
+                      <button
+                        className="text-red-500 hover:text-red-700"
+                        onClick={() => handleDeleteState(state.id)}
+                        title="Eliminar estado"
+                      >
+                        <FiTrash size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

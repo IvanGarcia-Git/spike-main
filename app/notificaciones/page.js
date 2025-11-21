@@ -290,36 +290,36 @@ export default function Notificaciones({ updateNotifications }) {
     const leidos = data.filter((u) => u.read);
     const noLeidos = data.filter((u) => !u.read);
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full text-black">
-          <h2 className="text-lg font-bold mb-4">Historial de lectura</h2>
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
+        <div className="neumorphic-card p-6 rounded-xl max-w-md w-full">
+          <h2 className="text-lg font-bold mb-4 text-slate-800 dark:text-slate-100">Historial de lectura</h2>
           <div className="mb-4">
-            <h3 className="font-semibold text-green-700 mb-2">Leído ({leidos.length})</h3>
+            <h3 className="font-semibold text-green-600 mb-2">Leído ({leidos.length})</h3>
             {leidos.length === 0 ? (
-              <div className="text-gray-500">Nadie</div>
+              <div className="text-slate-500 dark:text-slate-400">Nadie</div>
             ) : (
               <ul className="mb-2 max-h-40 overflow-y-auto">
                 {leidos.map((u) => (
-                  <li key={u.user.id}>
+                  <li key={u.user.id} className="text-slate-700 dark:text-slate-300">
                     {u.user.name} {u.user.firstSurname} {u.user.secondSurname}
                   </li>
                 ))}
               </ul>
             )}
-            <h3 className="font-semibold text-red-700 mb-2 mt-4">No leído ({noLeidos.length})</h3>
+            <h3 className="font-semibold text-red-600 mb-2 mt-4">No leído ({noLeidos.length})</h3>
             {noLeidos.length === 0 ? (
-              <div className="text-gray-500">Nadie</div>
+              <div className="text-slate-500 dark:text-slate-400">Nadie</div>
             ) : (
               <ul className="max-h-40 overflow-y-auto">
                 {noLeidos.map((u) => (
-                  <li key={u.user.id}>
+                  <li key={u.user.id} className="text-slate-700 dark:text-slate-300">
                     {u.user.name} {u.user.firstSurname} {u.user.secondSurname}
                   </li>
                 ))}
               </ul>
             )}
           </div>
-          <button onClick={onClose} className="bg-blue-600 text-white px-4 py-2 rounded">
+          <button onClick={onClose} className="bg-primary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium w-full">
             Cerrar
           </button>
         </div>
@@ -331,22 +331,22 @@ export default function Notificaciones({ updateNotifications }) {
     <ul className="space-y-2 mt-4">
       {selectedTab === "comunicaciones" && (
         <>
-          <div className="flex gap-2 mb-2">
+          <div className="flex gap-2 mb-4">
             <button
-              className={`px-3 py-1 rounded-t-md border-b-2 ${
+              className={`px-4 py-2 rounded-lg transition-all ${
                 subTab === "recibidos"
-                  ? "border-blue-600 text-blue-600 font-bold bg-white"
-                  : "border-transparent text-gray-500 bg-gray-100"
+                  ? "shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark text-primary font-semibold"
+                  : "shadow-neumorphic-light dark:shadow-neumorphic-dark text-slate-600 dark:text-slate-400 font-medium hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark"
               }`}
               onClick={() => setSubTab("recibidos")}
             >
               Recibidos
             </button>
             <button
-              className={`px-3 py-1 rounded-t-md border-b-2 ${
+              className={`px-4 py-2 rounded-lg transition-all ${
                 subTab === "enviados"
-                  ? "border-blue-600 text-blue-600 font-bold bg-white"
-                  : "border-transparent text-gray-500 bg-gray-100"
+                  ? "shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark text-primary font-semibold"
+                  : "shadow-neumorphic-light dark:shadow-neumorphic-dark text-slate-600 dark:text-slate-400 font-medium hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark"
               }`}
               onClick={() => setSubTab("enviados")}
             >
@@ -366,15 +366,15 @@ export default function Notificaciones({ updateNotifications }) {
                 {selectedNotifications.length > 0 && (
                   <div className="relative ml-2">
                     <button
-                      className="bg-blue-600 text-white px-3 py-1 rounded flex items-center gap-1"
+                      className="bg-primary text-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-1"
                       onClick={() => setIsActionsOpen((o) => !o)}
                     >
                       Acciones <FaChevronDown />
                     </button>
                     {isActionsOpen && (
-                      <ul className="absolute left-0 mt-1 w-44 bg-white border rounded shadow z-10 text-black">
+                      <ul className="absolute left-0 mt-1 w-44 neumorphic-card rounded-lg overflow-hidden shadow-lg z-10">
                         <li
-                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                          className="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-slate-800 dark:text-slate-200"
                           onClick={() => {
                             const anyUnread = receivedRaw.some(
                               (n) => selectedNotifications.includes(n.uuid) && !n.read
@@ -391,7 +391,7 @@ export default function Notificaciones({ updateNotifications }) {
                             : "no leído"}
                         </li>
                         <li
-                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-red-600"
+                          className="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-red-600"
                           onClick={() => {
                             bulkDelete();
                             setIsActionsOpen(false);
@@ -409,7 +409,7 @@ export default function Notificaciones({ updateNotifications }) {
             )}
             <button
               onClick={handleCreateCommunication}
-              className="bg-secondary text-white px-4 py-2 rounded hover:bg-secondaryHover"
+              className="bg-secondary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
             >
               Crear Comunicado
             </button>
@@ -439,8 +439,8 @@ export default function Notificaciones({ updateNotifications }) {
         return (
           <li
             key={`${representativeNotification.uuid}-${index}`}
-            className={`flex items-center space-x-4 p-3 rounded-lg shadow-sm transition ${
-              isRead ? "bg-white" : "bg-gray-100 hover:bg-gray-200"
+            className={`flex items-center space-x-4 p-4 rounded-lg transition-all ${
+              isRead ? "neumorphic-card" : "neumorphic-card shadow-neumorphic-light-md dark:shadow-neumorphic-dark-md hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark"
             }`}
           >
             {isCommsTab && !isSentTab && (
@@ -451,24 +451,24 @@ export default function Notificaciones({ updateNotifications }) {
                 className="mr-2"
               />
             )}
-            <div className="relative w-10 h-10 flex-none rounded-full bg-blue-900 flex items-center justify-center">
+            <div className="relative w-10 h-10 flex-none rounded-full neumorphic-card-inset flex items-center justify-center">
               <img src="/avatar.png" alt="avatar" className="w-8 h-8 rounded-full" />
             </div>
             <div className="flex-1">
-              <p className="text-xs sm:text-sm text-gray-500">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                 {representativeNotification?.subject}
               </p>
-              <p className="font-semibold text-sm sm:text-base">
+              <p className="font-semibold text-sm sm:text-base text-slate-800 dark:text-slate-200">
                 {representativeNotification.content}
               </p>
-              <p className="text-xs sm:text-sm text-gray-500">{timeAgo}</p>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">{timeAgo}</p>
             </div>
             {representativeNotification.documentUri && (
               <a
                 href={representativeNotification.documentUri}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="ml-2 text-blue-500 hover:text-blue-700"
+                className="ml-2 text-primary hover:text-primary/80 transition-colors"
                 title="Ver archivo"
               >
                 <FaEye className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -480,7 +480,7 @@ export default function Notificaciones({ updateNotifications }) {
                 {!targetNotification.read ? (
                   <button
                     onClick={() => markAsReadOrUnread(targetNotification)}
-                    className="hover:text-gray-700"
+                    className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
                     title="Marcar como leído"
                   >
                     <MdMarkEmailUnread className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -488,7 +488,7 @@ export default function Notificaciones({ updateNotifications }) {
                 ) : (
                   <button
                     onClick={() => markAsReadOrUnread(targetNotification)}
-                    className="hover:text-gray-700"
+                    className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
                     title="Marcar como no leído"
                   >
                     <MdMarkEmailRead className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -499,7 +499,7 @@ export default function Notificaciones({ updateNotifications }) {
 
             {isSentTab && userId && representativeNotification.creatorId === userId && (
               <button
-                className="ml-2 px-2 py-1 bg-gray-200 rounded text-xs hover:bg-gray-300"
+                className="ml-2 px-3 py-1.5 rounded-lg shadow-neumorphic-light dark:shadow-neumorphic-dark hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark text-xs font-medium text-slate-600 dark:text-slate-400 transition-all"
                 onClick={() => fetchReadHistory(representativeNotification)}
               >
                 Historial de lectura
@@ -517,19 +517,19 @@ export default function Notificaciones({ updateNotifications }) {
   );
 
   return (
-    <div className="flex flex-col items-center bg-gray-100 min-h-screen">
+    <div className="flex flex-col items-center min-h-screen p-6">
       <div className="w-full">
-        <div className="bg-white text-black rounded-lg shadow-md p-6">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4">Notificaciones</h2>
+        <div className="neumorphic-card p-6">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 text-slate-800 dark:text-slate-100">Notificaciones</h2>
 
-          {/* 1. SECCIÓN DE PESTAÑAS (Sin cambios) */}
-          <div className="flex justify-around border-b mb-4 text-xs sm:text-sm lg:text-base overflow-x-auto">
+          {/* 1. SECCIÓN DE PESTAÑAS */}
+          <div className="flex justify-around mb-6 text-xs sm:text-sm lg:text-base overflow-x-auto flex-wrap gap-2">
             <button
               onClick={() => setSelectedTab("llamadas")}
-              className={`flex items-center space-x-1 mr-1 pb-2 ${
+              className={`flex items-center space-x-1 px-4 py-2 rounded-lg transition-all ${
                 selectedTab === "llamadas"
-                  ? "text-blue-500 border-b-2 border-blue-500 font-bold"
-                  : "text-gray-500"
+                  ? "shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark font-semibold text-primary"
+                  : "shadow-neumorphic-light dark:shadow-neumorphic-dark font-medium text-slate-600 dark:text-slate-400 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark"
               }`}
             >
               <FaPhoneAlt className="w-4 h-4" />
@@ -542,10 +542,10 @@ export default function Notificaciones({ updateNotifications }) {
             </button>
             <button
               onClick={() => setSelectedTab("recordatorios")}
-              className={`flex items-center space-x-1 mr-1  pb-2 ${
+              className={`flex items-center space-x-1 px-4 py-2 rounded-lg transition-all ${
                 selectedTab === "recordatorios"
-                  ? "text-blue-500 border-b-2 border-blue-500 font-bold"
-                  : "text-gray-500"
+                  ? "shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark font-semibold text-primary"
+                  : "shadow-neumorphic-light dark:shadow-neumorphic-dark font-medium text-slate-600 dark:text-slate-400 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark"
               }`}
             >
               <FaBell className="w-4 h-4" />
@@ -558,10 +558,10 @@ export default function Notificaciones({ updateNotifications }) {
             </button>
             <button
               onClick={() => setSelectedTab("comunicaciones")}
-              className={`flex items-center space-x-1 mr-1  pb-2 ${
+              className={`flex items-center space-x-1 px-4 py-2 rounded-lg transition-all ${
                 selectedTab === "comunicaciones"
-                  ? "text-blue-500 border-b-2 border-blue-500 font-bold"
-                  : "text-gray-500"
+                  ? "shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark font-semibold text-primary"
+                  : "shadow-neumorphic-light dark:shadow-neumorphic-dark font-medium text-slate-600 dark:text-slate-400 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark"
               }`}
             >
               <FaEnvelope className="w-4 h-4" />
@@ -574,10 +574,10 @@ export default function Notificaciones({ updateNotifications }) {
             </button>
             <button
               onClick={() => setSelectedTab("tareas")}
-              className={`flex items-center space-x-1 mr-1 pb-2 ${
+              className={`flex items-center space-x-1 px-4 py-2 rounded-lg transition-all ${
                 selectedTab === "tareas"
-                  ? "text-blue-500 border-b-2 border-blue-500 font-bold"
-                  : "text-gray-500"
+                  ? "shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark font-semibold text-primary"
+                  : "shadow-neumorphic-light dark:shadow-neumorphic-dark font-medium text-slate-600 dark:text-slate-400 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark"
               }`}
             >
               <FaTasks className="w-4 h-4" />
@@ -590,10 +590,10 @@ export default function Notificaciones({ updateNotifications }) {
             </button>
             <button
               onClick={() => setSelectedTab("others")}
-              className={`flex items-center space-x-1 mr-1  pb-2 ${
+              className={`flex items-center space-x-1 px-4 py-2 rounded-lg transition-all ${
                 selectedTab === "others"
-                  ? "text-blue-500 border-b-2 border-blue-500 font-bold"
-                  : "text-gray-500"
+                  ? "shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark font-semibold text-primary"
+                  : "shadow-neumorphic-light dark:shadow-neumorphic-dark font-medium text-slate-600 dark:text-slate-400 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark"
               }`}
             >
               <FaEnvelope className="w-4 h-4" />
@@ -608,7 +608,7 @@ export default function Notificaciones({ updateNotifications }) {
 
           {/* 2. ✨ NUEVA BARRA DE ACCIONES PARA SELECCIÓN MÚLTIPLE */}
           {selectedTab !== "comunicaciones" || subTab !== "enviados" ? (
-            <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md mb-4">
+            <div className="flex items-center justify-between p-4 neumorphic-card-inset rounded-lg mb-4">
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -616,7 +616,7 @@ export default function Notificaciones({ updateNotifications }) {
                   checked={selectAll}
                   onChange={() => setSelectAll((prev) => !prev)}
                 />
-                <label htmlFor="select-all" className="text-sm font-medium text-gray-700">
+                <label htmlFor="select-all" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   Seleccionar Todo
                 </label>
               </div>
@@ -626,14 +626,14 @@ export default function Notificaciones({ updateNotifications }) {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => bulkMarkReadUnread(true)}
-                    className="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm hover:bg-blue-200"
+                    className="flex items-center gap-1 px-3 py-2 rounded-lg shadow-neumorphic-light dark:shadow-neumorphic-dark hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark text-sm font-medium text-primary transition-all"
                   >
                     <MdMarkEmailRead />
                     Marcar como leído
                   </button>
                   <button
                     onClick={() => bulkMarkReadUnread(false)}
-                    className="flex items-center gap-1 bg-gray-200 text-gray-800 px-3 py-1 rounded-md text-sm hover:bg-gray-300"
+                    className="flex items-center gap-1 px-3 py-2 rounded-lg shadow-neumorphic-light dark:shadow-neumorphic-dark hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark text-sm font-medium text-slate-600 dark:text-slate-400 transition-all"
                   >
                     <MdMarkEmailUnread />
                     Marcar como no leído

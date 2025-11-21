@@ -149,12 +149,12 @@ const NuevaLiquidacionModal = ({ isOpen, onClose, onSubmit, users, isLoading }) 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 lg:ml-72">
-      <div className="bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-md">
+      <div className="neumorphic-card rounded-xl p-6 md:p-8 w-full max-w-md">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">Nueva Liquidación</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold text-slate-800 dark:text-slate-100">Nueva Liquidación</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
             disabled={isLoading}
           >
             <FaTimes size={20} />
@@ -162,7 +162,7 @@ const NuevaLiquidacionModal = ({ isOpen, onClose, onSubmit, users, isLoading }) 
         </div>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="liq-nombre" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="liq-nombre" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               Nombre de liquidación
             </label>
             <input
@@ -170,13 +170,13 @@ const NuevaLiquidacionModal = ({ isOpen, onClose, onSubmit, users, isLoading }) 
               id="liq-nombre"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent w-full text-slate-800 dark:text-slate-100"
               required
               disabled={isLoading}
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="liq-date" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="liq-date" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               Fecha (YYYY-MM-DD)
             </label>
             <input
@@ -184,44 +184,46 @@ const NuevaLiquidacionModal = ({ isOpen, onClose, onSubmit, users, isLoading }) 
               id="liq-date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent w-full text-slate-800 dark:text-slate-100"
               required
               disabled={isLoading}
             />
           </div>
           {users.length > 0 && (
             <div className="mb-6">
-              <label htmlFor="liq-user" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="liq-user" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Asignar a Usuario
               </label>
-              <select
-                id="liq-user"
-                value={selectedUserIdForNewLiq}
-                onChange={(e) => setSelectedUserIdForNewLiq(e.target.value)}
-                className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                required
-                disabled={isLoading}
-              >
-                {users.map((user) => (
-                  <option key={user.id} value={user.id.toString()}>
-                    {getFullName(user)}
-                  </option>
-                ))}
-              </select>
+              <div className="neumorphic-card-inset rounded-lg">
+                <select
+                  id="liq-user"
+                  value={selectedUserIdForNewLiq}
+                  onChange={(e) => setSelectedUserIdForNewLiq(e.target.value)}
+                  className="w-full p-2.5 border-none bg-transparent focus:ring-2 focus:ring-primary focus:ring-opacity-50 rounded-lg text-slate-800 dark:text-slate-100"
+                  required
+                  disabled={isLoading}
+                >
+                  {users.map((user) => (
+                    <option key={user.id} value={user.id.toString()}>
+                      {getFullName(user)}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           )}
           <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 w-full sm:w-auto"
+              className="shadow-neumorphic-light dark:shadow-neumorphic-dark hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark px-4 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 w-full sm:w-auto"
               disabled={isLoading}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 w-full sm:w-auto flex items-center justify-center"
+              className="bg-primary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium w-full sm:w-auto flex items-center justify-center"
               disabled={isLoading}
             >
               {isLoading ? <FaSpinner className="animate-spin mr-2" /> : null}
@@ -608,7 +610,7 @@ const LiquidacionesPage = () => {
 
   if (isLoading && isLoadingUsers && !error) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-foreground text-gray-800">
+      <div className="flex justify-center items-center min-h-screen bg-background text-slate-800 dark:text-slate-100">
         <FaSpinner className="animate-spin text-blue-600 text-4xl" />
         <p className="ml-3 text-xl">Cargando datos...</p>
       </div>
@@ -616,14 +618,14 @@ const LiquidacionesPage = () => {
   }
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 bg-foreground min-h-screen font-sans text-gray-800">
-      <header className="flex flex-col sm:flex-row justify-between items-center mb-6 md:mb-8 pb-4 border-b border-gray-300">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4 sm:mb-0">
+    <div className="p-4 md:p-6 lg:p-8 bg-background min-h-screen font-sans text-slate-800 dark:text-slate-100">
+      <header className="flex flex-col sm:flex-row justify-between items-center mb-6 md:mb-8 pb-4 border-b border-gray-300 dark:border-gray-600">
+        <h1 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4 sm:mb-0">
           Historial de liquidaciones
         </h1>
         <button
           onClick={handleOpenModal}
-          className="bg-blue-600 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-md flex items-center space-x-2 hover:bg-blue-700 transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          className="bg-primary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
         >
           <FaPlus size={16} />
           <span className="text-sm sm:text-base font-bold">Nueva Liquidación</span>
@@ -637,39 +639,41 @@ const LiquidacionesPage = () => {
       )}
 
       {/* Filters Section */}
-      <div className="mb-6 p-4 bg-white rounded-lg shadow-sm">
+      <div className="mb-6 p-4 neumorphic-card rounded-lg">
         <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
           <div className="w-full md:w-auto md:min-w-[240px]">
             <label htmlFor="user-select" className="sr-only">
               Seleccionar Colaborador
             </label>
-            <select
-              id="user-select"
-              value={selectedUserId}
-              onChange={(e) => setSelectedUserId(e.target.value)}
-              className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 shadow-sm appearance-none cursor-pointer"
-              style={{
-                backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='feather feather-chevron-down'><polyline points='6 9 12 15 18 9'></polyline></svg>")`,
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "right 0.75rem center",
-                backgroundSize: "1.5em 1.5em",
-              }}
-              disabled={isLoadingUsers || usersWithLiquidations.length === 0}
-            >
-              <option value="all">Todos los colaboradores</option>
-              {usersWithLiquidations.map((user) => (
-                <option key={user.id} value={user.id.toString()}>
-                  {getFullName(user)}
-                </option>
-              ))}
-            </select>
+            <div className="neumorphic-card-inset rounded-lg">
+              <select
+                id="user-select"
+                value={selectedUserId}
+                onChange={(e) => setSelectedUserId(e.target.value)}
+                className="w-full p-2.5 border-none bg-transparent focus:ring-2 focus:ring-primary focus:ring-opacity-50 rounded-lg text-slate-800 dark:text-slate-100 appearance-none cursor-pointer"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='feather feather-chevron-down'><polyline points='6 9 12 15 18 9'></polyline></svg>")`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "right 0.75rem center",
+                  backgroundSize: "1.5em 1.5em",
+                }}
+                disabled={isLoadingUsers || usersWithLiquidations.length === 0}
+              >
+                <option value="all">Todos los colaboradores</option>
+                {usersWithLiquidations.map((user) => (
+                  <option key={user.id} value={user.id.toString()}>
+                    {getFullName(user)}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="relative w-full flex-grow">
             <label htmlFor="search-bar" className="sr-only">
               Buscador
             </label>
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FaSearch className="text-gray-400" />
+              <FaSearch className="text-slate-400" />
             </div>
             <input
               type="text"
@@ -677,7 +681,7 @@ const LiquidacionesPage = () => {
               placeholder="Buscar por nombre, fecha, estado..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-2.5 pl-10 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+              className="neumorphic-card-inset px-4 py-3 pl-10 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent w-full text-slate-800 dark:text-slate-100"
             />
           </div>
         </div>
@@ -686,7 +690,7 @@ const LiquidacionesPage = () => {
             Buscar contratos
           </label>
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FaSearch className="text-gray-400" />
+            <FaSearch className="text-slate-400" />
           </div>
           <input
             type="text"
@@ -694,10 +698,10 @@ const LiquidacionesPage = () => {
             placeholder="Buscar contratos por CUPS, DNI/CIF, cliente..."
             value={contractSearchTerm}
             onChange={(e) => setContractSearchTerm(e.target.value)}
-            className="w-full p-2.5 pl-10 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+            className="neumorphic-card-inset px-4 py-3 pl-10 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent w-full text-slate-800 dark:text-slate-100"
           />
         </div>
-        <p className="mt-3 text-xs text-gray-600 italic">
+        <p className="mt-3 text-xs text-slate-500 dark:text-slate-400 italic">
           {currentUserForFilterMessage
             ? `Mostrando liquidaciones para ${getFullName(currentUserForFilterMessage)}.`
             : "Mostrando liquidaciones para todos los colaboradores."}
@@ -710,43 +714,43 @@ const LiquidacionesPage = () => {
       {isLoading && !allLiquidations.length ? (
         <div className="flex justify-center items-center py-10">
           <FaSpinner className="animate-spin text-blue-600 text-3xl" />
-          <p className="ml-2 text-gray-600">Cargando liquidaciones...</p>
+          <p className="ml-2 text-slate-500 dark:text-slate-400">Cargando liquidaciones...</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
+        <div className="neumorphic-card rounded-lg overflow-x-auto">
           <table className="w-full min-w-[768px]">
-            <thead className="border-b-2 border-gray-200 bg-background">
+            <thead className="border-b-2 border-gray-200 dark:border-gray-700 bg-background">
               <tr>
-                <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="p-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Fecha
                 </th>
-                <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="p-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Nombre Liquidación
                 </th>
-                <th className="p-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="p-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Importe
                 </th>
-                <th className="p-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="p-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Estado
                 </th>
-                <th className="p-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="p-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {displayedLiquidations.length > 0 ? (
                 displayedLiquidations.map((liq) => (
-                  <tr key={liq.uuid} className="hover:bg-gray-50/50 transition-colors duration-150">
-                    <td className="p-3 text-sm text-gray-700 whitespace-nowrap">{liq.date}</td>
+                  <tr key={liq.uuid} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors duration-150">
+                    <td className="p-3 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">{liq.date}</td>
                     <td
-                      className="p-3 text-sm text-gray-900 font-medium hover:text-blue-600 cursor-pointer whitespace-nowrap"
+                      className="p-3 text-sm text-slate-800 dark:text-slate-100 font-medium hover:text-blue-600 cursor-pointer whitespace-nowrap"
                       onClick={() => handleLiquidationNameClick(liq)}
                       title="Haz click para ver detalles"
                     >
                       {liq.name}
                     </td>
-                    <td className="p-3 text-sm text-gray-700 whitespace-nowrap text-right">
+                    <td className="p-3 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-right">
                       {formatCurrency(liq.totalCommission)}
                     </td>
 
@@ -782,11 +786,11 @@ const LiquidacionesPage = () => {
                       </div>
                     </td>
 
-                    <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
+                    <td className="p-3 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       <div className="flex items-center justify-center space-x-3">
                         <button
                           onClick={() => handleDownloadLiquidation(liq.uuid)}
-                          className="text-blue-500 hover:text-blue-700 transition-colors disabled:opacity-50"
+                          className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors disabled:opacity-50"
                           title="Descargar Excel"
                           disabled={isDownloadingExcel}
                         >
@@ -798,7 +802,7 @@ const LiquidacionesPage = () => {
                         </button>
                         <button
                           onClick={() => handleDeleteLiquidation(liq.uuid)}
-                          className="text-red-500 hover:text-red-700 transition-colors"
+                          className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                           title="Eliminar"
                           disabled={isSubmitting}
                         >
@@ -810,7 +814,7 @@ const LiquidacionesPage = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="p-6 text-center text-gray-500 text-sm">
+                  <td colSpan="5" className="p-6 text-center text-slate-500 dark:text-slate-400 text-sm">
                     {isLoading
                       ? "Cargando..."
                       : searchTerm

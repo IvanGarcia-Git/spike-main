@@ -133,7 +133,7 @@ const LeadsPriorityConfigurationPage = () => {
     <DndProvider backend={MultiBackend} options={BACKEND_OPTIONS}>
       <div className="flex flex-col items-center justify-center gap-6 p-4 min-h-screen bg-background">
         {/* Selector de usuario */}
-        <div className="flex flex-col items-center gap-2 text-black mb-6">
+        <div className="flex flex-col items-center gap-2 text-slate-800 dark:text-slate-100 mb-6">
           <label htmlFor="userSelector" className="text-lg font-bold">
             Usuario:
           </label>
@@ -187,7 +187,7 @@ const ColumnsOrder = ({ columnsOrder, setColumnsOrder }) => {
   };
 
   return (
-    <div className="w-full text-black bg-gray-100 p-4 rounded-md shadow-md">
+    <div className="w-full text-black neumorphic-card p-4 rounded-md">
       <h3 className="text-lg font-bold mb-4">Prioridad de Leads</h3>
       <div className="columns-container">
         {columnsOrder.map((priority, index) => (
@@ -229,11 +229,11 @@ const ColumnItem = ({ column, index, moveColumn }) => {
   return (
     <div
       ref={ref}
-      className={`flex text-black items-center p-2 bg-white border mb-2 rounded-md shadow-md cursor-pointer ${
+      className={`flex text-black items-center p-2 neumorphic-card border mb-2 rounded-md cursor-pointer ${
         isDragging ? "opacity-50" : ""
       }`}
     >
-      <MdOutlineDragHandle className="mr-2 text-gray-500" />
+      <MdOutlineDragHandle className="mr-2 text-slate-500 dark:text-slate-400" />
       <span>{column.label}</span>
     </div>
   );

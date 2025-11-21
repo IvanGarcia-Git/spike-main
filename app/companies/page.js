@@ -108,40 +108,41 @@ export default function Companies() {
   };
 
   return (
-    <div className="flex justify-center items-start bg-background min-h-screen p-8">
-      <div className="w-full max-w-5xl mx-auto p-4 bg-foreground text-black rounded-lg mt-24">
+    <div className="flex justify-center items-start min-h-screen p-8">
+      <div className="w-full max-w-5xl mx-auto p-4 neumorphic-card rounded-lg mt-24">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-black">Compañías</h2>
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Compañías</h2>
           <button
-            className="bg-secondary text-white px-4 py-2 rounded hover:bg-secondaryHover"
+            className="bg-secondary text-white px-4 py-2 rounded hover:bg-secondaryHover shadow-md hover:shadow-lg transition-all"
             onClick={openModal}
           >
             Añadir Compañía
           </button>
         </div>
 
-        <table className="min-w-full bg-gray-700 text-black">
-          <thead className="bg-background">
-            <tr>
-              <th className="px-4 py-2 text-left text-black">Imagen</th>
-              <th className="px-4 py-2 text-left text-black">Nombre</th>
-              <th className="px-4 py-2 text-left text-black">Tipo</th>
-              <th className="px-4 py-2 text-center text-black">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {companies.map((company) => (
-              <tr key={company.id} className="bg-foreground hover:bg-background">
-                <td className="px-4 py-2 text-black">
-                  <img
-                    src={company.imageUri}
-                    alt={company.name}
-                    className="w-16 h-16 object-cover rounded text-black"
-                  />
-                </td>
-                <td className="px-4 py-2 text-black">{company.name}</td>
+        <div className="neumorphic-card rounded-lg overflow-hidden">
+          <table className="min-w-full">
+            <thead className="neumorphic-card-inset">
+              <tr>
+                <th className="px-4 py-2 text-left text-slate-700 dark:text-slate-300">Imagen</th>
+                <th className="px-4 py-2 text-left text-slate-700 dark:text-slate-300">Nombre</th>
+                <th className="px-4 py-2 text-left text-slate-700 dark:text-slate-300">Tipo</th>
+                <th className="px-4 py-2 text-center text-slate-700 dark:text-slate-300">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {companies.map((company) => (
+                <tr key={company.id} className="hover:bg-slate-100 dark:hover:bg-slate-800">
+                  <td className="px-4 py-2">
+                    <img
+                      src={company.imageUri}
+                      alt={company.name}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                  </td>
+                  <td className="px-4 py-2 text-slate-800 dark:text-slate-200">{company.name}</td>
 
-                <td className="px-4 py-2 text-black">
+                  <td className="px-4 py-2">
                   <span
                     className={`${
                       company.type === "Gas"
@@ -155,83 +156,86 @@ export default function Companies() {
                   </span>
                 </td>
 
-                <td className="px-4 py-2 text-center">
-                  <button
-                    className="text-blue-500 hover:text-blue-700 mr-4"
-                    onClick={() => handleEditCompany(company.uuid)}
-                  >
-                    <FiEdit size={22} />
-                  </button>
-                  <button
-                    className="text-red-500 hover:text-red-700"
-                    onClick={() => handleDeleteCompany(company.id)}
-                  >
-                    <FiTrash size={22} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  <td className="px-4 py-2 text-center">
+                    <button
+                      className="text-blue-500 hover:text-blue-700 mr-4"
+                      onClick={() => handleEditCompany(company.uuid)}
+                    >
+                      <FiEdit size={22} />
+                    </button>
+                    <button
+                      className="text-red-500 hover:text-red-700"
+                      onClick={() => handleDeleteCompany(company.id)}
+                    >
+                      <FiTrash size={22} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal para crear nueva compañía */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 lg:ml-72 z-50">
-          <div className="bg-foreground text-black p-6 rounded-lg shadow-lg w-full max-w-lg">
-            <h3 className="text-xl font-bold mb-4">Crear nueva compañía</h3>
+          <div className="neumorphic-card p-6 rounded-xl w-full max-w-lg">
+            <h3 className="text-xl font-bold mb-4 text-slate-800 dark:text-slate-100">Crear nueva compañía</h3>
             <form onSubmit={handleAddCompany}>
               <div className="mb-4">
-                <label className="block text-black mb-2" htmlFor="name">
+                <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="name">
                   Nombre de la Compañía
                 </label>
                 <input
                   type="text"
                   id="name"
-                  className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
+                  className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
                   value={newCompany.name}
                   onChange={(e) => setNewCompany({ ...newCompany, name: e.target.value })}
                   required
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-black mb-2" htmlFor="type">
+                <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="type">
                   Tipo
                 </label>
-                <select
-                  id="type"
-                  className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                  value={newCompany.type}
-                  onChange={(e) => setNewCompany({ ...newCompany, type: e.target.value })}
-                >
-                  <option value="Luz">Luz</option>
-                  <option value="Gas">Gas</option>
-                  <option value="Telefonía">Telefonía</option>
-                </select>
+                <div className="neumorphic-card-inset rounded-lg">
+                  <select
+                    id="type"
+                    className="w-full px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+                    value={newCompany.type}
+                    onChange={(e) => setNewCompany({ ...newCompany, type: e.target.value })}
+                  >
+                    <option value="Luz">Luz</option>
+                    <option value="Gas">Gas</option>
+                    <option value="Telefonía">Telefonía</option>
+                  </select>
+                </div>
               </div>
               <div className="mb-4">
-                <label className="block text-black mb-2" htmlFor="image">
+                <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="image">
                   Subir imagen de la Compañía
                 </label>
                 <input
                   type="file"
                   id="image"
                   accept="image/*"
-                  className="w-full text-black"
+                  className="w-full text-slate-700 dark:text-slate-300"
                   onChange={(e) => setNewCompany({ ...newCompany, image: e.target.files[0] })}
                 />
               </div>
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-2">
                 <button
                   type="button"
-                  className="bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700"
+                  className="bg-red-600 text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
                   onClick={closeModal}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="bg-secondary text-white px-4 py-2 rounded hover:bg-secondaryHover"
+                  className="bg-secondary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
                 >
                   Guardar
                 </button>

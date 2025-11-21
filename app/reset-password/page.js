@@ -58,14 +58,14 @@ function NewPasswordPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="bg-foreground shadow-md rounded-lg p-20 max-w-lg w-full">
-        <h2 className="text-3xl text-black font-bold text-center text-primary mb-8">
+      <div className="neumorphic-card rounded-lg p-20 max-w-lg w-full">
+        <h2 className="text-3xl text-slate-800 dark:text-slate-100 font-bold text-center text-primary mb-8">
           Restablecer contraseña
         </h2>
 
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-black mb-2" htmlFor="newPassword">
+            <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2" htmlFor="newPassword">
               Nueva contraseña
             </label>
             <div className="relative">
@@ -73,7 +73,7 @@ function NewPasswordPage() {
                 id="newPassword"
                 type={showNewPassword ? 'text' : 'password'}
                 placeholder="Introduce una contraseña..."
-                className="w-full text-black px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent pr-10"
+                className="neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent w-full text-slate-800 dark:text-slate-100 pr-10"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
@@ -90,7 +90,7 @@ function NewPasswordPage() {
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm text-black font-semibold mb-2" htmlFor="confirmPassword">
+            <label className="block text-sm text-slate-800 dark:text-slate-100 font-semibold mb-2" htmlFor="confirmPassword">
               Confirmar contraseña
             </label>
             <div className="relative mb-6">
@@ -98,7 +98,7 @@ function NewPasswordPage() {
                 id="confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="Introduce de nuevo la contraseña..."
-                className="w-full text-black px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent pr-10"
+                className="neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent w-full text-slate-800 dark:text-slate-100 pr-10"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -120,7 +120,7 @@ function NewPasswordPage() {
 
           <button
             type="submit"
-            className="w-full bg-[#faca15] text-black py-3 rounded-full font-semibold hover:bg-gray-300 transition-colors duration-200"
+            className="w-full bg-primary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
           >
             Restablecer contraseña
           </button>

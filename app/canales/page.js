@@ -119,12 +119,12 @@ export default function Canales() {
   };
 
   return (
-    <div className="flex justify-center items-start bg-background min-h-screen p-5">
-      <div className="w-full max-w-5xl mx-auto p-4 bg-foreground text-white rounded-lg mt-24">
+    <div className="flex justify-center items-start min-h-screen p-5">
+      <div className="w-full max-w-5xl mx-auto p-4 neumorphic-card rounded-lg mt-24">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-black">Canales</h2>
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Canales</h2>
           <button
-            className="bg-secondary text-white px-4 py-2 rounded flex items-center hover:bg-secondaryHover"
+            className="bg-secondary text-white px-4 py-2 rounded flex items-center hover:bg-secondaryHover shadow-md hover:shadow-lg transition-all"
             onClick={openModal}
           >
             <FiPlus className="mr-2" />
@@ -135,20 +135,20 @@ export default function Canales() {
         {/* Modal */}
         {isModalOpen && (
           <div
-            className={`fixed inset-0 flex items-center justify-center bg-foreground bg-opacity-50 z-50 ${isModalOpen ? "lg:ml-72" : ""
+            className={`fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 ${isModalOpen ? "lg:ml-72" : ""
               }`}
           >
-            <div className="bg-foreground text-black p-6 rounded-lg shadow-lg w-full max-w-lg">
-              <h3 className="text-xl font-bold mb-4">Crear nuevo canal</h3>
+            <div className="neumorphic-card p-6 rounded-xl w-full max-w-lg">
+              <h3 className="text-xl font-bold mb-4 text-slate-800 dark:text-slate-100">Crear nuevo canal</h3>
               <form onSubmit={handleAddChannel}>
                 <div className="mb-4">
-                  <label className="block text-black mb-2" htmlFor="name">
+                  <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="name">
                     Nombre del Canal
                   </label>
                   <input
                     type="text"
                     id="name"
-                    className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
+                    className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
                     value={newChannel.name}
                     onChange={(e) =>
                       setNewChannel({ ...newChannel, name: e.target.value })
@@ -158,7 +158,7 @@ export default function Canales() {
                 </div>
                 <div className="mb-4">
                   <label
-                    className="block text-black mb-2"
+                    className="block text-slate-700 dark:text-slate-300 mb-2"
                     htmlFor="representativeName"
                   >
                     Nombre de representante
@@ -166,7 +166,7 @@ export default function Canales() {
                   <input
                     type="text"
                     id="representativeName"
-                    className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
+                    className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
                     value={newChannel.representativeName}
                     onChange={(e) =>
                       setNewChannel({
@@ -179,7 +179,7 @@ export default function Canales() {
                 </div>
                 <div className="mb-4">
                   <label
-                    className="block text-black mb-2"
+                    className="block text-slate-700 dark:text-slate-300 mb-2"
                     htmlFor="representativePhone"
                   >
                     Teléfono de representante
@@ -187,7 +187,7 @@ export default function Canales() {
                   <input
                     type="text"
                     id="representativePhone"
-                    className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
+                    className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
                     value={newChannel.representativePhone}
                     onChange={(e) =>
                       setNewChannel({
@@ -200,7 +200,7 @@ export default function Canales() {
                 </div>
                 <div className="mb-4">
                   <label
-                    className="block text-black mb-2"
+                    className="block text-slate-700 dark:text-slate-300 mb-2"
                     htmlFor="representativeEmail"
                   >
                     Email de representante
@@ -208,7 +208,7 @@ export default function Canales() {
                   <input
                     type="email"
                     id="representativeEmail"
-                    className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
+                    className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
                     value={newChannel.representativeEmail}
                     onChange={(e) =>
                       setNewChannel({
@@ -220,28 +220,28 @@ export default function Canales() {
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block text-black mb-2" htmlFor="image">
+                  <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="image">
                     Subir imagen del canal
                   </label>
                   <input
                     type="file"
                     id="image"
                     accept="image/*"
-                    className="w-full text-black"
+                    className="w-full text-slate-700 dark:text-slate-300"
                     onChange={(e) => setImageFile(e.target.files[0])}
                   />
                 </div>
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-2">
                   <button
                     type="button"
-                    className="bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700"
+                    className="bg-red-600 text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
                     onClick={closeModal}
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="bg-secondary text-white px-4 py-2 rounded hover:bg-secondaryHover"
+                    className="bg-secondary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
                   >
                     Guardar
                   </button>
@@ -250,50 +250,50 @@ export default function Canales() {
             </div>
           </div>
         )}
-        <div className="w-full overflow-x-auto">
-          <table className="min-w-full bg-foreground text-black">
-            <thead className="bg-background">
+        <div className="w-full overflow-x-auto neumorphic-card rounded-lg">
+          <table className="min-w-full">
+            <thead className="neumorphic-card-inset">
               <tr>
-                <th className="px-4 py-2 text-left text-black">Imagen</th>
-                <th className="px-4 py-2 text-left text-black">Nombre</th>
-                <th className="px-4 py-2 text-left text-black">Representante</th>
-                <th className="px-4 py-2 text-left text-black">Email</th>
-                <th className="px-4 py-2 text-left text-black">Telefono</th>
-                <th className="px-4 py-2 text-center text-black">Acciones</th>
+                <th className="px-4 py-2 text-left text-slate-700 dark:text-slate-300">Imagen</th>
+                <th className="px-4 py-2 text-left text-slate-700 dark:text-slate-300">Nombre</th>
+                <th className="px-4 py-2 text-left text-slate-700 dark:text-slate-300">Representante</th>
+                <th className="px-4 py-2 text-left text-slate-700 dark:text-slate-300">Email</th>
+                <th className="px-4 py-2 text-left text-slate-700 dark:text-slate-300">Telefono</th>
+                <th className="px-4 py-2 text-center text-slate-700 dark:text-slate-300">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {channels.map((channel) => (
                 <tr
                   key={channel.id}
-                  className="bg-foreground hover:bg-background"
+                  className="hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
-                  <td className="px-4 py-2 text-black">
+                  <td className="px-4 py-2">
                     <img
                       src={channel.imageUri}
                       alt={channel.name}
                       className="w-16 h-16 object-cover rounded"
                     />
                   </td>
-                  <td className="px-4 py-2 text-black">{channel.name}</td>
+                  <td className="px-4 py-2 text-slate-800 dark:text-slate-200">{channel.name}</td>
 
-                  <td className="px-4 py-2text-black">
+                  <td className="px-4 py-2">
                     <span
-                      className={`text-black rounded-full text-sm font-semibold`}
+                      className={`text-slate-800 dark:text-slate-200 rounded-full text-sm font-semibold`}
                     >
                       {channel.representativeName}
                     </span>
                   </td>
                   <td className="px-4 py-2">
                     <span
-                      className={`text-black rounded-full text-sm font-semibold`}
+                      className={`text-slate-800 dark:text-slate-200 rounded-full text-sm font-semibold`}
                     >
                       {channel.representativeEmail}
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-black">
+                  <td className="px-4 py-2">
                     <span
-                      className={`text-black rounded-full text-sm font-semibold`}
+                      className={`text-slate-800 dark:text-slate-200 rounded-full text-sm font-semibold`}
                     >
                       {channel.representativePhone}
                     </span>

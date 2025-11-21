@@ -835,7 +835,7 @@ export default function LiquidacionDetailPage() {
 
   if (loading && !liquidation) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-100 text-gray-800">
+      <div className="flex justify-center items-center min-h-screen bg-background text-slate-800 dark:text-slate-100">
         <FaSpinner className="animate-spin text-blue-600 text-4xl" />
         <p className="ml-3 text-xl">Cargando datos de la liquidación...</p>
       </div>
@@ -844,13 +844,13 @@ export default function LiquidacionDetailPage() {
 
   if (error && !liquidation) {
     return (
-      <div className="min-h-screen bg-gray-100 p-6">
-        <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-xl">
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-4xl mx-auto neumorphic-card p-6 rounded-lg">
           <h2 className="text-2xl font-semibold text-red-600 mb-4">Error</h2>
           <p className="text-red-700">{error.message || "Ocurrió un error al cargar los datos."}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="mt-4 bg-primary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
           >
             Reintentar
           </button>
@@ -861,15 +861,15 @@ export default function LiquidacionDetailPage() {
 
   if (!liquidation) {
     return (
-      <div className="min-h-screen bg-gray-100 p-6 text-center">No se encontró la liquidación.</div>
+      <div className="min-h-screen bg-background p-6 text-center text-slate-800 dark:text-slate-100">No se encontró la liquidación.</div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-800 p-4 md:p-6">
-      <div className="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow-xl">
+    <div className="min-h-screen bg-background text-slate-800 dark:text-slate-100 p-4 md:p-6">
+      <div className="max-w-7xl mx-auto neumorphic-card p-6 rounded-lg">
         {/* Liquidation Header */}
-        <div className="flex flex-col gap-2 pb-4 border-b border-gray-200 mb-6">
+        <div className="flex flex-col gap-2 pb-4 border-b border-gray-200 dark:border-gray-700 mb-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center space-x-2 flex-grow min-w-[200px]">
               {isEditingLiquidationName ? (
@@ -878,14 +878,14 @@ export default function LiquidacionDetailPage() {
                     type="text"
                     value={currentEditedLiquidationName}
                     onChange={(e) => setCurrentEditedLiquidationName(e.target.value)}
-                    className="text-2xl md:text-3xl font-bold p-2 border border-blue-500 rounded-md focus:ring-2 focus:ring-blue-300 flex-grow"
+                    className="neumorphic-card-inset text-2xl md:text-3xl font-bold p-2 border-none rounded-lg focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent flex-grow text-slate-800 dark:text-slate-100"
                     autoFocus
                     onKeyDown={(e) => e.key === "Enter" && handleNameSave()}
                   />
                   <button
                     onClick={handleNameSave}
                     disabled={savingStates.liquidationName}
-                    className="p-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors disabled:opacity-50"
+                    className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 shadow-md"
                     title="Guardar nombre"
                   >
                     {savingStates.liquidationName ? (
@@ -897,7 +897,7 @@ export default function LiquidacionDetailPage() {
                   <button
                     onClick={handleNameEditToggle}
                     disabled={savingStates.liquidationName}
-                    className="p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors disabled:opacity-50"
+                    className="p-2 shadow-neumorphic-light dark:shadow-neumorphic-dark hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark text-slate-700 dark:text-slate-300 rounded-lg transition-colors disabled:opacity-50"
                     title="Cancelar edición"
                   >
                     <FaTimes />
@@ -906,7 +906,7 @@ export default function LiquidacionDetailPage() {
               ) : (
                 <>
                   <h1
-                    className="text-2xl md:text-3xl font-bold cursor-pointer hover:text-blue-700 transition-colors break-all"
+                    className="text-2xl md:text-3xl font-bold cursor-pointer hover:text-blue-600 transition-colors break-all text-slate-800 dark:text-slate-100"
                     onClick={handleNameEditToggle}
                     title="Editar nombre de la liquidación"
                   >
@@ -914,7 +914,7 @@ export default function LiquidacionDetailPage() {
                   </h1>
                   <button
                     onClick={handleNameEditToggle}
-                    className="text-blue-600 hover:text-blue-800 p-1 transition-colors"
+                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 transition-colors"
                     title="Editar nombre"
                   >
                     <FaEdit size={20} />
@@ -922,7 +922,7 @@ export default function LiquidacionDetailPage() {
                 </>
               )}
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-slate-500 dark:text-slate-400">
               <p>
                 <strong>Fecha:</strong> {formatDate(liquidation.date)}
               </p>
@@ -952,14 +952,14 @@ export default function LiquidacionDetailPage() {
           <div className="flex gap-2">
             <button
               type="button"
-              className="bg-blue-600 text-white px-4 py-2 rounded max-w-64 self-start"
+              className="bg-primary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium max-w-64 self-start"
               onClick={() => router.push(`/emitir-factura?liquidationUuid=${liquidation.uuid}`)}
             >
               Exportar como factura
             </button>
             <button
               type="button"
-              className="bg-green-600 text-white px-4 py-2 rounded max-w-64 self-start flex items-center gap-2"
+              className="bg-green-600 text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium max-w-64 self-start flex items-center gap-2"
               onClick={handleDownloadExcel}
               disabled={isDownloadingExcel}
             >
@@ -973,18 +973,18 @@ export default function LiquidacionDetailPage() {
         <div className="mt-6 mb-4">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FaSearch className="text-gray-400" />
+              <FaSearch className="text-slate-400" />
             </div>
             <input
               type="text"
               placeholder="Buscar por CUPS, cliente, agente, tarifa, fecha, importe..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-2.5 pl-10 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+              className="neumorphic-card-inset px-4 py-3 pl-10 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent w-full text-slate-800 dark:text-slate-100"
             />
           </div>
           {searchTerm && (
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
               {filteredContracts.length} resultados encontrados
             </p>
           )}
@@ -997,16 +997,16 @@ export default function LiquidacionDetailPage() {
               type="checkbox"
               checked={selectedContracts.length === filteredContracts.length}
               onChange={handleSelectAllContracts}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="rounded border-gray-300 text-primary focus:ring-primary"
             />
-            <span className="text-sm text-gray-700">Seleccionar todos</span>
+            <span className="text-sm text-slate-700 dark:text-slate-300">Seleccionar todos</span>
           </label>
 
           {selectedContracts.length > 0 && (
             <div ref={dropdownRef} className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center space-x-2"
+                className="bg-primary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium flex items-center space-x-2"
                 disabled={savingStates.bulkDelete || savingStates.bulkCommission}
               >
                 {savingStates.bulkDelete || savingStates.bulkCommission ? (
@@ -1020,16 +1020,16 @@ export default function LiquidacionDetailPage() {
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                <div className="absolute right-0 mt-2 w-48 neumorphic-card rounded-lg z-10">
                   <button
                     onClick={handleBulkEditCommission}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-t-lg"
                   >
                     Editar comisiones
                   </button>
                   <button
                     onClick={handleBulkDelete}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-b-lg"
                   >
                     Desvincular contratos
                   </button>
@@ -1041,19 +1041,19 @@ export default function LiquidacionDetailPage() {
 
         {/* Liquidation Contracts Table */}
         <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">Contratos en esta Liquidación</h2>
+          <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-slate-100">Contratos en esta Liquidación</h2>
           {filteredContracts && filteredContracts.length > 0 ? (
             <>
-              <div className="overflow-x-auto shadow rounded-lg">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+              <div className="overflow-x-auto neumorphic-card rounded-lg">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-background">
                     <tr>
                       {/* Cabeceras dinámicas basadas en las preferencias */}
                       {columnsOrder.map((columnKey) => (
                         <th
                           key={columnKey}
                           scope="col"
-                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"
                         >
                           {liquidationColumnsConfig[columnKey]?.header || columnKey}
                         </th>
@@ -1061,31 +1061,31 @@ export default function LiquidacionDetailPage() {
                       {/* Cabeceras fijas para Importe y Acciones */}
                       <th
                         scope="col"
-                        className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        className="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"
                       >
                         Importe
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         Acciones
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {paginatedContracts.map((lc) => {
                       const effectiveComm = getEffectiveCommission(lc);
                       return (
-                        <tr key={lc.uuid}>
+                        <tr key={lc.uuid} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30">
                           {/* Celdas dinámicas basadas en las preferencias */}
                           {columnsOrder.map((columnKey) => (
                             <td
                               key={columnKey}
-                              className="px-4 py-3 whitespace-nowrap text-sm text-gray-700"
+                              className="px-4 py-3 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300"
                             >
                               {liquidationColumnsConfig[columnKey]?.render(lc) ?? "—"}
                             </td>
                           ))}
                           {/* Celdas fijas para Importe y Acciones */}
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-right">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300 text-right">
                             {editingCommissionState.lcUuid === lc.uuid ? (
                               <input
                                 type="number"
@@ -1098,7 +1098,7 @@ export default function LiquidacionDetailPage() {
                                     value: e.target.value,
                                   }))
                                 }
-                                className="w-28 p-1 border border-blue-400 rounded-md text-right text-sm"
+                                className="neumorphic-card-inset w-28 p-1 border-none rounded-lg text-right text-sm bg-transparent text-slate-800 dark:text-slate-100"
                                 onKeyDown={(e) =>
                                   e.key === "Enter" && handleSaveCommission(lc.uuid)
                                 }
@@ -1168,34 +1168,34 @@ export default function LiquidacionDetailPage() {
                   <button
                     onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1.5 text-sm border rounded-md hover:bg-gray-50 disabled:opacity-50 flex items-center"
+                    className="shadow-neumorphic-light dark:shadow-neumorphic-dark hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark px-3 py-1.5 text-sm rounded-lg disabled:opacity-50 flex items-center text-slate-700 dark:text-slate-300"
                   >
                     <FaChevronLeft size={12} className="mr-1" /> Anterior
                   </button>
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm text-slate-700 dark:text-slate-300">
                     Página {currentPage} de {totalPages}
                   </span>
                   <button
                     onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1.5 text-sm border rounded-md hover:bg-gray-50 disabled:opacity-50 flex items-center"
+                    className="shadow-neumorphic-light dark:shadow-neumorphic-dark hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark px-3 py-1.5 text-sm rounded-lg disabled:opacity-50 flex items-center text-slate-700 dark:text-slate-300"
                   >
                     Siguiente <FaChevronRight size={12} className="ml-1" />
                   </button>
                 </div>
               )}
 
-              <div className="mt-6 pt-4 border-t border-gray-200 flex justify-end">
+              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
                 <div className="text-right">
-                  <p className="text-sm text-gray-600">Total Liquidación:</p>
-                  <p className="text-xl font-bold text-gray-800">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Total Liquidación:</p>
+                  <p className="text-xl font-bold text-slate-800 dark:text-slate-100">
                     {formatCurrency(totalLiquidationCommission)}
                   </p>
                 </div>
               </div>
             </>
           ) : (
-            <p className="text-gray-600">
+            <p className="text-slate-500 dark:text-slate-400">
               {searchTerm
                 ? "No se encontraron contratos con los criterios de búsqueda."
                 : "No hay contratos vinculados a esta liquidación."}

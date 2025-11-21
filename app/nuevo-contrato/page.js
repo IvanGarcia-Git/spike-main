@@ -438,8 +438,8 @@ export default function CreateContractPage() {
 
   return (
     <div className="min-h-screen bg-background p-8">
-      <div className="max-w-7xl mx-auto bg-foreground p-6 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-black mb-6">Crear Nuevo Contrato</h2>
+      <div className="max-w-7xl mx-auto neumorphic-card p-6 rounded-lg">
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6">Crear Nuevo Contrato</h2>
 
         {/* Información de los detalles del cliente */}
         <CreateCustomerForm
@@ -467,12 +467,12 @@ export default function CreateContractPage() {
         </div>
 
         <div className="mb-4 mt-4">
-          <label className="block text-black mb-2" htmlFor="comments">
+          <label className="block text-slate-800 dark:text-slate-100 mb-2" htmlFor="comments">
             Comentario
           </label>
           <textarea
             id="comments"
-            className="w-full h-32 px-4 py-2 rounded bg-background text-black focus:outline-none"
+            className="neumorphic-card-inset w-full h-32 px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-100"
             rows="4"
             value={newContractComment.initialComment}
             onChange={(e) =>
@@ -481,8 +481,8 @@ export default function CreateContractPage() {
           ></textarea>
         </div>
 
-        <div className="mb-4 text-black">
-          <label className="block text-black mb-2" htmlFor="file">
+        <div className="mb-4 text-slate-800 dark:text-slate-100">
+          <label className="block text-slate-800 dark:text-slate-100 mb-2" htmlFor="file">
             Archivo
           </label>
           <input
@@ -496,21 +496,19 @@ export default function CreateContractPage() {
         <div className="mt-6 flex space-x-4">
           <button
             onClick={() => handleCreateContract(true)}
-            className="bg-yellow-600 text-white px-4 py-2 rounded-full hover:bg-yellow-700"
+            className="bg-yellow-600 text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
           >
             Guardar como Borrador
           </button>
 
-          {/* Botón para crear contrato finalizado */}
           <button
             onClick={() => handleCreateContract(false)}
-            className="bg-secondary text-white px-4 py-2 rounded-full hover:bg-secondaryHover"
+            className="bg-secondary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
           >
             Guardar
           </button>
         </div>
       </div>
-      {/* Modal */}
       {openDuplicityModal && (
         <div
           className={`fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 ${
