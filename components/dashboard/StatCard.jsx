@@ -35,8 +35,8 @@ export default function StatCard({ title, value, change, changeType, icon: Icon,
           )}
         </div>
         {Icon && (
-          <div className={`p-3 rounded-lg ${colorClasses[color] || colorClasses.blue}`}>
-            <Icon className="h-6 w-6" />
+          <div className={`p-4 rounded-xl shadow-md ${colorClasses[color] || colorClasses.blue}`}>
+            <Icon className="h-10 w-10" />
           </div>
         )}
       </div>

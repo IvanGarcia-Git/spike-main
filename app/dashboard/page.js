@@ -12,6 +12,106 @@ import {
   StatsCard,
   DataTable,
 } from "@/components/neumorphic";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
+
+// Ventas por Mes Chart Component
+function VentasPorMesChart({ data }) {
+  const chartData = {
+    labels: data.map(item => item.mes),
+    datasets: [
+      {
+        label: 'Ventas',
+        data: data.map(item => item.ventas),
+        borderColor: '#14b8a6',
+        backgroundColor: 'rgba(20, 184, 166, 0.1)',
+        borderWidth: 2,
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        pointBackgroundColor: '#14b8a6',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointHoverBackgroundColor: '#0d9488',
+        pointHoverBorderColor: '#fff',
+        tension: 0.4,
+        fill: true,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        borderColor: '#14b8a6',
+        borderWidth: 1,
+        titleColor: '#fff',
+        bodyColor: '#fff',
+        displayColors: false,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
+          drawBorder: false,
+        },
+        ticks: {
+          color: '#64748b',
+        },
+      },
+      x: {
+        grid: {
+          display: false,
+          drawBorder: false,
+        },
+        ticks: {
+          color: '#64748b',
+        },
+      },
+    },
+  };
+
+  return (
+    <div className="neumorphic-card p-6 mb-8">
+      <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6">
+        Ventas por Mes
+      </h3>
+      <div className="h-64">
+        <Line data={chartData} options={options} />
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const router = useRouter();
@@ -409,26 +509,7 @@ export default function Dashboard() {
           </div>
 
           {/* Ventas por Mes Chart */}
-          <div className="neumorphic-card p-6 mb-8">
-            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6">
-              Ventas por Mes
-            </h3>
-            <div className="flex items-end h-64 space-x-2 sm:space-x-4">
-              {dashboardData.ventasPorMes.map((mes, idx) => (
-                <div key={idx} className="flex-1 flex flex-col items-center justify-end">
-                  <div className="w-full bg-primary/20 dark:bg-primary/30 rounded-t-lg group relative">
-                    <div
-                      className="bg-primary rounded-t-lg w-full transition-all duration-300 group-hover:bg-teal-400"
-                      style={{ height: `${mes.ventas * 2}px`, minHeight: '10px' }}
-                    ></div>
-                  </div>
-                  <p className="text-xs mt-2 text-slate-500 dark:text-slate-400">
-                    {mes.mes}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
+          <VentasPorMesChart data={dashboardData.ventasPorMes} />
 
           {/* Calendario de Actividad */}
           <div className="neumorphic-card p-6 mb-8 min-h-[200px] flex flex-col">

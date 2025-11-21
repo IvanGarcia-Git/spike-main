@@ -3,7 +3,7 @@
 import type { ProcessedTariff } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, LabelList } from 'recharts';
+import { Line, LineChart, CartesianGrid, XAxis, YAxis, LabelList } from 'recharts';
 
 interface CostVisualizationProps {
   tariffs: ProcessedTariff[];
@@ -31,40 +31,52 @@ export default function CostVisualization({ tariffs }: CostVisualizationProps) {
             color: "hsl(var(--chart-1))",
           },
         }} className="h-[250px] w-full">
-          <BarChart
+          <LineChart
             data={chartData}
-            layout="vertical"
-            margin={{ left: 10, right: 40 }}
+            margin={{ left: 10, right: 40, top: 20, bottom: 20 }}
           >
-            <CartesianGrid horizontal={false} />
-            <YAxis
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
               dataKey="name"
-              type="category"
               tickLine={false}
               axisLine={false}
               tick={{ fontSize: 12 }}
-              width={100}
+              angle={-45}
+              textAnchor="end"
+              height={80}
             />
-            <XAxis dataKey="cost" type="number" hide />
+            <YAxis
+              dataKey="cost"
+              tickLine={false}
+              axisLine={false}
+              tick={{ fontSize: 12 }}
+              tickFormatter={(value) => `$${value}`}
+            />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent
                 labelFormatter={(value, payload) => payload?.[0]?.payload.name}
                 formatter={(value) => `$${value}`}
-                indicator="dot" 
+                indicator="dot"
               />}
             />
-            <Bar dataKey="cost" fill="var(--color-cost)" radius={5}>
+            <Line
+              dataKey="cost"
+              stroke="var(--color-cost)"
+              strokeWidth={2}
+              dot={{ r: 4, fill: "var(--color-cost)" }}
+              activeDot={{ r: 6 }}
+            >
               <LabelList
                 dataKey="cost"
-                position="right"
+                position="top"
                 offset={8}
                 className="fill-foreground"
                 fontSize={12}
                 formatter={(value: number) => `$${value}`}
               />
-            </Bar>
-          </BarChart>
+            </Line>
+          </LineChart>
         </ChartContainer>
       </CardContent>
     </Card>

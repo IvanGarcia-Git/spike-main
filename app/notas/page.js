@@ -745,13 +745,7 @@ function NotaCard({ nota, onEdit, onDelete, onToggleFavorito, formatDate }) {
     <div
       className="neumorphic-card p-4 flex flex-col justify-between h-44 group hover:shadow-lg transition-shadow relative"
     >
-      {/* Color indicator */}
-      <div
-        className="absolute top-0 left-0 right-0 h-1 rounded-t-lg"
-        style={{ backgroundColor: `var(--color-${nota.color}, #3b82f6)` }}
-      />
-
-      <div className="mt-2">
+      <div>
         <div className="flex items-start justify-between mb-2">
           <h4 className="font-semibold text-slate-800 dark:text-slate-200 line-clamp-2 flex-1">
             {nota.titulo}

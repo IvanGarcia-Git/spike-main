@@ -60,12 +60,12 @@ export default function StatsCard({
         <div className="flex items-start justify-between">
           {/* Icon circle */}
           <div className={`
-            w-14 h-14 rounded-full
+            w-20 h-20 rounded-full
             flex items-center justify-center
-            shadow-neumorphic-light dark:shadow-neumorphic-dark
+            shadow-neumorphic-light-lg dark:shadow-neumorphic-dark-lg
             ${iconColorClasses[iconColor]}
           `}>
-            <span className="material-icons-outlined text-2xl">
+            <span className="material-icons-outlined text-4xl">
               {icon}
             </span>
           </div>
