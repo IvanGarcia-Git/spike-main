@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { getCookie } from "cookies-next";
 import Select from "react-select";
+import BaseModal, { ModalActions, ModalButton, ModalInput, ModalTextarea } from "./base-modal.component";
 
 //TODO: General refactor
 export default function NewTaskModal({
@@ -238,34 +239,44 @@ export default function NewTaskModal({
   };
 
   return (
-    <div
-      className={`bg-foreground text-black p-6 rounded-lg shadow-lg w-full max-w-lg ${
-        isModalOpen ? "" : "hidden"
-      }`}
+    <BaseModal
+      isOpen={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+      title="Crear nueva tarea"
+      maxWidth="max-w-2xl"
     >
-      <h3 className="text-xl font-bold mb-4 text-black">Crear nueva tarea</h3>
-      <div className="flex mb-4 border-b">
+      {/* Tabs */}
+      <div className="flex mb-6 border-b border-slate-200 dark:border-slate-700">
         <button
-          className={`px-4 py-2 ${
-            activeTab === "task" ? "border-b-2 border-blue-500 font-bold" : "text-gray-500"
+          className={`px-6 py-3 font-medium transition-all ${
+            activeTab === "task"
+              ? "border-b-2 border-primary text-primary"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
           onClick={() => setActiveTab("task")}
+          type="button"
         >
           Tarea
         </button>
         <button
-          className={`px-4 py-2 ${
-            activeTab === "reminder" ? "border-b-2 border-blue-500 font-bold" : "text-gray-500"
+          className={`px-6 py-3 font-medium transition-all ${
+            activeTab === "reminder"
+              ? "border-b-2 border-primary text-primary"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
           onClick={() => setActiveTab("reminder")}
+          type="button"
         >
           Recordatorio
         </button>
         <button
-          className={`px-4 py-2 ${
-            activeTab === "leadCall" ? "border-b-2 border-blue-500 font-bold" : "text-gray-500"
+          className={`px-6 py-3 font-medium transition-all ${
+            activeTab === "leadCall"
+              ? "border-b-2 border-primary text-primary"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
           onClick={() => setActiveTab("leadCall")}
+          type="button"
         >
           Llamada
         </button>
@@ -273,51 +284,36 @@ export default function NewTaskModal({
 
       {activeTab === "task" && (
         <form onSubmit={handleAddTask}>
-          <div className="mb-4 flex justify-between">
-            <div className="w-1/2 pr-2">
-              <label className="block text-black mb-2" htmlFor="startDate">
-                Fecha Inicio
-              </label>
-              <input
-                type="date"
-                id="startDate"
-                className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                value={newTask.startDate}
-                onChange={(e) => setNewTask({ ...newTask, startDate: e.target.value })}
-                required
-              />
-            </div>
-            <div className="w-1/2 pl-2">
-              <label className="block text-black mb-2" htmlFor="startTime">
-                Hora Inicio
-              </label>
-              <input
-                type="time"
-                id="startTime"
-                className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                value={newTask.startTime}
-                onChange={(e) => setNewTask({ ...newTask, startTime: e.target.value })}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="subject">
-              Asunto
-            </label>
-            <input
-              type="text"
-              id="subject"
-              className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-              value={newTask.subject}
-              onChange={(e) => setNewTask({ ...newTask, subject: e.target.value })}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <ModalInput
+              label="Fecha Inicio"
+              type="date"
+              id="startDate"
+              value={newTask.startDate}
+              onChange={(e) => setNewTask({ ...newTask, startDate: e.target.value })}
+              required
+            />
+            <ModalInput
+              label="Hora Inicio"
+              type="time"
+              id="startTime"
+              value={newTask.startTime}
+              onChange={(e) => setNewTask({ ...newTask, startTime: e.target.value })}
               required
             />
           </div>
 
+          <ModalInput
+            label="Asunto"
+            type="text"
+            id="subject"
+            value={newTask.subject}
+            onChange={(e) => setNewTask({ ...newTask, subject: e.target.value })}
+            required
+          />
+
           <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="cups">
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-2" htmlFor="cups">
               Seleccionar CUPS
             </label>
             <Select
@@ -327,65 +323,94 @@ export default function NewTaskModal({
               onChange={(selectedOption) => {
                 const value = selectedOption ? selectedOption.value : "";
                 setSelectedCups(value);
-                // Opcional: puedes mantener la lógica de actualizar el estado de la tarea aquí si lo necesitas
-                // Por ejemplo, para la pestaña de tareas:
-                // setNewTask({ ...newTask, contractUrl: value });
               }}
               placeholder="Seleccionar o buscar CUPS..."
               isClearable
               noOptionsMessage={() => "No se encontraron CUPS"}
               styles={{
-                // Estilos opcionales para que se parezca a tus otros inputs
-                control: (base) => ({
+                control: (base, state) => ({
                   ...base,
-                  backgroundColor: "#eaf0f9", // bg-background (si usas Tailwind, adapta el color)
+                  backgroundColor: "transparent",
                   border: "none",
-                  boxShadow: "none",
+                  boxShadow: state.isFocused
+                    ? "inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff"
+                    : "inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff",
+                  borderRadius: "0.5rem",
+                  padding: "0.5rem",
+                  minHeight: "48px",
+                }),
+                input: (base) => ({
+                  ...base,
+                  color: "#475569",
+                }),
+                singleValue: (base) => ({
+                  ...base,
+                  color: "#475569",
+                }),
+                placeholder: (base) => ({
+                  ...base,
+                  color: "#94a3b8",
+                }),
+                menu: (base) => ({
+                  ...base,
+                  backgroundColor: "#fff",
+                  boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                  borderRadius: "0.5rem",
+                  zIndex: 9999,
+                }),
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.isFocused ? "#f1f5f9" : "transparent",
+                  color: "#475569",
+                  cursor: "pointer",
                 }),
               }}
+              theme={(theme) => ({
+                ...theme,
+                colors: {
+                  ...theme.colors,
+                  primary: "#14b8a6",
+                  primary25: "#f1f5f9",
+                },
+              })}
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="comments">
-              Comentario
-            </label>
-            <textarea
-              id="comments"
-              className="w-full h-32 px-4 py-2 rounded bg-background text-black focus:outline-none"
-              rows="4"
-              value={newTask.initialComment}
-              onChange={(e) => setNewTask({ ...newTask, initialComment: e.target.value })}
-            ></textarea>
-          </div>
+          <ModalTextarea
+            label="Comentario"
+            id="comments"
+            value={newTask.initialComment}
+            onChange={(e) => setNewTask({ ...newTask, initialComment: e.target.value })}
+            rows={4}
+          />
 
           <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="file">
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-2" htmlFor="file">
               Archivo
             </label>
             <input
               type="file"
               id="file"
               onChange={(e) => setSelectedFile(e.target.files[0])}
-              className="w-full cursor-pointer"
+              className="w-full px-4 py-3 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark"
             />
           </div>
 
-          <div className="flex justify-end">
-            <button
-              type="button"
-              className="bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700"
+          <ModalActions>
+            <ModalButton
+              variant="ghost"
               onClick={() => setIsModalOpen(false)}
             >
               Cancelar
-            </button>
-            <button
+            </ModalButton>
+            <ModalButton
+              variant="primary"
               type="submit"
-              className="bg-secondary text-white px-4 py-2 rounded hover:bg-secondaryHover"
+              icon="add_task"
             >
               Crear Tarea
-            </button>
-          </div>
+            </ModalButton>
+          </ModalActions>
         </form>
       )}
 
@@ -393,36 +418,26 @@ export default function NewTaskModal({
 
       {activeTab === "reminder" && (
         <form onSubmit={handleAddReminder}>
-          <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="startDate">
-              Fecha Inicio
-            </label>
-            <input
-              type="datetime-local"
-              id="startDate"
-              className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-              value={newReminder.startDate}
-              onChange={(e) => setNewReminder({ ...newReminder, startDate: e.target.value })}
-              required
-            />
-          </div>
+          <ModalInput
+            label="Fecha Inicio"
+            type="datetime-local"
+            id="startDate"
+            value={newReminder.startDate}
+            onChange={(e) => setNewReminder({ ...newReminder, startDate: e.target.value })}
+            required
+          />
+
+          <ModalInput
+            label="Asunto"
+            type="text"
+            id="subject"
+            value={newReminder.subject}
+            onChange={(e) => setNewReminder({ ...newReminder, subject: e.target.value })}
+            required
+          />
 
           <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="subject">
-              Asunto
-            </label>
-            <input
-              type="text"
-              id="subject"
-              className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-              value={newReminder.subject}
-              onChange={(e) => setNewReminder({ ...newReminder, subject: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="cups">
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-2" htmlFor="cups">
               Seleccionar CUPS
             </label>
             <Select
@@ -432,65 +447,94 @@ export default function NewTaskModal({
               onChange={(selectedOption) => {
                 const value = selectedOption ? selectedOption.value : "";
                 setSelectedCups(value);
-                // Opcional: puedes mantener la lógica de actualizar el estado de la tarea aquí si lo necesitas
-                // Por ejemplo, para la pestaña de tareas:
-                // setNewTask({ ...newTask, contractUrl: value });
               }}
               placeholder="Seleccionar o buscar CUPS..."
               isClearable
               noOptionsMessage={() => "No se encontraron CUPS"}
               styles={{
-                // Estilos opcionales para que se parezca a tus otros inputs
-                control: (base) => ({
+                control: (base, state) => ({
                   ...base,
-                  backgroundColor: "#eaf0f9", // bg-background (si usas Tailwind, adapta el color)
+                  backgroundColor: "transparent",
                   border: "none",
-                  boxShadow: "none",
+                  boxShadow: state.isFocused
+                    ? "inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff"
+                    : "inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff",
+                  borderRadius: "0.5rem",
+                  padding: "0.5rem",
+                  minHeight: "48px",
+                }),
+                input: (base) => ({
+                  ...base,
+                  color: "#475569",
+                }),
+                singleValue: (base) => ({
+                  ...base,
+                  color: "#475569",
+                }),
+                placeholder: (base) => ({
+                  ...base,
+                  color: "#94a3b8",
+                }),
+                menu: (base) => ({
+                  ...base,
+                  backgroundColor: "#fff",
+                  boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                  borderRadius: "0.5rem",
+                  zIndex: 9999,
+                }),
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.isFocused ? "#f1f5f9" : "transparent",
+                  color: "#475569",
+                  cursor: "pointer",
                 }),
               }}
+              theme={(theme) => ({
+                ...theme,
+                colors: {
+                  ...theme.colors,
+                  primary: "#14b8a6",
+                  primary25: "#f1f5f9",
+                },
+              })}
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="description">
-              Descripción
-            </label>
-            <textarea
-              id="description"
-              className="w-full h-32 px-4 py-2 rounded bg-background text-black focus:outline-none"
-              rows="4"
-              value={newReminder.description}
-              onChange={(e) => setNewReminder({ ...newReminder, description: e.target.value })}
-            ></textarea>
-          </div>
+          <ModalTextarea
+            label="Descripción"
+            id="description"
+            value={newReminder.description}
+            onChange={(e) => setNewReminder({ ...newReminder, description: e.target.value })}
+            rows={4}
+          />
 
           <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="file">
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-2" htmlFor="file">
               Archivo
             </label>
             <input
               type="file"
               id="file"
               onChange={(e) => setSelectedFile(e.target.files[0])}
-              className="w-full cursor-pointer"
+              className="w-full px-4 py-3 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark"
             />
           </div>
 
-          <div className="flex justify-end">
-            <button
-              type="button"
-              className="bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700"
+          <ModalActions>
+            <ModalButton
+              variant="ghost"
               onClick={() => setIsModalOpen(false)}
             >
               Cancelar
-            </button>
-            <button
+            </ModalButton>
+            <ModalButton
+              variant="primary"
               type="submit"
-              className="bg-secondary text-white px-4 py-2 rounded hover:bg-secondaryHover"
+              icon="alarm"
             >
               Crear Recordatorio
-            </button>
-          </div>
+            </ModalButton>
+          </ModalActions>
         </form>
       )}
 
@@ -498,36 +542,26 @@ export default function NewTaskModal({
 
       {activeTab === "leadCall" && (
         <form onSubmit={handleAddLeadCall}>
-          <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="startDate">
-              Fecha Inicio
-            </label>
-            <input
-              type="datetime-local"
-              id="startDate"
-              className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-              value={newLeadCall.startDate}
-              onChange={(e) => setNewLeadCall({ ...newLeadCall, startDate: e.target.value })}
-              required
-            />
-          </div>
+          <ModalInput
+            label="Fecha Inicio"
+            type="datetime-local"
+            id="startDate"
+            value={newLeadCall.startDate}
+            onChange={(e) => setNewLeadCall({ ...newLeadCall, startDate: e.target.value })}
+            required
+          />
+
+          <ModalInput
+            label="Asunto"
+            type="text"
+            id="subject"
+            value={newLeadCall.subject}
+            onChange={(e) => setNewLeadCall({ ...newLeadCall, subject: e.target.value })}
+            required
+          />
 
           <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="subject">
-              Asunto
-            </label>
-            <input
-              type="text"
-              id="subject"
-              className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-              value={newLeadCall.subject}
-              onChange={(e) => setNewLeadCall({ ...newLeadCall, subject: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="cups">
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-2" htmlFor="cups">
               Seleccionar CUPS
             </label>
             <Select
@@ -537,66 +571,96 @@ export default function NewTaskModal({
               onChange={(selectedOption) => {
                 const value = selectedOption ? selectedOption.value : "";
                 setSelectedCups(value);
-                // Opcional: puedes mantener la lógica de actualizar el estado de la tarea aquí si lo necesitas
-                // Por ejemplo, para la pestaña de tareas:
-                // setNewTask({ ...newTask, contractUrl: value });
               }}
               placeholder="Seleccionar o buscar CUPS..."
               isClearable
               noOptionsMessage={() => "No se encontraron CUPS"}
               styles={{
-                control: (base) => ({
+                control: (base, state) => ({
                   ...base,
-                  backgroundColor: "#eaf0f9", 
+                  backgroundColor: "transparent",
                   border: "none",
-                  boxShadow: "none",
+                  boxShadow: state.isFocused
+                    ? "inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff"
+                    : "inset 3px 3px 6px #d5d7da, inset -3px -3px 6px #ffffff",
+                  borderRadius: "0.5rem",
+                  padding: "0.5rem",
+                  minHeight: "48px",
+                }),
+                input: (base) => ({
+                  ...base,
+                  color: "#475569",
+                }),
+                singleValue: (base) => ({
+                  ...base,
+                  color: "#475569",
+                }),
+                placeholder: (base) => ({
+                  ...base,
+                  color: "#94a3b8",
+                }),
+                menu: (base) => ({
+                  ...base,
+                  backgroundColor: "#fff",
+                  boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                  borderRadius: "0.5rem",
+                  zIndex: 9999,
+                }),
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.isFocused ? "#f1f5f9" : "transparent",
+                  color: "#475569",
+                  cursor: "pointer",
                 }),
               }}
+              theme={(theme) => ({
+                ...theme,
+                colors: {
+                  ...theme.colors,
+                  primary: "#14b8a6",
+                  primary25: "#f1f5f9",
+                },
+              })}
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="observations">
-              Observaciones
-            </label>
-            <textarea
-              id="observations"
-              className="w-full h-32 px-4 py-2 rounded bg-background text-black focus:outline-none"
-              rows="4"
-              value={newLeadCall.observations}
-              onChange={(e) => setNewLeadCall({ ...newLeadCall, observations: e.target.value })}
-            ></textarea>
-          </div>
+          <ModalTextarea
+            label="Observaciones"
+            id="observations"
+            value={newLeadCall.observations}
+            onChange={(e) => setNewLeadCall({ ...newLeadCall, observations: e.target.value })}
+            rows={4}
+          />
 
           <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="file">
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-2" htmlFor="file">
               Archivo
             </label>
             <input
               type="file"
               id="file"
               onChange={(e) => setSelectedFile(e.target.files[0])}
-              className="w-full cursor-pointer"
+              className="w-full px-4 py-3 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark"
             />
           </div>
 
-          <div className="flex justify-end">
-            <button
-              type="button"
-              className="bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700"
+          <ModalActions>
+            <ModalButton
+              variant="ghost"
               onClick={() => setIsModalOpen(false)}
             >
               Cancelar
-            </button>
-            <button
+            </ModalButton>
+            <ModalButton
+              variant="primary"
               type="submit"
-              className="bg-secondary text-white px-4 py-2 rounded hover:bg-secondaryHover"
+              icon="phone"
             >
               Crear Llamada
-            </button>
-          </div>
+            </ModalButton>
+          </ModalActions>
         </form>
       )}
-    </div>
+    </BaseModal>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import BaseModal, { ModalButton } from "../base-modal.component";
 
 export default function NuevaComparativaModal({ isOpen, onClose }) {
   const router = useRouter();
@@ -88,34 +89,23 @@ export default function NuevaComparativaModal({ isOpen, onClose }) {
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-30 dark:bg-opacity-50 flex justify-center items-center p-4 z-50"
-      onClick={onClose}
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth="max-w-4xl"
+      showCloseButton={true}
     >
-      <div
-        className="neumorphic-card w-full max-w-4xl max-h-[90vh] overflow-y-auto relative"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full neumorphic-button hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all z-10"
-        >
-          <span className="material-icons-outlined">close</span>
-        </button>
-
-        <div className="p-8">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-              Nueva Comparativa
-            </h3>
-            <p className="text-slate-600 dark:text-slate-400 mt-2">
-              Completa el formulario para crear tu comparativa
-            </p>
-          </div>
+      <div className="max-h-[70vh] overflow-y-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+            Nueva Comparativa
+          </h3>
+          <p className="text-slate-600 dark:text-slate-400 mt-2">
+            Completa el formulario para crear tu comparativa
+          </p>
+        </div>
 
           {/* Timeline */}
           <div className="mb-8">
@@ -525,38 +515,27 @@ export default function NuevaComparativaModal({ isOpen, onClose }) {
             )}
           </div>
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8">
-            <button
-              onClick={handleBack}
-              disabled={currentStep === 1}
-              className={`neumorphic-button px-6 py-3 rounded-lg font-semibold transition-all flex items-center ${
-                currentStep === 1
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark"
-              }`}
-            >
-              <span className="material-icons-outlined mr-2">arrow_back</span>
-              Anterior
-            </button>
+        {/* Navigation Buttons */}
+        <div className="flex justify-between mt-8">
+          <ModalButton
+            onClick={handleBack}
+            disabled={currentStep === 1}
+            variant="ghost"
+            icon="arrow_back"
+          >
+            Anterior
+          </ModalButton>
 
-            <button
-              onClick={handleNext}
-              disabled={!isStepValid()}
-              className={`neumorphic-button px-6 py-3 rounded-lg font-semibold transition-all flex items-center ${
-                !isStepValid()
-                  ? "opacity-50 cursor-not-allowed"
-                  : "bg-primary text-white hover:bg-primary/90"
-              }`}
-            >
-              {currentStep === steps.length ? "Comparar" : "Siguiente"}
-              {currentStep !== steps.length && (
-                <span className="material-icons-outlined ml-2">arrow_forward</span>
-              )}
-            </button>
-          </div>
+          <ModalButton
+            onClick={handleNext}
+            disabled={!isStepValid()}
+            variant="primary"
+            icon={currentStep !== steps.length ? "arrow_forward" : undefined}
+          >
+            {currentStep === steps.length ? "Comparar" : "Siguiente"}
+          </ModalButton>
         </div>
       </div>
-    </div>
+    </BaseModal>
   );
 }

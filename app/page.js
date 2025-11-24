@@ -180,9 +180,7 @@ export default function Login() {
 
           {/* Additional Info */}
           <div className="mt-6 text-center">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              © 2025 Spikes CRM/ERP. Todos los derechos reservados.
-            </p>
+
           </div>
         </div>
       </div>
