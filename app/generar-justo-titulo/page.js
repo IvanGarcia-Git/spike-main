@@ -206,7 +206,7 @@ function GenerarJustoTitulo() {
                                         <div
                                             className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
                                                 index + 1 <= currentStep
-                                                    ? 'bg-primary text-white shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark'
+                                                    ? 'bg-primary text-white shadow-neumorphic-light dark:shadow-neumorphic-dark'
                                                     : 'neumorphic-card-inset text-slate-400 dark:text-slate-600'
                                             }`}
                                         >

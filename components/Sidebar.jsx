@@ -15,13 +15,11 @@ import { usePathname } from "next/navigation";
  */
 export default function Sidebar({ userGroupId, isManager }) {
   const pathname = usePathname();
-  const [showTaskMenu, setShowTaskMenu] = useState(false);
-  const [showLeadsMenu, setShowLeadsMenu] = useState(false);
-  const [showToolsMenu, setShowToolsMenu] = useState(false);
+  const [openMenu, setOpenMenu] = useState(null); // null, 'tasks', 'leads', 'tools'
 
-  const toggleTaskMenu = () => setShowTaskMenu((prev) => !prev);
-  const toggleLeadsMenu = () => setShowLeadsMenu((prev) => !prev);
-  const toggleToolsMenu = () => setShowToolsMenu((prev) => !prev);
+  const toggleTaskMenu = () => setOpenMenu(openMenu === 'tasks' ? null : 'tasks');
+  const toggleLeadsMenu = () => setOpenMenu(openMenu === 'leads' ? null : 'leads');
+  const toggleToolsMenu = () => setOpenMenu(openMenu === 'tools' ? null : 'tools');
 
   // Menu item component
   const MenuItem = ({ href, icon, label, isActive }) => (
@@ -36,7 +34,7 @@ export default function Sidebar({ userGroupId, isManager }) {
         }
       `}
     >
-      <span className={`material-icons-outlined ${isActive ? "text-primary" : ""}`}>
+      <span className={`material-icons-outlined flex-shrink-0 ${isActive ? "text-primary" : ""}`}>
         {icon}
       </span>
       <span className={`ml-4 ${isActive ? "font-semibold" : "font-medium"}`}>
@@ -49,21 +47,21 @@ export default function Sidebar({ userGroupId, isManager }) {
   const SubMenuToggle = ({ icon, label, isOpen, onClick }) => (
     <button
       onClick={onClick}
-      className="flex justify-between items-center p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:text-primary hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all duration-200 w-full"
+      className="flex justify-between items-center p-3 pr-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-primary hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all duration-200 w-full"
     >
-      <div className="flex items-center">
-        <span className="material-icons-outlined">{icon}</span>
+      <div className="flex items-center flex-1 min-w-0">
+        <span className="material-icons-outlined flex-shrink-0">{icon}</span>
         <span className="ml-4 font-medium">{label}</span>
       </div>
-      <span className="material-icons-outlined text-sm">
+      <span className="material-icons-outlined text-sm flex-shrink-0 ml-2">
         {isOpen ? "expand_less" : "expand_more"}
       </span>
     </button>
   );
 
   return (
-    <aside className="w-64 flex-shrink-0 p-4 overflow-x-hidden">
-      <div className="flex flex-col h-full bg-background-light dark:bg-background-dark rounded-xl p-6 overflow-x-hidden">
+    <aside className="w-80 flex-shrink-0 p-4 overflow-x-hidden">
+      <div className="flex flex-col h-full bg-background-light dark:bg-background-dark rounded-xl p-5 overflow-x-hidden">
         {/* Logo */}
         <div className="flex items-center mb-10 p-2 h-8">
           <span className="text-2xl font-bold tracking-wider text-primary">
@@ -72,7 +70,7 @@ export default function Sidebar({ userGroupId, isManager }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-grow space-y-2 overflow-y-auto overflow-x-hidden">
+        <nav className="flex-grow space-y-2 overflow-y-auto overflow-x-hidden pr-2">
           {/* Dashboard */}
           <MenuItem
             href="/dashboard"
@@ -109,10 +107,10 @@ export default function Sidebar({ userGroupId, isManager }) {
           <SubMenuToggle
             icon="task_alt"
             label="Tareas"
-            isOpen={showTaskMenu}
+            isOpen={openMenu === 'tasks'}
             onClick={toggleTaskMenu}
           />
-          {showTaskMenu && (
+          {openMenu === 'tasks' && (
             <div className="pl-4 space-y-2">
               <MenuItem
                 href="/agenda"
@@ -127,10 +125,10 @@ export default function Sidebar({ userGroupId, isManager }) {
           <SubMenuToggle
             icon="leaderboard"
             label="Leads"
-            isOpen={showLeadsMenu}
+            isOpen={openMenu === 'leads'}
             onClick={toggleLeadsMenu}
           />
-          {showLeadsMenu && (
+          {openMenu === 'leads' && (
             <div className="pl-4 space-y-2">
               {/* Super Admin only */}
               {userGroupId === 1 && (
@@ -151,7 +149,7 @@ export default function Sidebar({ userGroupId, isManager }) {
               )}
               <MenuItem
                 href="/gestor-lead"
-                icon="person_check"
+                icon="manage_search"
                 label="Gestor Leads"
                 isActive={pathname === "/gestor-lead"}
               />
@@ -162,10 +160,10 @@ export default function Sidebar({ userGroupId, isManager }) {
           <SubMenuToggle
             icon="build"
             label="Herramientas"
-            isOpen={showToolsMenu}
+            isOpen={openMenu === 'tools'}
             onClick={toggleToolsMenu}
           />
-          {showToolsMenu && (
+          {openMenu === 'tools' && (
             <div className="pl-4 space-y-2">
               {/* Super Admin only */}
               {userGroupId === 1 && (
@@ -184,8 +182,8 @@ export default function Sidebar({ userGroupId, isManager }) {
               />
               <MenuItem
                 href="/studio"
-                icon="edit_document"
-                label="Contratos Colaboración"
+                icon="edit_note"
+                label="Studio Contratos"
                 isActive={pathname === "/studio"}
               />
             </div>
@@ -206,16 +204,6 @@ export default function Sidebar({ userGroupId, isManager }) {
             label="Liquidaciones"
             isActive={pathname === "/liquidaciones"}
           />
-
-          {/* Usuarios (Manager only) */}
-          {isManager && (
-            <MenuItem
-              href="/usuarios"
-              icon="manage_accounts"
-              label="Usuarios"
-              isActive={pathname === "/usuarios"}
-            />
-          )}
         </nav>
       </div>
     </aside>

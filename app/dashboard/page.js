@@ -527,49 +527,99 @@ export default function Dashboard() {
         <div className="space-y-6">
           {/* Métricas financieras */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Ingresos Totales */}
             <div className="neumorphic-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className="material-icons-outlined text-4xl text-green-500">
-                  trending_up
-                </span>
-                <div className="text-right">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Ingresos Totales</p>
-                  <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">€25,840</p>
-                  <p className="text-xs text-green-500 flex items-center justify-end mt-1">
-                    <span className="material-icons-outlined text-sm">arrow_upward</span>
-                    15% vs mes anterior
-                  </p>
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 rounded-full neumorphic-card-inset p-1 flex items-center justify-center mr-4">
+                    <span className="material-icons-outlined text-3xl text-slate-500">trending_up</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800 dark:text-slate-100">Ingresos Totales</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Este mes</p>
+                  </div>
                 </div>
+                <div className="text-right">
+                  <p className="text-3xl font-bold text-green-500">85%</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Meta</p>
+                </div>
+              </div>
+              <div className="space-y-1 text-xs text-slate-500 dark:text-slate-400 mb-2">
+                <div className="flex justify-between"><span>Facturado</span><span>€25,840</span></div>
+                <div className="flex justify-between"><span>Objetivo</span><span>€30,000</span></div>
+              </div>
+              <div className="neumorphic-progress-track h-2.5">
+                <div className="bg-primary h-full rounded-full" style={{width: '85%'}}></div>
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <p className="font-bold text-lg text-slate-800 dark:text-slate-200">€25,840</p>
+                <p className="text-sm text-green-500 flex items-center">
+                  <span className="material-icons-outlined text-base">arrow_upward</span>15%
+                </p>
               </div>
             </div>
 
+            {/* Cobrado */}
             <div className="neumorphic-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className="material-icons-outlined text-4xl text-blue-500">
-                  account_balance_wallet
-                </span>
-                <div className="text-right">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Cobrado</p>
-                  <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">€18,200</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    70.5% del total
-                  </p>
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 rounded-full neumorphic-card-inset p-1 flex items-center justify-center mr-4">
+                    <span className="material-icons-outlined text-3xl text-slate-500">account_balance_wallet</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800 dark:text-slate-100">Cobrado</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Efectivo</p>
+                  </div>
                 </div>
+                <div className="text-right">
+                  <p className="text-3xl font-bold text-blue-500">70%</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Del total</p>
+                </div>
+              </div>
+              <div className="space-y-1 text-xs text-slate-500 dark:text-slate-400 mb-2">
+                <div className="flex justify-between"><span>Cobrado</span><span>€18,200</span></div>
+                <div className="flex justify-between"><span>Total</span><span>€25,840</span></div>
+              </div>
+              <div className="neumorphic-progress-track h-2.5">
+                <div className="bg-blue-500 h-full rounded-full" style={{width: '70.5%'}}></div>
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <p className="font-bold text-lg text-slate-800 dark:text-slate-200">€18,200</p>
+                <p className="text-sm text-green-500 flex items-center">
+                  <span className="material-icons-outlined text-base">arrow_upward</span>12%
+                </p>
               </div>
             </div>
 
+            {/* Pendiente */}
             <div className="neumorphic-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className="material-icons-outlined text-4xl text-yellow-500">
-                  hourglass_empty
-                </span>
-                <div className="text-right">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Pendiente</p>
-                  <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">€7,640</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    29.5% del total
-                  </p>
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 rounded-full neumorphic-card-inset p-1 flex items-center justify-center mr-4">
+                    <span className="material-icons-outlined text-3xl text-slate-500">hourglass_empty</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800 dark:text-slate-100">Pendiente</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Por cobrar</p>
+                  </div>
                 </div>
+                <div className="text-right">
+                  <p className="text-3xl font-bold text-yellow-500">30%</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Del total</p>
+                </div>
+              </div>
+              <div className="space-y-1 text-xs text-slate-500 dark:text-slate-400 mb-2">
+                <div className="flex justify-between"><span>Pendiente</span><span>€7,640</span></div>
+                <div className="flex justify-between"><span>Vencido</span><span>€1,240</span></div>
+              </div>
+              <div className="neumorphic-progress-track h-2.5">
+                <div className="bg-yellow-500 h-full rounded-full" style={{width: '29.5%'}}></div>
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <p className="font-bold text-lg text-slate-800 dark:text-slate-200">€7,640</p>
+                <p className="text-sm text-red-500 flex items-center">
+                  <span className="material-icons-outlined text-base">arrow_downward</span>3%
+                </p>
               </div>
             </div>
           </div>

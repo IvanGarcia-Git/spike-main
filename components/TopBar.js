@@ -8,14 +8,15 @@ import * as jose from "jose";
 
 export default function TopBar({ userGroupId, isManager }) {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isAppsOpen, setIsAppsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [profileImageUri, setProfileImageUri] = useState("/avatar.png");
   const [userEmail, setUserEmail] = useState("");
   const [userUuid, setUserUuid] = useState("");
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const userDropdownRef = useRef(null);
-  const notificationsRef = useRef(null);
   const appsRef = useRef(null);
+  const settingsRef = useRef(null);
   const router = useRouter();
 
   const fetchProfilePicture = async (userId) => {
@@ -44,11 +45,11 @@ export default function TopBar({ userGroupId, isManager }) {
       if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
         setIsUserDropdownOpen(false);
       }
-      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
-        setIsNotificationsOpen(false);
-      }
       if (appsRef.current && !appsRef.current.contains(event.target)) {
         setIsAppsOpen(false);
+      }
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setIsSettingsOpen(false);
       }
     };
 
@@ -70,6 +71,10 @@ export default function TopBar({ userGroupId, isManager }) {
         console.error("Error al decodificar el token:", error);
       }
     }
+
+    // Load unread notifications count from localStorage
+    const count = localStorage.getItem("totalUnreadNotifications");
+    setUnreadNotifications(parseInt(count) || 0);
   }, []);
 
   return (
@@ -280,94 +285,165 @@ export default function TopBar({ userGroupId, isManager }) {
           </div>
 
           {/* Settings Button */}
-          <button className="w-12 h-12 rounded-full neumorphic-button flex items-center justify-center hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all">
-            <span className="material-icons-outlined text-slate-600 dark:text-slate-300">
-              settings
-            </span>
-          </button>
+          {isManager && (
+            <div ref={settingsRef} className="relative">
+              <button
+                className="w-12 h-12 rounded-full neumorphic-button flex items-center justify-center hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsSettingsOpen((prev) => !prev);
+                  setIsAppsOpen(false);
+                  setIsNotificationsOpen(false);
+                  setIsUserDropdownOpen(false);
+                }}
+              >
+                <span className="material-icons-outlined text-slate-600 dark:text-slate-300">
+                  settings
+                </span>
+              </button>
+
+              {isSettingsOpen && (
+                <div className="absolute right-0 mt-4 w-72 neumorphic-card bg-background-light dark:bg-background-dark rounded-xl shadow-xl p-4 z-50 max-h-[80vh] overflow-y-auto">
+                  <div className="mb-3">
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-3">
+                      Configuración
+                    </h3>
+                  </div>
+                  <div className="space-y-1">
+                    <Link
+                      href="/usuarios"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                      onClick={() => setIsSettingsOpen(false)}
+                    >
+                      <span className="material-icons-outlined text-primary text-xl">
+                        manage_accounts
+                      </span>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Usuarios
+                      </span>
+                    </Link>
+
+                    {userGroupId === 1 && (
+                      <>
+                        <Link
+                          href="/companies"
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                          onClick={() => setIsSettingsOpen(false)}
+                        >
+                          <span className="material-icons-outlined text-primary text-xl">
+                            apartment
+                          </span>
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Compañías
+                          </span>
+                        </Link>
+                        <Link
+                          href="/canales"
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                          onClick={() => setIsSettingsOpen(false)}
+                        >
+                          <span className="material-icons-outlined text-primary text-xl">
+                            valve
+                          </span>
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Canales
+                          </span>
+                        </Link>
+                        <Link
+                          href="/estados"
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                          onClick={() => setIsSettingsOpen(false)}
+                        >
+                          <span className="material-icons-outlined text-primary text-xl">
+                            done_all
+                          </span>
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Estados
+                          </span>
+                        </Link>
+                        <Link
+                          href="/origins"
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                          onClick={() => setIsSettingsOpen(false)}
+                        >
+                          <span className="material-icons-outlined text-primary text-xl">
+                            local_offer
+                          </span>
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Orígenes
+                          </span>
+                        </Link>
+                        <Link
+                          href="/users-visibility"
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                          onClick={() => setIsSettingsOpen(false)}
+                        >
+                          <span className="material-icons-outlined text-primary text-xl">
+                            visibility
+                          </span>
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Visibilidad
+                          </span>
+                        </Link>
+                        <Link
+                          href="/contract-customize"
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                          onClick={() => setIsSettingsOpen(false)}
+                        >
+                          <span className="material-icons-outlined text-primary text-xl">
+                            view_column
+                          </span>
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Personalizar Columnas
+                          </span>
+                        </Link>
+                        <Link
+                          href="/prioridad-leads"
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                          onClick={() => setIsSettingsOpen(false)}
+                        >
+                          <span className="material-icons-outlined text-primary text-xl">
+                            low_priority
+                          </span>
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Prioridad de Leads
+                          </span>
+                        </Link>
+                        <Link
+                          href="/notifications-settings"
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                          onClick={() => setIsSettingsOpen(false)}
+                        >
+                          <span className="material-icons-outlined text-primary text-xl">
+                            notifications_active
+                          </span>
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Ajustes de Notificaciones
+                          </span>
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Notifications Button */}
-          <div ref={notificationsRef} className="relative">
-            <button
-              className="w-12 h-12 rounded-full neumorphic-button flex items-center justify-center hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all relative"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsNotificationsOpen((prev) => !prev);
-                setIsAppsOpen(false);
-                setIsUserDropdownOpen(false);
-              }}
-            >
-              <span className="material-icons-outlined text-slate-600 dark:text-slate-300">
-                notifications
-              </span>
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-
-            {isNotificationsOpen && (
-              <div className="absolute right-0 mt-4 w-80 neumorphic-card bg-background-light dark:bg-background-dark rounded-xl shadow-xl p-4 z-50">
-                <div className="mb-3">
-                  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-1">
-                    Notificaciones
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Tienes 3 notificaciones nuevas
-                  </p>
-                </div>
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  <div className="neumorphic-card-inset p-3 rounded-lg hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all cursor-pointer">
-                    <div className="flex items-start gap-3">
-                      <span className="material-icons-outlined text-blue-500 text-xl">
-                        info
-                      </span>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                          Nueva actualización disponible
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          Hace 5 minutos
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="neumorphic-card-inset p-3 rounded-lg hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all cursor-pointer">
-                    <div className="flex items-start gap-3">
-                      <span className="material-icons-outlined text-green-500 text-xl">
-                        check_circle
-                      </span>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                          Contrato aprobado
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          Hace 1 hora
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="neumorphic-card-inset p-3 rounded-lg hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all cursor-pointer">
-                    <div className="flex items-start gap-3">
-                      <span className="material-icons-outlined text-orange-500 text-xl">
-                        warning
-                      </span>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                          Revisión pendiente
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          Hace 2 horas
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
-                  <button className="w-full text-center text-xs font-medium text-primary hover:underline">
-                    Ver todas las notificaciones
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          <Link href="/notificaciones" passHref>
+            <div className="relative cursor-pointer">
+              <button className="w-12 h-12 rounded-full neumorphic-button flex items-center justify-center hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all">
+                <span className="material-icons-outlined text-slate-600 dark:text-slate-300">
+                  notifications
+                </span>
+              </button>
+              {unreadNotifications > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
+                  {unreadNotifications}
+                </span>
+              )}
+            </div>
+          </Link>
 
           {/* User Avatar */}
           <div ref={userDropdownRef} className="relative">
@@ -377,7 +453,7 @@ export default function TopBar({ userGroupId, isManager }) {
                 e.stopPropagation();
                 setIsUserDropdownOpen((prev) => !prev);
                 setIsAppsOpen(false);
-                setIsNotificationsOpen(false);
+                setIsSettingsOpen(false);
               }}
             >
               <img
