@@ -108,80 +108,80 @@ export default function Companies() {
   };
 
   return (
-    <div className="flex justify-center items-start min-h-screen p-8">
-      <div className="w-full max-w-5xl mx-auto p-4 neumorphic-card rounded-lg mt-24">
-        <div className="flex justify-between items-center mb-4">
+    <div className="p-6 space-y-6">
+      <div className="neumorphic-card p-6">
+        <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Compañías</h2>
           <button
-            className="bg-secondary text-white px-4 py-2 rounded hover:bg-secondaryHover shadow-md hover:shadow-lg transition-all"
+            className="px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium"
             onClick={openModal}
           >
             Añadir Compañía
           </button>
         </div>
 
-        <div className="neumorphic-card rounded-lg overflow-hidden">
-          <table className="min-w-full">
-            <thead className="neumorphic-card-inset">
-              <tr>
-                <th className="px-4 py-2 text-left text-slate-700 dark:text-slate-300">Imagen</th>
-                <th className="px-4 py-2 text-left text-slate-700 dark:text-slate-300">Nombre</th>
-                <th className="px-4 py-2 text-left text-slate-700 dark:text-slate-300">Tipo</th>
-                <th className="px-4 py-2 text-center text-slate-700 dark:text-slate-300">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {companies.map((company) => (
-                <tr key={company.id} className="hover:bg-slate-100 dark:hover:bg-slate-800">
-                  <td className="px-4 py-2">
-                    <img
-                      src={company.imageUri}
-                      alt={company.name}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                  </td>
-                  <td className="px-4 py-2 text-slate-800 dark:text-slate-200">{company.name}</td>
-
-                  <td className="px-4 py-2">
-                  <span
-                    className={`${
-                      company.type === "Gas"
-                        ? "bg-yellow-500"
-                        : company.type === "Telefonía"
-                        ? "bg-purple-500"
-                        : "bg-blue-500"
-                    } text-white px-4 py-1 rounded-full text-sm font-semibold`}
-                  >
-                    {company.type}
-                  </span>
+        <table className="w-full text-left">
+          <thead className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <tr>
+              <th className="p-3">Imagen</th>
+              <th className="p-3">Nombre</th>
+              <th className="p-3">Tipo</th>
+              <th className="p-3">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {companies.map((company) => (
+              <tr key={company.id} className="table-row-divider">
+                <td className="p-3">
+                  <img
+                    src={company.imageUri}
+                    alt={company.name}
+                    className="w-16 h-16 object-cover rounded"
+                  />
                 </td>
+                <td className="p-3 font-medium text-slate-800 dark:text-slate-200">{company.name}</td>
 
-                  <td className="px-4 py-2 text-center">
+                <td className="p-3">
+                <span
+                  className={`${
+                    company.type === "Gas"
+                      ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
+                      : company.type === "Telefonía"
+                      ? "bg-purple-500/20 text-purple-600 dark:text-purple-400"
+                      : "bg-blue-500/20 text-blue-600 dark:text-blue-400"
+                  } px-3 py-1 rounded-full text-xs font-semibold`}
+                >
+                  {company.type}
+                </span>
+              </td>
+
+                <td className="p-3">
+                  <div className="flex space-x-2">
                     <button
-                      className="text-blue-500 hover:text-blue-700 mr-4"
+                      className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-400 hover:text-primary"
                       onClick={() => handleEditCompany(company.uuid)}
                     >
-                      <FiEdit size={22} />
+                      <FiEdit size={18} />
                     </button>
                     <button
-                      className="text-red-500 hover:text-red-700"
+                      className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-400 hover:text-primary"
                       onClick={() => handleDeleteCompany(company.id)}
                     >
-                      <FiTrash size={22} />
+                      <FiTrash size={18} />
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* Modal para crear nueva compañía */}
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 lg:ml-72 z-50">
-          <div className="neumorphic-card p-6 rounded-xl w-full max-w-lg">
-            <h3 className="text-xl font-bold mb-4 text-slate-800 dark:text-slate-100">Crear nueva compañía</h3>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center lg:ml-72">
+          <div className="modal-card p-6 w-full max-w-lg">
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6">Crear nueva compañía</h3>
             <form onSubmit={handleAddCompany}>
               <div className="mb-4">
                 <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="name">
@@ -225,17 +225,17 @@ export default function Companies() {
                   onChange={(e) => setNewCompany({ ...newCompany, image: e.target.files[0] })}
                 />
               </div>
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-3">
                 <button
                   type="button"
-                  className="bg-red-600 text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
+                  className="px-5 py-3 rounded-lg neumorphic-button text-slate-700 dark:text-slate-300 font-medium"
                   onClick={closeModal}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="bg-secondary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
+                  className="px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium"
                 >
                   Guardar
                 </button>

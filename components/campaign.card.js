@@ -526,24 +526,26 @@ export default function CampaignCard({
       <div className="flex flex-wrap items-center gap-3 justify-between mb-6">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">{campaign.name}</h2>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <span
-              className={`px-3 py-1 rounded-lg text-sm font-semibold ${
-                campaign.type === "Automatic" ? "bg-purple-500 text-white" : "bg-green-500 text-white"
+              className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                campaign.type === "Automatic"
+                  ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                  : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-400"
               }`}
             >
-              {campaign.type === "Automatic" ? "Automática" : campaign.type}
+              {campaign.type === "Automatic" ? "Auto" : "Manual"}
             </span>
             {campaign.source && (
               <span
-                className={`px-3 py-1 rounded-lg text-sm font-semibold ${
+                className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                   campaign.source === "Meta"
-                    ? "bg-blue-500 text-white"
+                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                     : campaign.source === "TikTok"
-                    ? "bg-pink-500 text-white"
+                    ? "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400"
                     : campaign.source === "Landing"
-                    ? "bg-secondary text-white"
-                    : "bg-slate-500 text-white"
+                    ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                    : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-400"
                 }`}
               >
                 {campaign.source}
@@ -605,21 +607,21 @@ export default function CampaignCard({
       {/* Tabla de leads con scroll interno */}
       <div className="overflow-x-auto max-h-[600px] overflow-y-auto mb-4 neumorphic-card-inset rounded-lg">
         <table className="min-w-full text-slate-800 dark:text-slate-100 table-fixed">
-          <thead className="bg-background-light dark:bg-background-dark sticky top-0">
+          <thead className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-background-light dark:bg-background-dark sticky top-0">
             <tr>
-              <th className="px-4 py-3 text-left font-semibold min-w-36">Fecha</th>
-              <th className="px-4 py-3 text-left font-semibold min-w-44">Nombre</th>
-              <th className="px-4 py-3 text-left font-semibold min-w-36">Teléfono</th>
-              <th className="px-4 py-3 text-left font-semibold min-w-56">Agente</th>
-              <th className="px-4 py-3 text-center font-semibold">Docs</th>
-              <th className="px-4 py-3 text-center font-semibold"></th>
+              <th className="p-3 text-left min-w-36">Fecha</th>
+              <th className="p-3 text-left min-w-44">Nombre</th>
+              <th className="p-3 text-left min-w-36">Teléfono</th>
+              <th className="p-3 text-left min-w-56">Agente</th>
+              <th className="p-3 text-center">Docs</th>
+              <th className="p-3 text-center"></th>
             </tr>
           </thead>
           <tbody>
             {filteredLeads.map((lead) => (
-              <tr key={lead.id} className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+              <tr key={lead.id} className="table-row-divider hover:bg-slate-50 dark:hover:bg-slate-800/50">
                 <td
-                  className="px-4 py-3 cursor-pointer"
+                  className="p-3 cursor-pointer text-slate-600 dark:text-slate-400"
                   onClick={(e) => handleCellClick(e, lead.id, "createdAt")}
                 >
                   {isEditing === lead.id ? (
@@ -641,7 +643,7 @@ export default function CampaignCard({
                 </td>
 
                 <td
-                  className="px-4 py-3 cursor-pointer"
+                  className="p-3 cursor-pointer font-medium text-slate-800 dark:text-slate-200"
                   onClick={(e) => handleCellClick(e, lead.id, "fullName")}
                 >
                   {isEditing === lead.id ? (
@@ -659,7 +661,7 @@ export default function CampaignCard({
                 </td>
 
                 <td
-                  className="px-4 py-3 cursor-pointer"
+                  className="p-3 cursor-pointer text-slate-600 dark:text-slate-400"
                   onClick={(e) => handleCellClick(e, lead.id, "phoneNumber")}
                 >
                   {isEditing === lead.id ? (
@@ -677,7 +679,7 @@ export default function CampaignCard({
                 </td>
 
                 <td
-                  className="px-4 py-3 cursor-pointer"
+                  className="p-3 cursor-pointer text-slate-600 dark:text-slate-400"
                   onClick={(e) => handleCellClick(e, lead.id, "assignedUserName")}
                 >
                   {isEditing === lead.id ? (
@@ -728,22 +730,22 @@ export default function CampaignCard({
                   )}
                 </td>
 
-                <td className="px-4 py-3 text-center">
+                <td className="p-3 text-center">
                   <button
                     onClick={() => setViewingLeadDocs(lead)}
-                    className="neumorphic-button p-2 rounded-lg text-primary transition-all"
+                    className="w-8 h-8 rounded-lg neumorphic-button flex items-center justify-center"
                     title="Ver/Añadir documentos"
                   >
-                    <span className="material-icons-outlined">attach_file</span>
+                    <span className="material-icons-outlined text-primary text-sm">attach_file</span>
                   </button>
                 </td>
 
-                <td className="px-4 py-3 text-center">
+                <td className="p-3 text-center">
                   <button
                     onClick={() => handleDeleteLead(lead.uuid)}
-                    className="neumorphic-button p-2 rounded-lg text-red-500 transition-all"
+                    className="w-8 h-8 rounded-lg neumorphic-button flex items-center justify-center"
                   >
-                    <span className="material-icons-outlined">delete</span>
+                    <span className="material-icons-outlined text-red-500 text-sm">delete</span>
                   </button>
                 </td>
               </tr>
@@ -772,9 +774,10 @@ export default function CampaignCard({
         )}
 
         <button
-          className="neumorphic-button bg-secondary text-white px-4 py-2 rounded-lg font-semibold hover:bg-secondary/90 transition-all"
+          className="neumorphic-button bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary/90 transition-all flex items-center gap-2"
           onClick={handleOpenModal}
         >
+          <span className="material-icons-outlined text-sm">group_add</span>
           Vincular a grupo
         </button>
 
@@ -788,119 +791,136 @@ export default function CampaignCard({
 
       {/* Modal de crear/editar lead */}
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 lg:ml-72 p-4">
-          <div className="neumorphic-card p-6 w-[95%] max-w-5xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
-                {editableLead.id ? "Editar Lead" : "Crear Nuevo Lead"}
-              </h3>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="modal-card p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
+                {editableLead.id ? "Editar Lead" : "Nuevo Lead"}
+              </h2>
               <button
                 onClick={handleModalClose}
-                className="neumorphic-button p-2 rounded-lg transition-all"
+                className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
               >
                 <span className="material-icons-outlined">close</span>
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              {/* Fecha */}
-              <div className="flex flex-col">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Fecha</label>
-                <input
-                  type="date"
-                  name="createdAt"
-                  value={
-                    editableLead.createdAt
-                      ? new Date(editableLead.createdAt).toISOString().split("T")[0]
-                      : ""
-                  }
-                  onChange={handleInputChange}
-                  className="neumorphic-card-inset px-3 py-2 rounded-lg text-center text-sm w-full bg-transparent"
-                />
+
+            {/* Formulario */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Nombre */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nombre</label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    placeholder="Nombre completo"
+                    value={editableLead.fullName || ""}
+                    onChange={handleInputChange}
+                    className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
+                  />
+                </div>
+
+                {/* Teléfono */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Teléfono</label>
+                  <input
+                    type="text"
+                    name="phoneNumber"
+                    placeholder="Número de teléfono"
+                    value={editableLead.phoneNumber || ""}
+                    onChange={handleInputChange}
+                    className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
+                  />
+                </div>
               </div>
 
-              {/* Nombre */}
-              <div className="flex flex-col">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nombre</label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={editableLead.fullName || ""}
-                  onChange={handleInputChange}
-                  className="neumorphic-card-inset px-3 py-2 rounded-lg text-sm w-full bg-transparent"
-                />
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Fecha */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Fecha</label>
+                  <input
+                    type="date"
+                    name="createdAt"
+                    value={
+                      editableLead.createdAt
+                        ? new Date(editableLead.createdAt).toISOString().split("T")[0]
+                        : ""
+                    }
+                    onChange={handleInputChange}
+                    className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
+                  />
+                </div>
 
-              {/* Teléfono */}
-              <div className="flex flex-col">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Teléfono</label>
-                <input
-                  type="text"
-                  name="phoneNumber"
-                  value={editableLead.phoneNumber || ""}
-                  onChange={handleInputChange}
-                  className="neumorphic-card-inset px-3 py-2 rounded-lg text-sm w-full bg-transparent"
-                />
-              </div>
-
-              {/* Factura */}
-              <div className="flex flex-col">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Factura</label>
-                {editableLead.billUri ? (
-                  <a
-                    href={`${editableLead.billUri}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="neumorphic-card-inset px-3 py-2 rounded-lg text-center text-sm text-primary underline w-full"
+                {/* Gestor */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Gestor</label>
+                  <select
+                    value={editableLead.assignedUserName || ""}
+                    onChange={(e) => {
+                      const selectedValue = e.target.value;
+                      setEditableLead({
+                        ...editableLead,
+                        assignedUserName: selectedValue === "null" ? null : selectedValue,
+                      });
+                    }}
+                    className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
                   >
-                    Ver archivo
-                  </a>
-                ) : (
-                  <div className="flex items-center">
-                    <input
-                      type="file"
-                      name="billFile"
-                      onChange={handleFileUpload}
-                      className="neumorphic-card-inset rounded-lg text-sm cursor-pointer w-full p-2"
-                    />
-                  </div>
-                )}
-              </div>
+                    <option value="null">No asignado</option>
+                    {allUsers.map((user) => {
+                      const userFullName = `${user.name} ${user.firstSurname} ${
+                        user.secondSurname || ""
+                      }`.trim();
+                      return (
+                        <option key={user.id} value={userFullName}>
+                          {userFullName}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
 
-              {/* Gestor */}
-              <div className="flex flex-col">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Gestor</label>
-                <select
-                  value={editableLead.assignedUserName || ""}
-                  onChange={(e) => {
-                    const selectedValue = e.target.value;
-
-                    setEditableLead({
-                      ...editableLead,
-                      assignedUserName: selectedValue === "null" ? null : selectedValue,
-                    });
-                  }}
-                  className="neumorphic-card-inset px-3 py-2 rounded-lg text-center text-sm w-full bg-transparent"
-                >
-                  <option value="null">No asignado</option>
-                  {allUsers.map((user) => {
-                    const userFullName = `${user.name} ${user.firstSurname} ${
-                      user.secondSurname || ""
-                    }`.trim();
-                    return (
-                      <option key={user.id} value={userFullName}>
-                        {userFullName}
-                      </option>
-                    );
-                  })}
-                </select>
+                {/* Factura */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Documento</label>
+                  {editableLead.billUri ? (
+                    <a
+                      href={`${editableLead.billUri}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 neumorphic-card-inset px-4 py-3 rounded-lg text-primary font-medium"
+                    >
+                      <span className="material-icons-outlined text-sm">description</span>
+                      Ver archivo
+                    </a>
+                  ) : (
+                    <div className="neumorphic-card-inset px-4 py-3 rounded-lg">
+                      <input
+                        type="file"
+                        name="billFile"
+                        onChange={handleFileUpload}
+                        className="text-sm text-slate-600 dark:text-slate-400 cursor-pointer w-full file:mr-3 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-            <div className={`flex mt-6 ${!editableLead.id ? "justify-center" : "justify-end"}`}>
+
+            {/* Botones */}
+            <div className="flex gap-3 mt-6">
               <button
                 onClick={handleSaveChanges}
-                className="neumorphic-button bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-dark transition-all"
+                className="flex-1 neumorphic-button bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
               >
-                Crear Lead
+                {editableLead.id ? "Guardar Cambios" : "Crear Lead"}
+              </button>
+              <button
+                onClick={handleModalClose}
+                className="flex-1 neumorphic-button px-6 py-3 rounded-lg text-slate-600 dark:text-slate-400 font-semibold"
+              >
+                Cancelar
               </button>
             </div>
           </div>

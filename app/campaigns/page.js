@@ -164,9 +164,9 @@ export default function CampaignsPage() {
         </div>
         <button
           onClick={openModal}
-          className="neumorphic-button flex items-center justify-center p-4 rounded-lg bg-primary text-white font-semibold hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all"
+          className="px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium flex items-center gap-2"
         >
-          <span className="material-icons-outlined mr-2">add</span>
+          <span className="material-icons-outlined">add</span>
           Nueva Campaña
         </button>
       </div>
@@ -183,16 +183,16 @@ export default function CampaignsPage() {
             placeholder="Buscar en todos los leads"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full pl-10 pr-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
           />
         </div>
 
         {/* Toggle de filtros */}
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="w-full neumorphic-button flex justify-between items-center p-3 rounded-lg mb-4 transition-all"
+          className="w-full px-5 py-3 rounded-lg neumorphic-button text-slate-700 dark:text-slate-300 font-medium flex justify-between items-center transition-all"
         >
-          <span className="font-semibold text-slate-800 dark:text-slate-100">Filtros Avanzados</span>
+          <span className="font-semibold">Filtros Avanzados</span>
           <span className={`material-icons-outlined text-primary transition-transform ${showFilters ? 'rotate-180' : ''}`}>
             expand_more
           </span>
@@ -246,7 +246,7 @@ export default function CampaignsPage() {
                       value === "true" ? true : value === "false" ? false : null
                     );
                   }}
-                  className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
                 >
                   <option value="">Todos</option>
                   <option value="true">Sí</option>
@@ -272,7 +272,7 @@ export default function CampaignsPage() {
                       value === "true" ? true : value === "false" ? false : null
                     );
                   }}
-                  className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
                 >
                   <option value="">Todos</option>
                   <option value="true">Sí</option>
@@ -287,7 +287,7 @@ export default function CampaignsPage() {
                 <select
                   value={selectedCampaign}
                   onChange={(e) => setSelectedCampaign(e.target.value)}
-                  className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
                 >
                   <option value="">Todas</option>
                   {[...new Set(campaigns.map((campaign) => campaign.name))].map(
@@ -365,7 +365,7 @@ export default function CampaignsPage() {
       <RepeatedLeads />
 
       {isCommunicationModalOpen && communications[communicationsCurrentIndex] && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 backdrop-blur-md">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
           <CommunicationModal
             isModalOpen={isCommunicationModalOpen}
             setIsModalOpen={() => {

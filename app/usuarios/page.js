@@ -219,9 +219,9 @@ export default function Users() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
       {/* Search and Add Button */}
-      <div className="neumorphic-card p-6 mb-8">
+      <div className="neumorphic-card p-6">
         <div className="flex justify-between items-center">
           <div className="relative w-full max-w-sm">
             <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
@@ -230,14 +230,14 @@ export default function Users() {
             <input
               type="text"
               placeholder="Buscar..."
-              className="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm bg-transparent text-slate-700 dark:text-slate-300"
+              className="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm bg-transparent text-slate-800 dark:text-slate-200"
               value={searchQuery}
               onChange={handleSearch}
             />
           </div>
           <button
             onClick={handleCreateUser}
-            className="px-5 py-3 rounded-lg neumorphic-button active font-semibold text-primary bg-primary/10 dark:bg-primary/20"
+            className="px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium"
           >
             Añadir usuario
           </button>
@@ -276,7 +276,7 @@ export default function Users() {
                       </Link>
                     </div>
                   </td>
-                  <td className="p-3 font-medium text-slate-800 dark:text-slate-200">
+                  <td className="p-3 text-slate-600 dark:text-slate-400">
                     {user.email}
                   </td>
                   <td className="p-3">

@@ -176,10 +176,10 @@ const ConfigureColumnsPage = () => {
   const TabButton = ({ tabName, label }) => (
     <button
       onClick={() => setActiveTab(tabName)}
-      className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+      className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
         activeTab === tabName
-          ? "bg-primary text-white shadow-md"
-          : "shadow-neumorphic-light dark:shadow-neumorphic-dark hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark text-slate-700 dark:text-slate-300"
+          ? "neumorphic-button active text-primary bg-primary/10 dark:bg-primary/20"
+          : "neumorphic-button text-slate-700 dark:text-slate-300"
       }`}
     >
       {label}
@@ -236,7 +236,7 @@ const ConfigureColumnsPage = () => {
               </div>
               <button
                 onClick={saveConfiguration}
-                className="mt-4 bg-primary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium self-start"
+                className="mt-4 px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium self-start"
               >
                 Guardar Configuración
               </button>

@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import { FiX } from "react-icons/fi";
 import { getCookie } from "cookies-next";
 import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
 
@@ -87,35 +86,66 @@ export default function GroupLinkModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center lg:ml-72">
-      <div className="bg-white p-6 rounded-lg w-full max-w-md">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Vincular a grupo</h3>
-          <button onClick={onClose} className="text-gray-500">
-            <FiX size={20} />
-          </button>
-        </div>
-        <div className="mb-4 max-h-60 overflow-y-auto">
-          {groups.map((groupData) => (
-            <label key={groupData.group.id} className="flex items-center mb-2">
-              <input
-                type="checkbox"
-                checked={selectedGroups.includes(groupData.group.id)}
-                onChange={() => handleCheckboxChange(groupData.group.id)}
-                className="mr-2"
-              />
-              <span>{groupData.group.name}</span>
-            </label>
-          ))}
-        </div>
-        <div className="flex justify-end">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="modal-card p-6 w-full max-w-md">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full neumorphic-button flex items-center justify-center">
+              <span className="material-icons-outlined text-primary">group</span>
+            </div>
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
+              Vincular a Grupo
+            </h2>
+          </div>
           <button
-            onClick={handleClose}
-            className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"
+            onClick={onClose}
+            className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
           >
-            Salir
+            <span className="material-icons-outlined">close</span>
           </button>
         </div>
+
+        {/* Lista de grupos */}
+        <div className="mb-6 max-h-64 overflow-y-auto space-y-2 pr-2">
+          {groups.length === 0 ? (
+            <div className="text-center py-8">
+              <span className="material-icons-outlined text-4xl text-slate-300 dark:text-slate-600 mb-2 block">
+                folder_off
+              </span>
+              <p className="text-slate-500 dark:text-slate-400">No hay grupos disponibles</p>
+            </div>
+          ) : (
+            groups.map((groupData) => (
+              <label
+                key={groupData.group.id}
+                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                  selectedGroups.includes(groupData.group.id)
+                    ? "neumorphic-card-inset"
+                    : "neumorphic-card hover:scale-[1.01]"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedGroups.includes(groupData.group.id)}
+                  onChange={() => handleCheckboxChange(groupData.group.id)}
+                  className="w-5 h-5"
+                />
+                <span className="font-medium text-slate-700 dark:text-slate-300">
+                  {groupData.group.name}
+                </span>
+              </label>
+            ))
+          )}
+        </div>
+
+        {/* Botón cerrar */}
+        <button
+          onClick={handleClose}
+          className="w-full neumorphic-button px-6 py-3 rounded-lg text-slate-600 dark:text-slate-400 font-semibold transition-colors"
+        >
+          Cerrar
+        </button>
       </div>
     </div>
   );

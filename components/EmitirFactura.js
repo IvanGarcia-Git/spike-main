@@ -343,7 +343,7 @@ export default function EmitirFactura() {
                       setCustomInputMode(true);
                       setSelectedChannel("");
                     }}
-                    className="neumorphic-button p-1.5 rounded-lg bg-primary text-white hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all"
+                    className="p-2 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90"
                   >
                     <span className="material-icons-outlined text-sm">add</span>
                   </button>
@@ -360,7 +360,7 @@ export default function EmitirFactura() {
                       setCustomChannelName(e.target.value);
                       setSelectedChannel(e.target.value);
                     }}
-                    className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
+                    className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400"
                   />
                   <button
                     type="button"
@@ -380,7 +380,7 @@ export default function EmitirFactura() {
                   id="contact"
                   value={selectedChannel}
                   onChange={(e) => setSelectedChannel(e.target.value)}
-                  className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
                 >
                   <option disabled value="">
                     Seleccionar
@@ -404,7 +404,7 @@ export default function EmitirFactura() {
                 id="paymentMethod"
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
               >
                 <option disabled value="">
                   Seleccionar
@@ -427,7 +427,7 @@ export default function EmitirFactura() {
                 value={invoiceNumber}
                 onChange={(e) => setInvoiceNumber(e.target.value)}
                 placeholder="F00025"
-                className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
+                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400"
               />
             </div>
 
@@ -442,7 +442,7 @@ export default function EmitirFactura() {
                 id="invoiceDate"
                 value={invoiceDate}
                 onChange={(e) => setInvoiceDate(e.target.value)}
-                className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
               />
             </div>
 
@@ -457,7 +457,7 @@ export default function EmitirFactura() {
                 id="invoiceDueDate"
                 value={invoiceDueDate}
                 onChange={(e) => setInvoiceDueDate(e.target.value)}
-                className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
               />
             </div>
           </div>
@@ -494,7 +494,7 @@ export default function EmitirFactura() {
                           placeholder="Descripción del servicio o producto"
                           value={item.concepto}
                           onChange={(e) => handleItemChange(item.id, "concepto", e.target.value)}
-                          className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400 text-sm"
+                          className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400 text-sm"
                         />
                       </td>
                       <td className="px-4 py-3">
@@ -502,7 +502,7 @@ export default function EmitirFactura() {
                           type="number"
                           value={item.cantidad}
                           onChange={(e) => handleItemChange(item.id, "cantidad", e.target.value)}
-                          className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                          className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm"
                           min="1"
                         />
                       </td>
@@ -511,7 +511,7 @@ export default function EmitirFactura() {
                           type="number"
                           value={item.precio}
                           onChange={(e) => handleItemChange(item.id, "precio", e.target.value)}
-                          className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                          className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm"
                           min="0"
                           step="0.01"
                         />
@@ -526,7 +526,7 @@ export default function EmitirFactura() {
                       <td className="px-4 py-3 text-center">
                         <button
                           onClick={() => handleDeleteItem(item.id)}
-                          className="neumorphic-button p-2 rounded-lg text-red-500 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="p-2 rounded-lg neumorphic-button text-red-500 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                           disabled={items.length <= 1}
                           aria-label="Borrar fila"
                         >
@@ -544,7 +544,7 @@ export default function EmitirFactura() {
           <div className="flex justify-end">
             <button
               onClick={handleAddItem}
-              className="neumorphic-button px-4 py-2 rounded-lg font-medium text-slate-700 dark:text-slate-300 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all flex items-center"
+              className="px-5 py-3 rounded-lg neumorphic-button text-slate-700 dark:text-slate-300 font-medium flex items-center"
             >
               <span className="material-icons-outlined mr-2 text-sm">add</span>
               Añadir fila
@@ -563,7 +563,7 @@ export default function EmitirFactura() {
                 name="ivaPercentage"
                 value={ivaPercentage}
                 onChange={(e) => setIvaPercentage(parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
+                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400"
                 min="0"
                 step="1"
                 placeholder="21"
@@ -580,7 +580,7 @@ export default function EmitirFactura() {
                 name="irpfPercentage"
                 value={irpfPercentage}
                 onChange={(e) => setIrpfPercentage(parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
+                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400"
                 min="0"
                 step="1"
                 placeholder="15"
@@ -599,7 +599,7 @@ export default function EmitirFactura() {
                 value={overrideAddress}
                 onChange={(e) => setOverrideAddress(e.target.value)}
                 placeholder="Dirección completa"
-                className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
+                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400"
               />
             </div>
 
@@ -612,7 +612,7 @@ export default function EmitirFactura() {
                 value={overrideId}
                 onChange={(e) => setOverrideId(e.target.value)}
                 placeholder="CIF o DNI"
-                className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
+                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400"
               />
             </div>
           </div>
@@ -673,12 +673,12 @@ export default function EmitirFactura() {
                 type="file"
                 accept=".png,.jpg,.jpeg"
                 onChange={handleLogoChange}
-                className="flex-1 px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-primary/90"
+                className="flex-1 px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-primary/90"
               />
               {customLogo && (
                 <button
                   onClick={() => setCustomLogo(null)}
-                  className="neumorphic-button p-2 rounded-lg text-red-500 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all"
+                  className="p-2 rounded-lg neumorphic-button text-red-500 hover:text-red-600"
                   title="Eliminar logo"
                 >
                   <span className="material-icons-outlined text-sm">delete</span>
@@ -702,7 +702,7 @@ export default function EmitirFactura() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Añade notas adicionales para la factura..."
-              className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400 resize-none"
+              className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400 resize-none"
             />
           </div>
 
@@ -718,7 +718,7 @@ export default function EmitirFactura() {
               value={ibanNumber}
               onChange={(e) => setIbanNumber(e.target.value)}
               placeholder="ESXX XXXX XXXX XXXX XXXX XXXX"
-              className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
+              className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400"
             />
           </div>
 
@@ -756,7 +756,7 @@ export default function EmitirFactura() {
                   value={pdfFilename}
                   onChange={(e) => setPdfFilename(e.target.value)}
                   placeholder="Factura_F0025_ClienteX.pdf"
-                  className="w-full px-3 py-2 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400"
+                  className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400"
                 />
               </div>
 
@@ -783,9 +783,9 @@ export default function EmitirFactura() {
                     />
                   }
                   fileName={pdfFilename.endsWith(".pdf") ? pdfFilename : `${pdfFilename}.pdf`}
-                  className={`neumorphic-button px-6 py-3 rounded-lg font-semibold transition-all inline-flex items-center ${
+                  className={`px-5 py-3 rounded-lg neumorphic-button font-medium inline-flex items-center ${
                     canDownload
-                      ? "bg-primary text-white hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark"
+                      ? "text-white bg-primary hover:bg-primary/90"
                       : "bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed"
                   }`}
                   style={!canDownload ? { pointerEvents: "none" } : {}}
@@ -802,7 +802,7 @@ export default function EmitirFactura() {
                 </PDFDownloadLink>
               )}
               {!isClient && (
-                <div className="neumorphic-button px-6 py-3 rounded-lg bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed inline-flex items-center">
+                <div className="px-5 py-3 rounded-lg neumorphic-button bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed inline-flex items-center">
                   <span className="material-icons-outlined mr-2">download</span>
                   Descargar PDF
                 </div>

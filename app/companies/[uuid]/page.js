@@ -124,14 +124,14 @@ export default function CompanyDetail({ params }) {
   };
 
   return (
-    <div className="flex justify-center items-start bg-background min-h-screen p-8">
-      <div className="w-full max-w-7xl bg-foreground text-black p-6 rounded-lg">
+    <div className="p-6 space-y-6">
+      <div className="neumorphic-card p-6">
         {/* Sección de detalles de la compañía */}
         <div className="flex items-center mb-8">
           <div className="mr-8">
             {isEditing ? (
               <div>
-                <label htmlFor="image" className="block text-black mb-2 text-sm font-medium">
+                <label htmlFor="image" className="block text-slate-700 dark:text-slate-300 mb-2 text-sm font-medium">
                   Seleccionar Imagen
                 </label>
                 <input
@@ -139,7 +139,7 @@ export default function CompanyDetail({ params }) {
                   accept="image/*"
                   id="image"
                   onChange={handleImageChange}
-                  className="block w-full text-sm text-background bg-gray-700 border border-gray-600 rounded-lg cursor-pointer focus:outline-none"
+                  className="block w-full text-sm text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-lg cursor-pointer focus:outline-none"
                 />
                 {company.imageUri && (
                   <img
@@ -165,25 +165,27 @@ export default function CompanyDetail({ params }) {
                 name="name"
                 value={company.name}
                 onChange={handleCompanyChange}
-                className="text-3xl mb-4 font-bold bg-background p-2 rounded w-full text-black"
+                className="text-3xl mb-4 font-bold neumorphic-card-inset p-4 rounded-lg w-full text-slate-800 dark:text-slate-200 border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent"
               />
             ) : (
-              <h2 className="mb-4 text-3xl font-bold">{company.name}</h2>
+              <h2 className="mb-4 text-3xl font-bold text-slate-800 dark:text-slate-100">{company.name}</h2>
             )}
 
             {isEditing ? (
-              <select
-                name="type"
-                value={company.type}
-                onChange={handleCompanyChange}
-                className="text-xl bg-background p-2 rounded text-black"
-              >
-                <option value="Luz">Luz</option>
-                <option value="Gas">Gas</option>
-                <option value="Telefonía">Telefonía</option>
-              </select>
+              <div className="neumorphic-card-inset rounded-lg">
+                <select
+                  name="type"
+                  value={company.type}
+                  onChange={handleCompanyChange}
+                  className="text-xl p-4 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+                >
+                  <option value="Luz">Luz</option>
+                  <option value="Gas">Gas</option>
+                  <option value="Telefonía">Telefonía</option>
+                </select>
+              </div>
             ) : (
-              <span className="bg-backgroundHover text-yellow-500 px-4 py-2 rounded-full text-l font-semibold">
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary">
                 {company.type}
               </span>
             )}
@@ -191,52 +193,50 @@ export default function CompanyDetail({ params }) {
         </div>
 
         {/* Listado de tarifas */}
-        <div className="p-5 w-full overflow-x-auto">
-          <h3 className="text-2xl font-bold mb-4">Tarifas Disponibles</h3>
-          <table className="min-w-full bg-gray-700 text-black">
-            <thead>
-              <tr className="bg-background">
-                <th className="px-4 py-2 text-left text-black">Nombre</th>
-                <th className="px-4 py-2 text-left text-black">Retro</th>
-                {isTelephony && <th className="px-4 py-2 text-left text-black">Productos</th>}
-                {isTelephony && <th className="px-4 py-2 text-left text-black">Precio Final</th>}
-                {!isTelephony && <th className="px-4 py-2 text-left text-black">Potencia(kW)</th>}
-                {!isTelephony && <th className="px-4 py-2 text-left text-black">Energía(€/kWh)</th>}
-                {!isTelephony && (
-                  <th className="px-4 py-2 text-left text-black">Excedente(€/kWh)</th>
-                )}
-                <th className="px-4 py-2 text-center text-black">Acciones</th>
+        <div className="w-full overflow-x-auto">
+          <h3 className="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-100">Tarifas Disponibles</h3>
+          <table className="w-full text-left">
+            <thead className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <tr>
+                <th className="p-3">Nombre</th>
+                <th className="p-3">Retro</th>
+                {isTelephony && <th className="p-3">Productos</th>}
+                {isTelephony && <th className="p-3">Precio Final</th>}
+                {!isTelephony && <th className="p-3">Potencia(kW)</th>}
+                {!isTelephony && <th className="p-3">Energía(€/kWh)</th>}
+                {!isTelephony && <th className="p-3">Excedente(€/kWh)</th>}
+                <th className="p-3">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {rates.map((rate, index) => (
-                <tr key={index} className="bg-foreground hover:bg-background">
-                  <td className="px-4 py-2">{rate.name}</td>
-                  <td className="px-4 py-2">{rate.renewDays} días</td>
+                <tr key={index} className="table-row-divider">
+                  <td className="p-3 font-medium text-slate-800 dark:text-slate-200">{rate.name}</td>
+                  <td className="p-3 text-slate-600 dark:text-slate-400">{rate.renewDays} días</td>
                   {isTelephony && (
                     <>
-                      <td className="px-4 py-2">{rate.products}</td>
-                      <td className="px-4 py-2">{rate.finalPrice} €</td>
+                      <td className="p-3 text-slate-600 dark:text-slate-400">{rate.products}</td>
+                      <td className="p-3 text-slate-600 dark:text-slate-400">{rate.finalPrice} €</td>
                     </>
                   )}
                   {!isTelephony && (
                     <>
                       {/* Columna de Potencia */}
-                      <td className="px-4 py-2">
+                      <td className="p-3">
                         <div className="flex flex-col">
                           <div className="flex">
                             {rate.powerSlot1 && (
-                              <span className="bg-backgroundHover text-yellow-500 px-3 py-1 rounded-full text-sm font-medium mr-2 mb-1">
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 mr-2 mb-1">
                                 {rate.powerSlot1}
                               </span>
                             )}
                             {rate.powerSlot2 && (
-                              <span className="bg-backgroundHover text-yellow-500 px-3 py-1 rounded-full text-sm font-medium mr-2 mb-1">
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 mr-2 mb-1">
                                 {rate.powerSlot2}
                               </span>
                             )}
                             {rate.powerSlot3 && (
-                              <span className="bg-backgroundHover text-yellow-500 px-3 py-1 rounded-full text-sm font-medium mb-1">
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 mb-1">
                                 {rate.powerSlot3}
                               </span>
                             )}
@@ -244,17 +244,17 @@ export default function CompanyDetail({ params }) {
                           {/* Segunda fila de potencia */}
                           <div className="flex">
                             {rate.powerSlot4 && (
-                              <span className="bg-backgroundHover text-yellow-500 px-3 py-1 rounded-full text-sm font-medium mr-2 mb-1">
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 mr-2 mb-1">
                                 {rate.powerSlot4}
                               </span>
                             )}
                             {rate.powerSlot5 && (
-                              <span className="bg-backgroundHover text-yellow-500 px-3 py-1 rounded-full text-sm font-medium mr-2 mb-1">
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 mr-2 mb-1">
                                 {rate.powerSlot5}
                               </span>
                             )}
                             {rate.powerSlot6 && (
-                              <span className="bg-backgroundHover text-yellow-500 px-3 py-1 rounded-full text-sm font-medium mb-1">
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 mb-1">
                                 {rate.powerSlot6}
                               </span>
                             )}
@@ -263,21 +263,21 @@ export default function CompanyDetail({ params }) {
                       </td>
 
                       {/* Columna de Energía */}
-                      <td className="px-4 py-2">
+                      <td className="p-3">
                         <div className="flex flex-col">
                           <div className="flex">
                             {rate.energySlot1 && (
-                              <span className="bg-backgroundHover text-blue-400 px-3 py-1 rounded-full text-sm font-medium mr-2 mb-1">
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-600 dark:text-blue-400 mr-2 mb-1">
                                 {rate.energySlot1}
                               </span>
                             )}
                             {rate.energySlot2 && (
-                              <span className="bg-backgroundHover text-blue-400 px-3 py-1 rounded-full text-sm font-medium mr-2 mb-1">
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-600 dark:text-blue-400 mr-2 mb-1">
                                 {rate.energySlot2}
                               </span>
                             )}
                             {rate.energySlot3 && (
-                              <span className="bg-backgroundHover text-blue-400 px-3 py-1 rounded-full text-sm font-medium mb-1">
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-600 dark:text-blue-400 mb-1">
                                 {rate.energySlot3}
                               </span>
                             )}
@@ -285,17 +285,17 @@ export default function CompanyDetail({ params }) {
                           {/* Segunda fila de energía */}
                           <div className="flex">
                             {rate.energySlot4 && (
-                              <span className="bg-backgroundHover text-blue-400 px-3 py-1 rounded-full text-sm font-medium mr-2 mb-1">
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-600 dark:text-blue-400 mr-2 mb-1">
                                 {rate.energySlot4}
                               </span>
                             )}
                             {rate.energySlot5 && (
-                              <span className="bg-backgroundHover text-blue-400 px-3 py-1 rounded-full text-sm font-medium mr-2 mb-1">
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-600 dark:text-blue-400 mr-2 mb-1">
                                 {rate.energySlot5}
                               </span>
                             )}
                             {rate.energySlot6 && (
-                              <span className="bg-backgroundHover text-blue-400 px-3 py-1 rounded-full text-sm font-medium mb-1">
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-600 dark:text-blue-400 mb-1">
                                 {rate.energySlot6}
                               </span>
                             )}
@@ -304,32 +304,34 @@ export default function CompanyDetail({ params }) {
                       </td>
 
                       {/* Columna de Excedente */}
-                      <td className="px-4 py-2">
+                      <td className="p-3">
                         {rate.surplusSlot1 && (
-                          <span className="bg-backgroundHover text-red-400 px-3 py-1 rounded-full text-sm font-medium">
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-600 dark:text-red-400">
                             {rate.surplusSlot1}
                           </span>
                         )}
                       </td>
                     </>
                   )}
-                  <td className="px-4 py-2 text-center">
-                    <button
-                      className="text-blue-500 hover:text-blue-700 mr-2"
-                      onClick={() => {
-                        setRateToEdit(rate);
-                        setIsEditingRate(true);
-                        setShowNewRateForm(true);
-                      }}
-                    >
-                      <FiEdit size={22} />
-                    </button>
-                    <button
-                      className="text-red-500 hover:text-red-700"
-                      onClick={() => handleDeleteRate(rate.id)}
-                    >
-                      <FiTrash size={22} />
-                    </button>
+                  <td className="p-3">
+                    <div className="flex space-x-2">
+                      <button
+                        className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-400 hover:text-primary"
+                        onClick={() => {
+                          setRateToEdit(rate);
+                          setIsEditingRate(true);
+                          setShowNewRateForm(true);
+                        }}
+                      >
+                        <FiEdit size={18} />
+                      </button>
+                      <button
+                        className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-400 hover:text-primary"
+                        onClick={() => handleDeleteRate(rate.id)}
+                      >
+                        <FiTrash size={18} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -343,7 +345,7 @@ export default function CompanyDetail({ params }) {
             setRateToEdit(null);
             setShowNewRateForm(true);
           }}
-          className="bg-secondary text-white px-4 py-2 mt-4 rounded hover:bg-secondaryHover"
+          className="px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium mt-4"
         >
           Añadir Nueva Tarifa
         </button>
@@ -362,18 +364,18 @@ export default function CompanyDetail({ params }) {
         />
 
         {/* Botones para editar y guardar cambios */}
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex justify-end gap-3">
           {isEditing ? (
             <button
               onClick={handleSaveChanges}
-              className="bg-secondary text-white px-4 py-2 rounded hover:bg-secondaryHover mr-4"
+              className="px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium"
             >
               Guardar Cambios
             </button>
           ) : (
             <button
               onClick={() => setIsEditing(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mr-4"
+              className="px-5 py-3 rounded-lg neumorphic-button text-slate-700 dark:text-slate-300 font-medium"
             >
               Editar
             </button>
@@ -381,7 +383,7 @@ export default function CompanyDetail({ params }) {
           {isEditing && (
             <button
               onClick={() => setIsEditing(false)}
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              className="px-5 py-3 rounded-lg neumorphic-button text-slate-700 dark:text-slate-300 font-medium"
             >
               Cancelar
             </button>

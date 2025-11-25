@@ -137,21 +137,23 @@ const LeadsPriorityConfigurationPage = () => {
           <label htmlFor="userSelector" className="text-lg font-bold">
             Usuario:
           </label>
-          <select
-            id="userSelector"
-            className="p-2 border rounded-md shadow-md w-60 text-center"
-            value={selectedUserUuid || ""}
-            onChange={(e) => setSelectedUserUuid(e.target.value)}
-          >
-            <option value="" disabled>
-              Selecciona
-            </option>
-            {users.map((user) => (
-              <option key={user.id} value={user.uuid}>
-                {user.name} {user.firstSurname}
+          <div className="neumorphic-card-inset rounded-lg w-60">
+            <select
+              id="userSelector"
+              className="p-2 w-full rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200 text-center"
+              value={selectedUserUuid || ""}
+              onChange={(e) => setSelectedUserUuid(e.target.value)}
+            >
+              <option value="" disabled>
+                Selecciona
               </option>
-            ))}
-          </select>
+              {users.map((user) => (
+                <option key={user.id} value={user.uuid}>
+                  {user.name} {user.firstSurname}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Contenedor para ColumnsOrder */}
@@ -166,7 +168,7 @@ const LeadsPriorityConfigurationPage = () => {
         <div className="w-full max-w-3xl">
           <button
             onClick={saveLeadPriorities}
-            className="px-4 py-2 bg-secondary hover:bg-secondaryHover text-white rounded-md shadow-md w-full"
+            className="px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium w-full"
           >
             Guardar Configuración
           </button>
@@ -187,7 +189,7 @@ const ColumnsOrder = ({ columnsOrder, setColumnsOrder }) => {
   };
 
   return (
-    <div className="w-full text-black neumorphic-card p-4 rounded-md">
+    <div className="w-full text-slate-800 dark:text-slate-100 neumorphic-card p-4 rounded-md">
       <h3 className="text-lg font-bold mb-4">Prioridad de Leads</h3>
       <div className="columns-container">
         {columnsOrder.map((priority, index) => (
@@ -229,8 +231,8 @@ const ColumnItem = ({ column, index, moveColumn }) => {
   return (
     <div
       ref={ref}
-      className={`flex text-black items-center p-2 neumorphic-card border mb-2 rounded-md cursor-pointer ${
-        isDragging ? "opacity-50" : ""
+      className={`flex text-slate-800 dark:text-slate-200 items-center p-2 neumorphic-card-inset border-none mb-2 rounded-lg cursor-grab ${
+        isDragging ? "opacity-40" : ""
       }`}
     >
       <MdOutlineDragHandle className="mr-2 text-slate-500 dark:text-slate-400" />

@@ -431,7 +431,7 @@ export default function LeadDetailPage() {
           </p>
           <button
             onClick={handleSearchNewLead}
-            className="neumorphic-button bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all inline-flex items-center"
+            className="px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium inline-flex items-center"
           >
             <span className="material-icons-outlined mr-2">add_circle</span>
             Solicitar Nuevo Lead
@@ -523,7 +523,7 @@ export default function LeadDetailPage() {
               placeholder="Escribe tus observaciones sobre el contacto..."
               value={observation}
               onChange={(e) => setObservation(e.target.value)}
-              className="w-full px-4 py-3 h-24 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-400 resize-none"
+              className="w-full px-4 py-3 h-24 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400 resize-none"
             />
             {error && (
               <div className="flex items-center text-red-500 text-sm mt-2">
@@ -536,9 +536,9 @@ export default function LeadDetailPage() {
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-3">
             <button
-              className={`neumorphic-button px-4 py-3 rounded-lg font-semibold transition-all flex items-center ${
+              className={`px-5 py-3 rounded-lg neumorphic-button font-medium transition-all flex items-center ${
                 showUsefulOptions
-                  ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark"
+                  ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 active"
                   : "text-green-600 dark:text-green-500"
               }`}
               onClick={() => {
@@ -554,9 +554,9 @@ export default function LeadDetailPage() {
             </button>
 
             <button
-              className={`neumorphic-button px-4 py-3 rounded-lg font-semibold transition-all flex items-center ${
+              className={`px-5 py-3 rounded-lg neumorphic-button font-medium transition-all flex items-center ${
                 showNotUsefulOptions
-                  ? "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark"
+                  ? "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 active"
                   : "text-red-600 dark:text-red-500"
               }`}
               onClick={() => {
@@ -573,10 +573,10 @@ export default function LeadDetailPage() {
 
             <button
               onClick={handleSubmit}
-              className={`neumorphic-button px-6 py-3 rounded-lg bg-primary text-white font-semibold transition-all flex items-center ${
+              className={`px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium flex items-center ${
                 !observation || !selectedOption
                   ? "opacity-50 cursor-not-allowed"
-                  : "hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark"
+                  : ""
               }`}
               disabled={!observation || !selectedOption}
             >
@@ -586,7 +586,7 @@ export default function LeadDetailPage() {
 
             <button
               onClick={handleEditOrCreateLeadSheet}
-              className="neumorphic-button px-4 py-3 rounded-lg font-semibold text-slate-700 dark:text-slate-300 hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all flex items-center flex-1 sm:flex-initial"
+              className="px-5 py-3 rounded-lg neumorphic-button text-slate-700 dark:text-slate-300 font-medium flex items-center flex-1 sm:flex-initial"
             >
               <span className="material-icons-outlined mr-2">assignment</span>
               Ficha de cliente
@@ -654,7 +654,7 @@ export default function LeadDetailPage() {
                 type="datetime-local"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
               />
             </div>
           )}
@@ -669,7 +669,7 @@ export default function LeadDetailPage() {
               <select
                 value={selectedUserId || ""}
                 onChange={(e) => setSelectedUserId(e.target.value)}
-                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
               >
                 <option value="">Seleccionar usuario</option>
                 {users.map((user) => (
@@ -754,7 +754,7 @@ export default function LeadDetailPage() {
                 href={lead.billUri}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="neumorphic-button bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all inline-flex items-center"
+                className="px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium inline-flex items-center"
               >
                 <span className="material-icons-outlined mr-2">attach_file</span>
                 Ver Adjuntos
@@ -791,7 +791,7 @@ export default function LeadDetailPage() {
       )}
 
       {isCommunicationModalOpen && communications[communicationsCurrentIndex] && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 backdrop-blur-md">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
           <CommunicationModal
             isModalOpen={isCommunicationModalOpen}
             setIsModalOpen={() => {

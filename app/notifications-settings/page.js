@@ -676,7 +676,7 @@ export default function NotificationsSettings() {
           </div>
           <button
             onClick={handleSave}
-            className="mt-4 w-full bg-primary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
+            className="mt-4 w-full px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium"
           >
             Guardar
           </button>

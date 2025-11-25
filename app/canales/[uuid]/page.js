@@ -287,12 +287,12 @@ export default function EditChannel({ params }) {
   };
 
   return (
-    <div className="flex flex-col justify-start items-center bg-background min-h-screen p-8">
-      <div className="w-full max-w-4xl bg-foreground text-white p-6 rounded-lg">
+    <div className="p-6 space-y-6">
+      <div className="neumorphic-card p-6">
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col sm:flex-row items-center sm:items-start mb-8">
             <div className="mr-0 sm:mr-8 mb-4 sm:mb-0">
-              <label className="block text-black mb-2" htmlFor="image">
+              <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="image">
                 Imagen del Canal
               </label>
               <input
@@ -422,12 +422,14 @@ export default function EditChannel({ params }) {
           </div>
 
           {/* Navegación de Pestañas */}
-          <div className="flex mb-4 border-b">
+          <div className="flex gap-2 p-1 neumorphic-card rounded-lg w-min mb-6">
             <button
               type="button"
               onClick={() => handleTabClick("rates")}
-              className={`px-4 py-2 text-black ${
-                activeTab === "rates" ? "border-b-2 border-blue-500" : "border-b-2 border-gray-300"
+              className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${
+                activeTab === "rates"
+                  ? "neumorphic-button active text-primary bg-primary/10 dark:bg-primary/20"
+                  : "neumorphic-button text-slate-600 dark:text-slate-400"
               }`}
             >
               Tarifas Vinculadas
@@ -435,10 +437,10 @@ export default function EditChannel({ params }) {
             <button
               type="button"
               onClick={() => handleTabClick("payment")}
-              className={`px-4 py-2 text-black ${
+              className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${
                 activeTab === "payment"
-                  ? "border-b-2 border-blue-500"
-                  : "border-b-2 border-gray-300"
+                  ? "neumorphic-button active text-primary bg-primary/10 dark:bg-primary/20"
+                  : "neumorphic-button text-slate-600 dark:text-slate-400"
               }`}
             >
               Fecha cobro
@@ -446,10 +448,10 @@ export default function EditChannel({ params }) {
             <button
               type="button"
               onClick={() => handleTabClick("commissions")}
-              className={`px-4 py-2 text-black ${
+              className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${
                 activeTab === "commissions"
-                  ? "border-b-2 border-blue-500"
-                  : "border-b-2 border-gray-300"
+                  ? "neumorphic-button active text-primary bg-primary/10 dark:bg-primary/20"
+                  : "neumorphic-button text-slate-600 dark:text-slate-400"
               }`}
             >
               Comisiones/Puntos
@@ -680,17 +682,17 @@ export default function EditChannel({ params }) {
           )}
 
           {/* Botones */}
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-3">
             <button
               type="button"
-              className="bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700"
+              className="px-5 py-3 rounded-lg neumorphic-button text-slate-700 dark:text-slate-300 font-medium"
               onClick={() => router.push("/canales")}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="bg-secondary text-white px-4 py-2 rounded hover:bg-secondaryHover"
+              className="px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium"
             >
               Guardar Cambios
             </button>

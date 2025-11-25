@@ -119,12 +119,12 @@ export default function Canales() {
   };
 
   return (
-    <div className="flex justify-center items-start min-h-screen p-5">
-      <div className="w-full max-w-5xl mx-auto p-4 neumorphic-card rounded-lg mt-24">
-        <div className="flex justify-between items-center mb-4">
+    <div className="p-6 space-y-6">
+      <div className="neumorphic-card p-6">
+        <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Canales</h2>
           <button
-            className="bg-secondary text-white px-4 py-2 rounded flex items-center hover:bg-secondaryHover shadow-md hover:shadow-lg transition-all"
+            className="px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium flex items-center"
             onClick={openModal}
           >
             <FiPlus className="mr-2" />
@@ -134,12 +134,9 @@ export default function Canales() {
 
         {/* Modal */}
         {isModalOpen && (
-          <div
-            className={`fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 ${isModalOpen ? "lg:ml-72" : ""
-              }`}
-          >
-            <div className="neumorphic-card p-6 rounded-xl w-full max-w-lg">
-              <h3 className="text-xl font-bold mb-4 text-slate-800 dark:text-slate-100">Crear nuevo canal</h3>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center lg:ml-72">
+            <div className="modal-card p-6 w-full max-w-lg">
+              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6">Crear nuevo canal</h3>
               <form onSubmit={handleAddChannel}>
                 <div className="mb-4">
                   <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="name">
@@ -231,17 +228,17 @@ export default function Canales() {
                     onChange={(e) => setImageFile(e.target.files[0])}
                   />
                 </div>
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-3">
                   <button
                     type="button"
-                    className="bg-red-600 text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
+                    className="px-5 py-3 rounded-lg neumorphic-button text-slate-700 dark:text-slate-300 font-medium"
                     onClick={closeModal}
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="bg-secondary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
+                    className="px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium"
                   >
                     Guardar
                   </button>
@@ -250,74 +247,58 @@ export default function Canales() {
             </div>
           </div>
         )}
-        <div className="w-full overflow-x-auto neumorphic-card rounded-lg">
-          <table className="min-w-full">
-            <thead className="neumorphic-card-inset">
-              <tr>
-                <th className="px-4 py-2 text-left text-slate-700 dark:text-slate-300">Imagen</th>
-                <th className="px-4 py-2 text-left text-slate-700 dark:text-slate-300">Nombre</th>
-                <th className="px-4 py-2 text-left text-slate-700 dark:text-slate-300">Representante</th>
-                <th className="px-4 py-2 text-left text-slate-700 dark:text-slate-300">Email</th>
-                <th className="px-4 py-2 text-left text-slate-700 dark:text-slate-300">Telefono</th>
-                <th className="px-4 py-2 text-center text-slate-700 dark:text-slate-300">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {channels.map((channel) => (
-                <tr
-                  key={channel.id}
-                  className="hover:bg-slate-100 dark:hover:bg-slate-800"
-                >
-                  <td className="px-4 py-2">
-                    <img
-                      src={channel.imageUri}
-                      alt={channel.name}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                  </td>
-                  <td className="px-4 py-2 text-slate-800 dark:text-slate-200">{channel.name}</td>
+        <table className="w-full text-left">
+          <thead className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <tr>
+              <th className="p-3">Imagen</th>
+              <th className="p-3">Nombre</th>
+              <th className="p-3">Representante</th>
+              <th className="p-3">Email</th>
+              <th className="p-3">Telefono</th>
+              <th className="p-3">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {channels.map((channel) => (
+              <tr key={channel.id} className="table-row-divider">
+                <td className="p-3">
+                  <img
+                    src={channel.imageUri}
+                    alt={channel.name}
+                    className="w-16 h-16 object-cover rounded"
+                  />
+                </td>
+                <td className="p-3 font-medium text-slate-800 dark:text-slate-200">{channel.name}</td>
 
-                  <td className="px-4 py-2">
-                    <span
-                      className={`text-slate-800 dark:text-slate-200 rounded-full text-sm font-semibold`}
-                    >
-                      {channel.representativeName}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2">
-                    <span
-                      className={`text-slate-800 dark:text-slate-200 rounded-full text-sm font-semibold`}
-                    >
-                      {channel.representativeEmail}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2">
-                    <span
-                      className={`text-slate-800 dark:text-slate-200 rounded-full text-sm font-semibold`}
-                    >
-                      {channel.representativePhone}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 text-center">
+                <td className="p-3 text-slate-600 dark:text-slate-400">
+                  {channel.representativeName}
+                </td>
+                <td className="p-3 text-slate-600 dark:text-slate-400">
+                  {channel.representativeEmail}
+                </td>
+                <td className="p-3 text-slate-600 dark:text-slate-400">
+                  {channel.representativePhone}
+                </td>
+                <td className="p-3">
+                  <div className="flex space-x-2">
                     <button
-                      className="text-blue-500 hover:text-blue-700 mr-4"
+                      className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-400 hover:text-primary"
                       onClick={() => handleEditChannel(channel.uuid)}
                     >
-                      <FiEdit size={22} />
+                      <FiEdit size={18} />
                     </button>
                     <button
-                      className="text-red-500 hover:text-red-700"
+                      className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-400 hover:text-primary"
                       onClick={() => handleDeleteChannel(channel.uuid)}
                     >
-                      <FiTrash size={22} />
+                      <FiTrash size={18} />
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

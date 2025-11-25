@@ -181,22 +181,22 @@ export default function UsersVisibility() {
     <div className="flex flex-col bg-background min-h-screen">
       {/* Navbar */}
       <div className="w-auto ml-4">
-        <div className="flex">
+        <div className="flex gap-2 p-1 neumorphic-card rounded-lg w-min">
           <button
-            className={`px-6 py-2 text-sm font-medium ${
+            className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${
               activeTab === "Tareas"
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-slate-600 dark:text-slate-400"
+                ? "neumorphic-button active text-primary bg-primary/10 dark:bg-primary/20"
+                : "neumorphic-button text-slate-600 dark:text-slate-400"
             }`}
             onClick={() => setActiveTab("Tareas")}
           >
             Tareas
           </button>
           <button
-            className={`px-6 py-2 text-sm font-medium ${
+            className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${
               activeTab === "Leads"
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-slate-600 dark:text-slate-400"
+                ? "neumorphic-button active text-primary bg-primary/10 dark:bg-primary/20"
+                : "neumorphic-button text-slate-600 dark:text-slate-400"
             }`}
             onClick={() => setActiveTab("Leads")}
           >
@@ -227,10 +227,11 @@ export default function UsersVisibility() {
                     >
                       Dirigido a:
                     </label>
-                    <select
-                      id="assigneeUserId"
-                      name="assigneeUserId"
-                      className="w-full px-4 py-2 rounded bg-background text-slate-800 dark:text-slate-100 focus:outline-none"
+                    <div className="neumorphic-card-inset rounded-lg">
+                      <select
+                        id="assigneeUserId"
+                        name="assigneeUserId"
+                        className="w-full px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
                       value={selectedAgentId}
                       onChange={(e) => {
                         const agentId = e.target.value;
@@ -246,7 +247,8 @@ export default function UsersVisibility() {
                           {agent.name}
                         </option>
                       ))}
-                    </select>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -286,7 +288,7 @@ export default function UsersVisibility() {
                   </div>
                   <button
                     onClick={handleSaveVisibility}
-                    className="mt-4 px-4 py-2 bg-secondary text-white rounded hover:bg-secondaryHover"
+                    className="mt-4 px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium"
                   >
                     Guardar visibilidad
                   </button>
@@ -314,10 +316,11 @@ export default function UsersVisibility() {
                     >
                       Dirigido a:
                     </label>
-                    <select
-                      id="assignToUserId"
-                      name="assignToUserId"
-                      className="w-full px-4 py-2 rounded bg-background text-slate-800 dark:text-slate-100 focus:outline-none"
+                    <div className="neumorphic-card-inset rounded-lg">
+                      <select
+                        id="assignToUserId"
+                        name="assignToUserId"
+                        className="w-full px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
                       value={selectedUserId}
                       onChange={(e) => {
                         const userId = e.target.value;
@@ -333,7 +336,8 @@ export default function UsersVisibility() {
                           {user.name}
                         </option>
                       ))}
-                    </select>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -385,7 +389,7 @@ export default function UsersVisibility() {
                   </div>
                   <button
                     onClick={handleSaveUserShareLead}
-                    className="mt-4 px-4 py-2 bg-secondary text-white rounded hover:bg-secondaryHover"
+                    className="mt-4 px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium"
                   >
                     Guardar visibilidad
                   </button>
