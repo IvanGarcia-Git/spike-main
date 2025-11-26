@@ -40,14 +40,12 @@ export default function ColaboradorProfile() {
       if (response.ok) {
         const backendData = await response.json()
         console.log('Backend data received:', backendData)
-        // Transformar datos del backend al formato del frontend
         const transformedData = transformBackendData(backendData)
         console.log('Transformed data:', transformedData)
         setColaboradorData(transformedData)
       } else {
         const errorData = await response.json()
         console.error('API error:', response.status, errorData)
-        // Usar datos de fallback para desarrollo
         setColaboradorData(generateFallbackData())
       }
     } catch (error) {
@@ -59,10 +57,8 @@ export default function ColaboradorProfile() {
   }
 
   const transformBackendData = (data) => {
-    // Calcular crecimiento basado en cumplimiento objetivo
     const crecimiento = data.cumplimientoObjetivo?.crecimiento || 0
 
-    // Mapear historial de comisiones desde el backend
     const historicoComisiones = data.historialComisiones?.map(h => {
       const fecha = new Date(h.fecha)
       const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
@@ -73,7 +69,6 @@ export default function ColaboradorProfile() {
       }
     }) || []
 
-    // Mapear histórico mensual para gráficos
     const historicoMensual = data.historicoMensual || []
 
     return {
@@ -85,7 +80,6 @@ export default function ColaboradorProfile() {
       phone: data.phone,
       shift: data.shift,
 
-      // Estadísticas principales
       contratosActivos: data.stats?.contratosActivos || 0,
       contratosActivosCrecimiento: crecimiento,
 
@@ -118,10 +112,8 @@ export default function ColaboradorProfile() {
         crecimiento: crecimiento
       },
 
-      // Histórico de comisiones
       historicoComisiones,
 
-      // Histórico mensual para ventas diarias - usar datos reales del backend
       ventasDiarias: historicoMensual.length > 0
         ? historicoMensual.map(h => ({
             dia: h.mes,
@@ -134,7 +126,6 @@ export default function ColaboradorProfile() {
             dinero: 0
           })),
 
-      // Distribución de clientes por tipo
       estados: data.clientesPorTipo?.porTipo?.map((t, idx) => ({
         name: t.tipo,
         percentage: t.porcentaje,
@@ -142,13 +133,11 @@ export default function ColaboradorProfile() {
         cambio: idx % 2 === 0 ? Math.abs(crecimiento) : -Math.abs(crecimiento)
       })) || [],
 
-      // Compañías
       compañias: data.clientesPorTipo?.porCompania?.map(c => ({
         nombre: c.compania,
         valor: c.cantidad || 0
       })) || [],
 
-      // Distribución de tipo de cliente (Particulares vs Empresas)
       distribucionTipo: {
         particulares: {
           cantidad: data.clientesPorTipo?.distribucionClientesTipo?.particulares?.cantidad || 0,
@@ -161,13 +150,11 @@ export default function ColaboradorProfile() {
         total: data.clientesPorTipo?.distribucionClientesTipo?.total || 0
       },
 
-      // Ventas por mes (histórico mensual)
       ventasPorAgente: historicoMensual.map(h => ({
         agente: h.mes,
         ventas: h.contratos || 0
       })),
 
-      // Tiempos de activación (desde compañías si disponible)
       tiempoActivacion: data.clientesPorTipo?.porCompania?.slice(0, 5).map(c => ({
         tipo: c.compania,
         tiempo: 0,
@@ -175,7 +162,6 @@ export default function ColaboradorProfile() {
         contrato: c.cantidad || 0
       })) || [],
 
-      // Posibles renovaciones
       posiblesRenovaciones: {
         total: data.stats?.contratosActivos || 0,
         clientes: []
@@ -243,10 +229,10 @@ export default function ColaboradorProfile() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-background-light">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando perfil del colaborador...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-slate-600">Cargando perfil del colaborador...</p>
         </div>
       </div>
     )
@@ -254,70 +240,80 @@ export default function ColaboradorProfile() {
 
   if (!colaboradorData) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-600">No se encontró información del colaborador</p>
+      <div className="flex items-center justify-center min-h-screen bg-background-light">
+        <p className="text-slate-600">No se encontró información del colaborador</p>
       </div>
     )
   }
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8 bg-gray-50 min-h-screen">
+    <div className="px-4 sm:px-6 lg:px-8 py-8 bg-background-light min-h-screen">
       {/* Header con botón de regreso */}
-      <div className="mb-6">
+      <div className="neumorphic-card p-6 mb-6">
         <button
           onClick={() => router.back()}
-          className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
+          className="flex items-center text-slate-600 hover:text-primary mb-4 font-medium transition-colors"
         >
           <ArrowLeftIcon className="h-5 w-5 mr-2" />
           Volver al Dashboard
         </button>
 
         <div className="flex items-center gap-4">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src={colaboradorData.avatar || '/avatar.png'} alt={colaboradorData.name} />
-            <AvatarFallback className="bg-purple-500 text-white text-xl">
-              {colaboradorData.name?.charAt(0) || 'C'}
-            </AvatarFallback>
-          </Avatar>
+          <div className="w-16 h-16 rounded-full neumorphic-card-inset flex items-center justify-center">
+            <Avatar className="h-14 w-14">
+              <AvatarImage src={colaboradorData.avatar || '/avatar.png'} alt={colaboradorData.name} />
+              <AvatarFallback className="bg-primary text-white text-xl">
+                {colaboradorData.name?.charAt(0) || 'C'}
+              </AvatarFallback>
+            </Avatar>
+          </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{colaboradorData.name}</h1>
-            <p className="text-gray-500">
+            <h1 className="text-2xl font-bold text-slate-800">{colaboradorData.name}</h1>
+            <p className="text-slate-500">
               {colaboradorData.role === 'colaborador' ? 'Colaborador' : colaboradorData.role === 'agente' ? 'Agente' : colaboradorData.role}
             </p>
             {colaboradorData.email && (
-              <p className="text-sm text-gray-400">{colaboradorData.email}</p>
+              <p className="text-sm text-slate-400">{colaboradorData.email}</p>
             )}
           </div>
         </div>
       </div>
 
       {/* Primera fila - Gráfico grande y tarjetas */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Gráfico de ventas diarias */}
-        <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
+        <div className="lg:col-span-2 neumorphic-card p-6">
+          <h3 className="text-sm font-semibold text-slate-600 mb-4">Ventas por Período</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={colaboradorData.ventasDiarias}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="dia" />
-                <YAxis />
-                <Tooltip />
-                <Area type="monotone" dataKey="contratos" stroke="#3B82F6" fill="#93C5FD" fillOpacity={0.6} />
-                <Area type="monotone" dataKey="dinero" stroke="#10B981" fill="#86EFAC" fillOpacity={0.6} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E2E4E7" />
+                <XAxis dataKey="dia" tick={{ fill: '#64748b', fontSize: 12 }} />
+                <YAxis tick={{ fill: '#64748b', fontSize: 12 }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#F0F2F5',
+                    border: 'none',
+                    borderRadius: '0.75rem',
+                    boxShadow: '3px 3px 6px #d9dbde, -3px -3px 6px #ffffff'
+                  }}
+                />
+                <Area type="monotone" dataKey="contratos" stroke="#14b8a6" fill="rgba(20, 184, 166, 0.2)" />
+                <Area type="monotone" dataKey="dinero" stroke="#10B981" fill="rgba(16, 185, 129, 0.2)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Tarjetas de métricas principales */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* Contratos Activos */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-sm font-semibold text-gray-600 mb-2">Contratos Activos</h3>
+          <div className="neumorphic-card p-6">
+            <h3 className="text-sm font-semibold text-slate-600 mb-2">Contratos Activos</h3>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold">{colaboradorData.contratosActivos}</span>
+              <span className="text-4xl font-bold text-slate-800">{colaboradorData.contratosActivos}</span>
               <span className={`text-sm font-medium ${
-                colaboradorData.contratosActivosCrecimiento >= 0 ? 'text-green-600' : 'text-red-600'
+                colaboradorData.contratosActivosCrecimiento >= 0 ? 'text-green-500' : 'text-red-500'
               }`}>
                 {colaboradorData.contratosActivosCrecimiento >= 0 ? '+' : ''}{colaboradorData.contratosActivosCrecimiento}%
               </span>
@@ -325,89 +321,89 @@ export default function ColaboradorProfile() {
           </div>
 
           {/* Predicción de Ventas */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-sm font-semibold text-gray-600 mb-3">Predicción de Ventas total</h3>
+          <div className="neumorphic-card p-6">
+            <h3 className="text-sm font-semibold text-slate-600 mb-3">Predicción de Ventas total</h3>
             <div className="space-y-2">
               <div className="flex justify-between items-baseline">
-                <span className="text-2xl font-bold">{colaboradorData.prediccionVentasTotal.ventas}</span>
-                <span className="text-2xl font-bold text-blue-600">{colaboradorData.prediccionVentasTotal.dinero}€</span>
+                <span className="text-2xl font-bold text-slate-800">{colaboradorData.prediccionVentasTotal.ventas}</span>
+                <span className="text-2xl font-bold text-primary">{colaboradorData.prediccionVentasTotal.dinero}€</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Segunda fila - Métricas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      {/* Segunda fila - Métricas con gráficos pequeños */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         {/* Nº Clientes */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-2">Nº Clientes</h3>
+        <div className="neumorphic-card p-6">
+          <h3 className="text-sm font-semibold text-slate-800 mb-2">Nº Clientes</h3>
           <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-3xl font-bold">{colaboradorData.numeroClientes.valor}</span>
-            <span className={`text-sm ${colaboradorData.numeroClientes.crecimiento >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <span className="text-3xl font-bold text-slate-800">{colaboradorData.numeroClientes.valor}</span>
+            <span className={`text-sm font-medium ${colaboradorData.numeroClientes.crecimiento >= 0 ? 'text-green-500' : 'text-red-500'}`}>
               {colaboradorData.numeroClientes.crecimiento >= 0 ? '+' : ''}{colaboradorData.numeroClientes.crecimiento}%
             </span>
           </div>
           <div className="h-20">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={colaboradorData.ventasDiarias.map(d => ({ v: d.contratos }))}>
-                <Line type="monotone" dataKey="v" stroke="#3B82F6" strokeWidth={2} dot={false} />
-              </LineChart>
+              <AreaChart data={colaboradorData.ventasDiarias.map(d => ({ v: d.contratos }))}>
+                <Area type="monotone" dataKey="v" stroke="#14b8a6" fill="rgba(20, 184, 166, 0.2)" />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Retiros */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-2">Retiros</h3>
+        <div className="neumorphic-card p-6">
+          <h3 className="text-sm font-semibold text-slate-800 mb-2">Retiros</h3>
           <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-3xl font-bold">{colaboradorData.retiros.valor}</span>
-            <span className={`text-sm ${colaboradorData.retiros.cambio >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <span className="text-3xl font-bold text-slate-800">{colaboradorData.retiros.valor}</span>
+            <span className={`text-sm font-medium ${colaboradorData.retiros.cambio >= 0 ? 'text-green-500' : 'text-red-500'}`}>
               {colaboradorData.retiros.cambio}
             </span>
           </div>
           <div className="h-20">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={colaboradorData.ventasDiarias.map(d => ({ v: d.contratos }))}>
-                <Area type="monotone" dataKey="v" stroke="#10B981" fill="#86EFAC" />
+                <Area type="monotone" dataKey="v" stroke="#10B981" fill="rgba(16, 185, 129, 0.2)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Clientes medios */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-2">Clientes medios</h3>
+        <div className="neumorphic-card p-6">
+          <h3 className="text-sm font-semibold text-slate-800 mb-2">Clientes medios</h3>
           <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-3xl font-bold">{colaboradorData.clientesMedios.valor}</span>
-            <span className="text-sm text-gray-500">/{colaboradorData.clientesMedios.unidad}</span>
-            <span className={`text-sm ${colaboradorData.clientesMedios.crecimiento >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <span className="text-3xl font-bold text-slate-800">{colaboradorData.clientesMedios.valor}</span>
+            <span className="text-sm text-slate-500">/{colaboradorData.clientesMedios.unidad}</span>
+            <span className={`text-sm font-medium ${colaboradorData.clientesMedios.crecimiento >= 0 ? 'text-green-500' : 'text-red-500'}`}>
               {colaboradorData.clientesMedios.crecimiento >= 0 ? '+' : ''}{colaboradorData.clientesMedios.crecimiento}%
             </span>
           </div>
           <div className="h-20">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={colaboradorData.ventasDiarias.map(d => ({ v: d.contratos }))}>
-                <Line type="monotone" dataKey="v" stroke="#FCD34D" strokeWidth={2} dot={false} />
-              </LineChart>
+              <AreaChart data={colaboradorData.ventasDiarias.map(d => ({ v: d.contratos }))}>
+                <Area type="monotone" dataKey="v" stroke="#F59E0B" fill="rgba(245, 158, 11, 0.2)" />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Comisión media */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-2">Comisión media</h3>
+        <div className="neumorphic-card p-6">
+          <h3 className="text-sm font-semibold text-slate-800 mb-2">Comisión media</h3>
           <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-3xl font-bold">{colaboradorData.comisionMedia.valor}</span>
-            <span className="text-sm text-gray-500">{colaboradorData.comisionMedia.unidad}</span>
-            <span className={`text-sm ${colaboradorData.comisionMedia.crecimiento >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <span className="text-3xl font-bold text-slate-800">{colaboradorData.comisionMedia.valor}</span>
+            <span className="text-sm text-slate-500">{colaboradorData.comisionMedia.unidad}</span>
+            <span className={`text-sm font-medium ${colaboradorData.comisionMedia.crecimiento >= 0 ? 'text-green-500' : 'text-red-500'}`}>
               {colaboradorData.comisionMedia.crecimiento >= 0 ? '+' : ''}{colaboradorData.comisionMedia.crecimiento}%
             </span>
           </div>
           <div className="h-20">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={colaboradorData.historicoComisiones.map(h => ({ v: h.comision }))}>
-                <Area type="monotone" dataKey="v" stroke="#EC4899" fill="#FBCFE8" />
+                <Area type="monotone" dataKey="v" stroke="#EC4899" fill="rgba(236, 72, 153, 0.2)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -415,23 +411,23 @@ export default function ColaboradorProfile() {
       </div>
 
       {/* Histórico Comisiones */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Histórico Comisiones</h3>
+      <div className="neumorphic-card p-6 mb-6">
+        <h3 className="text-lg font-bold text-slate-800 mb-4">Histórico Comisiones</h3>
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+          <table className="w-full text-left">
+            <thead className="text-xs text-slate-500 uppercase tracking-wider">
               <tr>
-                <th className="px-4 py-2 text-left">Mes</th>
-                <th className="px-4 py-2 text-left">Comisión</th>
-                <th className="px-4 py-2 text-left">Contratos</th>
+                <th className="p-3">Mes</th>
+                <th className="p-3">Comisión</th>
+                <th className="p-3">Contratos</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody>
               {colaboradorData.historicoComisiones.map((item, idx) => (
-                <tr key={idx}>
-                  <td className="px-4 py-2 text-sm">{item.mes}</td>
-                  <td className="px-4 py-2 text-sm text-green-600 font-bold">{item.comision}$</td>
-                  <td className="px-4 py-2 text-sm">{item.contratos || '...'}</td>
+                <tr key={idx} className="table-row-divider">
+                  <td className="p-3 font-medium text-slate-800">{item.mes}</td>
+                  <td className="p-3 text-green-600 font-bold">{item.comision}€</td>
+                  <td className="p-3 text-slate-600">{item.contratos || '...'}</td>
                 </tr>
               ))}
             </tbody>
@@ -439,43 +435,44 @@ export default function ColaboradorProfile() {
         </div>
       </div>
 
-      {/* Gráfico de barras - Ventas por agente */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      {/* Gráfico de barras - Ventas por mes */}
+      <div className="neumorphic-card p-6 mb-6">
+        <h3 className="text-lg font-bold text-slate-800 mb-4">Ventas por Mes</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={colaboradorData.ventasPorAgente}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="agente" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="ventas" fill="#3B82F6" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E2E4E7" />
+              <XAxis dataKey="agente" tick={{ fill: '#64748b', fontSize: 12 }} />
+              <YAxis tick={{ fill: '#64748b', fontSize: 12 }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#F0F2F5',
+                  border: 'none',
+                  borderRadius: '0.75rem',
+                  boxShadow: '3px 3px 6px #d9dbde, -3px -3px 6px #ffffff'
+                }}
+              />
+              <Bar dataKey="ventas" fill="#14b8a6" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* Grid inferior - Información detallada */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         {/* Estados */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Estados</h3>
+        <div className="neumorphic-card p-6">
+          <h3 className="text-sm font-semibold text-slate-800 mb-3">Estados</h3>
           <div className="space-y-3">
             {colaboradorData.estados.map((estado, idx) => (
               <div key={idx}>
                 <div className="flex justify-between items-center text-xs mb-1">
-                  <span className="text-gray-900 font-medium">{estado.name}</span>
-                  <div className="flex gap-2 items-center">
-                    <span className={`font-medium ${
-                      estado.cambio >= 0 ? 'text-yellow-600' : 'text-red-600'
-                    }`}>
-                      {estado.cambio >= 0 ? '+' : ''}{estado.cambio}€
-                    </span>
-                    <span className="font-bold">{estado.percentage}%</span>
-                  </div>
+                  <span className="text-slate-600">{estado.name}</span>
+                  <span className="font-medium text-slate-800">{estado.percentage}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="neumorphic-progress-track h-2">
                   <div
-                    className="bg-blue-500 h-2 rounded-full"
+                    className="bg-primary h-2 rounded-full"
                     style={{ width: `${estado.percentage}%` }}
                   />
                 </div>
@@ -485,89 +482,109 @@ export default function ColaboradorProfile() {
         </div>
 
         {/* Distribución de Clientes */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Distribución de Clientes</h3>
+        <div className="neumorphic-card p-6">
+          <h3 className="text-sm font-semibold text-slate-800 mb-4">Distribución Clientes</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-2xl">👤</span>
-                <span className="text-sm text-gray-600">Particulares</span>
+                <div className="w-8 h-8 rounded-full neumorphic-card-inset flex items-center justify-center">
+                  <span className="text-lg">👤</span>
+                </div>
+                <span className="text-xs text-slate-600">Particulares</span>
               </div>
-              <span className="text-xl font-bold">{colaboradorData.distribucionTipo.particulares.porcentaje}%</span>
+              <span className="text-lg font-bold text-slate-800">{colaboradorData.distribucionTipo.particulares.porcentaje}%</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="neumorphic-progress-track h-2">
               <div
-                className="bg-blue-500 h-2 rounded-full"
+                className="bg-primary h-2 rounded-full"
                 style={{ width: `${colaboradorData.distribucionTipo.particulares.porcentaje}%` }}
               />
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-2xl">🏢</span>
-                <span className="text-sm text-gray-600">Empresas</span>
+                <div className="w-8 h-8 rounded-full neumorphic-card-inset flex items-center justify-center">
+                  <span className="text-lg">🏢</span>
+                </div>
+                <span className="text-xs text-slate-600">Empresas</span>
               </div>
-              <span className="text-xl font-bold">{colaboradorData.distribucionTipo.empresas.porcentaje}%</span>
+              <span className="text-lg font-bold text-slate-800">{colaboradorData.distribucionTipo.empresas.porcentaje}%</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="neumorphic-progress-track h-2">
               <div
                 className="bg-purple-500 h-2 rounded-full"
                 style={{ width: `${colaboradorData.distribucionTipo.empresas.porcentaje}%` }}
               />
             </div>
-            <div className="mt-4 pt-4 border-t">
-              <p className="text-xs text-gray-500 text-center">
-                Total: {colaboradorData.distribucionTipo.total} clientes
-              </p>
+            <div className="text-center pt-2">
+              <p className="text-xs text-slate-500">Total: {colaboradorData.distribucionTipo.total} clientes</p>
             </div>
           </div>
         </div>
 
         {/* Tiempo medio Activ */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Tiempo medio Activ</h3>
-          <div className="space-y-3">
-            {colaboradorData.tiempoActivacion.map((item, idx) => (
-              <div key={idx} className="space-y-1">
-                <div className="flex items-center gap-2">
-                  {item.tipo && (
-                    <>
-                      <span className="text-xs text-gray-600">{item.tipo}</span>
-                      <span className="text-xs font-medium">{item.empresa}</span>
-                    </>
-                  )}
+        <div className="neumorphic-card p-6">
+          <h3 className="text-sm font-semibold text-slate-800 mb-3">Tiempo medio Activ</h3>
+          <div className="neumorphic-card-inset rounded-lg p-3">
+            <div className="space-y-2">
+              {colaboradorData.tiempoActivacion.map((item, idx) => (
+                <div key={idx} className="flex justify-between items-center text-xs">
+                  <span className="text-slate-600">{item.tiempo > 0 ? `${item.tiempo} días` : '-'}</span>
+                  <span className="font-medium text-slate-800">{item.tipo}</span>
                 </div>
-                <div className="flex justify-between text-xs">
-                  <span className="font-bold">{item.tiempo > 0 ? `${item.tiempo} días` : ''}</span>
-                  <span className="text-gray-600">{item.tipo}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="font-bold">{item.tiempo > 0 ? `${item.tiempo} días` : ''}</span>
-                  <span className="text-gray-600">{item.tipo === 'Empresas' ? 'Naturgy' : item.tipo === 'Particulares' ? 'Endesa' : ''}</span>
-                </div>
-                {item.tipo === 'Particulares' && (
-                  <div className="flex justify-between text-xs">
-                    <span className="font-bold">2 días</span>
-                    <span className="text-gray-600">Iberdrola</span>
-                  </div>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Posibles Renovaciones */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Posibles Renovaciones</h3>
-          <div className="text-center mb-4">
-            <span className="text-4xl font-bold">Total {colaboradorData.posiblesRenovaciones.total}</span>
+        <div className="neumorphic-card p-6">
+          <h3 className="text-sm font-semibold text-slate-800 mb-3">Posibles Renovaciones</h3>
+          <div className="neumorphic-card-inset rounded-lg p-4 text-center">
+            <p className="text-xs text-slate-600 mb-1">Total</p>
+            <span className="text-4xl font-bold text-slate-800">{colaboradorData.posiblesRenovaciones.total}</span>
           </div>
-          <div className="border-2 border-gray-900 rounded p-3 space-y-2">
-            {colaboradorData.posiblesRenovaciones.clientes.map((cliente, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <div className="h-4 w-full bg-gray-200 rounded"></div>
-                <span className="text-xs font-medium">{cliente.tipo}</span>
-              </div>
-            ))}
+          {colaboradorData.posiblesRenovaciones.clientes.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {colaboradorData.posiblesRenovaciones.clientes.map((cliente, idx) => (
+                <div key={idx} className="flex items-center gap-2 text-xs">
+                  <div className="h-2 flex-1 neumorphic-progress-track">
+                    <div className="bg-primary h-2 rounded-full" style={{ width: '60%' }} />
+                  </div>
+                  <span className="font-medium text-slate-600">{cliente.tipo}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Fila final - Distribuciones adicionales */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Publicidad */}
+        <div className="neumorphic-card p-6">
+          <h3 className="text-sm font-semibold text-slate-800 mb-4">Publicidad</h3>
+          <div className="neumorphic-card-inset rounded-lg p-6 text-center">
+            <p className="text-3xl font-bold text-slate-800 mb-1">{colaboradorData.distribucionTipo.particulares.porcentaje}%</p>
+            <p className="text-xs text-slate-500">margen</p>
+          </div>
+        </div>
+
+        {/* Otros */}
+        <div className="neumorphic-card p-6">
+          <h3 className="text-sm font-semibold text-slate-800 mb-4">Otros</h3>
+          <div className="w-24 h-24 rounded-full neumorphic-card-inset mx-auto flex items-center justify-center">
+            <p className="text-2xl font-bold text-slate-800">{colaboradorData.distribucionTipo.empresas.porcentaje}%</p>
+          </div>
+        </div>
+
+        {/* Total Contratos */}
+        <div className="neumorphic-card p-6">
+          <h3 className="text-sm font-semibold text-slate-800 mb-4">Total Contratos</h3>
+          <div className="flex items-center justify-center gap-4 mt-4">
+            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center shadow-neumorphic-light-lg">
+              <span className="text-primary text-2xl">📄</span>
+            </div>
+            <p className="text-4xl font-bold text-slate-800">{colaboradorData.contratosActivos}</p>
           </div>
         </div>
       </div>
