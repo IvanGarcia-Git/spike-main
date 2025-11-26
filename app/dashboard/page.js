@@ -312,7 +312,14 @@ export default function Dashboard() {
       {/* Top 3 Agentes Cards - Visible en todas las vistas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {dashboardData.topAgentes.slice(0, 3).map((agente, idx) => (
-          <div key={agente.id || idx} className="neumorphic-card p-6">
+          <div
+            key={agente.id || idx}
+            className="neumorphic-card p-6 cursor-pointer hover:scale-[1.02] transition-transform"
+            onClick={() => {
+              const path = agente.role === 'colaborador' ? '/colaboradores' : '/agentes';
+              router.push(`${path}/${agente.id}`);
+            }}
+          >
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center">
                 <div className="w-12 h-12 rounded-full neumorphic-card-inset p-1 flex items-center justify-center mr-4">
@@ -415,7 +422,14 @@ export default function Dashboard() {
                 </thead>
                 <tbody>
                   {paginatedAgentes.map((agente, idx) => (
-                    <tr key={agente.id || idx} className="table-row-divider">
+                    <tr
+                      key={agente.id || idx}
+                      className="table-row-divider cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                      onClick={() => {
+                        const path = agente.role === 'colaborador' ? '/colaboradores' : '/agentes';
+                        router.push(`${path}/${agente.id}`);
+                      }}
+                    >
                       <td className="p-3 font-semibold">{idx + 1}</td>
                       <td className="p-3">
                         <div className="flex items-center">
@@ -731,7 +745,14 @@ export default function Dashboard() {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {dashboardData.topAgentes.map((agente, idx) => (
-                <div key={idx} className="neumorphic-card-inset p-4">
+                <div
+                  key={idx}
+                  className="neumorphic-card-inset p-4 cursor-pointer hover:scale-[1.02] transition-transform"
+                  onClick={() => {
+                    const path = agente.role === 'colaborador' ? '/colaboradores' : '/agentes';
+                    router.push(`${path}/${agente.id}`);
+                  }}
+                >
                   <div className="flex items-center mb-3">
                     <div className="w-10 h-10 rounded-full neumorphic-card p-1 flex items-center justify-center mr-3">
                       <span className="material-icons-outlined text-2xl text-slate-500">
@@ -815,7 +836,14 @@ export default function Dashboard() {
             </h3>
             <div className="space-y-4">
               {dashboardData.topAgentes.map((agente, idx) => (
-                <div key={idx} className="neumorphic-card-inset p-4">
+                <div
+                  key={idx}
+                  className="neumorphic-card-inset p-4 cursor-pointer hover:scale-[1.01] transition-transform"
+                  onClick={() => {
+                    const path = agente.role === 'colaborador' ? '/colaboradores' : '/agentes';
+                    router.push(`${path}/${agente.id}`);
+                  }}
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center flex-1">
                       <div className="w-10 h-10 rounded-full neumorphic-card flex items-center justify-center mr-4">
@@ -995,7 +1023,14 @@ export default function Dashboard() {
               </h3>
               <div className="space-y-3">
                 {dashboardData.topAgentes.slice(0, 5).map((agente, idx) => (
-                  <div key={idx} className="flex items-center justify-between neumorphic-card-inset p-3">
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between neumorphic-card-inset p-3 cursor-pointer hover:scale-[1.01] transition-transform"
+                    onClick={() => {
+                      const path = agente.role === 'colaborador' ? '/colaboradores' : '/agentes';
+                      router.push(`${path}/${agente.id}`);
+                    }}
+                  >
                     <div className="flex items-center">
                       <div className="w-8 h-8 rounded-full neumorphic-card flex items-center justify-center mr-3">
                         <span className="text-sm font-bold text-primary">#{idx + 1}</span>
