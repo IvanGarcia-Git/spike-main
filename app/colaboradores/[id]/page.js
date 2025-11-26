@@ -57,12 +57,22 @@ export default function ColaboradorProfile() {
   }
 
   const transformBackendData = (data) => {
-    // Calcular crecimiento basado en histórico
-    const crecimiento = data.historicoMensual && data.historicoMensual.length >= 2
-      ? Math.round(((data.historicoMensual[data.historicoMensual.length - 1]?.contratos || 0) -
-          (data.historicoMensual[data.historicoMensual.length - 2]?.contratos || 0)) /
-          (data.historicoMensual[data.historicoMensual.length - 2]?.contratos || 1) * 100)
-      : 0
+    // Calcular crecimiento basado en cumplimiento objetivo
+    const crecimiento = data.cumplimientoObjetivo?.crecimiento || 0
+
+    // Mapear historial de comisiones desde el backend
+    const historicoComisiones = data.historialComisiones?.map(h => {
+      const fecha = new Date(h.fecha)
+      const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+      return {
+        mes: meses[fecha.getMonth()] || 'N/A',
+        comision: Math.round(h.comision || 0),
+        contratos: h.contratos || 0
+      }
+    }) || []
+
+    // Mapear histórico mensual para gráficos
+    const historicoMensual = data.historicoMensual || []
 
     return {
       id: data.id,
@@ -78,13 +88,15 @@ export default function ColaboradorProfile() {
       contratosActivosCrecimiento: crecimiento,
 
       prediccionVentasTotal: {
-        ventas: Math.round(data.stats?.prediccionVentas || 0),
-        dinero: Math.round(data.stats?.ingresos?.mes || 0)
+        ventas: data.stats?.ingresos?.puntos || 0,
+        dinero: Math.round(data.stats?.prediccionVentas || 0)
       },
 
       numeroClientes: {
         valor: data.stats?.clientes?.total || 0,
-        crecimiento: Math.round(((data.stats?.clientes?.nuevosMes || 0) / (data.stats?.clientes?.total || 1)) * 100)
+        crecimiento: data.stats?.clientes?.total > 0
+          ? Math.round(((data.stats?.clientes?.nuevosMes || 0) / data.stats?.clientes?.total) * 100)
+          : 0
       },
 
       retiros: {
@@ -105,23 +117,22 @@ export default function ColaboradorProfile() {
       },
 
       // Histórico de comisiones
-      historicoComisiones: data.historialComisiones?.map(h => ({
-        mes: h.mes,
-        comision: h.comision,
-        contratos: h.contratos || 0
-      })) || [],
+      historicoComisiones,
 
-      // Histórico mensual para ventas diarias
-      ventasDiarias: Array.from({ length: 12 }, (_, i) => {
-        const monthData = data.historicoMensual?.[i] || {}
-        return {
-          dia: `Día ${i + 1}`,
-          contratos: monthData.contratos || 0,
-          dinero: Math.round(monthData.comision || 0)
-        }
-      }),
+      // Histórico mensual para ventas diarias - usar datos reales del backend
+      ventasDiarias: historicoMensual.length > 0
+        ? historicoMensual.map(h => ({
+            dia: h.mes,
+            contratos: h.contratos || 0,
+            dinero: 0
+          }))
+        : Array.from({ length: 6 }, (_, i) => ({
+            dia: `Mes ${i + 1}`,
+            contratos: 0,
+            dinero: 0
+          })),
 
-      // Distribución de clientes
+      // Distribución de clientes por tipo
       estados: data.clientesPorTipo?.porTipo?.map((t, idx) => ({
         name: t.tipo,
         percentage: t.porcentaje,
@@ -135,143 +146,89 @@ export default function ColaboradorProfile() {
         valor: c.cantidad || 0
       })) || [],
 
-      // Distribución de género (simulado)
+      // Distribución de género (pendiente de implementar en backend)
       distribucionGenero: {
-        mujer: { emoji: '♀', porcentaje: 9 },
-        hombre: { emoji: '♂', porcentaje: 6 },
-        otro: { emoji: '⚧', porcentaje: 16 }
+        mujer: { emoji: '♀', porcentaje: data.clientesPorTipo?.distribucionClientesTipo?.particulares?.porcentaje || 0 },
+        hombre: { emoji: '♂', porcentaje: data.clientesPorTipo?.distribucionClientesTipo?.empresas?.porcentaje || 0 },
+        otro: { emoji: '⚧', porcentaje: 0 }
       },
 
-      // Ventas por agente
-      ventasPorAgente: data.historicoMensual?.map((h, i) => ({
-        agente: `${h.mes?.substring(0, 1)}${i + 1}`,
+      // Ventas por mes (histórico mensual)
+      ventasPorAgente: historicoMensual.map(h => ({
+        agente: h.mes,
         ventas: h.contratos || 0
-      })) || []
+      })),
+
+      // Tiempos de activación (desde compañías si disponible)
+      tiempoActivacion: data.clientesPorTipo?.porCompania?.slice(0, 5).map(c => ({
+        tipo: c.compania,
+        tiempo: 0,
+        empresa: c.compania,
+        contrato: c.cantidad || 0
+      })) || [],
+
+      // Posibles renovaciones
+      posiblesRenovaciones: {
+        total: data.stats?.contratosActivos || 0,
+        clientes: []
+      }
     }
   }
 
   const generateFallbackData = () => {
+    const monthNames = ['Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov']
+
     return {
       id: params.id,
-      name: 'María López',
-      role: 'Colaborador',
+      name: `Colaborador ${params.id}`,
+      role: 'colaborador',
       avatar: null,
-      contratosActivos: 336,
-      contratosActivosCrecimiento: 12,
+      email: null,
+      contratosActivos: 0,
+      contratosActivosCrecimiento: 0,
       prediccionVentasTotal: {
-        ventas: 552,
-        dinero: 5203
+        ventas: 0,
+        dinero: 0
       },
-      ventasDiarias: [
-        { dia: 'Aug 1', contratos: 4, dinero: 6 },
-        { dia: 'Aug 2', contratos: 10, dinero: 5 },
-        { dia: 'Aug 3', contratos: 5, dinero: 4 },
-        { dia: 'Aug 4', contratos: 3, dinero: 3 },
-        { dia: 'Aug 5', contratos: 2, dinero: 5 },
-        { dia: 'Aug 6', contratos: 4, dinero: 6 },
-        { dia: 'Aug 7', contratos: 8, dinero: 7 },
-        { dia: 'Aug 8', contratos: 7, dinero: 8 },
-        { dia: 'Aug 9', contratos: 10, dinero: 6 },
-        { dia: 'Aug 10', contratos: 14, dinero: 7 },
-        { dia: 'Aug 11', contratos: 9, dinero: 8 },
-        { dia: 'Aug 12', contratos: 7, dinero: 8 }
-      ],
+      ventasDiarias: Array.from({ length: 12 }, (_, i) => ({
+        dia: `Día ${i + 1}`,
+        contratos: 0,
+        dinero: 0
+      })),
       numeroClientes: {
-        valor: 196,
-        crecimiento: 12
+        valor: 0,
+        crecimiento: 0
       },
       retiros: {
-        valor: -92,
-        cambio: -986
+        valor: 0,
+        cambio: 0
       },
       clientesMedios: {
-        valor: 5.6,
-        unidad: 'día',
-        crecimiento: 12
+        valor: 0,
+        unidad: '€/día',
+        crecimiento: 0
       },
       comisionMedia: {
-        valor: 349.3,
-        unidad: '€/día',
-        crecimiento: 4
+        valor: 0,
+        unidad: '€',
+        crecimiento: 0
       },
-      historicoComisiones: [
-        { mes: 'Enero', comision: 7929, contratos: 118 },
-        { mes: 'Febrero', comision: 5629, contratos: 93 },
-        { mes: 'Marzo', comision: 5329, contratos: 0 },
-        { mes: 'Abril', comision: 4529, contratos: 0 },
-        { mes: 'Mayo', comision: 3229, contratos: 0 },
-        { mes: 'Junio', comision: 3229, contratos: 0 }
-      ],
-      ventasPorAgente: [
-        { agente: 'L1', ventas: 3 },
-        { agente: 'M1', ventas: 5 },
-        { agente: 'X3', ventas: 8 },
-        { agente: 'J4', ventas: 6 },
-        { agente: 'V5', ventas: 6 },
-        { agente: 'L7', ventas: 4 },
-        { agente: 'M8', ventas: 4 },
-        { agente: 'X10', ventas: 5 },
-        { agente: '', ventas: 8 },
-        { agente: '', ventas: 6 },
-        { agente: '', ventas: 4 },
-        { agente: 'L15', ventas: 9 },
-        { agente: '', ventas: 5 },
-        { agente: '', ventas: 5 },
-        { agente: '', ventas: 8 },
-        { agente: '', ventas: 6 },
-        { agente: '', ventas: 4 },
-        { agente: '', ventas: 4 },
-        { agente: '', ventas: 8 },
-        { agente: '', ventas: 6 },
-        { agente: '', ventas: 5 },
-        { agente: '', ventas: 8 },
-        { agente: '', ventas: 4 },
-        { agente: '', ventas: 10 },
-        { agente: '', ventas: 4 },
-        { agente: '', ventas: 5 },
-        { agente: '', ventas: 7 },
-        { agente: '', ventas: 6 },
-        { agente: '', ventas: 6 }
-      ],
-      estados: [
-        { name: 'Pagado', percentage: 97, valor: 97, cambio: 76 },
-        { name: 'Activo', percentage: 83, valor: 783, cambio: 24 },
-        { name: 'Pdte. Firma', percentage: 80, valor: 80, cambio: 76 },
-        { name: 'En proceso', percentage: 44, valor: 44, cambio: 24 },
-        { name: 'Otros', percentage: 73, valor: 73, cambio: 76 },
-        { name: 'Retiro', percentage: 14, valor: 14, cambio: -24 }
-      ],
+      historicoComisiones: [],
+      ventasPorAgente: monthNames.map((mes, i) => ({
+        agente: mes,
+        ventas: 0
+      })),
+      estados: [],
       distribucionGenero: {
-        mujer: { emoji: '♀', porcentaje: 9 },
-        hombre: { emoji: '♂', porcentaje: 6 },
-        otro: { emoji: '⚧', porcentaje: 16 }
+        mujer: { emoji: '♀', porcentaje: 0 },
+        hombre: { emoji: '♂', porcentaje: 0 },
+        otro: { emoji: '⚧', porcentaje: 0 }
       },
-      compañias: [
-        { nombre: 'Endesa', valor: 2500 },
-        { nombre: 'Naturgy', valor: 2000 },
-        { nombre: 'Iberdrola', valor: 1800 },
-        { nombre: 'Repsol', valor: 1600 },
-        { nombre: 'Eon', valor: 1200 },
-        { nombre: 'Total', valor: 1000 },
-        { nombre: 'Plenitude', valor: 500 }
-      ],
-      tiempoActivacion: [
-        { tipo: 'Empresas', tiempo: 4, empresa: 'mmmm', contrato: 992 },
-        { tipo: 'Particulares', tiempo: 4, empresa: 'PDC', contrato: 992 },
-        { tipo: '', tiempo: 8, empresa: '', contrato: 0 },
-        { tipo: '', tiempo: 2, empresa: '', contrato: 0 },
-        { tipo: '', tiempo: 0, empresa: '', contrato: 0 }
-      ],
+      compañias: [],
+      tiempoActivacion: [],
       posiblesRenovaciones: {
-        total: 93,
-        clientes: [
-          { nombre: 'Cliente P', tipo: 'P' },
-          { nombre: 'Cliente P', tipo: 'P' },
-          { nombre: 'Cliente P', tipo: 'P' },
-          { nombre: 'Cliente P', tipo: 'P' },
-          { nombre: 'Cliente P', tipo: 'P' },
-          { nombre: 'Cliente P', tipo: 'P' }
-        ]
+        total: 0,
+        clientes: []
       }
     }
   }

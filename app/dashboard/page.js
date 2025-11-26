@@ -127,6 +127,7 @@ export default function Dashboard() {
       ingresosMes: 0
     },
     topAgentes: [],
+    topColaboradores: [],
     ventasPorMes: [],
   });
 
@@ -147,6 +148,7 @@ export default function Dashboard() {
         setDashboardData({
           stats: data.stats || { totalClientes: 0, totalLeads: 0, totalContratos: 0, ingresosMes: 0 },
           topAgentes: data.topAgentes || [],
+          topColaboradores: data.topColaboradores || [],
           ventasPorMes: data.ventasPorMes || [],
         });
       } else {
@@ -164,59 +166,72 @@ export default function Dashboard() {
     stats: { totalClientes: 0, totalLeads: 0, totalContratos: 0, ingresosMes: 0 },
     topAgentes: [
       {
-        id: 1,
-        name: "Carlos Garcia",
-        role: "Salesman",
+        id: 2,
+        name: "Carlos García Martínez",
+        role: "agente",
         ventas: 280,
         objetivo: 140,
         porcentaje: 92,
-        comisiones: "$1570",
+        comisiones: 1570,
         crecimiento: 20,
         color: "green",
       },
       {
-        id: 2,
-        name: "Daniel Ken",
-        role: "Salesman",
+        id: 3,
+        name: "Daniel Rodríguez López",
+        role: "agente",
         ventas: 160,
         objetivo: 140,
         porcentaje: 75,
-        comisiones: "$800",
+        comisiones: 800,
         crecimiento: 4,
         color: "yellow",
       },
       {
-        id: 3,
-        name: "Jennifer Tan",
-        role: "Salesman",
+        id: 7,
+        name: "Laura Fernández López",
+        role: "agente",
         ventas: 124,
         objetivo: 140,
         porcentaje: 45,
-        comisiones: "$650",
+        comisiones: 650,
         crecimiento: 31,
         color: "red",
       },
+    ],
+    topColaboradores: [
       {
-        id: 4,
-        name: "María López",
-        role: "Salesman",
+        id: 1,
+        name: "María López García",
+        role: "colaborador",
         ventas: 110,
         objetivo: 140,
         porcentaje: 65,
-        comisiones: "$550",
+        comisiones: 550,
         crecimiento: 15,
         color: "yellow",
       },
       {
-        id: 5,
-        name: "Juan Pérez",
-        role: "Salesman",
+        id: 4,
+        name: "Jennifer Tan Fernández",
+        role: "colaborador",
         ventas: 95,
         objetivo: 140,
         porcentaje: 55,
-        comisiones: "$475",
+        comisiones: 475,
         crecimiento: 8,
         color: "yellow",
+      },
+      {
+        id: 5,
+        name: "Ana Martín Sánchez",
+        role: "colaborador",
+        ventas: 85,
+        objetivo: 140,
+        porcentaje: 48,
+        comisiones: 425,
+        crecimiento: 12,
+        color: "red",
       },
     ],
     ventasPorMes: [
@@ -261,6 +276,22 @@ export default function Dashboard() {
     return colors[color] || "bg-primary";
   };
 
+  // Format comisiones for display (handles both number and string formats)
+  const formatComisiones = (comisiones) => {
+    if (typeof comisiones === 'number') {
+      return `${comisiones.toLocaleString('es-ES')}€`;
+    }
+    // If already formatted as string, return as is
+    return comisiones;
+  };
+
+  // Format role for display
+  const formatRole = (role) => {
+    if (role === 'agente') return 'Agente';
+    if (role === 'colaborador') return 'Colaborador';
+    return role;
+  };
+
   const filteredAgentes = useMemo(() => {
     return dashboardData.topAgentes.filter((agente) =>
       agente.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -270,6 +301,14 @@ export default function Dashboard() {
   const paginatedAgentes = useMemo(() => {
     return filteredAgentes.slice(0, entriesPerPage);
   }, [filteredAgentes, entriesPerPage]);
+
+  // Get the top 3 users to display in the cards based on active tab
+  const topCardsData = useMemo(() => {
+    if (activeTab === "colaboradores") {
+      return dashboardData.topColaboradores.slice(0, 3);
+    }
+    return dashboardData.topAgentes.slice(0, 3);
+  }, [activeTab, dashboardData.topAgentes, dashboardData.topColaboradores]);
 
   const handleNavigateToContratos = () => {
     router.push('/contratos');
@@ -309,9 +348,9 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Top 3 Agentes Cards - Visible en todas las vistas */}
+      {/* Top 3 Cards - Muestra Agentes o Colaboradores según el tab activo */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {dashboardData.topAgentes.slice(0, 3).map((agente, idx) => (
+        {topCardsData.map((agente, idx) => (
           <div
             key={agente.id || idx}
             className="neumorphic-card p-6 cursor-pointer hover:scale-[1.02] transition-transform"
@@ -332,7 +371,7 @@ export default function Dashboard() {
                     {agente.name}
                   </p>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    {agente.role}
+                    {formatRole(agente.role)}
                   </p>
                 </div>
               </div>
@@ -361,7 +400,7 @@ export default function Dashboard() {
             </div>
             <div className="flex justify-between items-center mt-2">
               <p className="font-bold text-lg text-slate-800 dark:text-slate-200">
-                {agente.comisiones}
+                {formatComisiones(agente.comisiones)}
               </p>
               <p className="text-sm text-green-500 flex items-center">
                 <span className="material-icons-outlined text-base">arrow_upward</span>
@@ -443,7 +482,7 @@ export default function Dashboard() {
                               {agente.name}
                             </p>
                             <p className="text-xs text-slate-500 dark:text-slate-400">
-                              {agente.role}
+                              {formatRole(agente.role)}
                             </p>
                           </div>
                         </div>
@@ -452,7 +491,7 @@ export default function Dashboard() {
                         {agente.ventas}/{agente.objetivo}
                       </td>
                       <td className="p-3 font-bold text-slate-800 dark:text-slate-200">
-                        {agente.comisiones}
+                        {formatComisiones(agente.comisiones)}
                       </td>
                       <td className="p-3">
                         <div className="flex items-center">
@@ -744,14 +783,11 @@ export default function Dashboard() {
               Distribución de Clientes por Colaborador
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {dashboardData.topAgentes.map((agente, idx) => (
+              {dashboardData.topColaboradores.map((colaborador, idx) => (
                 <div
                   key={idx}
                   className="neumorphic-card-inset p-4 cursor-pointer hover:scale-[1.02] transition-transform"
-                  onClick={() => {
-                    const path = agente.role === 'colaborador' ? '/colaboradores' : '/agentes';
-                    router.push(`${path}/${agente.id}`);
-                  }}
+                  onClick={() => router.push(`/colaboradores/${colaborador.id}`)}
                 >
                   <div className="flex items-center mb-3">
                     <div className="w-10 h-10 rounded-full neumorphic-card p-1 flex items-center justify-center mr-3">
@@ -761,25 +797,25 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <p className="font-medium text-slate-800 dark:text-slate-200">
-                        {agente.name}
+                        {colaborador.name}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {agente.ventas} clientes
+                        {colaborador.ventas} clientes
                       </p>
                     </div>
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs">
                       <span className="text-slate-600 dark:text-slate-400">Activos</span>
-                      <span className="font-medium">{Math.floor(agente.ventas * 0.8)}</span>
+                      <span className="font-medium">{Math.floor(colaborador.ventas * 0.8)}</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-slate-600 dark:text-slate-400">Pendientes</span>
-                      <span className="font-medium">{Math.floor(agente.ventas * 0.15)}</span>
+                      <span className="font-medium">{Math.floor(colaborador.ventas * 0.15)}</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-slate-600 dark:text-slate-400">Cancelados</span>
-                      <span className="font-medium">{Math.floor(agente.ventas * 0.05)}</span>
+                      <span className="font-medium">{Math.floor(colaborador.ventas * 0.05)}</span>
                     </div>
                   </div>
                 </div>
@@ -795,7 +831,7 @@ export default function Dashboard() {
               </span>
               <p className="text-sm text-slate-500 dark:text-slate-400">Total Colaboradores</p>
               <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-                {dashboardData.topAgentes.length}
+                {dashboardData.topColaboradores.length}
               </p>
             </div>
             <div className="neumorphic-card p-6">
@@ -804,7 +840,7 @@ export default function Dashboard() {
               </span>
               <p className="text-sm text-slate-500 dark:text-slate-400">Clientes Totales</p>
               <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-                {dashboardData.topAgentes.reduce((sum, a) => sum + a.ventas, 0)}
+                {dashboardData.topColaboradores.reduce((sum, a) => sum + a.ventas, 0)}
               </p>
             </div>
             <div className="neumorphic-card p-6">
@@ -813,7 +849,7 @@ export default function Dashboard() {
               </span>
               <p className="text-sm text-slate-500 dark:text-slate-400">Promedio/Persona</p>
               <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-                {Math.floor(dashboardData.topAgentes.reduce((sum, a) => sum + a.ventas, 0) / dashboardData.topAgentes.length)}
+                {dashboardData.topColaboradores.length > 0 ? Math.floor(dashboardData.topColaboradores.reduce((sum, a) => sum + a.ventas, 0) / dashboardData.topColaboradores.length) : 0}
               </p>
             </div>
             <div className="neumorphic-card p-6">
@@ -863,7 +899,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-bold text-primary">{agente.comisiones}</p>
+                      <p className="text-lg font-bold text-primary">{formatComisiones(agente.comisiones)}</p>
                       <p className="text-xs text-green-500 flex items-center">
                         <span className="material-icons-outlined text-sm">arrow_upward</span>
                         {agente.crecimiento}%

@@ -85,10 +85,19 @@ export default function AgentProfile() {
 
     // Mapear histórico mensual para gráficos
     const historicoMensual = data.historicoMensual || []
-    const chartData = historicoMensual.map(h => ({
-      month: h.mes,
-      value: h.contratos || 0
-    }))
+    const chartData = historicoMensual.length > 0
+      ? historicoMensual.map(h => ({
+          month: h.mes,
+          value: h.contratos || 0
+        }))
+      : [
+          { month: 'Jun', value: 0 },
+          { month: 'Jul', value: 0 },
+          { month: 'Ago', value: 0 },
+          { month: 'Sep', value: 0 },
+          { month: 'Oct', value: 0 },
+          { month: 'Nov', value: 0 }
+        ]
 
     // Datos de distribución de clientes
     const distribucionClientesTipo = data.clientesPorTipo?.distribucionClientesTipo || {
@@ -164,31 +173,17 @@ export default function AgentProfile() {
         value: data.stats?.comisionMedia?.diaria || 0,
         unit: '€/día',
         change: crecimiento > 0 ? crecimiento : 0,
-        data: chartData.length > 0 ? chartData : [
-          { month: 'Ene', value: 10 },
-          { month: 'Feb', value: 12 },
-          { month: 'Mar', value: 8 },
-          { month: 'Abr', value: 15 },
-          { month: 'May', value: 11 },
-          { month: 'Jun', value: 14 }
-        ]
+        data: chartData
       },
 
       // % Conversión (objetivo cumplido)
       conversion: {
         percentage: data.cumplimientoObjetivo?.porcentaje || 0,
         change: crecimiento,
-        data: chartData.length > 0 ? chartData.map(d => ({
+        data: chartData.map(d => ({
           month: d.month,
-          value: Math.round((d.value / objetivo) * 100)
-        })) : [
-          { month: 'Ene', value: 42 },
-          { month: 'Feb', value: 38 },
-          { month: 'Mar', value: 45 },
-          { month: 'Abr', value: 40 },
-          { month: 'May', value: 37 },
-          { month: 'Jun', value: 39 }
-        ]
+          value: objetivo > 0 ? Math.round((d.value / objetivo) * 100) : 0
+        }))
       },
 
       // Puntos medio por venta
@@ -203,10 +198,12 @@ export default function AgentProfile() {
         value: data.stats?.comisionMedia?.mensual || 0,
         currency: '€',
         change: crecimiento < 0 ? crecimiento : 0,
-        data: historicoComisiones.map((h, i) => ({
-          month: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'][i] || h.mes?.slice(0, 3),
-          value: h.comision || 0
-        }))
+        data: historicoComisiones.length > 0
+          ? historicoComisiones.map((h, i) => ({
+              month: h.mes?.slice(0, 3) || chartData[i]?.month || `M${i+1}`,
+              value: h.comision || 0
+            }))
+          : chartData.map(d => ({ month: d.month, value: 0 }))
       },
 
       // Estados (distribución por tipo de servicio)
@@ -245,117 +242,100 @@ export default function AgentProfile() {
   }
 
   const generateFallbackData = () => {
+    // Calcular días del mes
+    const currentDate = new Date()
+    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
+    const currentDay = currentDate.getDate()
+    const daysLeft = daysInMonth - currentDay
+
     return {
       id: params.id,
-      name: 'Carlos Garcia',
-      role: 'Salesman',
+      name: `Agente ${params.id}`,
+      role: 'agente',
       avatar: null,
+      email: null,
       daysLeft: {
-        current: 32.9,
-        total: 62,
-        percentage: 53
+        current: daysLeft,
+        total: daysInMonth,
+        percentage: Math.round((currentDay / daysInMonth) * 100)
       },
       contratos: {
         confirmados: 0,
-        activos: 42.6,
+        activos: 0,
         porActivarse: 0,
-        retiros: 12,
-        cancelados: 4
+        retiros: 0,
+        cancelados: 0
       },
-      puntosRestantes: 22,
+      puntosRestantes: 140,
       historialPuntos: [
-        { cliente: 'Cliente 1', puntos: 0.9 },
-        { cliente: 'Cliente 2', puntos: 1.2 },
-        { cliente: 'Cliente 3', puntos: 0.9 },
-        { cliente: 'Cliente 4', puntos: 0.65 },
-        { cliente: 'Cliente 5', puntos: 1.1 },
-        { cliente: 'Cliente 6', puntos: 2 }
+        { cliente: 'Sin datos', puntos: 0 }
       ],
       mediaMensual: {
-        value: 12,
-        unit: 'día',
-        change: 12,
+        value: 0,
+        unit: '€/día',
+        change: 0,
         data: [
-          { month: 'Ene', value: 10 },
-          { month: 'Feb', value: 15 },
-          { month: 'Mar', value: 12 },
-          { month: 'Abr', value: 18 },
-          { month: 'May', value: 14 },
-          { month: 'Jun', value: 11 }
+          { month: 'Jun', value: 0 },
+          { month: 'Jul', value: 0 },
+          { month: 'Ago', value: 0 },
+          { month: 'Sep', value: 0 },
+          { month: 'Oct', value: 0 },
+          { month: 'Nov', value: 0 }
         ]
       },
       conversion: {
-        percentage: 39.6,
-        change: -4,
+        percentage: 0,
+        change: 0,
         data: [
-          { month: 'Ene', value: 42 },
-          { month: 'Feb', value: 38 },
-          { month: 'Mar', value: 45 },
-          { month: 'Abr', value: 40 },
-          { month: 'May', value: 37 },
-          { month: 'Jun', value: 39.6 }
+          { month: 'Jun', value: 0 },
+          { month: 'Jul', value: 0 },
+          { month: 'Ago', value: 0 },
+          { month: 'Sep', value: 0 },
+          { month: 'Oct', value: 0 },
+          { month: 'Nov', value: 0 }
         ]
       },
       puntosMedioVenta: {
-        value: 5.6,
-        change: 12,
+        value: 0,
+        change: 0,
         data: [
-          { month: 'Ene', value: 5 },
-          { month: 'Feb', value: 6 },
-          { month: 'Mar', value: 5.5 },
-          { month: 'Abr', value: 6.2 },
-          { month: 'May', value: 5.8 },
-          { month: 'Jun', value: 5.6 }
+          { month: 'Jun', value: 0 },
+          { month: 'Jul', value: 0 },
+          { month: 'Ago', value: 0 },
+          { month: 'Sep', value: 0 },
+          { month: 'Oct', value: 0 },
+          { month: 'Nov', value: 0 }
         ]
       },
       comisionMedia: {
-        value: 349.3,
+        value: 0,
         currency: '€',
-        change: -4,
+        change: 0,
         data: [
-          { month: 'Ene', value: 380 },
-          { month: 'Feb', value: 420 },
-          { month: 'Mar', value: 350 },
-          { month: 'Abr', value: 390 },
-          { month: 'May', value: 340 },
-          { month: 'Jun', value: 349.3 }
+          { month: 'Jun', value: 0 },
+          { month: 'Jul', value: 0 },
+          { month: 'Ago', value: 0 },
+          { month: 'Sep', value: 0 },
+          { month: 'Oct', value: 0 },
+          { month: 'Nov', value: 0 }
         ]
       },
-      historicoComisiones: [
-        { mes: 'Enero', comision: 7929, ventasObjetivo: '118/75' },
-        { mes: 'Febrero', comision: 5629, ventasObjetivo: '93/75' },
-        { mes: 'Marzo', comision: 5329, ventasObjetivo: '...' },
-        { mes: 'Abril', comision: 4529, ventasObjetivo: '...' },
-        { mes: 'Mayo', comision: 3229, ventasObjetivo: '...' },
-        { mes: 'Junio', comision: 3229, ventasObjetivo: '...' }
-      ],
-      estados: [
-        { name: 'Pagado', percentage: 76 },
-        { name: 'Activo', percentage: 24 },
-        { name: 'Pdte. Firma', percentage: 76 },
-        { name: '...', percentage: 24 },
-        { name: '...', percentage: 76 },
-        { name: '...', percentage: 24 }
-      ],
+      historicoComisiones: [],
+      estados: [],
       distribucionGenero: {
-        hombre: 62,
-        mujer: 6,
-        otro: 16
+        hombre: 0,
+        mujer: 0,
+        otro: 0
       },
-      totalClientes: 1340,
-      referidos: 725,
-      totalContratos: 540,
-      tiempoActivacion: [
-        { tiempo: '4 días', tipo: 'Naturgy' },
-        { tiempo: '8 días', tipo: 'Endesa' },
-        { tiempo: '2 días', tipo: 'Iberdrola' },
-        { tiempo: '5 días', tipo: 'Repsol' }
-      ],
+      totalClientes: 0,
+      referidos: 0,
+      totalContratos: 0,
+      tiempoActivacion: [],
       distribucionTipo: {
-        particulares: { cantidad: 1150, percentage: 72.8 },
-        empresas: { cantidad: 190, percentage: 19.9 }
+        particulares: { cantidad: 0, percentage: 0 },
+        empresas: { cantidad: 0, percentage: 0 }
       },
-      ventasCarretera: 122
+      ventasCarretera: 0
     }
   }
 
