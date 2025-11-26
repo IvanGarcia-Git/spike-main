@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -21,6 +21,8 @@ import {
 export default function ColaboradorProfile() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const nameFromUrl = searchParams.get('name')
   const [loading, setLoading] = useState(true)
   const [colaboradorData, setColaboradorData] = useState(null)
 
@@ -146,11 +148,17 @@ export default function ColaboradorProfile() {
         valor: c.cantidad || 0
       })) || [],
 
-      // Distribución de género (pendiente de implementar en backend)
-      distribucionGenero: {
-        mujer: { emoji: '♀', porcentaje: data.clientesPorTipo?.distribucionClientesTipo?.particulares?.porcentaje || 0 },
-        hombre: { emoji: '♂', porcentaje: data.clientesPorTipo?.distribucionClientesTipo?.empresas?.porcentaje || 0 },
-        otro: { emoji: '⚧', porcentaje: 0 }
+      // Distribución de tipo de cliente (Particulares vs Empresas)
+      distribucionTipo: {
+        particulares: {
+          cantidad: data.clientesPorTipo?.distribucionClientesTipo?.particulares?.cantidad || 0,
+          porcentaje: data.clientesPorTipo?.distribucionClientesTipo?.particulares?.porcentaje || 0
+        },
+        empresas: {
+          cantidad: data.clientesPorTipo?.distribucionClientesTipo?.empresas?.cantidad || 0,
+          porcentaje: data.clientesPorTipo?.distribucionClientesTipo?.empresas?.porcentaje || 0
+        },
+        total: data.clientesPorTipo?.distribucionClientesTipo?.total || 0
       },
 
       // Ventas por mes (histórico mensual)
@@ -180,7 +188,7 @@ export default function ColaboradorProfile() {
 
     return {
       id: params.id,
-      name: `Colaborador ${params.id}`,
+      name: nameFromUrl || `Colaborador ${params.id}`,
       role: 'colaborador',
       avatar: null,
       email: null,
@@ -219,10 +227,10 @@ export default function ColaboradorProfile() {
         ventas: 0
       })),
       estados: [],
-      distribucionGenero: {
-        mujer: { emoji: '♀', porcentaje: 0 },
-        hombre: { emoji: '♂', porcentaje: 0 },
-        otro: { emoji: '⚧', porcentaje: 0 }
+      distribucionTipo: {
+        particulares: { cantidad: 0, porcentaje: 0 },
+        empresas: { cantidad: 0, porcentaje: 0 },
+        total: 0
       },
       compañias: [],
       tiempoActivacion: [],
@@ -336,11 +344,13 @@ export default function ColaboradorProfile() {
           <h3 className="text-sm font-semibold text-gray-900 mb-2">Nº Clientes</h3>
           <div className="flex items-baseline gap-2 mb-2">
             <span className="text-3xl font-bold">{colaboradorData.numeroClientes.valor}</span>
-            <span className="text-sm text-green-600">+{colaboradorData.numeroClientes.crecimiento}%</span>
+            <span className={`text-sm ${colaboradorData.numeroClientes.crecimiento >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {colaboradorData.numeroClientes.crecimiento >= 0 ? '+' : ''}{colaboradorData.numeroClientes.crecimiento}%
+            </span>
           </div>
           <div className="h-20">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={[{v:4},{v:5},{v:3},{v:6},{v:5},{v:7}]}>
+              <LineChart data={colaboradorData.ventasDiarias.map(d => ({ v: d.contratos }))}>
                 <Line type="monotone" dataKey="v" stroke="#3B82F6" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
@@ -352,11 +362,13 @@ export default function ColaboradorProfile() {
           <h3 className="text-sm font-semibold text-gray-900 mb-2">Retiros</h3>
           <div className="flex items-baseline gap-2 mb-2">
             <span className="text-3xl font-bold">{colaboradorData.retiros.valor}</span>
-            <span className="text-sm text-red-600">{colaboradorData.retiros.cambio}</span>
+            <span className={`text-sm ${colaboradorData.retiros.cambio >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {colaboradorData.retiros.cambio}
+            </span>
           </div>
           <div className="h-20">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={[{v:4},{v:3},{v:5},{v:4},{v:3},{v:2}]}>
+              <AreaChart data={colaboradorData.ventasDiarias.map(d => ({ v: d.contratos }))}>
                 <Area type="monotone" dataKey="v" stroke="#10B981" fill="#86EFAC" />
               </AreaChart>
             </ResponsiveContainer>
@@ -369,11 +381,13 @@ export default function ColaboradorProfile() {
           <div className="flex items-baseline gap-2 mb-2">
             <span className="text-3xl font-bold">{colaboradorData.clientesMedios.valor}</span>
             <span className="text-sm text-gray-500">/{colaboradorData.clientesMedios.unidad}</span>
-            <span className="text-sm text-green-600">+{colaboradorData.clientesMedios.crecimiento}%</span>
+            <span className={`text-sm ${colaboradorData.clientesMedios.crecimiento >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {colaboradorData.clientesMedios.crecimiento >= 0 ? '+' : ''}{colaboradorData.clientesMedios.crecimiento}%
+            </span>
           </div>
           <div className="h-20">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={[{v:4},{v:5},{v:4},{v:6},{v:5},{v:6}]}>
+              <LineChart data={colaboradorData.ventasDiarias.map(d => ({ v: d.contratos }))}>
                 <Line type="monotone" dataKey="v" stroke="#FCD34D" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
@@ -386,11 +400,13 @@ export default function ColaboradorProfile() {
           <div className="flex items-baseline gap-2 mb-2">
             <span className="text-3xl font-bold">{colaboradorData.comisionMedia.valor}</span>
             <span className="text-sm text-gray-500">{colaboradorData.comisionMedia.unidad}</span>
-            <span className="text-sm text-green-600">+{colaboradorData.comisionMedia.crecimiento}%</span>
+            <span className={`text-sm ${colaboradorData.comisionMedia.crecimiento >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {colaboradorData.comisionMedia.crecimiento >= 0 ? '+' : ''}{colaboradorData.comisionMedia.crecimiento}%
+            </span>
           </div>
           <div className="h-20">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={[{v:4},{v:3},{v:5},{v:4},{v:5},{v:6}]}>
+              <AreaChart data={colaboradorData.historicoComisiones.map(h => ({ v: h.comision }))}>
                 <Area type="monotone" dataKey="v" stroke="#EC4899" fill="#FBCFE8" />
               </AreaChart>
             </ResponsiveContainer>
@@ -468,49 +484,40 @@ export default function ColaboradorProfile() {
           </div>
         </div>
 
-        {/* Distribución de Género */}
+        {/* Distribución de Clientes */}
         <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Distribución de Clientes</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-2xl">{colaboradorData.distribucionGenero.mujer.emoji}</span>
-                <span className="text-sm text-gray-600">♀</span>
+                <span className="text-2xl">👤</span>
+                <span className="text-sm text-gray-600">Particulares</span>
               </div>
-              <span className="text-xl font-bold">{colaboradorData.distribucionGenero.mujer.porcentaje}%</span>
+              <span className="text-xl font-bold">{colaboradorData.distribucionTipo.particulares.porcentaje}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-blue-500 h-2 rounded-full"
+                style={{ width: `${colaboradorData.distribucionTipo.particulares.porcentaje}%` }}
+              />
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-2xl">{colaboradorData.distribucionGenero.hombre.emoji}</span>
-                <span className="text-sm text-gray-600">♂</span>
+                <span className="text-2xl">🏢</span>
+                <span className="text-sm text-gray-600">Empresas</span>
               </div>
-              <span className="text-xl font-bold">{colaboradorData.distribucionGenero.hombre.porcentaje}%</span>
+              <span className="text-xl font-bold">{colaboradorData.distribucionTipo.empresas.porcentaje}%</span>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{colaboradorData.distribucionGenero.otro.emoji}</span>
-                <span className="text-sm text-gray-600">⚧</span>
-              </div>
-              <span className="text-xl font-bold">{colaboradorData.distribucionGenero.otro.porcentaje}%</span>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-purple-500 h-2 rounded-full"
+                style={{ width: `${colaboradorData.distribucionTipo.empresas.porcentaje}%` }}
+              />
             </div>
-            <div className="mt-4">
-              <div className="flex gap-1 mb-2">
-                {[...Array(7)].map((_, i) => (
-                  <div key={i} className="flex-1 h-1 bg-gray-300 rounded"></div>
-                ))}
-              </div>
-              <div className="space-y-2">
-                {colaboradorData.compañias.map((comp, idx) => (
-                  <div key={idx} className="flex justify-between text-xs">
-                    <span className="text-gray-600">{comp.nombre}</span>
-                    <div className="w-32 bg-gray-200 rounded-full h-3">
-                      <div
-                        className="bg-blue-500 h-3 rounded-full"
-                        style={{ width: `${(comp.valor / 2500) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <div className="mt-4 pt-4 border-t">
+              <p className="text-xs text-gray-500 text-center">
+                Total: {colaboradorData.distribucionTipo.total} clientes
+              </p>
             </div>
           </div>
         </div>

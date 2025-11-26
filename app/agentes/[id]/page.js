@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -21,6 +21,8 @@ import {
 export default function AgentProfile() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const nameFromUrl = searchParams.get('name')
   const [loading, setLoading] = useState(true)
   const [agentData, setAgentData] = useState(null)
 
@@ -209,11 +211,17 @@ export default function AgentProfile() {
       // Estados (distribución por tipo de servicio)
       estados,
 
-      // Distribución de género (requiere implementación en backend)
-      distribucionGenero: {
-        hombre: 62,
-        mujer: 22,
-        otro: 16
+      // Distribución de tipo de cliente (Particulares vs Empresas)
+      distribucionClientesTipo: {
+        particulares: {
+          cantidad: distribucionClientesTipo.particulares?.cantidad || 0,
+          porcentaje: distribucionClientesTipo.particulares?.porcentaje || 0
+        },
+        empresas: {
+          cantidad: distribucionClientesTipo.empresas?.cantidad || 0,
+          porcentaje: distribucionClientesTipo.empresas?.porcentaje || 0
+        },
+        total: distribucionClientesTipo.total || 0
       },
 
       // Métricas de clientes
@@ -250,7 +258,7 @@ export default function AgentProfile() {
 
     return {
       id: params.id,
-      name: `Agente ${params.id}`,
+      name: nameFromUrl || `Agente ${params.id}`,
       role: 'agente',
       avatar: null,
       email: null,
@@ -322,10 +330,10 @@ export default function AgentProfile() {
       },
       historicoComisiones: [],
       estados: [],
-      distribucionGenero: {
-        hombre: 0,
-        mujer: 0,
-        otro: 0
+      distribucionClientesTipo: {
+        particulares: { cantidad: 0, porcentaje: 0 },
+        empresas: { cantidad: 0, porcentaje: 0 },
+        total: 0
       },
       totalClientes: 0,
       referidos: 0,
@@ -596,27 +604,42 @@ export default function AgentProfile() {
           </div>
         </div>
 
-        {/* Distribución de Género */}
+        {/* Distribución de Clientes */}
         <div className="neumorphic-card p-6">
-          <h3 className="text-sm font-semibold text-slate-800 mb-4">Distribución</h3>
-          <div className="flex justify-center gap-6">
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full neumorphic-card-inset flex items-center justify-center mx-auto mb-2">
-                <span className="text-2xl">♀</span>
+          <h3 className="text-sm font-semibold text-slate-800 mb-4">Distribución Clientes</h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full neumorphic-card-inset flex items-center justify-center">
+                  <span className="text-lg">👤</span>
+                </div>
+                <span className="text-xs text-slate-600">Particulares</span>
               </div>
-              <p className="text-xl font-bold text-slate-800">{agentData.distribucionGenero.hombre}</p>
+              <span className="text-lg font-bold text-slate-800">{agentData.distribucionClientesTipo.particulares.porcentaje}%</span>
             </div>
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full neumorphic-card-inset flex items-center justify-center mx-auto mb-2">
-                <span className="text-2xl">♂</span>
-              </div>
-              <p className="text-xl font-bold text-slate-800">{agentData.distribucionGenero.mujer}%</p>
+            <div className="neumorphic-progress-track h-2">
+              <div
+                className="bg-primary h-2 rounded-full"
+                style={{ width: `${agentData.distribucionClientesTipo.particulares.porcentaje}%` }}
+              />
             </div>
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full neumorphic-card-inset flex items-center justify-center mx-auto mb-2">
-                <span className="text-2xl">⚧</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full neumorphic-card-inset flex items-center justify-center">
+                  <span className="text-lg">🏢</span>
+                </div>
+                <span className="text-xs text-slate-600">Empresas</span>
               </div>
-              <p className="text-xl font-bold text-slate-800">{agentData.distribucionGenero.otro}%</p>
+              <span className="text-lg font-bold text-slate-800">{agentData.distribucionClientesTipo.empresas.porcentaje}%</span>
+            </div>
+            <div className="neumorphic-progress-track h-2">
+              <div
+                className="bg-purple-500 h-2 rounded-full"
+                style={{ width: `${agentData.distribucionClientesTipo.empresas.porcentaje}%` }}
+              />
+            </div>
+            <div className="text-center pt-2">
+              <p className="text-xs text-slate-500">Total: {agentData.distribucionClientesTipo.total} clientes</p>
             </div>
           </div>
         </div>

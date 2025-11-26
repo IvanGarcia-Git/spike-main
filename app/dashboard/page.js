@@ -356,7 +356,7 @@ export default function Dashboard() {
             className="neumorphic-card p-6 cursor-pointer hover:scale-[1.02] transition-transform"
             onClick={() => {
               const path = agente.role === 'colaborador' ? '/colaboradores' : '/agentes';
-              router.push(`${path}/${agente.id}`);
+              router.push(`${path}/${agente.id}?name=${encodeURIComponent(agente.name)}`);
             }}
           >
             <div className="flex justify-between items-start mb-4">
@@ -787,7 +787,7 @@ export default function Dashboard() {
                 <div
                   key={idx}
                   className="neumorphic-card-inset p-4 cursor-pointer hover:scale-[1.02] transition-transform"
-                  onClick={() => router.push(`/colaboradores/${colaborador.id}`)}
+                  onClick={() => router.push(`/colaboradores/${colaborador.id}?name=${encodeURIComponent(colaborador.name)}`)}
                 >
                   <div className="flex items-center mb-3">
                     <div className="w-10 h-10 rounded-full neumorphic-card p-1 flex items-center justify-center mr-3">
