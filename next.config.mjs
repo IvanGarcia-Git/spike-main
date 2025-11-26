@@ -1,16 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
-  // output: 'standalone', // Comentado para desarrollo local
-  // Asegúrate de que la API_URL esté configurada correctamente en Vercel
+  output: 'standalone',
   env: {
     API_URL: process.env.API_URL,
   },
   async rewrites() {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:3000/:path*',
+        destination: `${backendUrl}/:path*`,
       },
     ];
   },
