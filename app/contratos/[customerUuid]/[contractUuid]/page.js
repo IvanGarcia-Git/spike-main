@@ -346,15 +346,15 @@ export default function ContractDetail({ params }) {
             {/* Información del contrato */}
             {customer && activeContract && (
               <div className="flex flex-col space-y-2">
-                <div className="text-xl font-semibold text-black">
+                <div className="text-xl font-semibold text-slate-800 dark:text-slate-100">
                   {contracts[0].type === "Telefonía" ? (
                     <>
-                      <span className="font-bold text-black">Tarifas de telefonía:</span>{" "}
+                      <span className="font-bold text-slate-800 dark:text-slate-100">Tarifas de telefonía:</span>{" "}
                       {contracts[0].telephonyData?.rates &&
                         contracts[0].telephonyData?.rates.length > 0 ? (
                         <ul>
                           {contracts[0].telephonyData.rates.map((rate, index) => (
-                            <li className="px-4" key={index}>
+                            <li className="px-4 text-slate-700 dark:text-slate-300" key={index}>
                               - {rate.name || "Sin Definir"}
                             </li>
                           ))}
@@ -365,13 +365,13 @@ export default function ContractDetail({ params }) {
                     </>
                   ) : (
                     <>
-                      <span className="font-bold text-black">Tarifa:</span>{" "}
+                      <span className="font-bold text-slate-800 dark:text-slate-100">Tarifa:</span>{" "}
                       {activeContract?.rate?.name ? activeContract.rate.name : "Sin Definir"}
                     </>
                   )}
                 </div>
-                <p className="text-xl font-semibold text-black">
-                  <span className="font-bold text-black">Asesor:</span> {activeContract.user.name}{" "}
+                <p className="text-xl font-semibold text-slate-800 dark:text-slate-100">
+                  <span className="font-bold text-slate-800 dark:text-slate-100">Asesor:</span> {activeContract.user.name}{" "}
                   {activeContract.user.firstSurname}
                 </p>
               </div>

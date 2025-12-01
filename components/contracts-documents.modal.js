@@ -1,8 +1,6 @@
-import { MdClose } from "react-icons/md";
 import { useState, useEffect } from "react";
 import { getCookie } from "cookies-next";
 import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
-import { AiFillFile } from "react-icons/ai";
 
 //TODO: REFACTOR THE CODE (UNIFY) CONTRACT.DOCUMENTS.MODAL AND CONTRACT.DOCUMENTS.PAGE
 
@@ -86,7 +84,7 @@ export default function ContractsDocumentsModal({ contractUuid, isOpen, onClose,
 
     return () => {
       document.removeEventListener("keydown", handleEsc);
-      document.body.style.overflow = "auto"; // Restaurar scroll al cerrar el modal
+      document.body.style.overflow = "auto";
     };
   }, [isOpen, onClose]);
 
@@ -122,105 +120,163 @@ export default function ContractsDocumentsModal({ contractUuid, isOpen, onClose,
 
   return (
     <div
-      className={`fixed inset-0 flex justify-center bg-black bg-opacity-50 z-50 overflow-y-auto ${
+      className={`fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4 ${
         isOpen ? "lg:ml-72" : ""
       }`}
     >
-      <div className="bg-background text-black p-8 rounded-lg shadow-lg w-full max-w-4xl relative my-auto overflow-y-auto max-h-[90vh]">
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-        >
-          <MdClose size={30} />
-        </button>
-
-        <div className="max-w-7xl mx-auto bg-background p-6 shadow-lg">
-          {/* Mostrar tipos de documentación requeridos */}
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold text-black">Documentación Requerida:</h2>
-            {documentation && documentation.length > 0 ? (
-              <ul className="list-disc pl-5 text-black">
-                {documentation.map((doc, index) => (
-                  <li key={index}>{doc}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-600">
-                No se especificaron tipos de documentación requeridos.
-              </p>
-            )}
-          </div>
-          <form onSubmit={handleFileUpload}>
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-4">
-                <input
-                  type="file"
-                  id="file"
-                  className="hidden"
-                  onChange={(e) => setSelectedFile(e.target.files[0])}
-                />
-                <label
-                  htmlFor="file"
-                  className="px-4 py-2 bg-backgroundHoverBold text-black rounded-md cursor-pointer"
-                >
-                  Seleccionar archivo
-                </label>
-                <span className="text-gray-600">
-                  {selectedFile ? selectedFile.name : "Ningún archivo seleccionado"}
-                </span>
-              </div>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondaryHover"
-                disabled={uploading}
-              >
-                {uploading ? "Subiendo..." : "Subir Documentación"}
-              </button>
+      <div className="bg-background-light dark:bg-background-dark rounded-xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full neumorphic-card-inset flex items-center justify-center">
+              <span className="material-icons-outlined text-primary">folder</span>
             </div>
-          </form>
+            <div>
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
+                Documentos del Contrato
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Gestiona los documentos adjuntos
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-10 h-10 rounded-full neumorphic-button flex items-center justify-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+          >
+            <span className="material-icons-outlined">close</span>
+          </button>
+        </div>
 
-          <div className="bg-backgroundHover">
-            {files.length > 0 ? (
-              <ul className="space-y-4">
-                {files.map((file) => (
-                  <li
-                    key={file.uuid}
-                    className="flex justify-between items-center bg-backgroundHoverBold p-4 rounded-lg"
-                  >
-                    <div className="flex items-center gap-4">
-                      <AiFillFile size={24} className="text-yellow-400" />
-                      <span className="font-semibold text-black">{file.fileName}</span>
+        {/* Documentación requerida */}
+        {documentation && documentation.length > 0 && (
+          <div className="neumorphic-card-inset p-4 rounded-lg mb-6">
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+              <span className="material-icons-outlined text-primary text-lg">checklist</span>
+              Documentación Requerida
+            </h3>
+            <ul className="space-y-1">
+              {documentation.map((doc, index) => (
+                <li key={index} className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                  <span className="material-icons-outlined text-xs text-slate-400">check_circle_outline</span>
+                  {doc}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Upload form */}
+        <form onSubmit={handleFileUpload} className="mb-6">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <input
+                type="file"
+                id="file"
+                className="hidden"
+                onChange={(e) => setSelectedFile(e.target.files[0])}
+              />
+              <label
+                htmlFor="file"
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg neumorphic-button cursor-pointer text-slate-600 dark:text-slate-400 font-medium hover:text-primary transition-colors"
+              >
+                <span className="material-icons-outlined">upload_file</span>
+                {selectedFile ? selectedFile.name : "Seleccionar archivo"}
+              </label>
+            </div>
+            <button
+              type="submit"
+              className="px-6 py-3 rounded-lg bg-primary text-white font-semibold neumorphic-button hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              disabled={uploading || !selectedFile}
+            >
+              {uploading ? (
+                <>
+                  <span className="material-icons-outlined animate-spin">refresh</span>
+                  Subiendo...
+                </>
+              ) : (
+                <>
+                  <span className="material-icons-outlined">cloud_upload</span>
+                  Subir
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+
+        {/* Files list */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+            <span className="material-icons-outlined text-primary text-lg">description</span>
+            Documentos ({files.length})
+          </h3>
+
+          {files.length > 0 ? (
+            <div className="space-y-2">
+              {files.map((file) => (
+                <div
+                  key={file.uuid}
+                  className="neumorphic-card p-4 rounded-lg flex items-center justify-between group hover:shadow-lg transition-shadow"
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 rounded-lg neumorphic-card-inset flex items-center justify-center flex-shrink-0">
+                      <span className="material-icons-outlined text-yellow-500">insert_drive_file</span>
                     </div>
-                    <div>
-                      <p className="text-gray-600 text-sm">
-                        {new Date(file.createdAt).toLocaleDateString()} -{" "}
-                        {new Date(file.createdAt).toLocaleTimeString()}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-slate-800 dark:text-slate-200 truncate">
+                        {file.fileName}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {new Date(file.createdAt).toLocaleDateString("es-ES", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        })}
                       </p>
                     </div>
-                    <div className="flex space-x-4">
-                      {/* Botón para ver el archivo */}
-                      <button
-                        onClick={() => handleFileView(file.documentUri)}
-                        className="bg-blue-500 text-white px-4 py-2 rounded"
-                      >
-                        Ver
-                      </button>
+                  </div>
+                  <div className="flex items-center gap-2 ml-3">
+                    <button
+                      onClick={() => handleFileView(file.documentUri)}
+                      className="w-9 h-9 rounded-lg neumorphic-button flex items-center justify-center text-blue-500 hover:text-blue-600 transition-colors"
+                      title="Ver documento"
+                    >
+                      <span className="material-icons-outlined text-lg">visibility</span>
+                    </button>
+                    <button
+                      onClick={() => handleFileDelete(file.uuid)}
+                      className="w-9 h-9 rounded-lg neumorphic-button flex items-center justify-center text-red-500 hover:text-red-600 transition-colors"
+                      title="Eliminar documento"
+                    >
+                      <span className="material-icons-outlined text-lg">delete</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="neumorphic-card-inset p-8 rounded-lg text-center">
+              <span className="material-icons-outlined text-5xl text-slate-400 mb-3">folder_off</span>
+              <p className="text-slate-600 dark:text-slate-400 font-medium">
+                No hay documentos disponibles
+              </p>
+              <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
+                Sube el primer documento usando el botón de arriba
+              </p>
+            </div>
+          )}
+        </div>
 
-                      {/* Botón para eliminar el archivo */}
-                      <button
-                        onClick={() => handleFileDelete(file.uuid)}
-                        className="bg-red-500 text-white px-4 py-2 rounded"
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-black">No hay documentos disponibles.</p>
-            )}
-          </div>
+        {/* Footer */}
+        <div className="flex justify-end mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+          <button
+            onClick={onClose}
+            className="px-6 py-2.5 rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+          >
+            Cerrar
+          </button>
         </div>
       </div>
     </div>

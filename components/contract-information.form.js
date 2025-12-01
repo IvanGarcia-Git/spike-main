@@ -205,12 +205,12 @@ export default function ContractForm({
 
   return (
     <div
-      className={`p-4 border rounded-lg bg-background ${
-        isActive ? "border-blue-500 border-4" : "border-gray-500 border"
+      className={`p-6 rounded-xl ${
+        isActive ? "neumorphic-card ring-2 ring-primary" : "neumorphic-card-inset"
       }`}
     >
       {/* Formulario de contrato */}
-      <h3 className="text-xl font-bold text-black">
+      <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">
         {contract.type === "Luz" ? "Contrato Luz" : "Contrato Gas"}
       </h3>
 
@@ -218,14 +218,14 @@ export default function ContractForm({
       <div className="mb-4">
         <div className="flex gap-4">
           {["2.0", "3.0", "6.1"].map((option) => (
-            <label key={option} className="flex text-black items-center">
+            <label key={option} className="flex text-slate-700 dark:text-slate-300 items-center cursor-pointer">
               <input
                 type="radio"
                 name="rateType"
                 value={option}
                 checked={selectedRateType === option}
                 onChange={() => handleRateTypeChange(option)}
-                className="mr-2"
+                className="mr-2 accent-primary"
                 disabled={fieldDisabled || !isActive}
               />
               {option}
@@ -237,7 +237,7 @@ export default function ContractForm({
       <form onSubmit={handleSubmit}>
         {/* Compañía */}
         <div className="mb-4">
-          <label className="block text-black mb-2" htmlFor="companyId">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="companyId">
             Compañía
           </label>
           <select
@@ -245,7 +245,7 @@ export default function ContractForm({
             name="companyId"
             value={formData.companyId}
             onChange={handleChange}
-            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
+            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
             disabled={fieldDisabled || !isActive}
             required
           >
@@ -263,7 +263,7 @@ export default function ContractForm({
         {/* CUPS */}
         <div className="mb-4">
           <label
-            className="block text-black mb-2"
+            className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
             htmlFor={`cups-${contract.uuid}`}
           >
             CUPS
@@ -272,7 +272,7 @@ export default function ContractForm({
             type="text"
             id={`cups-${contract.uuid}`}
             name="cups"
-            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
+            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
             value={formData.cups}
             onChange={handleChange}
             disabled={fieldDisabled || !isActive}
@@ -283,7 +283,7 @@ export default function ContractForm({
         {/* Selector Producto (Solo para Gas) */}
         {contract.type === "Gas" && (
           <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="product">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="product">
               Producto
             </label>
             <select
@@ -291,7 +291,7 @@ export default function ContractForm({
               name="product"
               value={formData.product}
               onChange={handleChange}
-              className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
+              className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
               disabled={fieldDisabled || !isActive}
               required
             >
@@ -309,7 +309,7 @@ export default function ContractForm({
 
         {/* Tarifa */}
         <div className="mb-4">
-          <label className="block text-black mb-2" htmlFor="rateId">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="rateId">
             Tarifa
           </label>
           <select
@@ -317,7 +317,7 @@ export default function ContractForm({
             name="rateId"
             value={formData.rateId || ""}
             onChange={handleChange}
-            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
+            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
             disabled={fieldDisabled || !isActive}
             required
           >
@@ -341,7 +341,7 @@ export default function ContractForm({
         {/* Potencias - Solo para contratos de luz */}
         {contract.type === "Luz" && (
           <div className="mb-4">
-            <label className="block text-black mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Potencias Contratadas (kW)
             </label>
             <div className="flex flex-wrap gap-2">
@@ -363,7 +363,7 @@ export default function ContractForm({
                       contractedPowers: updatedPowers,
                     }));
                   }}
-                  className="w-28 px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
+                  className="w-28 px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
                   placeholder={`P${index + 1}`}
                   disabled={
                     (selectedRateType === "2.0" && index > 1) ||
@@ -393,10 +393,10 @@ export default function ContractForm({
                     virtualBat: !e.target.checked ? false : formData.virtualBat,
                   })
                 }
-                className="mr-2"
+                className="mr-2 w-4 h-4 accent-primary"
                 disabled={fieldDisabled || !isActive}
               />
-              <label htmlFor="solarPlates" className="text-black">
+              <label htmlFor="solarPlates" className="text-slate-700 dark:text-slate-300 cursor-pointer">
                 Placas
               </label>
             </div>
@@ -404,7 +404,7 @@ export default function ContractForm({
             {/* Selector BAT Virtual */}
             {formData.solarPlates && (
               <div className="mb-4">
-                <label className="block text-black mb-2" htmlFor="virtualBat">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="virtualBat">
                   BAT Virtual
                 </label>
                 <select
@@ -418,8 +418,8 @@ export default function ContractForm({
                       virtualBat: newVirtualBatValue,
                     });
                   }}
-                  className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
-                  disabled={!formData.solarPlates || !isActive} // Deshabilitar si Placas no está marcado
+                  className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
+                  disabled={!formData.solarPlates || !isActive}
                   required
                 >
                   <option value="true">Sí</option>
@@ -432,7 +432,7 @@ export default function ContractForm({
 
         {/* Selector de Mantenimiento */}
         <div className="mb-4">
-          <label className="block text-black mb-2" htmlFor="maintenance">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="maintenance">
             Mantenimiento
           </label>
           <select
@@ -445,7 +445,7 @@ export default function ContractForm({
                 maintenance: e.target.value === "true",
               })
             }
-            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
+            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
             disabled={fieldDisabled || !isActive}
             required
           >
@@ -456,7 +456,7 @@ export default function ContractForm({
 
         {/* Selector de Factura Electrónica */}
         <div className="mb-4">
-          <label className="block text-black mb-2" htmlFor="electronicBill">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="electronicBill">
             Factura Electrónica
           </label>
           <select
@@ -469,7 +469,7 @@ export default function ContractForm({
                 electronicBill: e.target.value === "true",
               })
             }
-            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
+            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
             disabled={fieldDisabled || !isActive}
             required
           >
@@ -481,7 +481,7 @@ export default function ContractForm({
         {/* Observaciones */}
         <div className="mb-4">
           <label
-            className="block text-black mb-2"
+            className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
             htmlFor={`extraInfo-${contract.uuid}`}
           >
             Observaciones
@@ -489,31 +489,34 @@ export default function ContractForm({
           <textarea
             id={`extraInfo-${contract.uuid}`}
             name="extraInfo"
-            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
+            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent resize-none"
             value={formData.extraInfo}
             onChange={handleChange}
             disabled={fieldDisabled || !isActive}
+            rows={3}
           />
         </div>
 
-        {isActive &&(
-          <button
-            type="button"
-            onClick={handleSaveAsDraft}
-            className="bg-yellow-600 text-white px-4 py-2 rounded-full hover:bg-yellow-700 mt-2"
-          >
-            Guardar como borrador
-          </button>
-        )}
+        {isActive && (
+          <div className="flex flex-wrap gap-3 mt-6">
+            <button
+              type="button"
+              onClick={handleSaveAsDraft}
+              className="px-6 py-2.5 rounded-lg neumorphic-button font-medium text-yellow-600 hover:text-yellow-700 transition-colors"
+            >
+              Guardar como borrador
+            </button>
 
-        {/* Botón de envío solo visible si el contrato es activo */}
-        {isActive && !fieldDisabled && (
-          <button
-            type="submit"
-            className="bg-secondary text-white px-4 py-2 ml-2 rounded-full hover:bg-secondaryHover"
-          >
-            Guardar cambios
-          </button>
+            {/* Botón de envío solo visible si el contrato es activo */}
+            {!fieldDisabled && (
+              <button
+                type="submit"
+                className="px-6 py-2.5 rounded-lg bg-primary text-white font-semibold neumorphic-button hover:bg-primary/90 transition-colors"
+              >
+                Guardar cambios
+              </button>
+            )}
+          </div>
         )}
       </form>
     </div>

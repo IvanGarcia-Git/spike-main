@@ -146,19 +146,19 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
   }, [formData.nationalId]);
 
   return (
-    <form ref={formRef} className="bg-background p-6 rounded-lg shadow-lg border border-white mb-7">
+    <form ref={formRef} className="neumorphic-card p-6 rounded-xl mb-7">
       {/* Selector de Particular/Empresa */}
       <div className="mb-4">
         <div className="flex space-x-4">
           {/* Tipo de Cliente */}
           <div className="flex-1">
-            <label className="block text-black mb-2" htmlFor="type">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="type">
               Tipo de Cliente
             </label>
             <select
               id="type"
               name="type"
-              className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
               value={formData.type}
               disabled={fieldsDisabled}
               onChange={handleChange}
@@ -170,13 +170,13 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
 
           {/* Origen */}
           <div className="flex-1">
-            <label className="block text-black mb-2" htmlFor="origin">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="origin">
               Origen
             </label>
             <select
               id="origin"
               name="originId"
-              className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
               value={formData.originId || ""}
               disabled={fieldsDisabled}
               onChange={handleChange}
@@ -196,28 +196,28 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
       {formData.type == "B2B" && (
         <>
           <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="cif">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="cif">
               CIF
             </label>
             <input
               type="text"
               id="cif"
               name="cif"
-              className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
               value={formData.cif}
               disabled={fieldsDisabled}
               onChange={handleChange}
             />
           </div>
           <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="tradeName">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="tradeName">
               Razón social
             </label>
             <input
               type="text"
               id="tradeName"
               name="tradeName"
-              className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
               value={formData.tradeName}
               disabled={fieldsDisabled}
               onChange={handleChange}
@@ -228,14 +228,14 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
 
       {/* Campo Nombre */}
       <div className="mb-4">
-        <label className="block text-black mb-2" htmlFor="name">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="name">
           Nombre
         </label>
         <input
           type="text"
           id="name"
           name="name"
-          className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
           value={formData.name}
           disabled={fieldsDisabled}
           onChange={handleChange}
@@ -245,14 +245,14 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
 
       {/* Campo Apellidos */}
       <div className="mb-4">
-        <label className="block text-black mb-2" htmlFor="surnames">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="surnames">
           Apellidos
         </label>
         <input
           type="text"
           id="surnames"
           name="surnames"
-          className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
           value={formData.surnames}
           disabled={fieldsDisabled}
           onChange={handleChange}
@@ -262,7 +262,7 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
 
       {/* Campo nationalId */}
       <div className="mb-4">
-        <label className="block text-black mb-2" htmlFor="nationalId">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="nationalId">
           {isNIE ? "NIE" : "DNI"}
         </label>
         <div className="flex gap-4">
@@ -271,7 +271,7 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
             pattern={isNIE ? "^[XYZ]\\d{7}[A-Z]$" : "^\\d{8}[A-Z]$"}
             id="nationalId"
             name="nationalId"
-            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
             value={formData.nationalId}
             disabled={fieldsDisabled}
             onChange={handleChange}
@@ -288,7 +288,7 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
                 id="nationality"
                 name="nationality"
                 list="countryList"
-                className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
                 value={formData.nationality}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -309,14 +309,14 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
 
       {/* Campo Correo */}
       <div className="mb-4">
-        <label className="block text-black mb-2" htmlFor="email">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="email">
           Correo
         </label>
         <input
           type="email"
           id="email"
           name="email"
-          className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
           value={formData.email}
           disabled={fieldsDisabled}
           onChange={handleChange}
@@ -326,14 +326,14 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
 
       {/* Campo Dirección */}
       <div className="mb-4">
-        <label className="block text-black mb-2" htmlFor="address">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="address">
           Dirección
         </label>
         <input
           type="text"
           id="address"
           name="address"
-          className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
           value={formData.address}
           disabled={fieldsDisabled}
           onChange={handleChange}
@@ -345,7 +345,7 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
       <div className="mb-4 space-y-4 sm:space-y-0 sm:flex sm:space-x-4">
         {/* Campo CP */}
         <div className="w-full sm:flex-1">
-          <label className="block text-black mb-2" htmlFor="zipCode">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="zipCode">
             Código Postal
           </label>
           <input
@@ -353,7 +353,7 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
             id="zipCode"
             name="zipCode"
             pattern="^(0[1-9]|[1-4][0-9]|5[0-2])\d{3}$"
-            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
             value={formData.zipCode}
             onChange={handleChange}
             title="Por favor, introduce un código postal válido de España (5 dígitos, entre 01000 y 52999)."
@@ -362,14 +362,14 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
 
         {/* Campo Provincia */}
         <div className="w-full sm:flex-1">
-          <label className="block text-black mb-2" htmlFor="province">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="province">
             Provincia
           </label>
           <input
             type="text"
             id="province"
             name="province"
-            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
             value={formData.province}
             onChange={handleChange}
             required={!contractIsDraft}
@@ -378,14 +378,14 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
 
         {/* Campo Población */}
         <div className="w-full sm:flex-1">
-          <label className="block text-black mb-2" htmlFor="populace">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="populace">
             Población
           </label>
           <input
             type="text"
             id="populace"
             name="populace"
-            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
             value={formData.populace}
             onChange={handleChange}
           />
@@ -394,7 +394,7 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
 
       {/* Campo Teléfono */}
       <div className="mb-4">
-        <label className="block text-black mb-2" htmlFor="phoneNumber">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="phoneNumber">
           Teléfono
         </label>
         <input
@@ -402,7 +402,7 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
           pattern="^\d{9,}$"
           id="phoneNumber"
           name="phoneNumber"
-          className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
           value={formData.phoneNumber}
           disabled={fieldsDisabled}
           onChange={handleChange}
@@ -413,14 +413,14 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
 
       {/* Campo IBAN */}
       <div className="mb-4">
-        <label className="block text-black mb-2" htmlFor="iban">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="iban">
           IBAN
         </label>
         <input
           type="text"
           id="iban"
           name="iban"
-          className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
           value={formData.iban}
           disabled={fieldsDisabled}
           onChange={handleChange}
@@ -430,27 +430,27 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
       </div>
 
       {/* Checkboxes Cambio de Titular y Nuevo Alta en una fila */}
-      <div className="mb-4 flex items-center space-x-4">
-        <label className="text-black flex items-center">
+      <div className="mb-4 flex items-center space-x-6">
+        <label className="text-slate-700 dark:text-slate-300 flex items-center cursor-pointer">
           <input
             type="checkbox"
             name="holderChange"
             checked={formData.holderChange}
             onChange={handleChange}
             disabled={fieldsDisabled}
-            className="mr-2"
+            className="mr-2 w-4 h-4 accent-primary"
           />
           Cambio Titular
         </label>
 
-        <label className="text-black flex items-center">
+        <label className="text-slate-700 dark:text-slate-300 flex items-center cursor-pointer">
           <input
             type="checkbox"
             name="newCreation"
             checked={formData.newCreation}
             onChange={handleChange}
             disabled={fieldsDisabled}
-            className="mr-2"
+            className="mr-2 w-4 h-4 accent-primary"
           />
           Nuevo Alta
         </label>

@@ -181,14 +181,14 @@ export default function TelephonyContractForm({
   const fieldDisabled = !formData.isDraft && !isManager;
 
   return (
-    <div className="p-4 border rounded-lg bg-background border-blue-500 border-4">
+    <div className={`p-6 rounded-xl ${isActive ? "neumorphic-card ring-2 ring-primary" : "neumorphic-card-inset"}`}>
       {/* Formulario de contrato */}
-      <h3 className="text-xl font-bold text-black mb-4">Contrato Telefonía</h3>
+      <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Contrato Telefonía</h3>
 
       <form onSubmit={handleSubmit}>
         {/* Compañía */}
         <div className="mb-4">
-          <label className="block text-black mb-2" htmlFor="companyId">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="companyId">
             Compañía
           </label>
           <select
@@ -196,7 +196,7 @@ export default function TelephonyContractForm({
             name="companyId"
             value={formData.companyId}
             onChange={handleChange}
-            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
+            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
             disabled={fieldDisabled || !isActive}
             required
           >
@@ -213,12 +213,12 @@ export default function TelephonyContractForm({
 
         {/* Tarifa */}
         <div className="mb-4">
-          <label className="block text-black mb-2">Tarifas</label>
-          <div className="grid grid-cols-1 gap-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Tarifas</label>
+          <div className="grid grid-cols-1 gap-2 neumorphic-card-inset p-4 rounded-lg">
             {filteredRates
               .filter((rate) => rate.companyId == formData.companyId)
               .map((rate) => (
-                <label key={rate.id} className="flex text-black items-center space-x-2">
+                <label key={rate.id} className="flex text-slate-700 dark:text-slate-300 items-center space-x-2 cursor-pointer">
                   <input
                     type="checkbox"
                     value={rate.id}
@@ -241,7 +241,7 @@ export default function TelephonyContractForm({
                         };
                       });
                     }}
-                    className="form-checkbox"
+                    className="w-4 h-4 accent-primary"
                   />
                   <span>{rate.name}</span>
                 </label>
@@ -252,7 +252,7 @@ export default function TelephonyContractForm({
         {/* Líneas telefónicas */}
         {formData.telephoneLines.map((line, index) => (
           <div key={index} className="mb-4">
-            <label className="block text-black mb-2" htmlFor={`telephoneLine-${index}`}>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor={`telephoneLine-${index}`}>
               {index === 0 ? "Línea Principal" : `Línea Adicional ${index}`}
             </label>
             <input
@@ -260,7 +260,7 @@ export default function TelephonyContractForm({
               id={`telephoneLine-${index}`}
               value={line !== 0 ? line : ""}
               onChange={(e) => handleTelephoneChange(index, e.target.value)}
-              className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
+              className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
               placeholder={`Número de línea ${index === 0 ? "principal" : "adicional"}`}
               disabled={fieldDisabled || !isActive}
             />
@@ -271,14 +271,14 @@ export default function TelephonyContractForm({
         <button
           type="button"
           onClick={addTelephoneLine}
-          className="flex items-center gap-2  py-2 rounded text-black"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg neumorphic-button text-slate-700 dark:text-slate-300 hover:text-primary transition-colors mb-4"
         >
           <FiPlus className="text-lg" /> Añadir Línea
         </button>
 
         {/* Línea fija */}
         <div className="mb-4">
-          <label className="block text-black mb-2" htmlFor="landlinePhone">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="landlinePhone">
             Número de línea fija
           </label>
           <input
@@ -286,7 +286,7 @@ export default function TelephonyContractForm({
             id="landlinePhone"
             value={formData.landlinePhone || ""}
             onChange={(e) => handleLandlineChange(e.target.value)}
-            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
+            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
             placeholder="Número de línea fija"
             disabled={fieldDisabled || !isActive}
           />
@@ -294,13 +294,13 @@ export default function TelephonyContractForm({
 
         {/* Extra Services */}
         <div className="mb-4">
-          <label className="block text-black mb-2">Servicios Extra</label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Servicios Extra</label>
           <select
             id="hasExtraServices"
             name="hasExtraServices"
             value={hasExtraServices ? "yes" : "no"}
             onChange={handleExtraServicesSelect}
-            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
+            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
             disabled={fieldDisabled || !isActive}
           >
             <option value="no">No</option>
@@ -317,20 +317,20 @@ export default function TelephonyContractForm({
                     type="text"
                     value={service}
                     onChange={(e) => handleExtraServiceChange(index, e.target.value)}
-                    className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
+                    className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
                     placeholder={`Servicio Extra ${index + 1}`}
                     disabled={fieldDisabled || !isActive}
                   />
                 </div>
               ))
             ) : (
-              <p className="text-gray-600">No hay servicios extra añadidos.</p>
+              <p className="text-slate-500 dark:text-slate-400">No hay servicios extra añadidos.</p>
             )}
 
             <button
               type="button"
               onClick={addExtraService}
-              className="flex items-center gap-2 py-2 rounded text-black mt-2"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg neumorphic-button text-slate-700 dark:text-slate-300 hover:text-primary transition-colors mt-2"
               disabled={fieldDisabled || !isActive}
             >
               <FiPlus className="text-lg" /> Añadir Servicio Extra
@@ -340,7 +340,7 @@ export default function TelephonyContractForm({
 
         {/* Selector de Factura Electrónica */}
         <div className="mb-4">
-          <label className="block text-black mb-2" htmlFor="electronicBill">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="electronicBill">
             Factura Electrónica
           </label>
           <select
@@ -353,7 +353,7 @@ export default function TelephonyContractForm({
                 electronicBill: e.target.value === "true",
               })
             }
-            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
+            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
             disabled={fieldDisabled || !isActive}
             required
           >
@@ -364,37 +364,38 @@ export default function TelephonyContractForm({
 
         {/* Observaciones */}
         <div className="mb-4">
-          <label className="block text-black mb-2" htmlFor={`extraInfo-${contract.uuid}`}>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor={`extraInfo-${contract.uuid}`}>
             Observaciones
           </label>
           <textarea
             id={`extraInfo-${contract.uuid}`}
             name="extraInfo"
-            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
+            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent resize-none"
             value={formData.extraInfo}
             onChange={handleChange}
             disabled={fieldDisabled || !isActive}
+            rows={3}
           />
         </div>
 
         {/* Botón de envío solo visible si el contrato es activo */}
         {isActive && (
-          <>
+          <div className="flex flex-wrap gap-3 mt-6">
             <button
               type="button"
               onClick={handleSaveAsDraft}
-              className="bg-yellow-600 text-white px-4 py-2 rounded-full hover:bg-yellow-700 mt-2"
+              className="px-6 py-2.5 rounded-lg neumorphic-button font-medium text-yellow-600 hover:text-yellow-700 transition-colors"
             >
               Guardar como borrador
             </button>
 
             <button
               type="submit"
-              className="bg-secondary text-white px-4 py-2 ml-2 rounded-full hover:bg-secondaryHover"
+              className="px-6 py-2.5 rounded-lg bg-primary text-white font-semibold neumorphic-button hover:bg-primary/90 transition-colors"
             >
               Guardar cambios
             </button>
-          </>
+          </div>
         )}
       </form>
     </div>
