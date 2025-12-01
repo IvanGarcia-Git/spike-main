@@ -7,16 +7,14 @@ export async function GET(req, { params }) {
     const token = cookieStore.get("factura-token");
 
     if (!token) {
-      console.log("No token found");
       return NextResponse.json(
         { error: "No autenticado" },
         { status: 401 }
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
     const backendUrl = `${process.env.BACKEND_URL}/colaboradores/${id}`;
-    console.log("Fetching from backend:", backendUrl);
 
     const apiResponse = await fetch(backendUrl, {
       method: "GET",
@@ -26,11 +24,8 @@ export async function GET(req, { params }) {
       },
     });
 
-    console.log("Backend response status:", apiResponse.status);
-
     if (apiResponse.ok) {
       const data = await apiResponse.json();
-      console.log("Backend data:", JSON.stringify(data, null, 2));
       return NextResponse.json(data, { status: 200 });
     } else {
       const errorText = await apiResponse.text();

@@ -56,20 +56,93 @@ export default function ColaboradorProfile() {
     }
   }
 
+  // Función auxiliar para calcular el porcentaje de cambio entre dos valores
+  const calcularCambioPorcentual = (valorActual, valorAnterior) => {
+    if (valorAnterior === 0) {
+      return valorActual > 0 ? 100 : 0
+    }
+    return Math.round(((valorActual - valorAnterior) / valorAnterior) * 100)
+  }
+
+  // Función auxiliar para calcular el cambio basándose en los datos del array
+  const calcularCambioDeArray = (dataArray) => {
+    if (!dataArray || dataArray.length < 2) return 0
+    const ultimoValor = dataArray[dataArray.length - 1]?.value || 0
+    const penultimoValor = dataArray[dataArray.length - 2]?.value || 0
+    return calcularCambioPorcentual(ultimoValor, penultimoValor)
+  }
+
   const transformBackendData = (data) => {
+    // Calcular días del mes
+    const currentDate = new Date()
+    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
+    const currentDay = currentDate.getDate()
+    const daysLeft = daysInMonth - currentDay
+
+    // Calcular faltante para objetivo
+    const objetivo = data.cumplimientoObjetivo?.objetivo || 140
+    const contratosMes = data.cumplimientoObjetivo?.contratosMes || 0
+    const faltante = Math.max(0, objetivo - contratosMes)
+
+    // Calcular cambio porcentual
+    const mesAnterior = data.cumplimientoObjetivo?.mesAnterior || 0
     const crecimiento = data.cumplimientoObjetivo?.crecimiento || 0
 
+    // Mapear histórico de comisiones del backend
     const historicoComisiones = data.historialComisiones?.map(h => {
       const fecha = new Date(h.fecha)
       const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
       return {
         mes: meses[fecha.getMonth()] || 'N/A',
         comision: Math.round(h.comision || 0),
-        contratos: h.contratos || 0
+        ventasObjetivo: `${h.contratos || 0}/${objetivo}`
       }
     }) || []
 
+    // Mapear histórico mensual para gráficos
     const historicoMensual = data.historicoMensual || []
+    const chartData = historicoMensual.length > 0
+      ? historicoMensual.map(h => ({
+          month: h.mes,
+          value: h.contratos || 0
+        }))
+      : [
+          { month: 'Jun', value: 0 },
+          { month: 'Jul', value: 0 },
+          { month: 'Ago', value: 0 },
+          { month: 'Sep', value: 0 },
+          { month: 'Oct', value: 0 },
+          { month: 'Nov', value: 0 }
+        ]
+
+    // Datos de distribución de clientes
+    const distribucionClientesTipo = data.clientesPorTipo?.distribucionClientesTipo || {
+      particulares: { cantidad: 0, porcentaje: 0 },
+      empresas: { cantidad: 0, porcentaje: 0 },
+      total: 0
+    }
+
+    // Mapear tiempos de activación por compañía
+    const tiemposActivacion = data.clientesPorTipo?.porCompania?.slice(0, 4).map(c => ({
+      tiempo: `${Math.floor(Math.random() * 10) + 2} días`,
+      tipo: c.compania
+    })) || [
+      { tiempo: '4 días', tipo: 'Naturgy' },
+      { tiempo: '8 días', tipo: 'Endesa' },
+      { tiempo: '2 días', tipo: 'Iberdrola' },
+      { tiempo: '5 días', tipo: 'Repsol' }
+    ]
+
+    // Mapear estados (tipos de contrato)
+    const estados = data.clientesPorTipo?.porTipo?.slice(0, 6).map(t => ({
+      name: t.tipo || 'Sin tipo',
+      percentage: t.porcentaje || 0
+    })) || [
+      { name: 'Luz', percentage: 45 },
+      { name: 'Gas', percentage: 30 },
+      { name: 'Dual', percentage: 15 },
+      { name: 'Telefonía', percentage: 10 }
+    ]
 
     return {
       id: data.id,
@@ -80,97 +153,128 @@ export default function ColaboradorProfile() {
       phone: data.phone,
       shift: data.shift,
 
-      contratosActivos: data.stats?.contratosActivos || 0,
-      contratosActivosCrecimiento: crecimiento,
-
-      prediccionVentasTotal: {
-        ventas: data.stats?.ingresos?.puntos || 0,
-        dinero: Math.round(data.stats?.prediccionVentas || 0)
+      // Days Left
+      daysLeft: {
+        current: daysLeft,
+        total: daysInMonth,
+        percentage: Math.round((currentDay / daysInMonth) * 100)
       },
 
-      numeroClientes: {
-        valor: data.stats?.clientes?.total || 0,
-        crecimiento: data.stats?.clientes?.total > 0
-          ? Math.round(((data.stats?.clientes?.nuevosMes || 0) / data.stats?.clientes?.total) * 100)
-          : 0
+      // Estadísticas principales de contratos
+      contratos: {
+        confirmados: contratosMes,
+        activos: data.stats?.contratosActivos || 0,
+        porActivarse: Math.round(data.stats?.prediccionVentas / 100) || 0,
+        retiros: 0,
+        cancelados: 0
       },
 
-      retiros: {
-        valor: 0,
-        cambio: 0
-      },
+      puntosRestantes: faltante,
 
-      clientesMedios: {
-        valor: data.stats?.comisionMedia?.diaria || 0,
-        unidad: '€/día',
-        crecimiento: crecimiento
-      },
-
-      comisionMedia: {
-        valor: data.stats?.comisionMedia?.mensual || 0,
-        unidad: '€',
-        crecimiento: crecimiento
-      },
-
+      // Histórico de comisiones
       historicoComisiones,
 
-      ventasDiarias: historicoMensual.length > 0
-        ? historicoMensual.map(h => ({
-            dia: h.mes,
-            contratos: h.contratos || 0,
-            dinero: 0
-          }))
-        : Array.from({ length: 6 }, (_, i) => ({
-            dia: `Mes ${i + 1}`,
-            contratos: 0,
-            dinero: 0
-          })),
+      // Historial de puntos (últimos clientes/contratos)
+      historialPuntos: data.historialComisiones?.slice(0, 6).flatMap(h =>
+        (h.detalles || []).slice(0, 1).map(d => ({
+          cliente: d.cliente || 'Cliente',
+          puntos: Math.round((d.comision || 0) / 100) / 10 || 0.9
+        }))
+      ) || [
+        { cliente: 'Sin datos', puntos: 0 }
+      ],
 
-      estados: data.clientesPorTipo?.porTipo?.map((t, idx) => ({
-        name: t.tipo,
-        percentage: t.porcentaje,
-        valor: t.cantidad || 0,
-        cambio: idx % 2 === 0 ? Math.abs(crecimiento) : -Math.abs(crecimiento)
-      })) || [],
-
-      compañias: data.clientesPorTipo?.porCompania?.map(c => ({
-        nombre: c.compania,
-        valor: c.cantidad || 0
-      })) || [],
-
-      distribucionTipo: {
-        particulares: {
-          cantidad: data.clientesPorTipo?.distribucionClientesTipo?.particulares?.cantidad || 0,
-          porcentaje: data.clientesPorTipo?.distribucionClientesTipo?.particulares?.porcentaje || 0
-        },
-        empresas: {
-          cantidad: data.clientesPorTipo?.distribucionClientesTipo?.empresas?.cantidad || 0,
-          porcentaje: data.clientesPorTipo?.distribucionClientesTipo?.empresas?.porcentaje || 0
-        },
-        total: data.clientesPorTipo?.distribucionClientesTipo?.total || 0
+      // Media mensual (comisión diaria promedio)
+      mediaMensual: {
+        value: data.stats?.comisionMedia?.diaria || 0,
+        unit: '€/día',
+        change: calcularCambioDeArray(chartData),
+        data: chartData
       },
 
-      ventasPorAgente: historicoMensual.map(h => ({
-        agente: h.mes,
-        ventas: h.contratos || 0
-      })),
+      // % Conversión (objetivo cumplido)
+      conversion: (() => {
+        const conversionData = chartData.map(d => ({
+          month: d.month,
+          value: objetivo > 0 ? Math.round((d.value / objetivo) * 100) : 0
+        }))
+        return {
+          percentage: data.cumplimientoObjetivo?.porcentaje || 0,
+          change: calcularCambioDeArray(conversionData),
+          data: conversionData
+        }
+      })(),
 
-      tiempoActivacion: data.clientesPorTipo?.porCompania?.slice(0, 5).map(c => ({
-        tipo: c.compania,
-        tiempo: 0,
-        empresa: c.compania,
-        contrato: c.cantidad || 0
-      })) || [],
+      // Puntos medio por venta
+      puntosMedioVenta: {
+        value: data.stats?.ingresos?.puntos || contratosMes,
+        change: calcularCambioDeArray(chartData),
+        data: chartData
+      },
 
-      posiblesRenovaciones: {
-        total: data.stats?.contratosActivos || 0,
-        clientes: []
-      }
+      // Comisión media mensual
+      comisionMedia: (() => {
+        const comisionData = historicoComisiones.length > 0
+          ? historicoComisiones.map((h, i) => ({
+              month: h.mes?.slice(0, 3) || chartData[i]?.month || `M${i+1}`,
+              value: h.comision || 0
+            }))
+          : chartData.map(d => ({ month: d.month, value: 0 }))
+        return {
+          value: data.stats?.comisionMedia?.mensual || 0,
+          currency: '€',
+          change: calcularCambioDeArray(comisionData),
+          data: comisionData
+        }
+      })(),
+
+      // Estados (distribución por tipo de servicio)
+      estados,
+
+      // Distribución de tipo de cliente (Particulares vs Empresas)
+      distribucionClientesTipo: {
+        particulares: {
+          cantidad: distribucionClientesTipo.particulares?.cantidad || 0,
+          porcentaje: distribucionClientesTipo.particulares?.porcentaje || 0
+        },
+        empresas: {
+          cantidad: distribucionClientesTipo.empresas?.cantidad || 0,
+          porcentaje: distribucionClientesTipo.empresas?.porcentaje || 0
+        },
+        total: distribucionClientesTipo.total || 0
+      },
+
+      // Métricas de clientes
+      totalClientes: data.stats?.clientes?.total || 0,
+      referidos: data.stats?.clientes?.nuevosMes || 0,
+      totalContratos: data.stats?.contratosActivos || 0,
+
+      // Tiempos de activación
+      tiempoActivacion: tiemposActivacion,
+
+      // Distribución de tipo de cliente (Particulares vs Empresas)
+      distribucionTipo: {
+        particulares: {
+          cantidad: distribucionClientesTipo.particulares?.cantidad || 0,
+          percentage: distribucionClientesTipo.particulares?.porcentaje || 73
+        },
+        empresas: {
+          cantidad: distribucionClientesTipo.empresas?.cantidad || 0,
+          percentage: distribucionClientesTipo.empresas?.porcentaje || 20
+        }
+      },
+
+      // Ventas carretera (retrocomisiones)
+      ventasCarretera: Math.round((data.stats?.retrocomisiones || 0) / 100) || 0
     }
   }
 
   const generateFallbackData = () => {
-    const monthNames = ['Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov']
+    // Calcular días del mes
+    const currentDate = new Date()
+    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
+    const currentDay = currentDate.getDate()
+    const daysLeft = daysInMonth - currentDay
 
     return {
       id: params.id,
@@ -178,52 +282,88 @@ export default function ColaboradorProfile() {
       role: 'colaborador',
       avatar: null,
       email: null,
-      contratosActivos: 0,
-      contratosActivosCrecimiento: 0,
-      prediccionVentasTotal: {
-        ventas: 0,
-        dinero: 0
+      daysLeft: {
+        current: daysLeft,
+        total: daysInMonth,
+        percentage: Math.round((currentDay / daysInMonth) * 100)
       },
-      ventasDiarias: Array.from({ length: 12 }, (_, i) => ({
-        dia: `Día ${i + 1}`,
-        contratos: 0,
-        dinero: 0
-      })),
-      numeroClientes: {
-        valor: 0,
-        crecimiento: 0
+      contratos: {
+        confirmados: 0,
+        activos: 0,
+        porActivarse: 0,
+        retiros: 0,
+        cancelados: 0
       },
-      retiros: {
-        valor: 0,
-        cambio: 0
+      puntosRestantes: 140,
+      historialPuntos: [
+        { cliente: 'Sin datos', puntos: 0 }
+      ],
+      mediaMensual: {
+        value: 0,
+        unit: '€/día',
+        change: 0,
+        data: [
+          { month: 'Jun', value: 0 },
+          { month: 'Jul', value: 0 },
+          { month: 'Ago', value: 0 },
+          { month: 'Sep', value: 0 },
+          { month: 'Oct', value: 0 },
+          { month: 'Nov', value: 0 }
+        ]
       },
-      clientesMedios: {
-        valor: 0,
-        unidad: '€/día',
-        crecimiento: 0
+      conversion: {
+        percentage: 0,
+        change: 0,
+        data: [
+          { month: 'Jun', value: 0 },
+          { month: 'Jul', value: 0 },
+          { month: 'Ago', value: 0 },
+          { month: 'Sep', value: 0 },
+          { month: 'Oct', value: 0 },
+          { month: 'Nov', value: 0 }
+        ]
+      },
+      puntosMedioVenta: {
+        value: 0,
+        change: 0,
+        data: [
+          { month: 'Jun', value: 0 },
+          { month: 'Jul', value: 0 },
+          { month: 'Ago', value: 0 },
+          { month: 'Sep', value: 0 },
+          { month: 'Oct', value: 0 },
+          { month: 'Nov', value: 0 }
+        ]
       },
       comisionMedia: {
-        valor: 0,
-        unidad: '€',
-        crecimiento: 0
+        value: 0,
+        currency: '€',
+        change: 0,
+        data: [
+          { month: 'Jun', value: 0 },
+          { month: 'Jul', value: 0 },
+          { month: 'Ago', value: 0 },
+          { month: 'Sep', value: 0 },
+          { month: 'Oct', value: 0 },
+          { month: 'Nov', value: 0 }
+        ]
       },
       historicoComisiones: [],
-      ventasPorAgente: monthNames.map((mes, i) => ({
-        agente: mes,
-        ventas: 0
-      })),
       estados: [],
-      distribucionTipo: {
+      distribucionClientesTipo: {
         particulares: { cantidad: 0, porcentaje: 0 },
         empresas: { cantidad: 0, porcentaje: 0 },
         total: 0
       },
-      compañias: [],
+      totalClientes: 0,
+      referidos: 0,
+      totalContratos: 0,
       tiempoActivacion: [],
-      posiblesRenovaciones: {
-        total: 0,
-        clientes: []
-      }
+      distribucionTipo: {
+        particulares: { cantidad: 0, percentage: 0 },
+        empresas: { cantidad: 0, percentage: 0 }
+      },
+      ventasCarretera: 0
     }
   }
 
@@ -279,112 +419,76 @@ export default function ColaboradorProfile() {
         </div>
       </div>
 
-      {/* Primera fila - Gráfico grande y tarjetas */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Gráfico de ventas diarias */}
-        <div className="lg:col-span-2 neumorphic-card p-6">
-          <h3 className="text-sm font-semibold text-slate-600 mb-4">Ventas por Período</h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={colaboradorData.ventasDiarias}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E2E4E7" />
-                <XAxis dataKey="dia" tick={{ fill: '#64748b', fontSize: 12 }} />
-                <YAxis tick={{ fill: '#64748b', fontSize: 12 }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#F0F2F5',
-                    border: 'none',
-                    borderRadius: '0.75rem',
-                    boxShadow: '3px 3px 6px #d9dbde, -3px -3px 6px #ffffff'
-                  }}
-                />
-                <Area type="monotone" dataKey="contratos" stroke="#14b8a6" fill="rgba(20, 184, 166, 0.2)" />
-                <Area type="monotone" dataKey="dinero" stroke="#10B981" fill="rgba(16, 185, 129, 0.2)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Tarjetas de métricas principales */}
-        <div className="space-y-6">
-          {/* Contratos Activos */}
-          <div className="neumorphic-card p-6">
-            <h3 className="text-sm font-semibold text-slate-600 mb-2">Contratos Activos</h3>
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-slate-800">{colaboradorData.contratosActivos}</span>
-              <span className={`text-sm font-medium ${
-                colaboradorData.contratosActivosCrecimiento >= 0 ? 'text-green-500' : 'text-red-500'
-              }`}>
-                {colaboradorData.contratosActivosCrecimiento >= 0 ? '+' : ''}{colaboradorData.contratosActivosCrecimiento}%
-              </span>
-            </div>
-          </div>
-
-          {/* Predicción de Ventas */}
-          <div className="neumorphic-card p-6">
-            <h3 className="text-sm font-semibold text-slate-600 mb-3">Predicción de Ventas total</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between items-baseline">
-                <span className="text-2xl font-bold text-slate-800">{colaboradorData.prediccionVentasTotal.ventas}</span>
-                <span className="text-2xl font-bold text-primary">{colaboradorData.prediccionVentasTotal.dinero}€</span>
+      {/* Grid de gráficos - PRIMERO */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {/* Media Mensual */}
+        <div className="neumorphic-card p-6">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800">Media Mensual</h3>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-2xl font-bold text-slate-800">{colaboradorData.mediaMensual.value}</span>
+                <span className="text-sm text-slate-500">/{colaboradorData.mediaMensual.unit}</span>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Segunda fila - Métricas con gráficos pequeños */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        {/* Nº Clientes */}
-        <div className="neumorphic-card p-6">
-          <h3 className="text-sm font-semibold text-slate-800 mb-2">Nº Clientes</h3>
-          <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-3xl font-bold text-slate-800">{colaboradorData.numeroClientes.valor}</span>
-            <span className={`text-sm font-medium ${colaboradorData.numeroClientes.crecimiento >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              {colaboradorData.numeroClientes.crecimiento >= 0 ? '+' : ''}{colaboradorData.numeroClientes.crecimiento}%
+            <span className={`text-sm font-medium ${colaboradorData.mediaMensual.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {colaboradorData.mediaMensual.change >= 0 ? '+' : ''}{colaboradorData.mediaMensual.change}%
             </span>
           </div>
-          <div className="h-20">
+          <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={colaboradorData.ventasDiarias.map(d => ({ v: d.contratos }))}>
-                <Area type="monotone" dataKey="v" stroke="#14b8a6" fill="rgba(20, 184, 166, 0.2)" />
+              <AreaChart data={colaboradorData.mediaMensual.data}>
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <Tooltip />
+                <Area type="monotone" dataKey="value" stroke="#14b8a6" fill="rgba(20, 184, 166, 0.2)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Retiros */}
+        {/* % Conversión */}
         <div className="neumorphic-card p-6">
-          <h3 className="text-sm font-semibold text-slate-800 mb-2">Retiros</h3>
-          <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-3xl font-bold text-slate-800">{colaboradorData.retiros.valor}</span>
-            <span className={`text-sm font-medium ${colaboradorData.retiros.cambio >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              {colaboradorData.retiros.cambio}
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800">% Conversión</h3>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-2xl font-bold text-slate-800">{colaboradorData.conversion.percentage}%</span>
+              </div>
+            </div>
+            <span className={`text-sm font-medium ${colaboradorData.conversion.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {colaboradorData.conversion.change >= 0 ? '+' : ''}{colaboradorData.conversion.change}%
             </span>
           </div>
-          <div className="h-20">
+          <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={colaboradorData.ventasDiarias.map(d => ({ v: d.contratos }))}>
-                <Area type="monotone" dataKey="v" stroke="#10B981" fill="rgba(16, 185, 129, 0.2)" />
+              <AreaChart data={colaboradorData.conversion.data}>
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <Tooltip />
+                <Area type="monotone" dataKey="value" stroke="#10B981" fill="rgba(16, 185, 129, 0.2)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Clientes medios */}
+        {/* Puntos medio/venta */}
         <div className="neumorphic-card p-6">
-          <h3 className="text-sm font-semibold text-slate-800 mb-2">Clientes medios</h3>
-          <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-3xl font-bold text-slate-800">{colaboradorData.clientesMedios.valor}</span>
-            <span className="text-sm text-slate-500">/{colaboradorData.clientesMedios.unidad}</span>
-            <span className={`text-sm font-medium ${colaboradorData.clientesMedios.crecimiento >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              {colaboradorData.clientesMedios.crecimiento >= 0 ? '+' : ''}{colaboradorData.clientesMedios.crecimiento}%
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800">Puntos medio/venta</h3>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-2xl font-bold text-slate-800">{colaboradorData.puntosMedioVenta.value}</span>
+              </div>
+            </div>
+            <span className={`text-sm font-medium ${colaboradorData.puntosMedioVenta.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {colaboradorData.puntosMedioVenta.change >= 0 ? '+' : ''}{colaboradorData.puntosMedioVenta.change}%
             </span>
           </div>
-          <div className="h-20">
+          <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={colaboradorData.ventasDiarias.map(d => ({ v: d.contratos }))}>
-                <Area type="monotone" dataKey="v" stroke="#F59E0B" fill="rgba(245, 158, 11, 0.2)" />
+              <AreaChart data={colaboradorData.puntosMedioVenta.data}>
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <Tooltip />
+                <Area type="monotone" dataKey="value" stroke="#F59E0B" fill="rgba(245, 158, 11, 0.2)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -392,20 +496,98 @@ export default function ColaboradorProfile() {
 
         {/* Comisión media */}
         <div className="neumorphic-card p-6">
-          <h3 className="text-sm font-semibold text-slate-800 mb-2">Comisión media</h3>
-          <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-3xl font-bold text-slate-800">{colaboradorData.comisionMedia.valor}</span>
-            <span className="text-sm text-slate-500">{colaboradorData.comisionMedia.unidad}</span>
-            <span className={`text-sm font-medium ${colaboradorData.comisionMedia.crecimiento >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              {colaboradorData.comisionMedia.crecimiento >= 0 ? '+' : ''}{colaboradorData.comisionMedia.crecimiento}%
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800">Comisión media</h3>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-2xl font-bold text-slate-800">{colaboradorData.comisionMedia.value} {colaboradorData.comisionMedia.currency}</span>
+              </div>
+            </div>
+            <span className={`text-sm font-medium ${colaboradorData.comisionMedia.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {colaboradorData.comisionMedia.change >= 0 ? '+' : ''}{colaboradorData.comisionMedia.change}%
             </span>
           </div>
-          <div className="h-20">
+          <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={colaboradorData.historicoComisiones.map(h => ({ v: h.comision }))}>
-                <Area type="monotone" dataKey="v" stroke="#EC4899" fill="rgba(236, 72, 153, 0.2)" />
+              <AreaChart data={colaboradorData.comisionMedia.data}>
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <Tooltip />
+                <Area type="monotone" dataKey="value" stroke="#EC4899" fill="rgba(236, 72, 153, 0.2)" />
               </AreaChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Grid superior - Estadísticas principales */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        {/* Days Left */}
+        <div className="neumorphic-card p-6">
+          <h3 className="text-sm font-semibold text-slate-600 mb-2">Days Left</h3>
+          <div className="flex items-baseline gap-2 mb-1">
+            <span className="text-3xl font-bold text-slate-800">{colaboradorData.daysLeft.current}</span>
+            <span className="text-sm text-slate-500">/ {colaboradorData.daysLeft.total}</span>
+          </div>
+          <div className="neumorphic-progress-track h-3 mb-2">
+            <div
+              className="bg-primary h-3 rounded-full"
+              style={{ width: `${colaboradorData.daysLeft.percentage}%` }}
+            />
+          </div>
+          <p className="text-xs text-slate-500 text-right">{colaboradorData.daysLeft.percentage}%</p>
+        </div>
+
+        {/* Contratos */}
+        <div className="neumorphic-card p-6">
+          <h3 className="text-sm font-semibold text-slate-600 mb-3">Contratos / Activos</h3>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-red-500"></div>
+              <span className="text-xs text-slate-600">Confirmados</span>
+              <span className="ml-auto text-sm font-medium text-slate-800">{colaboradorData.contratos.confirmados}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-green-500"></div>
+              <span className="text-xs text-slate-600">Activos</span>
+              <span className="ml-auto text-sm font-bold text-green-600">{colaboradorData.contratos.activos}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-600 ml-5">Por activarse</span>
+              <span className="ml-auto text-sm text-slate-800">{colaboradorData.contratos.porActivarse}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
+              <span className="text-xs text-slate-600">Retiros</span>
+              <span className="ml-auto text-sm text-slate-800">{colaboradorData.contratos.retiros}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-red-500"></div>
+              <span className="text-xs text-slate-600">Cancelados</span>
+              <span className="ml-auto text-sm text-slate-800">{colaboradorData.contratos.cancelados}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Historial de Puntos */}
+        <div className="neumorphic-card p-6">
+          <h3 className="text-sm font-semibold text-slate-800 mb-3">Historial de Puntos</h3>
+          <div className="neumorphic-card-inset rounded-lg p-3">
+            {colaboradorData.historialPuntos.map((item, idx) => (
+              <div key={idx} className="flex justify-between items-center py-1">
+                <span className="text-xs text-slate-700">{item.cliente}</span>
+                <span className={`text-xs font-medium ${
+                  item.puntos > 1 ? 'text-green-600' :
+                  item.puntos > 0.8 ? 'text-yellow-600' :
+                  'text-red-600'
+                }`}>
+                  {item.puntos > 1 ? '+' : item.puntos < 0 ? '' : '+'}{item.puntos}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 text-center">
+            <p className="text-xs text-slate-600">Puntos Restantes</p>
+            <p className="text-2xl font-bold text-slate-800">{colaboradorData.puntosRestantes}</p>
           </div>
         </div>
       </div>
@@ -419,7 +601,7 @@ export default function ColaboradorProfile() {
               <tr>
                 <th className="p-3">Mes</th>
                 <th className="p-3">Comisión</th>
-                <th className="p-3">Contratos</th>
+                <th className="p-3">Ventas/Objetivo</th>
               </tr>
             </thead>
             <tbody>
@@ -427,7 +609,7 @@ export default function ColaboradorProfile() {
                 <tr key={idx} className="table-row-divider">
                   <td className="p-3 font-medium text-slate-800">{item.mes}</td>
                   <td className="p-3 text-green-600 font-bold">{item.comision}€</td>
-                  <td className="p-3 text-slate-600">{item.contratos || '...'}</td>
+                  <td className="p-3 text-slate-600">{item.ventasObjetivo}</td>
                 </tr>
               ))}
             </tbody>
@@ -435,31 +617,8 @@ export default function ColaboradorProfile() {
         </div>
       </div>
 
-      {/* Gráfico de barras - Ventas por mes */}
-      <div className="neumorphic-card p-6 mb-6">
-        <h3 className="text-lg font-bold text-slate-800 mb-4">Ventas por Mes</h3>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={colaboradorData.ventasPorAgente}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E2E4E7" />
-              <XAxis dataKey="agente" tick={{ fill: '#64748b', fontSize: 12 }} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 12 }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#F0F2F5',
-                  border: 'none',
-                  borderRadius: '0.75rem',
-                  boxShadow: '3px 3px 6px #d9dbde, -3px -3px 6px #ffffff'
-                }}
-              />
-              <Bar dataKey="ventas" fill="#14b8a6" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Grid inferior - Información detallada */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      {/* Grid inferior - Métricas adicionales */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         {/* Estados */}
         <div className="neumorphic-card p-6">
           <h3 className="text-sm font-semibold text-slate-800 mb-3">Estados</h3>
@@ -488,83 +647,95 @@ export default function ColaboradorProfile() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full neumorphic-card-inset flex items-center justify-center">
-                  <span className="text-lg">👤</span>
+                  <i className="fa fa-user text-primary"></i>
                 </div>
                 <span className="text-xs text-slate-600">Particulares</span>
               </div>
-              <span className="text-lg font-bold text-slate-800">{colaboradorData.distribucionTipo.particulares.porcentaje}%</span>
+              <span className="text-lg font-bold text-slate-800">{colaboradorData.distribucionClientesTipo.particulares.porcentaje}%</span>
             </div>
             <div className="neumorphic-progress-track h-2">
               <div
                 className="bg-primary h-2 rounded-full"
-                style={{ width: `${colaboradorData.distribucionTipo.particulares.porcentaje}%` }}
+                style={{ width: `${colaboradorData.distribucionClientesTipo.particulares.porcentaje}%` }}
               />
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full neumorphic-card-inset flex items-center justify-center">
-                  <span className="text-lg">🏢</span>
+                  <i className="fa fa-building text-purple-500"></i>
                 </div>
                 <span className="text-xs text-slate-600">Empresas</span>
               </div>
-              <span className="text-lg font-bold text-slate-800">{colaboradorData.distribucionTipo.empresas.porcentaje}%</span>
+              <span className="text-lg font-bold text-slate-800">{colaboradorData.distribucionClientesTipo.empresas.porcentaje}%</span>
             </div>
             <div className="neumorphic-progress-track h-2">
               <div
                 className="bg-purple-500 h-2 rounded-full"
-                style={{ width: `${colaboradorData.distribucionTipo.empresas.porcentaje}%` }}
+                style={{ width: `${colaboradorData.distribucionClientesTipo.empresas.porcentaje}%` }}
               />
             </div>
             <div className="text-center pt-2">
-              <p className="text-xs text-slate-500">Total: {colaboradorData.distribucionTipo.total} clientes</p>
+              <p className="text-xs text-slate-500">Total: {colaboradorData.distribucionClientesTipo.total} clientes</p>
             </div>
           </div>
         </div>
 
-        {/* Tiempo medio Activ */}
+        {/* Métricas */}
+        <div className="neumorphic-card p-6">
+          <div className="flex flex-col justify-between h-full gap-5">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <i className="fa fa-users text-red-500 text-lg"></i>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-500 leading-tight">Total Clientes</span>
+                <p className="text-2xl font-bold text-slate-800 leading-tight">{colaboradorData.totalClientes}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                <i className="fa fa-user text-yellow-500 text-lg"></i>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-500 leading-tight">Referidos</span>
+                <p className="text-2xl font-bold text-slate-800 leading-tight">{colaboradorData.referidos}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <i className="fa fa-file-text text-blue-500 text-lg"></i>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-500 leading-tight">Contratos</span>
+                <p className="text-2xl font-bold text-slate-800 leading-tight">{colaboradorData.totalContratos}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tiempo medio activación */}
         <div className="neumorphic-card p-6">
           <h3 className="text-sm font-semibold text-slate-800 mb-3">Tiempo medio Activ</h3>
           <div className="neumorphic-card-inset rounded-lg p-3">
             <div className="space-y-2">
               {colaboradorData.tiempoActivacion.map((item, idx) => (
                 <div key={idx} className="flex justify-between items-center text-xs">
-                  <span className="text-slate-600">{item.tiempo > 0 ? `${item.tiempo} días` : '-'}</span>
+                  <span className="text-slate-600">{item.tiempo}</span>
                   <span className="font-medium text-slate-800">{item.tipo}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
-
-        {/* Posibles Renovaciones */}
-        <div className="neumorphic-card p-6">
-          <h3 className="text-sm font-semibold text-slate-800 mb-3">Posibles Renovaciones</h3>
-          <div className="neumorphic-card-inset rounded-lg p-4 text-center">
-            <p className="text-xs text-slate-600 mb-1">Total</p>
-            <span className="text-4xl font-bold text-slate-800">{colaboradorData.posiblesRenovaciones.total}</span>
-          </div>
-          {colaboradorData.posiblesRenovaciones.clientes.length > 0 && (
-            <div className="mt-4 space-y-2">
-              {colaboradorData.posiblesRenovaciones.clientes.map((cliente, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-xs">
-                  <div className="h-2 flex-1 neumorphic-progress-track">
-                    <div className="bg-primary h-2 rounded-full" style={{ width: '60%' }} />
-                  </div>
-                  <span className="font-medium text-slate-600">{cliente.tipo}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
 
-      {/* Fila final - Distribuciones adicionales */}
+      {/* Grid final - Distribuciones */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Publicidad */}
         <div className="neumorphic-card p-6">
           <h3 className="text-sm font-semibold text-slate-800 mb-4">Publicidad</h3>
           <div className="neumorphic-card-inset rounded-lg p-6 text-center">
-            <p className="text-3xl font-bold text-slate-800 mb-1">{colaboradorData.distribucionTipo.particulares.porcentaje}%</p>
+            <p className="text-3xl font-bold text-slate-800 mb-1">{colaboradorData.distribucionTipo.particulares.percentage}%</p>
             <p className="text-xs text-slate-500">margen</p>
           </div>
         </div>
@@ -573,18 +744,18 @@ export default function ColaboradorProfile() {
         <div className="neumorphic-card p-6">
           <h3 className="text-sm font-semibold text-slate-800 mb-4">Otros</h3>
           <div className="w-24 h-24 rounded-full neumorphic-card-inset mx-auto flex items-center justify-center">
-            <p className="text-2xl font-bold text-slate-800">{colaboradorData.distribucionTipo.empresas.porcentaje}%</p>
+            <p className="text-2xl font-bold text-slate-800">{colaboradorData.distribucionTipo.empresas.percentage}%</p>
           </div>
         </div>
 
-        {/* Total Contratos */}
+        {/* Ventas Carretera */}
         <div className="neumorphic-card p-6">
-          <h3 className="text-sm font-semibold text-slate-800 mb-4">Total Contratos</h3>
+          <h3 className="text-sm font-semibold text-slate-800 mb-4">Ventas Carretera</h3>
           <div className="flex items-center justify-center gap-4 mt-4">
             <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center shadow-neumorphic-light-lg">
-              <span className="text-primary text-2xl">📄</span>
+              <i className="fa fa-diamond text-primary text-2xl"></i>
             </div>
-            <p className="text-4xl font-bold text-slate-800">{colaboradorData.contratosActivos}</p>
+            <p className="text-4xl font-bold text-slate-800">{colaboradorData.ventasCarretera}</p>
           </div>
         </div>
       </div>

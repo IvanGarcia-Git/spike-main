@@ -58,6 +58,22 @@ export default function AgentProfile() {
     }
   }
 
+  // Función auxiliar para calcular el porcentaje de cambio entre dos valores
+  const calcularCambioPorcentual = (valorActual, valorAnterior) => {
+    if (valorAnterior === 0) {
+      return valorActual > 0 ? 100 : 0
+    }
+    return Math.round(((valorActual - valorAnterior) / valorAnterior) * 100)
+  }
+
+  // Función auxiliar para calcular el cambio basándose en los datos del array
+  const calcularCambioDeArray = (dataArray) => {
+    if (!dataArray || dataArray.length < 2) return 0
+    const ultimoValor = dataArray[dataArray.length - 1]?.value || 0
+    const penultimoValor = dataArray[dataArray.length - 2]?.value || 0
+    return calcularCambioPorcentual(ultimoValor, penultimoValor)
+  }
+
   const transformBackendData = (data) => {
     // Calcular días del mes
     const currentDate = new Date()
@@ -174,39 +190,45 @@ export default function AgentProfile() {
       mediaMensual: {
         value: data.stats?.comisionMedia?.diaria || 0,
         unit: '€/día',
-        change: crecimiento > 0 ? crecimiento : 0,
+        change: calcularCambioDeArray(chartData),
         data: chartData
       },
 
       // % Conversión (objetivo cumplido)
-      conversion: {
-        percentage: data.cumplimientoObjetivo?.porcentaje || 0,
-        change: crecimiento,
-        data: chartData.map(d => ({
+      conversion: (() => {
+        const conversionData = chartData.map(d => ({
           month: d.month,
           value: objetivo > 0 ? Math.round((d.value / objetivo) * 100) : 0
         }))
-      },
+        return {
+          percentage: data.cumplimientoObjetivo?.porcentaje || 0,
+          change: calcularCambioDeArray(conversionData),
+          data: conversionData
+        }
+      })(),
 
       // Puntos medio por venta
       puntosMedioVenta: {
         value: data.stats?.ingresos?.puntos || contratosMes,
-        change: crecimiento > 0 ? crecimiento : 0,
+        change: calcularCambioDeArray(chartData),
         data: chartData
       },
 
       // Comisión media mensual
-      comisionMedia: {
-        value: data.stats?.comisionMedia?.mensual || 0,
-        currency: '€',
-        change: crecimiento < 0 ? crecimiento : 0,
-        data: historicoComisiones.length > 0
+      comisionMedia: (() => {
+        const comisionData = historicoComisiones.length > 0
           ? historicoComisiones.map((h, i) => ({
               month: h.mes?.slice(0, 3) || chartData[i]?.month || `M${i+1}`,
               value: h.comision || 0
             }))
           : chartData.map(d => ({ month: d.month, value: 0 }))
-      },
+        return {
+          value: data.stats?.comisionMedia?.mensual || 0,
+          currency: '€',
+          change: calcularCambioDeArray(comisionData),
+          data: comisionData
+        }
+      })(),
 
       // Estados (distribución por tipo de servicio)
       estados,
@@ -399,6 +421,106 @@ export default function AgentProfile() {
         </div>
       </div>
 
+      {/* Grid de gráficos - PRIMERO */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {/* Media Mensual */}
+        <div className="neumorphic-card p-6">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800">Media Mensual</h3>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-2xl font-bold text-slate-800">{agentData.mediaMensual.value}</span>
+                <span className="text-sm text-slate-500">/{agentData.mediaMensual.unit}</span>
+              </div>
+            </div>
+            <span className={`text-sm font-medium ${agentData.mediaMensual.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {agentData.mediaMensual.change >= 0 ? '+' : ''}{agentData.mediaMensual.change}%
+            </span>
+          </div>
+          <div className="h-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={agentData.mediaMensual.data}>
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <Tooltip />
+                <Area type="monotone" dataKey="value" stroke="#14b8a6" fill="rgba(20, 184, 166, 0.2)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* % Conversión */}
+        <div className="neumorphic-card p-6">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800">% Conversión</h3>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-2xl font-bold text-slate-800">{agentData.conversion.percentage}%</span>
+              </div>
+            </div>
+            <span className={`text-sm font-medium ${agentData.conversion.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {agentData.conversion.change >= 0 ? '+' : ''}{agentData.conversion.change}%
+            </span>
+          </div>
+          <div className="h-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={agentData.conversion.data}>
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <Tooltip />
+                <Area type="monotone" dataKey="value" stroke="#10B981" fill="rgba(16, 185, 129, 0.2)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Puntos medio/venta */}
+        <div className="neumorphic-card p-6">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800">Puntos medio/venta</h3>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-2xl font-bold text-slate-800">{agentData.puntosMedioVenta.value}</span>
+              </div>
+            </div>
+            <span className={`text-sm font-medium ${agentData.puntosMedioVenta.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {agentData.puntosMedioVenta.change >= 0 ? '+' : ''}{agentData.puntosMedioVenta.change}%
+            </span>
+          </div>
+          <div className="h-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={agentData.puntosMedioVenta.data}>
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <Tooltip />
+                <Area type="monotone" dataKey="value" stroke="#F59E0B" fill="rgba(245, 158, 11, 0.2)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Comisión media */}
+        <div className="neumorphic-card p-6">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800">Comisión media</h3>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-2xl font-bold text-slate-800">{agentData.comisionMedia.value} {agentData.comisionMedia.currency}</span>
+              </div>
+            </div>
+            <span className={`text-sm font-medium ${agentData.comisionMedia.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {agentData.comisionMedia.change >= 0 ? '+' : ''}{agentData.comisionMedia.change}%
+            </span>
+          </div>
+          <div className="h-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={agentData.comisionMedia.data}>
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <Tooltip />
+                <Area type="monotone" dataKey="value" stroke="#EC4899" fill="rgba(236, 72, 153, 0.2)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
       {/* Grid superior - Estadísticas principales */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         {/* Days Left */}
@@ -472,90 +594,6 @@ export default function AgentProfile() {
         </div>
       </div>
 
-      {/* Grid de gráficos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {/* Media Mensual */}
-        <div className="neumorphic-card p-6">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h3 className="text-sm font-semibold text-slate-800">Media Mensual</h3>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl font-bold text-slate-800">{agentData.mediaMensual.value}</span>
-                <span className="text-sm text-slate-500">/{agentData.mediaMensual.unit}</span>
-              </div>
-            </div>
-            <span className="text-sm text-green-500 font-medium">+{agentData.mediaMensual.change}%</span>
-          </div>
-          <div className="h-32">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={agentData.mediaMensual.data}>
-                <Area type="monotone" dataKey="value" stroke="#14b8a6" fill="rgba(20, 184, 166, 0.2)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* % Conversión */}
-        <div className="neumorphic-card p-6">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h3 className="text-sm font-semibold text-slate-800">% Conversión</h3>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl font-bold text-slate-800">{agentData.conversion.percentage}%</span>
-              </div>
-            </div>
-            <span className="text-sm text-red-500 font-medium">{agentData.conversion.change}%</span>
-          </div>
-          <div className="h-32">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={agentData.conversion.data}>
-                <Area type="monotone" dataKey="value" stroke="#10B981" fill="rgba(16, 185, 129, 0.2)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Puntos medio/venta */}
-        <div className="neumorphic-card p-6">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h3 className="text-sm font-semibold text-slate-800">Puntos medio/venta</h3>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl font-bold text-slate-800">{agentData.puntosMedioVenta.value}</span>
-              </div>
-            </div>
-            <span className="text-sm text-green-500 font-medium">+{agentData.puntosMedioVenta.change}%</span>
-          </div>
-          <div className="h-32">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={agentData.puntosMedioVenta.data}>
-                <Area type="monotone" dataKey="value" stroke="#F59E0B" fill="rgba(245, 158, 11, 0.2)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Comisión media */}
-        <div className="neumorphic-card p-6">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h3 className="text-sm font-semibold text-slate-800">Comisión media</h3>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl font-bold text-slate-800">{agentData.comisionMedia.value} {agentData.comisionMedia.currency}</span>
-              </div>
-            </div>
-            <span className="text-sm text-red-500 font-medium">{agentData.comisionMedia.change}%</span>
-          </div>
-          <div className="h-32">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={agentData.comisionMedia.data}>
-                <Area type="monotone" dataKey="value" stroke="#EC4899" fill="rgba(236, 72, 153, 0.2)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
       {/* Histórico Comisiones */}
       <div className="neumorphic-card p-6 mb-6">
         <h3 className="text-lg font-bold text-slate-800 mb-4">Histórico Comisiones</h3>
@@ -611,7 +649,7 @@ export default function AgentProfile() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full neumorphic-card-inset flex items-center justify-center">
-                  <span className="text-lg">👤</span>
+                  <i className="fa fa-user text-primary"></i>
                 </div>
                 <span className="text-xs text-slate-600">Particulares</span>
               </div>
@@ -626,7 +664,7 @@ export default function AgentProfile() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full neumorphic-card-inset flex items-center justify-center">
-                  <span className="text-lg">🏢</span>
+                  <i className="fa fa-building text-purple-500"></i>
                 </div>
                 <span className="text-xs text-slate-600">Empresas</span>
               </div>
@@ -646,33 +684,33 @@ export default function AgentProfile() {
 
         {/* Métricas */}
         <div className="neumorphic-card p-6">
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
-                  <span className="text-red-500 text-sm">👥</span>
-                </div>
-                <span className="text-xs text-slate-600">Total Clientes</span>
+          <div className="flex flex-col justify-between h-full gap-5">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <i className="fa fa-users text-red-500 text-lg"></i>
               </div>
-              <p className="text-2xl font-bold text-slate-800 ml-10">{agentData.totalClientes}</p>
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-500 leading-tight">Total Clientes</span>
+                <p className="text-2xl font-bold text-slate-800 leading-tight">{agentData.totalClientes}</p>
+              </div>
             </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
-                  <span className="text-yellow-500 text-sm">👤</span>
-                </div>
-                <span className="text-xs text-slate-600">Referidos</span>
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                <i className="fa fa-user text-yellow-500 text-lg"></i>
               </div>
-              <p className="text-2xl font-bold text-slate-800 ml-10">{agentData.referidos}</p>
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-500 leading-tight">Referidos</span>
+                <p className="text-2xl font-bold text-slate-800 leading-tight">{agentData.referidos}</p>
+              </div>
             </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                  <span className="text-blue-500 text-sm">📄</span>
-                </div>
-                <span className="text-xs text-slate-600">Contratos</span>
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <i className="fa fa-file-text text-blue-500 text-lg"></i>
               </div>
-              <p className="text-2xl font-bold text-slate-800 ml-10">{agentData.totalContratos}</p>
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-500 leading-tight">Contratos</span>
+                <p className="text-2xl font-bold text-slate-800 leading-tight">{agentData.totalContratos}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -717,7 +755,7 @@ export default function AgentProfile() {
           <h3 className="text-sm font-semibold text-slate-800 mb-4">Ventas Carretera</h3>
           <div className="flex items-center justify-center gap-4 mt-4">
             <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center shadow-neumorphic-light-lg">
-              <span className="text-primary text-2xl">💎</span>
+              <i className="fa fa-diamond text-primary text-2xl"></i>
             </div>
             <p className="text-4xl font-bold text-slate-800">{agentData.ventasCarretera}</p>
           </div>

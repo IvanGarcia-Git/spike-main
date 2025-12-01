@@ -69,15 +69,23 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center p-4 transition-colors duration-300">
+    <div
+      className="min-h-screen flex items-center justify-center p-4 transition-colors duration-300"
+      style={{
+        backgroundImage: "url('/images/login-background.png')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
       {/* Login Card */}
       <div className={`w-full max-w-md ${isModalOpen ? "hidden" : "block"}`}>
         {/* Login Form Card */}
-        <div className="neumorphic-card p-8">
+        <div className="neumorphic-card p-8" style={{ boxShadow: 'none' }}>
           {/* Logo */}
           <div className="flex justify-center mb-8">
             <img
-              src="/images/logo.svg"
+              src="/images/logo.png"
               alt="SPIKES Logo"
               className="h-20 w-auto"
             />

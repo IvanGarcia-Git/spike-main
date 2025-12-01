@@ -1,18 +1,19 @@
-<svg width="200" height="100" viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Cactus main body -->
-  <rect x="40" y="20" width="20" height="60" rx="10" fill="#10B981"/>
-  
-  <!-- Left arm -->
-  <rect x="20" y="30" width="20" height="40" rx="10" fill="#10B981"/>
-  <rect x="20" y="30" width="20" height="20" rx="10" fill="#10B981"/>
-  
-  <!-- Right arm -->
-  <rect x="60" y="40" width="20" height="30" rx="10" fill="#10B981"/>
-  <rect x="60" y="40" width="20" height="15" rx="10" fill="#10B981"/>
-  
-  <!-- Water drop -->
-  <path d="M120 35 C115 25, 125 25, 120 35 C120 40, 115 45, 120 45 C125 45, 120 40, 120 35 Z" fill="#10B981"/>
-  
-  <!-- Circle -->
-  <circle cx="170" cy="50" r="10" fill="#10B981"/>
+<svg width="300" height="100" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Cactus group -->
+  <g>
+    <!-- Left arm (shorter, curves up) -->
+    <path d="M12 70 L12 45 Q12 35 22 35 Q32 35 32 45 L32 70 Q32 80 22 80 Q12 80 12 70 Z" fill="#10B981"/>
+
+    <!-- Center body (tallest) -->
+    <path d="M32 80 L32 20 Q32 8 47 8 Q62 8 62 20 L62 80 Q62 92 47 92 Q32 92 32 80 Z" fill="#10B981"/>
+
+    <!-- Right arm (shortest, curves up) -->
+    <path d="M62 70 L62 50 Q62 40 72 40 Q82 40 82 50 L82 70 Q82 80 72 80 Q62 80 62 70 Z" fill="#10B981"/>
+  </g>
+
+  <!-- Water drop (teardrop shape) -->
+  <path d="M175 25 Q160 55 175 75 Q190 55 175 25 Z" fill="#10B981"/>
+
+  <!-- Small circle -->
+  <circle cx="270" cy="65" r="12" fill="#10B981"/>
 </svg>

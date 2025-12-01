@@ -63,10 +63,12 @@ export default function Sidebar({ userGroupId, isManager }) {
     <aside className="w-80 flex-shrink-0 p-4 overflow-x-hidden">
       <div className="flex flex-col h-full bg-background-light dark:bg-background-dark rounded-xl p-5 overflow-x-hidden">
         {/* Logo */}
-        <div className="flex items-center mb-10 p-2 h-8">
-          <span className="text-2xl font-bold tracking-wider text-primary">
-            SPIKES
-          </span>
+        <div className="flex items-center mb-10 p-2">
+          <img
+            src="/images/logo.png"
+            alt="SPIKES Logo"
+            className="h-12 w-auto"
+          />
         </div>
 
         {/* Navigation */}
