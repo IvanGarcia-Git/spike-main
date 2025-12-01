@@ -78,3 +78,7 @@ export const getComparativaById = async (comparativaId, jwtToken) => {
 export const deleteComparativa = async (comparativaId, jwtToken) => {
   return await authFetch("DELETE", `comparativas/${comparativaId}`, null, jwtToken);
 };
+
+export const updateComparativa = async (comparativaId, data, jwtToken) => {
+  return await authFetch("PUT", `comparativas/${comparativaId}`, data, jwtToken);
+};

@@ -181,7 +181,7 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
 
 
     useEffect(() => {
-        if (pdfData) {
+        if (pdfData && pdfData.bestTariff?.tariff) {
             const numDias = pdfData.numDias || 0;
             const bestTariff = pdfData.bestTariff.tariff;
 
@@ -219,7 +219,7 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                             label: `${energias[i] || 'X'}kWh x ${bestTariffEnergyPrices[i] !== undefined ? bestTariffEnergyPrices[i].toFixed(3) : `PrecioE${i + 1}`}€/kWh`,
                             value: formatCurrency(cost)
                         })),
-                        ...(pdfData.bestTariff.breakdown.surplusCredit! > 0 ? [{
+                        ...((pdfData.bestTariff?.breakdown?.surplusCredit ?? 0) > 0 ? [{
                             id: 'best-surplus',
                             label: `Abono Excedentes: ${excedentes}kWh x ${bestTariffSurplusPrice.toFixed(3)}€/kWh`,
                             value: formatCurrency(-(pdfData.bestTariff?.breakdown?.surplusCredit || 0))

@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { getCookie } from "cookies-next";
 import BaseModal, { ModalButton } from "../base-modal.component";
+import { createComparativa } from "@/helpers/server-fetch.helper";
 
-export default function NuevaComparativaModal({ isOpen, onClose }) {
+export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     // Paso 1: Tipo de comparativa
     comparisonType: "",
@@ -63,11 +66,93 @@ export default function NuevaComparativaModal({ isOpen, onClose }) {
     }
   };
 
-  const handleSubmit = () => {
-    // Guardar datos en sessionStorage para usar en la página de resultados
-    sessionStorage.setItem("comparisonData", JSON.stringify(formData));
-    router.push("/comparativas/resultados");
-    onClose();
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const token = getCookie("factura-token");
+      if (!token) {
+        console.error("No token found");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Calculate simple prices (simplified calculation - in real app would use tariff rates)
+      const potenciaTotal = formData.potencias?.reduce((acc, p) => acc + (parseFloat(p) || 0), 0) || 0;
+      const energiaTotal = formData.energias?.reduce((acc, e) => acc + (parseFloat(e) || 0), 0) || 0;
+
+      // Simplified price calculation
+      const calculatedOldPrice = parseFloat(formData.currentBillAmount) || 100;
+      const calculatedNewPrice = calculatedOldPrice * 0.85; // 15% savings example
+      const savings = calculatedOldPrice - calculatedNewPrice;
+
+      // Prepare data for backend
+      const comparativaData = {
+        clientName: formData.clientName,
+        comparisonType: formData.comparisonType,
+        customerType: formData.customerType,
+        tariffType: formData.comparisonType === "luz" ? formData.selectedLightTariff : formData.selectedGasTariff,
+        solarPanelActive: formData.isSolar || false,
+        excedentes: parseFloat(formData.excedentes) || 0,
+        potencias: formData.potencias?.map(p => parseFloat(p) || 0) || [],
+        energias: formData.energias?.map(e => parseFloat(e) || 0) || [],
+        numDias: parseInt(formData.numDias) || 30,
+        currentBillAmount: parseFloat(formData.currentBillAmount) || 0,
+        hasMainServices: false,
+        hasClientServices: false,
+        calculatedOldPrice: calculatedOldPrice,
+        calculatedNewPrice: calculatedNewPrice,
+        savings: savings,
+      };
+
+      const response = await createComparativa(comparativaData, token);
+
+      if (response.ok) {
+        const savedComparativa = await response.json();
+        console.log("Comparativa saved:", savedComparativa);
+
+        // Store data for results page
+        sessionStorage.setItem("comparisonData", JSON.stringify({
+          ...formData,
+          id: savedComparativa.id,
+          calculatedOldPrice,
+          calculatedNewPrice,
+          savings,
+        }));
+
+        // Reset form
+        setCurrentStep(1);
+        setFormData({
+          comparisonType: "",
+          customerType: "particular",
+          clientName: "",
+          currentBillAmount: "",
+          numDias: "30",
+          showCurrentBill: true,
+          selectedLightTariff: "2.0TD",
+          potencias: ["", "", ""],
+          energias: ["", "", ""],
+          excedentes: "0",
+          isSolar: false,
+          selectedGasTariff: "RL.1",
+          consumo: "",
+        });
+
+        // Call onCreated callback to refresh the list
+        if (onCreated) {
+          onCreated();
+        }
+
+        onClose();
+        router.push("/comparativas/resultados");
+      } else {
+        const error = await response.json();
+        console.error("Error creating comparativa:", error);
+      }
+    } catch (error) {
+      console.error("Error submitting comparativa:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isStepValid = () => {
