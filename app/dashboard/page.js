@@ -585,42 +585,51 @@ export default function Dashboard() {
           <VentasPorMesChart data={dashboardData.ventasPorMes} />
 
           {/* Calendario de Actividad */}
-          <div className="neumorphic-card p-6 mb-8 min-h-[200px] flex flex-col">
+          <div className="neumorphic-card p-6 mb-8">
             <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">
               Calendario de Actividad
             </h3>
             {dashboardData.activityCalendar && dashboardData.activityCalendar.length > 0 ? (
-              <div className="flex-grow">
-                <div className="flex flex-wrap gap-1">
-                  {dashboardData.activityCalendar.map((week, index) => (
-                    <div
-                      key={index}
-                      className="w-3 h-3 rounded-sm transition-colors"
-                      style={{
-                        backgroundColor: week.value > 0
-                          ? `rgba(20, 184, 166, ${Math.min(week.value / 10, 1)})`
-                          : 'rgba(0, 0, 0, 0.05)'
-                      }}
-                      title={`Semana ${week.week}: ${week.value} contratos`}
-                    />
+              <div className="overflow-x-auto">
+                <div className="flex gap-[3px] min-w-fit">
+                  {/* Organizar en columnas de 7 (días de la semana) */}
+                  {Array.from({ length: Math.ceil(dashboardData.activityCalendar.length / 7) }, (_, colIndex) => (
+                    <div key={colIndex} className="flex flex-col gap-[3px]">
+                      {dashboardData.activityCalendar.slice(colIndex * 7, (colIndex + 1) * 7).map((day, dayIndex) => (
+                        <div
+                          key={dayIndex}
+                          className="w-[14px] h-[14px] rounded-sm transition-colors cursor-pointer hover:ring-2 hover:ring-teal-400 hover:ring-offset-1"
+                          style={{
+                            backgroundColor: day.value > 0
+                              ? `rgba(20, 184, 166, ${Math.min(0.2 + (day.value / 15) * 0.8, 1)})`
+                              : 'rgba(100, 116, 139, 0.1)'
+                          }}
+                          title={`Semana ${day.week}: ${day.value} contratos`}
+                        />
+                      ))}
+                    </div>
                   ))}
                 </div>
-                <div className="flex items-center justify-end gap-2 mt-4 text-xs text-slate-500">
-                  <span>Menos</span>
-                  <div className="flex gap-1">
-                    {[0.1, 0.3, 0.5, 0.7, 1].map((opacity, i) => (
-                      <div
-                        key={i}
-                        className="w-3 h-3 rounded-sm"
-                        style={{ backgroundColor: `rgba(20, 184, 166, ${opacity})` }}
-                      />
-                    ))}
+                <div className="flex items-center justify-between mt-4 text-xs text-slate-500 dark:text-slate-400">
+                  <span className="text-slate-400">Últimas 52 semanas</span>
+                  <div className="flex items-center gap-2">
+                    <span>Menos</span>
+                    <div className="flex gap-[2px]">
+                      <div className="w-[14px] h-[14px] rounded-sm" style={{ backgroundColor: 'rgba(100, 116, 139, 0.1)' }} />
+                      {[0.3, 0.5, 0.7, 1].map((opacity, i) => (
+                        <div
+                          key={i}
+                          className="w-[14px] h-[14px] rounded-sm"
+                          style={{ backgroundColor: `rgba(20, 184, 166, ${opacity})` }}
+                        />
+                      ))}
+                    </div>
+                    <span>Más</span>
                   </div>
-                  <span>Más</span>
                 </div>
               </div>
             ) : (
-              <div className="flex-grow flex items-center justify-center text-sm text-slate-500 dark:text-slate-400">
+              <div className="flex items-center justify-center h-24 text-sm text-slate-500 dark:text-slate-400">
                 <p>No hay datos de actividad disponibles</p>
               </div>
             )}
