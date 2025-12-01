@@ -268,7 +268,7 @@ export default function Dashboard() {
     const colors = {
       green: "text-green-500",
       yellow: "text-yellow-500",
-      red: "text-red-500",
+      red: "text-primary",
     };
     return colors[color] || "text-primary";
   };
@@ -277,7 +277,7 @@ export default function Dashboard() {
     const colors = {
       green: "bg-primary",
       yellow: "bg-yellow-500",
-      red: "bg-red-500",
+      red: "bg-primary",
     };
     return colors[color] || "bg-primary";
   };
@@ -408,9 +408,11 @@ export default function Dashboard() {
               <p className="font-bold text-lg text-slate-800 dark:text-slate-200">
                 {formatComisiones(agente.comisiones)}
               </p>
-              <p className="text-sm text-green-500 flex items-center">
-                <span className="material-icons-outlined text-base">arrow_upward</span>
-                {agente.crecimiento}%
+              <p className={`text-sm flex items-center ${(agente.crecimiento ?? 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                <span className="material-icons-outlined text-base">
+                  {(agente.crecimiento ?? 0) >= 0 ? 'arrow_upward' : 'arrow_downward'}
+                </span>
+                {Math.abs(agente.crecimiento ?? 0)}%
               </p>
             </div>
           </div>
@@ -510,9 +512,11 @@ export default function Dashboard() {
                           <span>{agente.porcentaje}%</span>
                         </div>
                       </td>
-                      <td className="p-3 text-green-500 flex items-center">
-                        <span className="material-icons-outlined text-base">arrow_upward</span>
-                        {agente.crecimiento}%
+                      <td className={`p-3 flex items-center ${(agente.crecimiento ?? 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        <span className="material-icons-outlined text-base">
+                          {(agente.crecimiento ?? 0) >= 0 ? 'arrow_upward' : 'arrow_downward'}
+                        </span>
+                        {Math.abs(agente.crecimiento ?? 0)}%
                       </td>
                       <td className="p-3 font-medium">{agente.porcentaje}%</td>
                     </tr>
@@ -961,9 +965,11 @@ export default function Dashboard() {
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-bold text-primary">{formatComisiones(agente.comisiones)}</p>
-                      <p className="text-xs text-green-500 flex items-center">
-                        <span className="material-icons-outlined text-sm">arrow_upward</span>
-                        {agente.crecimiento}%
+                      <p className={`text-xs flex items-center justify-end ${(agente.crecimiento ?? 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        <span className="material-icons-outlined text-sm">
+                          {(agente.crecimiento ?? 0) >= 0 ? 'arrow_upward' : 'arrow_downward'}
+                        </span>
+                        {Math.abs(agente.crecimiento ?? 0)}%
                       </p>
                     </div>
                   </div>
