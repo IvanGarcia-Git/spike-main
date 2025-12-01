@@ -129,6 +129,8 @@ export default function Dashboard() {
     topAgentes: [],
     topColaboradores: [],
     ventasPorMes: [],
+    activityCalendar: [],
+    weeklyActivity: [],
   });
 
   useEffect(() => {
@@ -150,6 +152,8 @@ export default function Dashboard() {
           topAgentes: data.topAgentes || [],
           topColaboradores: data.topColaboradores || [],
           ventasPorMes: data.ventasPorMes || [],
+          activityCalendar: data.activityCalendar || [],
+          weeklyActivity: data.weeklyActivity || [],
         });
       } else {
         setDashboardData(generateFallbackData());
@@ -248,6 +252,8 @@ export default function Dashboard() {
       { mes: "Nov", ventas: 85 },
       { mes: "Dic", ventas: 80 },
     ],
+    activityCalendar: [],
+    weeklyActivity: [],
   });
 
   const tabs = [
@@ -555,9 +561,23 @@ export default function Dashboard() {
               <h3 className="font-semibold mb-4 text-slate-800 dark:text-slate-100">
                 Historial de Puntos
               </h3>
-              <div className="flex items-center justify-center h-full text-sm text-slate-500 dark:text-slate-400">
-                <p>No hay datos disponibles</p>
-              </div>
+              {dashboardData.weeklyActivity && dashboardData.weeklyActivity.length > 0 ? (
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {dashboardData.weeklyActivity.map((activity, index) => (
+                    <div key={index} className="flex items-center justify-between text-sm">
+                      <span className="text-slate-600 dark:text-slate-300 truncate flex-1">{activity.name}</span>
+                      <div className="flex items-center gap-2 ml-2">
+                        <span className="font-semibold text-primary">{activity.total}</span>
+                        <span className="text-slate-400 text-xs">pts</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full text-sm text-slate-500 dark:text-slate-400">
+                  <p>No hay datos disponibles</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -569,9 +589,41 @@ export default function Dashboard() {
             <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">
               Calendario de Actividad
             </h3>
-            <div className="flex-grow flex items-center justify-center text-sm text-slate-500 dark:text-slate-400">
-              <p>No hay datos de actividad disponibles</p>
-            </div>
+            {dashboardData.activityCalendar && dashboardData.activityCalendar.length > 0 ? (
+              <div className="flex-grow">
+                <div className="flex flex-wrap gap-1">
+                  {dashboardData.activityCalendar.map((week, index) => (
+                    <div
+                      key={index}
+                      className="w-3 h-3 rounded-sm transition-colors"
+                      style={{
+                        backgroundColor: week.value > 0
+                          ? `rgba(20, 184, 166, ${Math.min(week.value / 10, 1)})`
+                          : 'rgba(0, 0, 0, 0.05)'
+                      }}
+                      title={`Semana ${week.week}: ${week.value} contratos`}
+                    />
+                  ))}
+                </div>
+                <div className="flex items-center justify-end gap-2 mt-4 text-xs text-slate-500">
+                  <span>Menos</span>
+                  <div className="flex gap-1">
+                    {[0.1, 0.3, 0.5, 0.7, 1].map((opacity, i) => (
+                      <div
+                        key={i}
+                        className="w-3 h-3 rounded-sm"
+                        style={{ backgroundColor: `rgba(20, 184, 166, ${opacity})` }}
+                      />
+                    ))}
+                  </div>
+                  <span>Más</span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-grow flex items-center justify-center text-sm text-slate-500 dark:text-slate-400">
+                <p>No hay datos de actividad disponibles</p>
+              </div>
+            )}
           </div>
         </>
       )}
