@@ -103,100 +103,126 @@ export default function ContractDocuments({ contractUuid, documentation }) {
   };
 
   return (
-    <div className="bg-foreground">
-      <div className="max-w-7xl mx-auto bg-background p-6 shadow-lg">
-        {/* Mostrar los tipos de documentación requeridos */}
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-black">
-            Documentación Requerida:
-          </h2>
-          {documentation && documentation.length > 0 ? (
-            <ul className="list-disc pl-5 text-black">
-              {documentation.map((doc, index) => (
-                <li key={index}>{doc}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-600">
-              No se especificaron tipos de documentación requeridos.
-            </p>
-          )}
+    <div className="neumorphic-card p-6 rounded-xl">
+      {/* Mostrar los tipos de documentación requeridos */}
+      {documentation && documentation.length > 0 && (
+        <div className="neumorphic-card-inset p-4 rounded-lg mb-6">
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+            <span className="material-icons-outlined text-primary text-lg">checklist</span>
+            Documentación Requerida
+          </h3>
+          <ul className="space-y-1">
+            {documentation.map((doc, index) => (
+              <li key={index} className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                <span className="material-icons-outlined text-xs text-slate-400">check_circle_outline</span>
+                {doc}
+              </li>
+            ))}
+          </ul>
         </div>
-        <form onSubmit={handleFileUpload}>
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-4">
-              <input
-                type="file"
-                id="file"
-                className="hidden"
-                onChange={(e) => setSelectedFile(e.target.files[0])}
-              />
-              <label
-                htmlFor="file"
-                className="px-4 py-2 bg-backgroundHoverBold text-black rounded-md cursor-pointer"
-              >
-                Seleccionar archivo
-              </label>
-              <span className="text-gray-600">
-                {selectedFile
-                  ? selectedFile.name
-                  : "Ningún archivo seleccionado"}
-              </span>
-            </div>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondaryHover"
-              disabled={uploading}
-            >
-              {uploading ? "Subiendo..." : "Subir Documentación"}
-            </button>
-          </div>
-        </form>
+      )}
 
-        <div className="bg-backgroundHover">
-          {files.length > 0 ? (
-            <ul className="space-y-4">
-              {files.map((file) => (
-                <li
-                  key={file.uuid}
-                  className="flex justify-between items-center bg-backgroundHoverBold p-4 rounded-lg"
-                >
-                  <div className="flex items-center gap-4">
-                    <AiFillFile size={24} className="text-yellow-400" />
-                    <span className="font-semibold text-black">
-                      {file.fileName}
-                    </span>
+      {/* Upload form */}
+      <form onSubmit={handleFileUpload} className="mb-6">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1">
+            <input
+              type="file"
+              id="file-upload"
+              className="hidden"
+              onChange={(e) => setSelectedFile(e.target.files[0])}
+            />
+            <label
+              htmlFor="file-upload"
+              className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg neumorphic-button cursor-pointer text-slate-600 dark:text-slate-400 font-medium hover:text-primary transition-colors"
+            >
+              <span className="material-icons-outlined">upload_file</span>
+              {selectedFile ? selectedFile.name : "Seleccionar archivo"}
+            </label>
+          </div>
+          <button
+            type="submit"
+            className="px-6 py-3 rounded-lg bg-primary text-white font-semibold neumorphic-button hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            disabled={uploading || !selectedFile}
+          >
+            {uploading ? (
+              <>
+                <span className="material-icons-outlined animate-spin">refresh</span>
+                Subiendo...
+              </>
+            ) : (
+              <>
+                <span className="material-icons-outlined">cloud_upload</span>
+                Subir
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+
+      {/* Files list */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+          <span className="material-icons-outlined text-primary text-lg">description</span>
+          Documentos ({files.length})
+        </h3>
+
+        {files.length > 0 ? (
+          <div className="space-y-2">
+            {files.map((file) => (
+              <div
+                key={file.uuid}
+                className="neumorphic-card-inset p-4 rounded-lg flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="w-10 h-10 rounded-lg neumorphic-card flex items-center justify-center flex-shrink-0">
+                    <AiFillFile size={20} className="text-yellow-500" />
                   </div>
-                  <div>
-                    <p className="text-gray-600 text-sm">
-                      {new Date(file.createdAt).toLocaleDateString()} -{" "}
-                      {new Date(file.createdAt).toLocaleTimeString()}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-slate-800 dark:text-slate-200 truncate">
+                      {file.fileName}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {new Date(file.createdAt).toLocaleDateString("es-ES", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit"
+                      })}
                     </p>
                   </div>
-                  <div className="flex space-x-4">
-                    {/* Botón para ver el archivo */}
-                    <button
-                      onClick={() => handleFileView(file.documentUri)}
-                      className="bg-blue-500 text-white px-4 py-2 rounded"
-                    >
-                      Ver
-                    </button>
-
-                    {/* Botón para eliminar el archivo */}
-                    <button
-                      onClick={() => handleFileDelete(file.uuid)}
-                      className="bg-red-500 text-white px-4 py-2 rounded"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-black">No hay documentos disponibles.</p>
-          )}
-        </div>
+                </div>
+                <div className="flex items-center gap-2 ml-3">
+                  <button
+                    onClick={() => handleFileView(file.documentUri)}
+                    className="w-9 h-9 rounded-lg neumorphic-button flex items-center justify-center text-blue-500 hover:text-blue-600 transition-colors"
+                    title="Ver documento"
+                  >
+                    <span className="material-icons-outlined text-lg">visibility</span>
+                  </button>
+                  <button
+                    onClick={() => handleFileDelete(file.uuid)}
+                    className="w-9 h-9 rounded-lg neumorphic-button flex items-center justify-center text-red-500 hover:text-red-600 transition-colors"
+                    title="Eliminar documento"
+                  >
+                    <span className="material-icons-outlined text-lg">delete</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="neumorphic-card-inset p-8 rounded-lg text-center">
+            <span className="material-icons-outlined text-5xl text-slate-400 mb-3">folder_off</span>
+            <p className="text-slate-600 dark:text-slate-400 font-medium">
+              No hay documentos disponibles
+            </p>
+            <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
+              Sube el primer documento usando el botón de arriba
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
