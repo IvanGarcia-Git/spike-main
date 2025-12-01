@@ -1086,7 +1086,7 @@ export default function Contracts() {
                   <td className="p-3">
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => router.push(`/contratos/${contract.uuid}`)}
+                        onClick={() => router.push(`/contratos/${contract.customer.uuid}/${contract.uuid}`)}
                         className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-400"
                       >
                         <span className="material-icons-outlined text-lg">visibility</span>
@@ -1151,6 +1151,7 @@ export default function Contracts() {
       {isDocumentModalOpen && (
         <ContractsDocumentsModal
           contractUuid={contractUuid}
+          isOpen={isDocumentModalOpen}
           onClose={() => {
             setIsDocumentModalOpen(false);
             setContractUuid(null);

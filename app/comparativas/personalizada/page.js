@@ -2,15 +2,9 @@
 
 import { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Loader2 } from 'lucide-react';
 import ComparisonPdfPreview from '@/components/comparativas/ComparisonPdfPreview';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import ComparativasHeader from '@/components/comparativas/Header';
 import { authGetFetch } from '@/helpers/server-fetch.helper';
 import { getCookie } from 'cookies-next';
 import * as jose from 'jose';
@@ -22,9 +16,9 @@ export default function ComparativasPersonalizadaPage() {
   const [pdfData, setPdfData] = useState(null);
   const [shouldAutoDownload, setShouldAutoDownload] = useState(false);
   const [colors, setColors] = useState({
-    background: '#ffffff', // White background
-    primaryText: '#ef4444', // Red text (matches the input shown)
-    secondaryText: '#f97316', // Orange text
+    background: '#ffffff',
+    primaryText: '#ef4444',
+    secondaryText: '#f97316',
   });
   const [userData, setUserData] = useState({
     name: '',
@@ -32,7 +26,7 @@ export default function ComparativasPersonalizadaPage() {
     profileImageUri: '/avatar.png'
   });
 
-  // Cargar colores guardados del localStorage en el primer render del cliente
+  // Load saved colors from localStorage on first client render
   useEffect(() => {
     const savedColors = localStorage.getItem('comparativaColors');
     if (savedColors) {
@@ -45,18 +39,18 @@ export default function ComparativasPersonalizadaPage() {
     }
   }, []);
 
-  // Obtener datos del usuario logueado
+  // Get logged in user data
   useEffect(() => {
     const fetchUserData = async () => {
       const jwtToken = getCookie('factura-token');
       if (jwtToken) {
         try {
           const payload = jose.decodeJwt(jwtToken);
-          
-          // Obtener imagen de perfil del usuario
+
+          // Get user profile picture
           const response = await authGetFetch(`users/profile-picture/${payload.userId}`, jwtToken);
           let profileImageUri = '/avatar.png';
-          
+
           if (response.ok) {
             const data = await response.json();
             profileImageUri = data.profileImageUri || '/avatar.png';
@@ -79,14 +73,14 @@ export default function ComparativasPersonalizadaPage() {
   useEffect(() => {
     const storedData = sessionStorage.getItem('pdfDataForGeneration');
     const autoDownload = sessionStorage.getItem('autoDownloadPDF') === 'true';
-    
+
     if (storedData) {
       try {
         const data = JSON.parse(storedData);
         setPdfData(data);
         sessionStorage.removeItem('pdfDataForGeneration');
-        
-        // Si hay flag de descarga automática, activar el estado
+
+        // If auto download flag is set, activate state
         if (autoDownload) {
           sessionStorage.removeItem('autoDownloadPDF');
           setShouldAutoDownload(true);
@@ -103,7 +97,7 @@ export default function ComparativasPersonalizadaPage() {
     const { name, value } = e.target;
     setColors(prev => {
       const newColors = { ...prev, [name]: value };
-      // Guardar colores en localStorage
+      // Save colors to localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem('comparativaColors', JSON.stringify(newColors));
       }
@@ -135,36 +129,36 @@ export default function ComparativasPersonalizadaPage() {
         }
 
         const canvas = await html2canvas(page, {
-          scale: 3, 
+          scale: 3,
           useCORS: true,
           backgroundColor: colors.background,
           windowWidth: 1920,
           windowHeight: 1080,
           logging: false,
           onclone: (clonedDoc) => {
-            // Buscar todas las páginas PDF en el documento clonado
+            // Find all PDF pages in cloned document
             const clonedPages = clonedDoc.querySelectorAll('.pdf-page');
             clonedPages.forEach((clonedPage) => {
               if (clonedPage instanceof HTMLElement) {
-                // Aplicar colores directamente al elemento clonado
+                // Apply colors directly to cloned element
                 clonedPage.style.backgroundColor = colors.background;
                 clonedPage.style.color = colors.primaryText;
               }
             });
-            
+
             const allElements = clonedDoc.querySelectorAll('*');
             allElements.forEach((el) => {
               if (el instanceof HTMLElement) {
                 el.style.setProperty('font-family', 'Arial, sans-serif', 'important');
-                
-                // Aplicar color de texto principal a todos los elementos que tienen color
-                // Preservar estilos inline que incluyan color
+
+                // Apply primary text color to all elements that have color
+                // Preserve inline styles that include color
                 const originalStyle = el.getAttribute('style');
                 if (originalStyle && originalStyle.includes('color:')) {
-                  // Extraer y preservar el color del estilo inline si es el primaryText
+                  // Extract and preserve the color from inline style if it's primaryText
                   const colorMatch = originalStyle.match(/color:\s*([^;]+)/);
                   if (colorMatch) {
-                    // Si el color coincide con primaryText, aplicarlo con important
+                    // If color matches primaryText, apply with important
                     const currentColor = colorMatch[1].trim();
                     if (currentColor === colors.primaryText || currentColor === 'rgb(31, 41, 55)' || currentColor === '#1f2937') {
                       el.style.setProperty('color', colors.primaryText, 'important');
@@ -173,25 +167,25 @@ export default function ComparativasPersonalizadaPage() {
                     }
                   }
                 } else if (!el.classList.contains('text-white') && !el.classList.contains('text-green-500') && !el.classList.contains('text-rose-500') && !el.classList.contains('text-emerald-500')) {
-                  // Si no tiene color específico y no es un elemento con color fijo, aplicar primaryText
+                  // If no specific color and not an element with fixed color, apply primaryText
                   el.style.setProperty('color', colors.primaryText, 'important');
                 }
-                
-                // Convertir inputs y textareas a divs para mejor renderizado
+
+                // Convert inputs and textareas to divs for better rendering
                 if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
                   const div = clonedDoc.createElement('div');
                   div.textContent = el.value;
                   div.className = el.className;
-                  
-                  // Copiar estilos computados incluyendo el color
+
+                  // Copy computed styles including color
                   const computedStyle = window.getComputedStyle(el);
                   div.style.cssText = computedStyle.cssText;
                   div.style.whiteSpace = 'nowrap';
                   div.style.overflow = 'visible';
                   div.style.width = 'auto';
                   div.style.minWidth = computedStyle.width;
-                  
-                  // Asegurar que el color se mantenga
+
+                  // Ensure color is maintained
                   if (el.style.color) {
                     div.style.setProperty('color', el.style.color, 'important');
                   } else if (computedStyle.color) {
@@ -199,7 +193,7 @@ export default function ComparativasPersonalizadaPage() {
                   } else {
                     div.style.setProperty('color', colors.primaryText, 'important');
                   }
-                  
+
                   el.parentNode?.replaceChild(div, el);
                 }
               }
@@ -208,7 +202,7 @@ export default function ComparativasPersonalizadaPage() {
         });
 
         const imgData = canvas.toDataURL('image/png');
-        
+
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       }
 
@@ -220,102 +214,209 @@ export default function ComparativasPersonalizadaPage() {
     }
   };
 
-  // Efecto para manejar la descarga automática
+  // Effect to handle automatic download
   useEffect(() => {
     if (shouldAutoDownload && pdfData && previewRef.current) {
-      // Esperar un poco para asegurar que el componente está completamente renderizado
+      // Wait a bit to ensure component is fully rendered
       const timer = setTimeout(async () => {
         await handleDownloadPdf();
         setShouldAutoDownload(false);
-        // Volver a la página de comparativas después de la descarga
+        // Return to comparativas page after download
         setTimeout(() => {
           router.push('/comparativas');
         }, 500);
       }, 1500);
-      
+
       return () => clearTimeout(timer);
     }
   }, [shouldAutoDownload, pdfData]);
 
   return (
-    <div>
-      <ComparativasHeader />
-      <div className="container mx-auto p-4 md:p-8">
-      <div className="flex justify-between items-start mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">Personalizar Comparativa</h1>
-          <p className="text-gray-600">
-            Ajusta el estilo y descarga la comparativa en formato PDF.
-          </p>
+    <div className="p-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
+              Personalizar Comparativa
+            </h1>
+            <p className="text-slate-600 dark:text-slate-400 mt-2">
+              Ajusta el estilo y descarga la comparativa en formato PDF.
+            </p>
+          </div>
+          <button
+            onClick={handleDownloadPdf}
+            disabled={isDownloading}
+            className="neumorphic-button flex items-center justify-center px-6 py-3 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isDownloading ? (
+              <>
+                <span className="material-icons-outlined animate-spin mr-2">sync</span>
+                Descargando...
+              </>
+            ) : (
+              <>
+                <span className="material-icons-outlined mr-2">download</span>
+                Descargar en PDF
+              </>
+            )}
+          </button>
         </div>
-        <Button onClick={handleDownloadPdf} disabled={isDownloading}>
-          {isDownloading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Download className="mr-2 h-4 w-4" />
-          )}
-          {isDownloading ? 'Descargando...' : 'Descargar en PDF'}
-        </Button>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Opciones de Estilo</CardTitle>
-              <CardDescription>
-                Personaliza la apariencia del PDF.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="background">Color de Fondo</Label>
-                <Input
-                  id="background"
-                  name="background"
-                  type="color"
-                  value={colors.background}
-                  onChange={handleColorChange}
-                  className="p-0 h-8 w-14 border-none rounded-md cursor-pointer"
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Style Options Card */}
+          <div className="lg:col-span-1">
+            <div className="neumorphic-card p-6">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
+                  Opciones de Estilo
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Personaliza la apariencia del PDF.
+                </p>
+              </div>
+
+              <div className="space-y-5">
+                {/* Background Color */}
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="background"
+                    className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                  >
+                    Color de Fondo
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="background"
+                      name="background"
+                      type="color"
+                      value={colors.background}
+                      onChange={handleColorChange}
+                      className="w-14 h-10 rounded-lg cursor-pointer border-0 p-1 neumorphic-card-inset"
+                    />
+                  </div>
+                </div>
+
+                {/* Primary Text Color */}
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="primaryText"
+                    className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                  >
+                    Texto Principal
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="primaryText"
+                      name="primaryText"
+                      type="color"
+                      value={colors.primaryText}
+                      onChange={handleColorChange}
+                      className="w-14 h-10 rounded-lg cursor-pointer border-0 p-1 neumorphic-card-inset"
+                    />
+                  </div>
+                </div>
+
+                {/* Secondary Text Color */}
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="secondaryText"
+                    className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                  >
+                    Texto Secundario
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="secondaryText"
+                      name="secondaryText"
+                      type="color"
+                      value={colors.secondaryText}
+                      onChange={handleColorChange}
+                      className="w-14 h-10 rounded-lg cursor-pointer border-0 p-1 neumorphic-card-inset"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Color Preview */}
+              <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                  Vista previa de colores
+                </p>
+                <div className="flex gap-3">
+                  <div
+                    className="flex-1 h-12 rounded-lg neumorphic-card-inset flex items-center justify-center"
+                    style={{ backgroundColor: colors.background }}
+                  >
+                    <span className="text-xs text-slate-500">Fondo</span>
+                  </div>
+                  <div
+                    className="flex-1 h-12 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: colors.primaryText }}
+                  >
+                    <span className="text-xs text-white">Principal</span>
+                  </div>
+                  <div
+                    className="flex-1 h-12 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: colors.secondaryText }}
+                  >
+                    <span className="text-xs text-white">Secundario</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                  Acciones rápidas
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const defaultColors = {
+                        background: '#ffffff',
+                        primaryText: '#ef4444',
+                        secondaryText: '#f97316',
+                      };
+                      setColors(defaultColors);
+                      localStorage.setItem('comparativaColors', JSON.stringify(defaultColors));
+                    }}
+                    className="flex-1 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 neumorphic-button"
+                  >
+                    Restablecer
+                  </button>
+                  <button
+                    onClick={() => router.push('/comparativas')}
+                    className="flex-1 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 neumorphic-button"
+                  >
+                    Volver
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* PDF Preview */}
+          <div className="lg:col-span-2">
+            <div className="neumorphic-card p-6">
+              <div className="mb-4">
+                <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
+                  Vista Previa
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Así se verá tu comparativa en PDF.
+                </p>
+              </div>
+              <div ref={previewRef} className="neumorphic-card-inset p-4 rounded-lg">
+                <ComparisonPdfPreview
+                  key={`${colors.background}-${colors.primaryText}-${colors.secondaryText}`}
+                  pdfData={pdfData}
+                  colors={colors}
+                  userData={userData}
                 />
               </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="primaryText">Texto Principal</Label>
-                <Input
-                  id="primaryText"
-                  name="primaryText"
-                  type="color"
-                  value={colors.primaryText}
-                  onChange={handleColorChange}
-                  className="p-0 h-8 w-14 border-none rounded-md cursor-pointer"
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="secondaryText">Texto Secundario</Label>
-                <Input
-                  id="secondaryText"
-                  name="secondaryText"
-                  type="color"
-                  value={colors.secondaryText}
-                  onChange={handleColorChange}
-                  className="p-0 h-8 w-14 border-none rounded-md cursor-pointer"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="lg:col-span-2">
-          <div ref={previewRef}>
-            <ComparisonPdfPreview 
-              key={`${colors.background}-${colors.primaryText}-${colors.secondaryText}`}
-              pdfData={pdfData} 
-              colors={colors}
-              userData={userData}
-            />
+            </div>
           </div>
         </div>
-      </div>
-      </div>
     </div>
   );
 }
