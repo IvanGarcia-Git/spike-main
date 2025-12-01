@@ -10,6 +10,7 @@ export default function TopBar({ userGroupId, isManager }) {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isAppsOpen, setIsAppsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [profileImageUri, setProfileImageUri] = useState("/avatar.png");
   const [userEmail, setUserEmail] = useState("");
   const [userUuid, setUserUuid] = useState("");
@@ -17,6 +18,7 @@ export default function TopBar({ userGroupId, isManager }) {
   const userDropdownRef = useRef(null);
   const appsRef = useRef(null);
   const settingsRef = useRef(null);
+  const notificationsRef = useRef(null);
   const router = useRouter();
 
   const fetchProfilePicture = async (userId) => {
@@ -50,6 +52,9 @@ export default function TopBar({ userGroupId, isManager }) {
       }
       if (settingsRef.current && !settingsRef.current.contains(event.target)) {
         setIsSettingsOpen(false);
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+        setIsNotificationsOpen(false);
       }
     };
 
@@ -98,82 +103,82 @@ export default function TopBar({ userGroupId, isManager }) {
             </button>
 
             {isAppsOpen && (
-              <div className="absolute right-0 mt-4 w-80 neumorphic-card bg-background-light dark:bg-background-dark rounded-xl shadow-xl p-4 z-50 max-h-[80vh] overflow-y-auto">
+              <div className="absolute right-0 mt-4 w-72 neumorphic-card bg-background-light dark:bg-background-dark rounded-xl shadow-xl p-4 z-50 max-h-[80vh] overflow-y-auto">
                 <div className="mb-3">
                   <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-3">
                     Aplicaciones
                   </h3>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
                   <Link
                     href="/dashboard"
-                    className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
                     onClick={() => setIsAppsOpen(false)}
                   >
-                    <span className="material-icons-outlined text-primary text-2xl">
+                    <span className="material-icons-outlined text-primary text-xl">
                       dashboard
                     </span>
-                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       Dashboard
                     </span>
                   </Link>
                   <Link
                     href="/contratos"
-                    className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
                     onClick={() => setIsAppsOpen(false)}
                   >
-                    <span className="material-icons-outlined text-primary text-2xl">
+                    <span className="material-icons-outlined text-primary text-xl">
                       receipt_long
                     </span>
-                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       Contratos
                     </span>
                   </Link>
                   <Link
                     href="/comparativas"
-                    className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
                     onClick={() => setIsAppsOpen(false)}
                   >
-                    <span className="material-icons-outlined text-primary text-2xl">
+                    <span className="material-icons-outlined text-primary text-xl">
                       compare_arrows
                     </span>
-                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       Comparativas
                     </span>
                   </Link>
                   <Link
                     href="/notas"
-                    className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
                     onClick={() => setIsAppsOpen(false)}
                   >
-                    <span className="material-icons-outlined text-primary text-2xl">
+                    <span className="material-icons-outlined text-primary text-xl">
                       note_alt
                     </span>
-                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       Notas
                     </span>
                   </Link>
                   <Link
                     href="/agenda"
-                    className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
                     onClick={() => setIsAppsOpen(false)}
                   >
-                    <span className="material-icons-outlined text-primary text-2xl">
+                    <span className="material-icons-outlined text-primary text-xl">
                       book
                     </span>
-                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       Agenda
                     </span>
                   </Link>
                   <Link
                     href="/gestor-lead"
-                    className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
                     onClick={() => setIsAppsOpen(false)}
                   >
-                    <span className="material-icons-outlined text-primary text-2xl">
-                      person_check
+                    <span className="material-icons-outlined text-primary text-xl">
+                      manage_search
                     </span>
-                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       Gestor Leads
                     </span>
                   </Link>
@@ -181,37 +186,37 @@ export default function TopBar({ userGroupId, isManager }) {
                     <>
                       <Link
                         href="/campaigns"
-                        className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
                         onClick={() => setIsAppsOpen(false)}
                       >
-                        <span className="material-icons-outlined text-primary text-2xl">
+                        <span className="material-icons-outlined text-primary text-xl">
                           campaign
                         </span>
-                        <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                           Campañas
                         </span>
                       </Link>
                       <Link
                         href="/groups"
-                        className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
                         onClick={() => setIsAppsOpen(false)}
                       >
-                        <span className="material-icons-outlined text-primary text-2xl">
+                        <span className="material-icons-outlined text-primary text-xl">
                           groups
                         </span>
-                        <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                           Grupos
                         </span>
                       </Link>
                       <Link
                         href="/emitir-factura"
-                        className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
                         onClick={() => setIsAppsOpen(false)}
                       >
-                        <span className="material-icons-outlined text-primary text-2xl">
+                        <span className="material-icons-outlined text-primary text-xl">
                           receipt_long
                         </span>
-                        <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                           Factura
                         </span>
                       </Link>
@@ -219,62 +224,62 @@ export default function TopBar({ userGroupId, isManager }) {
                   )}
                   <Link
                     href="/generar-justo-titulo"
-                    className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
                     onClick={() => setIsAppsOpen(false)}
                   >
-                    <span className="material-icons-outlined text-primary text-2xl">
-                      receipt_long
+                    <span className="material-icons-outlined text-primary text-xl">
+                      gavel
                     </span>
-                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       Justo Título
                     </span>
                   </Link>
                   <Link
                     href="/studio"
-                    className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
                     onClick={() => setIsAppsOpen(false)}
                   >
-                    <span className="material-icons-outlined text-primary text-2xl">
-                      edit_document
+                    <span className="material-icons-outlined text-primary text-xl">
+                      edit_note
                     </span>
-                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       Studio
                     </span>
                   </Link>
                   <Link
                     href="/drive?section=precios"
-                    className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
                     onClick={() => setIsAppsOpen(false)}
                   >
-                    <span className="material-icons-outlined text-primary text-2xl">
+                    <span className="material-icons-outlined text-primary text-xl">
                       folder
                     </span>
-                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       Drive
                     </span>
                   </Link>
                   <Link
                     href="/liquidaciones"
-                    className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
                     onClick={() => setIsAppsOpen(false)}
                   >
-                    <span className="material-icons-outlined text-primary text-2xl">
+                    <span className="material-icons-outlined text-primary text-xl">
                       payments
                     </span>
-                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       Liquidaciones
                     </span>
                   </Link>
                   {isManager && (
                     <Link
                       href="/usuarios"
-                      className="neumorphic-card-inset p-3 rounded-lg flex flex-col items-center gap-2 hover:shadow-neumorphic-light dark:hover:shadow-neumorphic-dark transition-all"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
                       onClick={() => setIsAppsOpen(false)}
                     >
-                      <span className="material-icons-outlined text-primary text-2xl">
+                      <span className="material-icons-outlined text-primary text-xl">
                         manage_accounts
                       </span>
-                      <span className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                         Usuarios
                       </span>
                     </Link>
@@ -323,106 +328,102 @@ export default function TopBar({ userGroupId, isManager }) {
                       </span>
                     </Link>
 
-                    {userGroupId === 1 && (
-                      <>
-                        <Link
-                          href="/companies"
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
-                          onClick={() => setIsSettingsOpen(false)}
-                        >
-                          <span className="material-icons-outlined text-primary text-xl">
-                            apartment
-                          </span>
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Compañías
-                          </span>
-                        </Link>
-                        <Link
-                          href="/canales"
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
-                          onClick={() => setIsSettingsOpen(false)}
-                        >
-                          <span className="material-icons-outlined text-primary text-xl">
-                            valve
-                          </span>
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Canales
-                          </span>
-                        </Link>
-                        <Link
-                          href="/estados"
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
-                          onClick={() => setIsSettingsOpen(false)}
-                        >
-                          <span className="material-icons-outlined text-primary text-xl">
-                            done_all
-                          </span>
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Estados
-                          </span>
-                        </Link>
-                        <Link
-                          href="/origins"
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
-                          onClick={() => setIsSettingsOpen(false)}
-                        >
-                          <span className="material-icons-outlined text-primary text-xl">
-                            local_offer
-                          </span>
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Orígenes
-                          </span>
-                        </Link>
-                        <Link
-                          href="/users-visibility"
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
-                          onClick={() => setIsSettingsOpen(false)}
-                        >
-                          <span className="material-icons-outlined text-primary text-xl">
-                            visibility
-                          </span>
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Visibilidad
-                          </span>
-                        </Link>
-                        <Link
-                          href="/contract-customize"
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
-                          onClick={() => setIsSettingsOpen(false)}
-                        >
-                          <span className="material-icons-outlined text-primary text-xl">
-                            view_column
-                          </span>
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Personalizar Columnas
-                          </span>
-                        </Link>
-                        <Link
-                          href="/prioridad-leads"
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
-                          onClick={() => setIsSettingsOpen(false)}
-                        >
-                          <span className="material-icons-outlined text-primary text-xl">
-                            low_priority
-                          </span>
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Prioridad de Leads
-                          </span>
-                        </Link>
-                        <Link
-                          href="/notifications-settings"
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
-                          onClick={() => setIsSettingsOpen(false)}
-                        >
-                          <span className="material-icons-outlined text-primary text-xl">
-                            notifications_active
-                          </span>
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Ajustes de Notificaciones
-                          </span>
-                        </Link>
-                      </>
-                    )}
+                    <Link
+                      href="/companies"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                      onClick={() => setIsSettingsOpen(false)}
+                    >
+                      <span className="material-icons-outlined text-primary text-xl">
+                        apartment
+                      </span>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Compañías
+                      </span>
+                    </Link>
+                    <Link
+                      href="/canales"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                      onClick={() => setIsSettingsOpen(false)}
+                    >
+                      <span className="material-icons-outlined text-primary text-xl">
+                        hub
+                      </span>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Canales
+                      </span>
+                    </Link>
+                    <Link
+                      href="/estados"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                      onClick={() => setIsSettingsOpen(false)}
+                    >
+                      <span className="material-icons-outlined text-primary text-xl">
+                        done_all
+                      </span>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Estados
+                      </span>
+                    </Link>
+                    <Link
+                      href="/origins"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                      onClick={() => setIsSettingsOpen(false)}
+                    >
+                      <span className="material-icons-outlined text-primary text-xl">
+                        local_offer
+                      </span>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Orígenes
+                      </span>
+                    </Link>
+                    <Link
+                      href="/users-visibility"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                      onClick={() => setIsSettingsOpen(false)}
+                    >
+                      <span className="material-icons-outlined text-primary text-xl">
+                        visibility
+                      </span>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Visibilidad
+                      </span>
+                    </Link>
+                    <Link
+                      href="/contract-customize"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                      onClick={() => setIsSettingsOpen(false)}
+                    >
+                      <span className="material-icons-outlined text-primary text-xl">
+                        view_column
+                      </span>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Personalizar Columnas
+                      </span>
+                    </Link>
+                    <Link
+                      href="/prioridad-leads"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                      onClick={() => setIsSettingsOpen(false)}
+                    >
+                      <span className="material-icons-outlined text-primary text-xl">
+                        low_priority
+                      </span>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Prioridad de Leads
+                      </span>
+                    </Link>
+                    <Link
+                      href="/notifications-settings"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                      onClick={() => setIsSettingsOpen(false)}
+                    >
+                      <span className="material-icons-outlined text-primary text-xl">
+                        notifications_active
+                      </span>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Ajustes de Notificaciones
+                      </span>
+                    </Link>
                   </div>
                 </div>
               )}
