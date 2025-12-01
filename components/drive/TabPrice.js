@@ -3,7 +3,7 @@
 import { authGetFetch } from "@/helpers/server-fetch.helper";
 import { getCookie } from "cookies-next";
 import { useState, useEffect, useCallback } from "react";
-import useIsMobile from "@/hooks/useIsMobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 function TabPrice() {
   const [activeTab, setActiveTab] = useState("Luz");

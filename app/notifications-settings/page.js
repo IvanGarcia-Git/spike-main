@@ -2,8 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { getCookie } from "cookies-next";
 import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
-import useIsMobile from "@/hooks/useIsMobile";
-import { id } from "date-fns/locale";
+import { useIsMobile } from "@/hooks/use-mobile";
 import Select from "react-select";
 
 export default function NotificationsSettings() {

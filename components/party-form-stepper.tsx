@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from '@/helpers/utils';
+import { cn } from '@/lib/utils';
 import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 
 interface PartyFormStepperProps {

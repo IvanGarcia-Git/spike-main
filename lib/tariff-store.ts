@@ -12,16 +12,6 @@ export function getTariffs(): CompanyTariff[] {
 }
 
 /**
- * Finds a tariff by its ID.
- * @param id The ID of the tariff to find.
- * @returns A deep copy of the tariff or undefined if not found.
- */
-export function getTariffById(id: string): CompanyTariff | undefined {
-  const tariff = tariffs.find(t => t.id === id);
-  return tariff ? JSON.parse(JSON.stringify(tariff)) : undefined;
-}
-
-/**
  * Updates an existing tariff.
  * @param updatedTariff The full tariff object with updated data.
  */

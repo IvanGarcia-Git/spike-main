@@ -5,7 +5,7 @@ import provincesData from "../app/provinces.json";
 import { FaSearch } from "react-icons/fa";
 
 import { FaSortAmountDown, FaSortAmountUpAlt, FaFileExcel } from "react-icons/fa";
-import useIsMobile from "@/hooks/useIsMobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function ContractSearch({
   contractStates,

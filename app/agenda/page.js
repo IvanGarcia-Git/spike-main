@@ -15,7 +15,7 @@ import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { TouchBackend } from "react-dnd-touch-backend";
 import { MultiBackend, TouchTransition } from "react-dnd-multi-backend";
-import useIsMobile from "@/hooks/useIsMobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import CommunicationModal from "@/components/communication.modal";
 import { useLayout } from "../layout";
 import { toast } from "react-toastify";

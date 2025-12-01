@@ -14,7 +14,7 @@ export async function GET(req, { params }) {
     }
 
     const { id } = await params;
-    const backendUrl = `${process.env.BACKEND_URL}/agentes/${id}`;
+    const backendUrl = `${process.env.BACKEND_URL}/user-profiles/agente/${id}`;
 
     const apiResponse = await fetch(backendUrl, {
       method: "GET",
