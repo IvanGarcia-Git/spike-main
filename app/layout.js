@@ -31,8 +31,14 @@ export default function RootLayout({ children }) {
   const [userGroupId, setUserGroupId] = useState(null);
   const [isManager, setIsManager] = useState(false);
   const [sideBarHidden, setSideBarHidden] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const pathname = usePathname();
+
+  // Close mobile sidebar when route changes
+  useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, [pathname]);
 
   const checkAuthentication = () => {
     const token = getCookie("factura-token");
@@ -83,18 +89,32 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <LayoutContext.Provider value={{ sideBarHidden, setSideBarHidden }}>
+        <LayoutContext.Provider value={{
+          sideBarHidden,
+          setSideBarHidden,
+          isMobileSidebarOpen,
+          setIsMobileSidebarOpen
+        }}>
           {isAuthenticated ? (
             <div className="flex h-screen overflow-hidden">
               {/* Sidebar */}
               {!sideBarHidden && (
-                <Sidebar userGroupId={userGroupId} isManager={isManager} />
+                <Sidebar
+                  userGroupId={userGroupId}
+                  isManager={isManager}
+                  isMobileOpen={isMobileSidebarOpen}
+                  onClose={() => setIsMobileSidebarOpen(false)}
+                />
               )}
 
               {/* Main content area with TopBar */}
               <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Top Bar */}
-                <TopBar userGroupId={userGroupId} isManager={isManager} />
+                <TopBar
+                  userGroupId={userGroupId}
+                  isManager={isManager}
+                  onMenuClick={() => setIsMobileSidebarOpen(true)}
+                />
 
                 {/* Main content */}
                 <main className="flex-1 overflow-y-auto">

@@ -8,12 +8,15 @@ import { usePathname } from "next/navigation";
  *
  * Application sidebar navigation with neumorphic design.
  * Features collapsible submenus and permission-based menu items.
+ * Now with responsive support - hidden on mobile by default.
  *
  * @param {Object} props
  * @param {number} props.userGroupId - User group ID for permission checks
  * @param {boolean} props.isManager - Manager permission flag
+ * @param {boolean} props.isMobileOpen - Whether sidebar is open on mobile
+ * @param {function} props.onClose - Callback to close sidebar on mobile
  */
-export default function Sidebar({ userGroupId, isManager }) {
+export default function Sidebar({ userGroupId, isManager, isMobileOpen = false, onClose }) {
   const pathname = usePathname();
   const [openMenu, setOpenMenu] = useState(null); // null, 'tasks', 'leads', 'tools'
 
@@ -21,10 +24,16 @@ export default function Sidebar({ userGroupId, isManager }) {
   const toggleLeadsMenu = () => setOpenMenu(openMenu === 'leads' ? null : 'leads');
   const toggleToolsMenu = () => setOpenMenu(openMenu === 'tools' ? null : 'tools');
 
+  // Handle link click - close sidebar on mobile
+  const handleLinkClick = () => {
+    if (onClose) onClose();
+  };
+
   // Menu item component
   const MenuItem = ({ href, icon, label, isActive }) => (
     <Link
       href={href}
+      onClick={handleLinkClick}
       className={`
         flex items-center p-3 rounded-xl transition-all duration-200
         ${
@@ -60,16 +69,45 @@ export default function Sidebar({ userGroupId, isManager }) {
   );
 
   return (
-    <aside className="w-80 flex-shrink-0 p-4 overflow-x-hidden">
-      <div className="flex flex-col h-full bg-background-light dark:bg-background-dark rounded-xl p-5 overflow-x-hidden">
-        {/* Logo */}
-        <div className="flex items-center mb-10 p-2">
-          <img
-            src="/images/logo.png"
-            alt="SPIKES Logo"
-            className="h-12 w-auto"
-          />
-        </div>
+    <>
+      {/* Mobile overlay */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed md:relative inset-y-0 left-0
+          w-80 flex-shrink-0 p-4 overflow-x-hidden
+          transform transition-transform duration-300 ease-in-out
+          ${isMobileOpen ? 'translate-x-0 z-[60]' : '-translate-x-full z-50'}
+          md:translate-x-0 md:z-auto
+          bg-background-light dark:bg-background-dark
+        `}
+      >
+        {/* Close button for mobile - outside the inner container */}
+        <button
+          onClick={onClose}
+          className="md:hidden absolute top-6 right-6 z-[60] w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-slate-800 shadow-md hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+        >
+          <span className="material-icons-outlined text-slate-600 dark:text-slate-300">
+            close
+          </span>
+        </button>
+
+        <div className="flex flex-col h-full bg-background-light dark:bg-background-dark rounded-xl p-5 overflow-x-hidden shadow-lg md:shadow-none">
+          {/* Logo */}
+          <div className="flex items-center mb-10 p-2">
+            <img
+              src="/images/logo.png"
+              alt="SPIKES Logo"
+              className="h-12 w-auto"
+            />
+          </div>
 
         {/* Navigation */}
         <nav className="flex-grow space-y-2 overflow-y-auto overflow-x-hidden pr-2">
@@ -207,7 +245,8 @@ export default function Sidebar({ userGroupId, isManager }) {
             isActive={pathname === "/liquidaciones"}
           />
         </nav>
-      </div>
-    </aside>
+        </div>
+      </aside>
+    </>
   );
 }

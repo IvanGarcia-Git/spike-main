@@ -6,7 +6,7 @@ import { getCookie, deleteCookie } from "cookies-next";
 import { authGetFetch } from "@/helpers/server-fetch.helper";
 import * as jose from "jose";
 
-export default function TopBar({ userGroupId, isManager }) {
+export default function TopBar({ userGroupId, isManager, onMenuClick }) {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isAppsOpen, setIsAppsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -83,9 +83,19 @@ export default function TopBar({ userGroupId, isManager }) {
   }, []);
 
   return (
-    <div className="sticky top-0 z-50 bg-background-light dark:bg-background-dark border-b border-slate-200 dark:border-slate-700 px-6 py-4 no-print">
-      <div className="flex items-center justify-end">
-        <div className="flex items-center space-x-4">
+    <div className="sticky top-0 z-50 bg-background-light dark:bg-background-dark border-b border-slate-200 dark:border-slate-700 px-4 md:px-6 py-4 no-print">
+      <div className="flex items-center justify-between md:justify-end">
+        {/* Mobile menu button */}
+        <button
+          onClick={onMenuClick}
+          className="md:hidden w-12 h-12 rounded-full neumorphic-button flex items-center justify-center hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all"
+        >
+          <span className="material-icons-outlined text-slate-600 dark:text-slate-300">
+            menu
+          </span>
+        </button>
+
+        <div className="flex items-center space-x-2 md:space-x-4">
           {/* Apps Button */}
           <div ref={appsRef} className="relative">
             <button
