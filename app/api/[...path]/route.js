@@ -34,10 +34,12 @@ async function handleRequest(req, params, method) {
     const queryString = searchParams.toString();
     const fullPath = queryString ? `${path}?${queryString}` : path;
 
+    // Check content type of incoming request
+    const incomingContentType = req.headers.get("content-type") || "";
+    const isMultipart = incomingContentType.includes("multipart/form-data");
+
     // Prepare headers
-    const headers = {
-      "Content-Type": "application/json",
-    };
+    const headers = {};
 
     if (token) {
       headers["Authorization"] = `Bearer ${token.value}`;
@@ -51,12 +53,24 @@ async function handleRequest(req, params, method) {
 
     // Add body for POST, PUT, PATCH requests
     if (method !== "GET" && method !== "DELETE") {
-      try {
-        const body = await req.json();
-        requestOptions.body = JSON.stringify(body);
-      } catch (e) {
-        // No body or invalid JSON
+      if (isMultipart) {
+        // For multipart/form-data, pass through the FormData as-is
+        const formData = await req.formData();
+        requestOptions.body = formData;
+        // Don't set Content-Type - fetch will set it automatically with boundary
+      } else {
+        // For JSON requests
+        headers["Content-Type"] = "application/json";
+        try {
+          const body = await req.json();
+          requestOptions.body = JSON.stringify(body);
+        } catch (e) {
+          // No body or invalid JSON
+        }
       }
+    } else {
+      // For GET/DELETE, set JSON content type for consistency
+      headers["Content-Type"] = "application/json";
     }
 
     // Make request to backend
