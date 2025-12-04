@@ -110,13 +110,23 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
         const savedComparativa = await response.json();
         console.log("Comparativa saved:", savedComparativa);
 
-        // Store data for results page
-        sessionStorage.setItem("comparisonData", JSON.stringify({
-          ...formData,
+        // Store data for PDF preview page
+        sessionStorage.setItem("pdfDataForGeneration", JSON.stringify({
           id: savedComparativa.id,
-          calculatedOldPrice,
-          calculatedNewPrice,
-          savings,
+          clientName: formData.clientName,
+          comparisonType: formData.comparisonType,
+          customerType: formData.customerType,
+          tariffType: formData.comparisonType === "luz" ? formData.selectedLightTariff : formData.selectedGasTariff,
+          calculatedNewPrice: calculatedNewPrice,
+          calculatedOldPrice: calculatedOldPrice,
+          savings: savings,
+          potencias: formData.potencias?.map(p => parseFloat(p) || 0) || [],
+          energias: formData.energias?.map(e => parseFloat(e) || 0) || [],
+          numDias: parseInt(formData.numDias) || 30,
+          showCurrentBill: formData.showCurrentBill,
+          currentBillAmount: parseFloat(formData.currentBillAmount) || 0,
+          excedentes: parseFloat(formData.excedentes) || 0,
+          isSolar: formData.isSolar || false,
         }));
 
         // Reset form
@@ -143,7 +153,7 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
         }
 
         onClose();
-        router.push("/comparativas/resultados");
+        router.push("/comparativas/personalizada");
       } else {
         const error = await response.json();
         console.error("Error creating comparativa:", error);
