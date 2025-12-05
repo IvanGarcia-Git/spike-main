@@ -162,90 +162,9 @@ export default function Dashboard() {
 
   const generateFallbackData = () => ({
     stats: { totalClientes: 0, totalLeads: 0, totalContratos: 0, ingresosMes: 0 },
-    topAgentes: [
-      {
-        id: 2,
-        name: "Carlos García Martínez",
-        role: "agente",
-        ventas: 280,
-        objetivo: 140,
-        porcentaje: 92,
-        comisiones: 1570,
-        crecimiento: 20,
-        color: "green",
-      },
-      {
-        id: 3,
-        name: "Daniel Rodríguez López",
-        role: "agente",
-        ventas: 160,
-        objetivo: 140,
-        porcentaje: 75,
-        comisiones: 800,
-        crecimiento: 4,
-        color: "yellow",
-      },
-      {
-        id: 7,
-        name: "Laura Fernández López",
-        role: "agente",
-        ventas: 124,
-        objetivo: 140,
-        porcentaje: 45,
-        comisiones: 650,
-        crecimiento: 31,
-        color: "red",
-      },
-    ],
-    topColaboradores: [
-      {
-        id: 1,
-        name: "María López García",
-        role: "colaborador",
-        ventas: 110,
-        objetivo: 140,
-        porcentaje: 65,
-        comisiones: 550,
-        crecimiento: 15,
-        color: "yellow",
-      },
-      {
-        id: 4,
-        name: "Jennifer Tan Fernández",
-        role: "colaborador",
-        ventas: 95,
-        objetivo: 140,
-        porcentaje: 55,
-        comisiones: 475,
-        crecimiento: 8,
-        color: "yellow",
-      },
-      {
-        id: 5,
-        name: "Ana Martín Sánchez",
-        role: "colaborador",
-        ventas: 85,
-        objetivo: 140,
-        porcentaje: 48,
-        comisiones: 425,
-        crecimiento: 12,
-        color: "red",
-      },
-    ],
-    ventasPorMes: [
-      { mes: "Ene", ventas: 50 },
-      { mes: "Feb", ventas: 75 },
-      { mes: "Mar", ventas: 10 },
-      { mes: "Abr", ventas: 70 },
-      { mes: "May", ventas: 40 },
-      { mes: "Jun", ventas: 30 },
-      { mes: "Jul", ventas: 65 },
-      { mes: "Ago", ventas: 20 },
-      { mes: "Sep", ventas: 5 },
-      { mes: "Oct", ventas: 35 },
-      { mes: "Nov", ventas: 85 },
-      { mes: "Dic", ventas: 80 },
-    ],
+    topAgentes: [],
+    topColaboradores: [],
+    ventasPorMes: [],
     activityCalendar: [],
     weeklyActivity: [],
   });
@@ -652,21 +571,21 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-green-500">85%</p>
+                  <p className="text-3xl font-bold text-green-500">0%</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">Meta</p>
                 </div>
               </div>
               <div className="space-y-1 text-xs text-slate-500 dark:text-slate-400 mb-2">
-                <div className="flex justify-between"><span>Facturado</span><span>€25,840</span></div>
-                <div className="flex justify-between"><span>Objetivo</span><span>€30,000</span></div>
+                <div className="flex justify-between"><span>Facturado</span><span>€0</span></div>
+                <div className="flex justify-between"><span>Objetivo</span><span>€0</span></div>
               </div>
               <div className="neumorphic-progress-track h-2.5">
-                <div className="bg-primary h-full rounded-full" style={{width: '85%'}}></div>
+                <div className="bg-primary h-full rounded-full" style={{width: '0%'}}></div>
               </div>
               <div className="flex justify-between items-center mt-2">
-                <p className="font-bold text-lg text-slate-800 dark:text-slate-200">€25,840</p>
-                <p className="text-sm text-green-500 flex items-center">
-                  <span className="material-icons-outlined text-base">arrow_upward</span>15%
+                <p className="font-bold text-lg text-slate-800 dark:text-slate-200">€0</p>
+                <p className="text-sm text-slate-500 flex items-center">
+                  <span className="material-icons-outlined text-base">remove</span>0%
                 </p>
               </div>
             </div>
@@ -684,21 +603,21 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-blue-500">70%</p>
+                  <p className="text-3xl font-bold text-blue-500">0%</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">Del total</p>
                 </div>
               </div>
               <div className="space-y-1 text-xs text-slate-500 dark:text-slate-400 mb-2">
-                <div className="flex justify-between"><span>Cobrado</span><span>€18,200</span></div>
-                <div className="flex justify-between"><span>Total</span><span>€25,840</span></div>
+                <div className="flex justify-between"><span>Cobrado</span><span>€0</span></div>
+                <div className="flex justify-between"><span>Total</span><span>€0</span></div>
               </div>
               <div className="neumorphic-progress-track h-2.5">
-                <div className="bg-blue-500 h-full rounded-full" style={{width: '70.5%'}}></div>
+                <div className="bg-blue-500 h-full rounded-full" style={{width: '0%'}}></div>
               </div>
               <div className="flex justify-between items-center mt-2">
-                <p className="font-bold text-lg text-slate-800 dark:text-slate-200">€18,200</p>
-                <p className="text-sm text-green-500 flex items-center">
-                  <span className="material-icons-outlined text-base">arrow_upward</span>12%
+                <p className="font-bold text-lg text-slate-800 dark:text-slate-200">€0</p>
+                <p className="text-sm text-slate-500 flex items-center">
+                  <span className="material-icons-outlined text-base">remove</span>0%
                 </p>
               </div>
             </div>
@@ -716,21 +635,21 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-yellow-500">30%</p>
+                  <p className="text-3xl font-bold text-yellow-500">0%</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">Del total</p>
                 </div>
               </div>
               <div className="space-y-1 text-xs text-slate-500 dark:text-slate-400 mb-2">
-                <div className="flex justify-between"><span>Pendiente</span><span>€7,640</span></div>
-                <div className="flex justify-between"><span>Vencido</span><span>€1,240</span></div>
+                <div className="flex justify-between"><span>Pendiente</span><span>€0</span></div>
+                <div className="flex justify-between"><span>Vencido</span><span>€0</span></div>
               </div>
               <div className="neumorphic-progress-track h-2.5">
-                <div className="bg-yellow-500 h-full rounded-full" style={{width: '29.5%'}}></div>
+                <div className="bg-yellow-500 h-full rounded-full" style={{width: '0%'}}></div>
               </div>
               <div className="flex justify-between items-center mt-2">
-                <p className="font-bold text-lg text-slate-800 dark:text-slate-200">€7,640</p>
-                <p className="text-sm text-red-500 flex items-center">
-                  <span className="material-icons-outlined text-base">arrow_downward</span>3%
+                <p className="font-bold text-lg text-slate-800 dark:text-slate-200">€0</p>
+                <p className="text-sm text-slate-500 flex items-center">
+                  <span className="material-icons-outlined text-base">remove</span>0%
                 </p>
               </div>
             </div>
@@ -741,31 +660,9 @@ export default function Dashboard() {
             <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6">
               Ingresos por Tarifa
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { nombre: "2.0TD", ingresos: 8200, color: "bg-blue-500" },
-                { nombre: "3.0TD", ingresos: 6800, color: "bg-green-500" },
-                { nombre: "2.1TD", ingresos: 5400, color: "bg-yellow-500" },
-                { nombre: "Otras", ingresos: 5440, color: "bg-purple-500" },
-              ].map((tarifa, idx) => (
-                <div key={idx} className="neumorphic-card-inset p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      {tarifa.nombre}
-                    </span>
-                    <div className={`w-3 h-3 rounded-full ${tarifa.color}`}></div>
-                  </div>
-                  <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-                    €{tarifa.ingresos.toLocaleString()}
-                  </p>
-                  <div className="mt-2 neumorphic-progress-track h-2">
-                    <div
-                      className={`h-full rounded-full ${tarifa.color}`}
-                      style={{ width: `${(tarifa.ingresos / 8200) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
+            <div className="flex items-center justify-center py-8 text-slate-500 dark:text-slate-400">
+              <span className="material-icons-outlined text-4xl mr-3">bar_chart</span>
+              <p>No hay datos de ingresos por tarifa disponibles</p>
             </div>
           </div>
 
@@ -775,27 +672,9 @@ export default function Dashboard() {
               <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4">
                 Fuentes de Ingreso
               </h3>
-              <div className="space-y-3">
-                {[
-                  { fuente: "Luz", monto: 14200, porcentaje: 55 },
-                  { fuente: "Gas", monto: 7800, porcentaje: 30 },
-                  { fuente: "Telefonía", monto: 3840, porcentaje: 15 },
-                ].map((item, idx) => (
-                  <div key={idx}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-slate-600 dark:text-slate-400">{item.fuente}</span>
-                      <span className="font-medium text-slate-800 dark:text-slate-200">
-                        €{item.monto.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="neumorphic-progress-track h-2">
-                      <div
-                        className="bg-primary h-full rounded-full"
-                        style={{ width: `${item.porcentaje}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
+              <div className="flex items-center justify-center py-8 text-slate-500 dark:text-slate-400">
+                <span className="material-icons-outlined text-4xl mr-3">pie_chart</span>
+                <p>No hay datos disponibles</p>
               </div>
             </div>
 
@@ -809,24 +688,24 @@ export default function Dashboard() {
                     Objetivo Mensual
                   </p>
                   <p className="text-3xl font-bold text-slate-800 dark:text-slate-100">
-                    €30,000
+                    €0
                   </p>
                 </div>
                 <div className="neumorphic-progress-track h-4">
                   <div
                     className="bg-primary h-full rounded-full flex items-center justify-center text-white text-xs font-bold"
-                    style={{ width: '86%' }}
+                    style={{ width: '0%' }}
                   >
-                    86%
+                    0%
                   </div>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600 dark:text-slate-400">Alcanzado:</span>
-                  <span className="font-medium text-primary">€25,840</span>
+                  <span className="font-medium text-primary">€0</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600 dark:text-slate-400">Restante:</span>
-                  <span className="font-medium text-slate-800 dark:text-slate-200">€4,160</span>
+                  <span className="font-medium text-slate-800 dark:text-slate-200">€0</span>
                 </div>
               </div>
             </div>
@@ -916,7 +795,11 @@ export default function Dashboard() {
                 trending_up
               </span>
               <p className="text-sm text-slate-500 dark:text-slate-400">Tasa de Conversión</p>
-              <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">73%</p>
+              <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                {dashboardData.topColaboradores.length > 0
+                  ? `${Math.round(dashboardData.topColaboradores.reduce((sum, a) => sum + (a.porcentaje || 0), 0) / dashboardData.topColaboradores.length)}%`
+                  : '0%'}
+              </p>
             </div>
           </div>
         </div>
@@ -984,28 +867,9 @@ export default function Dashboard() {
               <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4">
                 Contratos por Compañía
               </h3>
-              <div className="space-y-3">
-                {[
-                  { compania: "Iberdrola", contratos: 145, color: "bg-blue-500" },
-                  { compania: "Endesa", contratos: 120, color: "bg-green-500" },
-                  { compania: "Naturgy", contratos: 98, color: "bg-yellow-500" },
-                  { compania: "Repsol", contratos: 75, color: "bg-red-500" },
-                ].map((item, idx) => (
-                  <div key={idx}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-slate-600 dark:text-slate-400">{item.compania}</span>
-                      <span className="font-medium text-slate-800 dark:text-slate-200">
-                        {item.contratos}
-                      </span>
-                    </div>
-                    <div className="neumorphic-progress-track h-2">
-                      <div
-                        className={`h-full rounded-full ${item.color}`}
-                        style={{ width: `${(item.contratos / 145) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
+              <div className="flex items-center justify-center py-8 text-slate-500 dark:text-slate-400">
+                <span className="material-icons-outlined text-4xl mr-3">business</span>
+                <p>No hay datos de contratos disponibles</p>
               </div>
             </div>
 
@@ -1014,7 +878,7 @@ export default function Dashboard() {
                 Posibles Renovaciones
               </h3>
               <div className="text-center mb-4">
-                <p className="text-5xl font-bold text-primary">42</p>
+                <p className="text-5xl font-bold text-primary">0</p>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
                   Contratos próximos a vencer
                 </p>
@@ -1022,15 +886,15 @@ export default function Dashboard() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-slate-600 dark:text-slate-400">Este mes</span>
-                  <span className="font-medium text-slate-800 dark:text-slate-200">12</span>
+                  <span className="font-medium text-slate-800 dark:text-slate-200">0</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600 dark:text-slate-400">Próximo mes</span>
-                  <span className="font-medium text-slate-800 dark:text-slate-200">18</span>
+                  <span className="font-medium text-slate-800 dark:text-slate-200">0</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600 dark:text-slate-400">2 meses</span>
-                  <span className="font-medium text-slate-800 dark:text-slate-200">12</span>
+                  <span className="font-medium text-slate-800 dark:text-slate-200">0</span>
                 </div>
               </div>
             </div>
@@ -1057,22 +921,21 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="neumorphic-card-inset p-6 text-center">
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">Ventas Hoy</p>
-                <p className="text-4xl font-bold text-primary">24</p>
-                <p className="text-xs text-green-500 mt-2 flex items-center justify-center">
-                  <span className="material-icons-outlined text-sm">arrow_upward</span>
-                  +8 vs ayer
+                <p className="text-4xl font-bold text-primary">0</p>
+                <p className="text-xs text-slate-500 mt-2">
+                  Sin datos de ayer
                 </p>
               </div>
               <div className="neumorphic-card-inset p-6 text-center">
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">Esta Semana</p>
-                <p className="text-4xl font-bold text-slate-800 dark:text-slate-100">87</p>
+                <p className="text-4xl font-bold text-slate-800 dark:text-slate-100">0</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                  72% del objetivo semanal
+                  Sin objetivo configurado
                 </p>
               </div>
               <div className="neumorphic-card-inset p-6 text-center">
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">Promedio/Día</p>
-                <p className="text-4xl font-bold text-slate-800 dark:text-slate-100">18</p>
+                <p className="text-4xl font-bold text-slate-800 dark:text-slate-100">0</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                   Últimos 7 días
                 </p>
@@ -1088,8 +951,8 @@ export default function Dashboard() {
               </h3>
               <div className="space-y-4">
                 {[
-                  { turno: "Mañana", horario: "09:00 - 14:00", ventas: 12, color: "bg-yellow-500" },
-                  { turno: "Tarde", horario: "14:00 - 20:00", ventas: 12, color: "bg-blue-500" },
+                  { turno: "Mañana", horario: "09:00 - 14:00", ventas: 0, color: "bg-yellow-500" },
+                  { turno: "Tarde", horario: "14:00 - 20:00", ventas: 0, color: "bg-blue-500" },
                 ].map((item, idx) => (
                   <div key={idx} className="neumorphic-card-inset p-4">
                     <div className="flex justify-between mb-2">
@@ -1106,7 +969,7 @@ export default function Dashboard() {
                     <div className="neumorphic-progress-track h-3">
                       <div
                         className={`h-full rounded-full ${item.color}`}
-                        style={{ width: `${(item.ventas / 12) * 100}%` }}
+                        style={{ width: '0%' }}
                       ></div>
                     </div>
                   </div>
@@ -1118,35 +981,42 @@ export default function Dashboard() {
               <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4">
                 Top Vendedores Hoy
               </h3>
-              <div className="space-y-3">
-                {dashboardData.topAgentes.slice(0, 5).map((agente, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between neumorphic-card-inset p-3 cursor-pointer hover:scale-[1.01] transition-transform"
-                    onClick={() => {
-                      const path = agente.role === 'colaborador' ? '/colaboradores' : '/agentes';
-                      router.push(`${path}/${agente.id}`);
-                    }}
-                  >
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full neumorphic-card flex items-center justify-center mr-3">
-                        <span className="text-sm font-bold text-primary">#{idx + 1}</span>
+              {dashboardData.topAgentes.length > 0 ? (
+                <div className="space-y-3">
+                  {dashboardData.topAgentes.slice(0, 5).map((agente, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between neumorphic-card-inset p-3 cursor-pointer hover:scale-[1.01] transition-transform"
+                      onClick={() => {
+                        const path = agente.role === 'colaborador' ? '/colaboradores' : '/agentes';
+                        router.push(`${path}/${agente.id}`);
+                      }}
+                    >
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 rounded-full neumorphic-card flex items-center justify-center mr-3">
+                          <span className="text-sm font-bold text-primary">#{idx + 1}</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                            {agente.name}
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            {agente.ventasHoy || 0} ventas hoy
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                          {agente.name}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {Math.floor(Math.random() * 8) + 1} ventas hoy
-                        </p>
-                      </div>
+                      <span className="material-icons-outlined text-yellow-500">
+                        emoji_events
+                      </span>
                     </div>
-                    <span className="material-icons-outlined text-yellow-500">
-                      emoji_events
-                    </span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center py-8 text-slate-500 dark:text-slate-400">
+                  <span className="material-icons-outlined text-4xl mr-3">people</span>
+                  <p>No hay datos de vendedores disponibles</p>
+                </div>
+              )}
             </div>
           </div>
 

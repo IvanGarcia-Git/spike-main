@@ -465,13 +465,13 @@ export default function Drive() {
                   Almacenamiento
                 </span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">
-                  8.5 GB de 15 GB
+                  0 B de 15 GB
                 </span>
               </div>
               <div className="w-full h-2 neumorphic-card-inset rounded-full overflow-hidden">
                 <div
                   className="h-full bg-primary rounded-full"
-                  style={{ width: "57%" }}
+                  style={{ width: "0%" }}
                 />
               </div>
             </div>

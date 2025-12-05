@@ -1,42 +1,9 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-// Datos de fallback para cuando el backend falle
+// Datos de fallback para cuando el backend falle (vacíos para mostrar estado sin datos)
 const generateFallbackData = () => ({
-  folders: [
-    {
-      id: 1,
-      nombre: "Contratos Clientes",
-      icono: "folder",
-      fecha: "2025-11-01",
-      archivosCount: 2,
-      propietario: "Usuario Actual",
-    },
-    {
-      id: 2,
-      nombre: "Informes 2025",
-      icono: "folder",
-      fecha: "2025-10-28",
-      archivosCount: 0,
-      propietario: "Usuario Actual",
-    },
-    {
-      id: 3,
-      nombre: "Material Marketing",
-      icono: "folder",
-      fecha: "2025-10-15",
-      archivosCount: 2,
-      propietario: "Usuario Actual",
-    },
-    {
-      id: 4,
-      nombre: "Propuestas Comerciales",
-      icono: "folder",
-      fecha: "2025-10-10",
-      archivosCount: 0,
-      propietario: "Usuario Actual",
-    },
-  ],
+  folders: [],
 });
 
 export async function GET(req) {
