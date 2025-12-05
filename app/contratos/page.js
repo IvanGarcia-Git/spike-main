@@ -957,7 +957,7 @@ export default function Contracts() {
       <div className="mb-6 flex justify-end">
         <button
           onClick={openModal}
-          className="px-5 py-2 rounded-lg neumorphic-button active bg-secondary text-white font-semibold flex items-center hover:bg-secondaryHover transition-colors"
+          className="px-5 py-2 rounded-lg neumorphic-button active bg-primary text-white font-semibold flex items-center hover:bg-primary/90 transition-colors"
         >
           <span className="material-icons-outlined mr-2">add</span>
           Nuevo Contrato

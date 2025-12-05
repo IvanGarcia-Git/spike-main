@@ -9,9 +9,7 @@ export default function ContractsTypeModal({
 
   return (
     <div
-      className={`fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4 ${
-        isContractModalOpen ? "lg:ml-72" : ""
-      }`}
+      className="fixed inset-0 flex items-center justify-center bg-black/50 z-[70] p-4"
     >
       <div className="modal-card p-8 w-full max-w-lg">
         {/* Header */}

@@ -475,9 +475,7 @@ export default function CreateTelephonyContractPage() {
       {/* Modal */}
       {openDuplicityModal && (
         <div
-          className={`fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4 ${
-            openDuplicityModal ? "lg:ml-72" : ""
-          }`}
+          className="fixed inset-0 flex items-center justify-center bg-black/50 z-[70] p-4"
         >
           <ConfirmContractModal
             duplicatedCustomers={duplicatedCustomers}

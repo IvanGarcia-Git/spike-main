@@ -32,6 +32,7 @@ export default function RootLayout({ children }) {
   const [isManager, setIsManager] = useState(false);
   const [sideBarHidden, setSideBarHidden] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const pathname = usePathname();
 
@@ -93,7 +94,9 @@ export default function RootLayout({ children }) {
           sideBarHidden,
           setSideBarHidden,
           isMobileSidebarOpen,
-          setIsMobileSidebarOpen
+          setIsMobileSidebarOpen,
+          isSidebarCollapsed,
+          setIsSidebarCollapsed
         }}>
           {isAuthenticated ? (
             <div className="flex h-screen overflow-hidden">
@@ -104,6 +107,8 @@ export default function RootLayout({ children }) {
                   isManager={isManager}
                   isMobileOpen={isMobileSidebarOpen}
                   onClose={() => setIsMobileSidebarOpen(false)}
+                  isCollapsed={isSidebarCollapsed}
+                  onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                 />
               )}
 
