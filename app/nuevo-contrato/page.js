@@ -437,11 +437,29 @@ export default function CreateContractPage() {
   }, [isConfirmed]);
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-7xl mx-auto neumorphic-card p-6 rounded-lg">
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6">Crear Nuevo Contrato</h2>
+    <div className="min-h-screen bg-background-light dark:bg-background-dark p-4 sm:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-2">
+            <button
+              onClick={() => router.back()}
+              className="w-10 h-10 rounded-full neumorphic-button flex items-center justify-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+            >
+              <span className="material-icons-outlined">arrow_back</span>
+            </button>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">
+                Nuevo Contrato de Energía
+              </h1>
+              <p className="text-slate-500 dark:text-slate-400">
+                Completa los datos del cliente y selecciona el tipo de contrato
+              </p>
+            </div>
+          </div>
+        </div>
 
-        {/* Información de los detalles del cliente */}
+        {/* Customer Form */}
         <CreateCustomerForm
           customerData={customerData}
           onCustomerUpdate={handleCustomerUpdate}
@@ -449,16 +467,14 @@ export default function CreateContractPage() {
           onDocumentTypeChange={handleSelectChange}
         />
 
-        {/* Sección de contratos de luz y gas */}
-        <div className="grid grid-cols-2 gap-6">
-          {/* Contrato Luz */}
+        {/* Contract Forms */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <CreateContractForm
             contractType="Luz"
             companies={companies.filter((company) => company.type == "Luz")}
             onContractUpdate={handleContractLuzUpdate}
           />
 
-          {/* Contrato Gas */}
           <CreateContractForm
             contractType="Gas"
             companies={companies.filter((company) => company.type == "Gas")}
@@ -466,52 +482,80 @@ export default function CreateContractPage() {
           />
         </div>
 
-        <div className="mb-4 mt-4">
-          <label className="block text-slate-800 dark:text-slate-100 mb-2" htmlFor="comments">
-            Comentario
-          </label>
+        {/* Comment Section */}
+        <div className="neumorphic-card p-6 mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-neumorphic-light-lg dark:shadow-neumorphic-dark-lg bg-purple-500 bg-opacity-10">
+              <span className="material-icons-outlined text-purple-500">comment</span>
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Comentario Inicial</h3>
+          </div>
+
           <textarea
             id="comments"
-            className="neumorphic-card-inset w-full h-32 px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-100"
             rows="4"
+            className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200 mb-4"
+            placeholder="Escribe un comentario inicial para el contrato..."
             value={newContractComment.initialComment}
             onChange={(e) =>
               setNewContractComment({ ...newContractComment, initialComment: e.target.value })
             }
           ></textarea>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Adjuntar Archivo
+            </label>
+            <div className="flex items-center gap-3">
+              <label
+                htmlFor="file"
+                className="px-4 py-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-400 font-medium cursor-pointer flex items-center gap-2"
+              >
+                <span className="material-icons-outlined text-sm">attach_file</span>
+                Seleccionar archivo
+              </label>
+              <input
+                type="file"
+                id="file"
+                onChange={(e) => setSelectedFile(e.target.files[0])}
+                className="hidden"
+              />
+              {selectedFile && (
+                <span className="text-sm text-slate-600 dark:text-slate-400">{selectedFile.name}</span>
+              )}
+            </div>
+          </div>
         </div>
 
-        <div className="mb-4 text-slate-800 dark:text-slate-100">
-          <label className="block text-slate-800 dark:text-slate-100 mb-2" htmlFor="file">
-            Archivo
-          </label>
-          <input
-            type="file"
-            id="file"
-            onChange={(e) => setSelectedFile(e.target.files[0])}
-            className="w-full cursor-pointer"
-          />
-        </div>
-
-        <div className="mt-6 flex space-x-4">
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-end">
+          <button
+            onClick={() => router.back()}
+            className="px-6 py-3 rounded-lg neumorphic-button font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+          >
+            Cancelar
+          </button>
           <button
             onClick={() => handleCreateContract(true)}
-            className="bg-yellow-600 text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
+            className="px-6 py-3 rounded-lg neumorphic-button font-semibold text-yellow-600 hover:text-yellow-700 transition-colors flex items-center justify-center gap-2"
           >
+            <span className="material-icons-outlined">save</span>
             Guardar como Borrador
           </button>
-
           <button
             onClick={() => handleCreateContract(false)}
-            className="bg-secondary text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
+            className="px-6 py-3 rounded-lg bg-primary text-white font-semibold neumorphic-button hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
           >
-            Guardar
+            <span className="material-icons-outlined">check</span>
+            Crear Contrato
           </button>
         </div>
       </div>
+
+      {/* Modal */}
       {openDuplicityModal && (
         <div
-          className={`fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 ${
+          className={`fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4 ${
             openDuplicityModal ? "lg:ml-72" : ""
           }`}
         >

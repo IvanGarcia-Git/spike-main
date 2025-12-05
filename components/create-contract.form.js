@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { getCookie } from "cookies-next";
 import { authGetFetch } from "@/helpers/server-fetch.helper";
-import { FaTrash } from "react-icons/fa";
 
 export default function CreateContractForm({
   contractType,
@@ -137,114 +136,123 @@ export default function CreateContractForm({
     setSelectedFiles(updatedFiles);
   };
 
+  const contractIcon = contractType === "Luz" ? "bolt" : "local_fire_department";
+  const contractColor = contractType === "Luz" ? "yellow" : "orange";
+
   return (
     <div
-      className={`p-4 border rounded-lg bg-background ${
-        isSelected ? "border-blue-500 border-4" : "border-gray-500 border"
+      className={`neumorphic-card p-6 transition-all ${
+        isSelected ? "ring-2 ring-primary" : ""
       }`}
     >
-      <h3 className="text-xl font-bold text-black">
-        {contractType === "Luz" ? "Contrato Luz" : "Contrato Gas"}
-      </h3>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-neumorphic-light-lg dark:shadow-neumorphic-dark-lg bg-${contractColor}-500 bg-opacity-10`}>
+            <span className={`material-icons-outlined text-2xl text-${contractColor}-500`}>{contractIcon}</span>
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+              {contractType === "Luz" ? "Contrato Luz" : "Contrato Gas"}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {contractType === "Luz" ? "Electricidad" : "Gas natural"}
+            </p>
+          </div>
+        </div>
 
-      <div className="mb-4 flex items-center">
-        <input
-          type="checkbox"
-          id={`selectContract-${contractType}`}
-          name={`selectContract-${contractType}`}
-          checked={isSelected}
-          onChange={handleIsSelectedChange}
-          className="mr-2"
-        />
-        <label
-          htmlFor={`selectContract-${contractType}`}
-          className="text-black"
-        >
-          Crear {contractType === "Luz" ? "Contrato de Luz" : "Contrato de Gas"}
+        {/* Toggle Switch */}
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            id={`selectContract-${contractType}`}
+            name={`selectContract-${contractType}`}
+            checked={isSelected}
+            onChange={handleIsSelectedChange}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary"></div>
         </label>
       </div>
 
       {isSelected && (
-        <>
-          <div className="mb-4">
-            <div className="flex gap-4">
+        <div className="space-y-6">
+          {/* Rate Type Selection */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+              Tipo de Tarifa
+            </label>
+            <div className="flex gap-3">
               {["2.0", "3.0", "6.1"].map((option) => (
-                <div key={option} className="flex items-center">
-                  <input
-                    type="radio"
-                    id={`option-${contractType}-${option}`}
-                    name={`contractMode-${contractType}`}
-                    value={option}
-                    checked={
-                      contractState.selectedTypeForContracts[contractType] ===
-                      option
-                    }
-                    onChange={(e) => {
-                      const newSelectedTypeForContracts = {
-                        ...contractState.selectedTypeForContracts,
-                        [contractType]: e.target.value,
-                      };
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => {
+                    const newSelectedTypeForContracts = {
+                      ...contractState.selectedTypeForContracts,
+                      [contractType]: option,
+                    };
+
+                    setContractState((prev) => ({
+                      ...prev,
+                      selectedTypeForContracts: newSelectedTypeForContracts,
+                    }));
+
+                    const selectedCompany = companies.find(
+                      (company) => company.id == formData.companyId
+                    );
+
+                    if (
+                      selectedCompany &&
+                      contractState.rates[selectedCompany.name]
+                    ) {
+                      const filtered = contractState.rates[
+                        selectedCompany.name
+                      ].filter((rate) => rate.type === option);
 
                       setContractState((prev) => ({
                         ...prev,
-                        selectedTypeForContracts: newSelectedTypeForContracts,
+                        filteredRates: filtered,
                       }));
 
-                      const selectedCompany = companies.find(
-                        (company) => company.id == formData.companyId
-                      );
+                      setFormData((prevFormData) => {
+                        const updatedPowers =
+                          option === "2.0"
+                            ? prevFormData.contractedPowers.slice(0, 2)
+                            : prevFormData.contractedPowers;
 
-                      if (
-                        selectedCompany &&
-                        contractState.rates[selectedCompany.name]
-                      ) {
-                        const filtered = contractState.rates[
-                          selectedCompany.name
-                        ].filter((rate) => rate.type === e.target.value);
-
-                        setContractState((prev) => ({
-                          ...prev,
-                          filteredRates: filtered,
-                        }));
-
-                        setFormData((prevFormData) => {
-                          const updatedPowers =
-                            e.target.value === "2.0"
-                              ? prevFormData.contractedPowers.slice(0, 2)
-                              : prevFormData.contractedPowers;
-
-                          return {
-                            ...prevFormData,
-                            rateId: filtered[0]?.id || "",
-                            contractedPowers: updatedPowers,
-                          };
-                        });
-                      }
-                    }}
-                    className="mr-2"
-                  />
-
-                  <label
-                    htmlFor={`option-${contractType}-${option}`}
-                    className="text-black"
-                  >
-                    {option}
-                  </label>
-                </div>
+                        return {
+                          ...prevFormData,
+                          rateId: filtered[0]?.id || "",
+                          contractedPowers: updatedPowers,
+                        };
+                      });
+                    }
+                  }}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    contractState.selectedTypeForContracts[contractType] === option
+                      ? "neumorphic-button active text-primary"
+                      : "neumorphic-button text-slate-600 dark:text-slate-400"
+                  }`}
+                >
+                  {option}
+                </button>
               ))}
             </div>
           </div>
-          <form>
-            <div className="mb-4">
-              <label className="block text-black mb-2" htmlFor="companyId">
-                Compañía
-              </label>
+
+          {/* Company Select */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="companyId">
+              Compañía *
+            </label>
+            <div className="neumorphic-card-inset rounded-lg">
               <select
                 id="companyId"
                 name="companyId"
                 value={formData.companyId}
                 onChange={handleChange}
-                className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
+                className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200"
                 required
               >
                 <option value="" disabled>
@@ -257,33 +265,38 @@ export default function CreateContractForm({
                 ))}
               </select>
             </div>
+          </div>
 
-            <div className="mb-4">
-              <label className="block text-black mb-2" htmlFor="cups">
-                CUPS
+          {/* CUPS */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="cups">
+              CUPS *
+            </label>
+            <input
+              type="text"
+              id="cups"
+              name="cups"
+              className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
+              value={formData.cups}
+              onChange={handleChange}
+              required
+              placeholder="ES0000000000000000XX"
+            />
+          </div>
+
+          {/* Product (Gas only) */}
+          {contractType === "Gas" && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="product">
+                Producto *
               </label>
-              <input
-                type="text"
-                id="cups"
-                name="cups"
-                className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
-                value={formData.cups}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            {contractType === "Gas" && (
-              <div className="mb-4">
-                <label className="block text-black mb-2" htmlFor="product">
-                  Producto
-                </label>
+              <div className="neumorphic-card-inset rounded-lg">
                 <select
                   id="product"
                   name="product"
                   value={formData.product}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
+                  className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200"
                   required
                 >
                   <option value="" disabled>
@@ -296,18 +309,21 @@ export default function CreateContractForm({
                   ))}
                 </select>
               </div>
-            )}
+            </div>
+          )}
 
-            <div className="mb-4">
-              <label className="block text-black mb-2" htmlFor="rateId">
-                Tarifa
-              </label>
+          {/* Rate Select */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="rateId">
+              Tarifa *
+            </label>
+            <div className="neumorphic-card-inset rounded-lg">
               <select
                 id="rateId"
                 name="rateId"
                 value={formData.rateId}
                 onChange={handleChange}
-                className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
+                className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200"
                 required
               >
                 <option value="" disabled>
@@ -320,22 +336,23 @@ export default function CreateContractForm({
                 ))}
               </select>
             </div>
+          </div>
 
-            {contractType === "Luz" && (
-              <div className="mb-4">
-                <label className="block text-black mb-2">
-                  Potencias Contratadas (kW)
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {Array.from({
-                    length:
-                      contractState.selectedTypeForContracts[contractType] ===
-                      "2.0"
-                        ? 2
-                        : 6,
-                  }).map((_, index) => (
+          {/* Contracted Powers (Luz only) */}
+          {contractType === "Luz" && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Potencias Contratadas (kW)
+              </label>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                {Array.from({
+                  length:
+                    contractState.selectedTypeForContracts[contractType] === "2.0"
+                      ? 2
+                      : 6,
+                }).map((_, index) => (
+                  <div key={index}>
                     <input
-                      key={index}
                       type="number"
                       min="0"
                       step="0.001"
@@ -353,21 +370,28 @@ export default function CreateContractForm({
                         setFormData(updatedFormData);
                         onContractUpdate(updatedFormData);
                       }}
-                      className="w-24 px-2 py-1 rounded bg-backgroundHoverBold text-black focus:outline-none"
+                      className="w-full neumorphic-card-inset px-3 py-2 rounded-lg text-center border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
                       placeholder={`P${index + 1}`}
                       disabled={
                         contractState.selectedTypeForContracts[contractType] ===
                           "2.0" && index > 1
                       }
                     />
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {contractType === "Luz" && (
-              <>
-                <div className="mb-4 flex items-center">
+          {/* Solar Plates (Luz only) */}
+          {contractType === "Luz" && (
+            <div className="neumorphic-card-inset p-4 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="material-icons-outlined text-yellow-500">solar_power</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Placas Solares</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
                     id="solarPlates"
@@ -377,209 +401,215 @@ export default function CreateContractForm({
                       const updatedFormData = {
                         ...formData,
                         solarPlates: e.target.checked,
-                        virtualBat: !e.target.checked
-                          ? false
-                          : formData.virtualBat,
+                        virtualBat: !e.target.checked ? false : formData.virtualBat,
                       };
-
                       setFormData(updatedFormData);
                       onContractUpdate(updatedFormData);
                     }}
-                    className="mr-2"
+                    className="sr-only peer"
                   />
-                  <label htmlFor="solarPlates" className="text-black">
-                    Placas
+                  <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary"></div>
+                </label>
+              </div>
+
+              {formData.solarPlates && (
+                <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    BAT Virtual
                   </label>
-                </div>
-
-                {formData.solarPlates && (
-                  <div className="mb-4">
-                    <label
-                      className="block text-black mb-2"
-                      htmlFor="virtualBat"
-                    >
-                      BAT Virtual
-                    </label>
-                    <select
-                      id="virtualBat"
-                      name="virtualBat"
-                      value={formData.virtualBat ? "true" : "false"}
-                      onChange={(e) => {
-                        const newVirtualBatValue = e.target.value === "true";
-
-                        const updatedFormData = {
-                          ...formData,
-                          virtualBat: newVirtualBatValue,
-                        };
-
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updatedFormData = { ...formData, virtualBat: true };
                         setFormData(updatedFormData);
                         onContractUpdate(updatedFormData);
                       }}
-                      className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
-                      disabled={!formData.solarPlates}
-                      required
+                      className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
+                        formData.virtualBat
+                          ? "neumorphic-button active text-primary"
+                          : "neumorphic-button text-slate-600 dark:text-slate-400"
+                      }`}
                     >
-                      <option value="true">Sí</option>
-                      <option value="false">No</option>
-                    </select>
-                  </div>
-                )}
-              </>
-            )}
-
-            <div className="mb-4">
-              <label className="block text-black mb-2" htmlFor="maintenance">
-                Mantenimiento
-              </label>
-              <select
-                id="maintenance"
-                name="maintenance"
-                value={formData.maintenance}
-                onChange={(e) => {
-                  const updatedFormData = {
-                    ...formData,
-                    maintenance: e.target.value === "true",
-                  };
-                  setFormData(updatedFormData);
-
-                  onContractUpdate(updatedFormData);
-                }}
-                className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
-                required
-              >
-                <option value="true">Sí</option>
-                <option value="false">No</option>
-              </select>
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-black mb-2" htmlFor="electronicBill">
-                Factura Electrónica
-              </label>
-              <select
-                id="electronicBill"
-                name="electronicBill"
-                value={formData.electronicBill}
-                onChange={(e) => {
-                  const updatedFormData = {
-                    ...formData,
-                    electronicBill: e.target.value === "true",
-                  };
-                  setFormData(updatedFormData);
-
-                  onContractUpdate(updatedFormData);
-                }}
-                className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
-                required
-              >
-                <option value="true">Sí</option>
-                <option value="false">No</option>
-              </select>
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-black mb-2" htmlFor="extraInfo">
-                Observaciones
-              </label>
-              <textarea
-                id="extraInfo"
-                name="extraInfo"
-                className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none"
-                value={formData.extraInfo}
-                onChange={handleChange}
-              />
-            </div>
-            {selectedDocumentation.length > 0 && (
-              <>
-                <div className="mt-4">
-                  <h4 className="text-black font-bold">
-                    Documentación necesaria:
-                  </h4>
-                  <ul className="list-disc list-inside text-black">
-                    {selectedDocumentation.map((item, index) => (
-                      <li key={index}>
-                        {item}
-                        <div className="mb-4 mt-4">
-                          <input
-                            type="file"
-                            id={`file-${contractType}-${index}`}
-                            onChange={(e) => {
-                              const file = e.target.files[0]; // Solo permitimos un archivo por input
-                              if (!file) return; // Salimos si no se selecciona un archivo
-
-                              const updatedFiles = {
-                                ...selectedFiles,
-                                [contractType]: [
-                                  ...selectedFiles[contractType],
-                                  { name: file.name, file }, // Guardamos un objeto con información del archivo
-                                ],
-                              };
-
-                              setSelectedFiles(updatedFiles);
-
-                              setFormData((prevFormData) => ({
-                                ...prevFormData,
-                                selectedFiles: updatedFiles[contractType],
-                              }));
-
-                              if (isSelected) {
-                                onContractUpdate({
-                                  ...formData,
-                                  selectedFiles: updatedFiles[contractType],
-                                });
-                              }
-                            }}
-                            className="hidden"
-                          />
-                          <label
-                            htmlFor={`file-${contractType}-${index}`}
-                            className="px-4 py-2 bg-backgroundHoverBold text-black rounded-md cursor-pointer"
-                          >
-                            Seleccionar archivo para {item}
-                          </label>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div className="mt-4">
-                    {selectedFiles[contractType]?.length > 0 ? (
-                      <ul className="list-disc list-inside text-black">
-                        {selectedFiles[contractType].map(
-                          (fileObj, fileIndex) => (
-                            <li
-                              key={fileIndex}
-                              className="flex items-center gap-2"
-                            >
-                              <span>
-                                {fileObj.name} -{" "}
-                                {(fileObj.file.size / 1024).toFixed(2)} KB
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleDeleteFile(contractType, fileObj.name)
-                                }
-                                className="text-red-600 hover:text-red-800 focus:outline-none"
-                                aria-label="Eliminar archivo"
-                              >
-                                <FaTrash />
-                              </button>
-                            </li>
-                          )
-                        )}
-                      </ul>
-                    ) : (
-                      <p className="text-gray-600">
-                        No hay archivos seleccionados.
-                      </p>
-                    )}
+                      Sí
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updatedFormData = { ...formData, virtualBat: false };
+                        setFormData(updatedFormData);
+                        onContractUpdate(updatedFormData);
+                      }}
+                      className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
+                        !formData.virtualBat
+                          ? "neumorphic-button active text-primary"
+                          : "neumorphic-button text-slate-600 dark:text-slate-400"
+                      }`}
+                    >
+                      No
+                    </button>
                   </div>
                 </div>
-              </>
-            )}
-          </form>
-        </>
+              )}
+            </div>
+          )}
+
+          {/* Maintenance & Electronic Bill */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="maintenance">
+                Mantenimiento
+              </label>
+              <div className="neumorphic-card-inset rounded-lg">
+                <select
+                  id="maintenance"
+                  name="maintenance"
+                  value={formData.maintenance}
+                  onChange={(e) => {
+                    const updatedFormData = {
+                      ...formData,
+                      maintenance: e.target.value === "true",
+                    };
+                    setFormData(updatedFormData);
+                    onContractUpdate(updatedFormData);
+                  }}
+                  className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200"
+                  required
+                >
+                  <option value="true">Sí</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="electronicBill">
+                Factura Electrónica
+              </label>
+              <div className="neumorphic-card-inset rounded-lg">
+                <select
+                  id="electronicBill"
+                  name="electronicBill"
+                  value={formData.electronicBill}
+                  onChange={(e) => {
+                    const updatedFormData = {
+                      ...formData,
+                      electronicBill: e.target.value === "true",
+                    };
+                    setFormData(updatedFormData);
+                    onContractUpdate(updatedFormData);
+                  }}
+                  className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200"
+                  required
+                >
+                  <option value="true">Sí</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Observations */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="extraInfo">
+              Observaciones
+            </label>
+            <textarea
+              id="extraInfo"
+              name="extraInfo"
+              rows="3"
+              className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
+              value={formData.extraInfo}
+              onChange={handleChange}
+              placeholder="Notas adicionales..."
+            />
+          </div>
+
+          {/* Documentation */}
+          {selectedDocumentation.length > 0 && (
+            <div className="neumorphic-card-inset p-4 rounded-lg">
+              <h4 className="font-semibold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
+                <span className="material-icons-outlined text-primary">description</span>
+                Documentación necesaria
+              </h4>
+              <div className="space-y-3">
+                {selectedDocumentation.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-background-light dark:bg-background-dark">
+                    <span className="text-sm text-slate-700 dark:text-slate-300">{item}</span>
+                    <label
+                      htmlFor={`file-${contractType}-${index}`}
+                      className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium cursor-pointer hover:bg-primary/90 transition-colors"
+                    >
+                      Seleccionar
+                      <input
+                        type="file"
+                        id={`file-${contractType}-${index}`}
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (!file) return;
+
+                          const updatedFiles = {
+                            ...selectedFiles,
+                            [contractType]: [
+                              ...selectedFiles[contractType],
+                              { name: file.name, file },
+                            ],
+                          };
+
+                          setSelectedFiles(updatedFiles);
+
+                          setFormData((prevFormData) => ({
+                            ...prevFormData,
+                            selectedFiles: updatedFiles[contractType],
+                          }));
+
+                          if (isSelected) {
+                            onContractUpdate({
+                              ...formData,
+                              selectedFiles: updatedFiles[contractType],
+                            });
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                ))}
+              </div>
+
+              {/* Selected Files List */}
+              {selectedFiles[contractType]?.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Archivos seleccionados:</p>
+                  <div className="space-y-2">
+                    {selectedFiles[contractType].map((fileObj, fileIndex) => (
+                      <div
+                        key={fileIndex}
+                        className="flex items-center justify-between p-2 rounded-lg bg-background-light dark:bg-background-dark"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="material-icons-outlined text-slate-500 text-sm">attach_file</span>
+                          <span className="text-sm text-slate-700 dark:text-slate-300">{fileObj.name}</span>
+                          <span className="text-xs text-slate-500">
+                            ({(fileObj.file.size / 1024).toFixed(2)} KB)
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteFile(contractType, fileObj.name)}
+                          className="w-8 h-8 rounded-full neumorphic-button flex items-center justify-center text-red-500 hover:text-red-600 transition-colors"
+                          aria-label="Eliminar archivo"
+                        >
+                          <span className="material-icons-outlined text-sm">delete</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

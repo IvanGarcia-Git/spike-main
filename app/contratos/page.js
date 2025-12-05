@@ -491,6 +491,18 @@ export default function Contracts() {
 
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
 
+  const openModal = () => setIsContractModalOpen(true);
+  const closeModal = () => setIsContractModalOpen(false);
+
+  const handleCreateContract = (type) => {
+    closeModal();
+    if (type === "telefonia") {
+      router.push("/nuevo-contrato-telefonia");
+    } else if (type === "energia") {
+      router.push("/nuevo-contrato");
+    }
+  };
+
   const [isStateChangeModalOpen, setIsStateChangeModalOpen] = useState(false);
   const [selectedStateForBatch, setSelectedStateForBatch] = useState(null);
   const [isChannelChangeModalOpen, setIsChannelChangeModalOpen] = useState(false);
@@ -941,6 +953,17 @@ export default function Contracts() {
         userGroupId={userGroupId}
       />
 
+      {/* New Contract Button */}
+      <div className="mb-6 flex justify-end">
+        <button
+          onClick={openModal}
+          className="px-5 py-2 rounded-lg neumorphic-button active bg-secondary text-white font-semibold flex items-center hover:bg-secondaryHover transition-colors"
+        >
+          <span className="material-icons-outlined mr-2">add</span>
+          Nuevo Contrato
+        </button>
+      </div>
+
       {/* Batch Actions */}
       {selectedContracts.length > 0 && (
         <div className="mb-8">
@@ -1162,7 +1185,9 @@ export default function Contracts() {
 
       {isContractModalOpen && (
         <ContractsTypeModal
-          onClose={() => setIsContractModalOpen(false)}
+          isContractModalOpen={isContractModalOpen}
+          closeModal={closeModal}
+          handleCreateContract={handleCreateContract}
         />
       )}
 

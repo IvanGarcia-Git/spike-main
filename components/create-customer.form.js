@@ -88,19 +88,30 @@ export default function CreateCustomerForm({
   };
 
   return (
-    <form className="bg-background p-6 rounded-lg shadow-lg border border-white mb-7">
-      {/* Selector de Particular/Empresa */}
-      <div className="mb-4">
-        <div className="flex space-x-4">
-          {/* Tipo de Cliente */}
-          <div className="flex-1">
-            <label className="block text-black mb-2" htmlFor="type">
-              Tipo de Cliente
-            </label>
+    <form className="neumorphic-card p-6 mb-6">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-12 h-12 rounded-full flex items-center justify-center shadow-neumorphic-light-lg dark:shadow-neumorphic-dark-lg bg-primary bg-opacity-10">
+          <span className="material-icons-outlined text-2xl text-primary">person</span>
+        </div>
+        <div>
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Datos del Cliente</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Información personal y de contacto</p>
+        </div>
+      </div>
+
+      {/* Selector de Tipo y Origen */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        {/* Tipo de Cliente */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="type">
+            Tipo de Cliente
+          </label>
+          <div className="neumorphic-card-inset rounded-lg">
             <select
               id="type"
               name="type"
-              className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200"
               value={formData.type}
               onChange={handleChange}
             >
@@ -108,16 +119,18 @@ export default function CreateCustomerForm({
               <option value="B2B">Empresa</option>
             </select>
           </div>
+        </div>
 
-          {/* Origen */}
-          <div className="flex-1">
-            <label className="block text-black mb-2" htmlFor="origin">
-              Origen
-            </label>
+        {/* Origen */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="origin">
+            Origen
+          </label>
+          <div className="neumorphic-card-inset rounded-lg">
             <select
               id="origin"
               name="originId"
-              className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200"
               value={formData.originId}
               onChange={handleChange}
             >
@@ -134,268 +147,283 @@ export default function CreateCustomerForm({
 
       {/* Campos de Empresa */}
       {formData.type == "B2B" && (
-        <>
-          <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="cif">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="cif">
               CIF
             </label>
             <input
               type="text"
               id="cif"
               name="cif"
-              className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
               value={formData.cif}
               onChange={handleChange}
+              placeholder="B12345678"
             />
           </div>
-          <div className="mb-4">
-            <label className="block text-black mb-2" htmlFor="tradeName">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="tradeName">
               Razón social
             </label>
             <input
               type="text"
               id="tradeName"
               name="tradeName"
-              className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
               value={formData.tradeName}
               onChange={handleChange}
+              placeholder="Nombre de la empresa"
             />
           </div>
-        </>
+        </div>
       )}
 
-      {/* Campo Nombre */}
-      <div className="mb-4">
-        <label className="block text-black mb-2" htmlFor="name">
-          Nombre
-        </label>
-        <input
-          type="text"
-          id="name"
-          name="name"
-          className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={formData.name}
-          onChange={handleChange}
-          required
-        />
-      </div>
-
-      {/* Campo Apellidos */}
-      <div className="mb-4">
-        <label className="block text-black mb-2" htmlFor="surnames">
-          Apellidos
-        </label>
-        <input
-          type="text"
-          id="surnames"
-          name="surnames"
-          className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={formData.surnames}
-          onChange={handleChange}
-          required
-        />
-      </div>
-
-      {/* Campo nationalId y nacionalidad*/}
-      <div className="mb-4 flex items-center gap-4 flex-wrap">
-        <div className="relative">
-          <label
-            htmlFor="documentType"
-            className="absolute left-3 top-1.5 text-xs text-sky-700 pointer-events-none"
-          >
-            Tipo de documento
-          </label>
-          <select
-            id="documentType"
-            name="documentType"
-            className="pt-6 pb-2 pr-8 pl-[7px] rounded bg-white text-black border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-auto"
-            onChange={handleSelectChange}
-            defaultValue="NIF / DNI"
-          >
-            <option value="NIF / DNI">NIF / DNI</option>
-            <option value="NIE">NIE</option>
-            <option value="Pasaporte">Pasaporte</option>
-          </select>
-        </div>
-        <div className="flex-1 flex flex-col">
-          <label className="text-xs text-sky-700 mb-1 sr-only" htmlFor="documentInput">
-            Número de documento
+      {/* Nombre y Apellidos */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="name">
+            Nombre *
           </label>
           <input
             type="text"
-            id="documentInput"
-            name="nationalId"
-            className="w-full px-4 py-[11px] rounded bg-white text-black border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={formData.nationalId}
+            id="name"
+            name="name"
+            className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
+            value={formData.name}
             onChange={handleChange}
             required
-            placeholder="Número de documento"
+            placeholder="Juan"
           />
         </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="surnames">
+            Apellidos *
+          </label>
+          <input
+            type="text"
+            id="surnames"
+            name="surnames"
+            className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
+            value={formData.surnames}
+            onChange={handleChange}
+            required
+            placeholder="Pérez García"
+          />
+        </div>
+      </div>
 
-        {(documentType === "NIE" || documentType === "Pasaporte") && (
-          <div className="flex-2">
-            <label className="sr-only" htmlFor="nationality">
-              Nacionalidad
-            </label>
+      {/* Documento de Identidad */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+          Documento de Identidad *
+        </label>
+        <div className="flex flex-wrap gap-3">
+          <div className="neumorphic-card-inset rounded-lg">
+            <select
+              id="documentType"
+              name="documentType"
+              className="bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200"
+              onChange={handleSelectChange}
+              defaultValue="NIF / DNI"
+            >
+              <option value="NIF / DNI">NIF / DNI</option>
+              <option value="NIE">NIE</option>
+              <option value="Pasaporte">Pasaporte</option>
+            </select>
+          </div>
+          <div className="flex-1">
             <input
               type="text"
-              id="nationality"
-              name="nationality"
-              list="countryList"
-              className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData.nationality}
+              id="documentInput"
+              name="nationalId"
+              className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
+              value={formData.nationalId}
               onChange={handleChange}
-              onBlur={handleBlur}
               required
-              placeholder="Seleccione un país"
+              placeholder="12345678A"
             />
-            <datalist id="countryList">
-              {countries.map((country) => (
-                <option
-                  key={country.code}
-                  value={country.name}
-                  className="px-4 py-2 hover:bg-gray-200"
-                />
-              ))}
-            </datalist>
           </div>
-        )}
-
+          {(documentType === "NIE" || documentType === "Pasaporte") && (
+            <div className="flex-1">
+              <input
+                type="text"
+                id="nationality"
+                name="nationality"
+                list="countryList"
+                className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
+                value={formData.nationality}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+                placeholder="Seleccione un país"
+              />
+              <datalist id="countryList">
+                {countries.map((country) => (
+                  <option key={country.code} value={country.name} />
+                ))}
+              </datalist>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Campo Correo */}
-      <div className="mb-4">
-        <label className="block text-black mb-2" htmlFor="email">
-          Correo
+      {/* Email */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="email">
+          Correo Electrónico *
         </label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
+        <div className="relative">
+          <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+            email
+          </span>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            className="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            placeholder="cliente@ejemplo.com"
+          />
+        </div>
       </div>
 
-      {/* Campo Dirección */}
-      <div className="mb-4">
-        <label className="block text-black mb-2" htmlFor="address">
+      {/* Dirección */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="address">
           Dirección
         </label>
-        <input
-          type="text"
-          id="address"
-          name="address"
-          className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={formData.address}
-          onChange={handleChange}
-        />
+        <div className="relative">
+          <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+            location_on
+          </span>
+          <input
+            type="text"
+            id="address"
+            name="address"
+            className="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
+            value={formData.address}
+            onChange={handleChange}
+            placeholder="Calle Principal, 123"
+          />
+        </div>
       </div>
 
-      {/* Campo CP, Provincia y Población en filas separadas en móvil */}
-      <div className="mb-4 space-y-4 sm:space-y-0 sm:flex sm:space-x-4">
-        {/* Campo CP */}
-        <div className="w-full sm:flex-1">
-          <label className="block text-black mb-2" htmlFor="zipCode">
+      {/* CP, Provincia, Población */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="zipCode">
             Código Postal
           </label>
           <input
             type="text"
             id="zipCode"
             name="zipCode"
-            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
             value={formData.zipCode}
             onChange={handleChange}
+            placeholder="28001"
           />
         </div>
-
-        {/* Campo Provincia */}
-        <div className="w-full sm:flex-1">
-          <label className="block text-black mb-2" htmlFor="province">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="province">
             Provincia
           </label>
           <input
             type="text"
             id="province"
             name="province"
-            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
             value={formData.province}
             onChange={handleChange}
+            placeholder="Madrid"
           />
         </div>
-
-        {/* Campo Población */}
-        <div className="w-full sm:flex-1">
-          <label className="block text-black mb-2" htmlFor="populace">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="populace">
             Población
           </label>
           <input
             type="text"
             id="populace"
             name="populace"
-            className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
             value={formData.populace}
             onChange={handleChange}
+            placeholder="Madrid"
           />
         </div>
       </div>
 
-      {/* Campo Teléfono */}
-      <div className="mb-4">
-        <label className="block text-black mb-2" htmlFor="phoneNumber">
+      {/* Teléfono */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="phoneNumber">
           Teléfono
         </label>
-        <input
-          type="text"
-          id="phoneNumber"
-          name="phoneNumber"
-          className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={formData.phoneNumber}
-          onChange={handleChange}
-        />
+        <div className="relative">
+          <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+            phone
+          </span>
+          <input
+            type="text"
+            id="phoneNumber"
+            name="phoneNumber"
+            className="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
+            value={formData.phoneNumber}
+            onChange={handleChange}
+            placeholder="612345678"
+          />
+        </div>
       </div>
 
-      {/* Campo IBAN */}
-      <div className="mb-4">
-        <label className="block text-black mb-2" htmlFor="iban">
+      {/* IBAN */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="iban">
           IBAN
         </label>
-        <input
-          type="text"
-          id="iban"
-          name="iban"
-          className="w-full px-4 py-2 rounded bg-backgroundHoverBold text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={formData.iban}
-          onChange={handleChange}
-        />
+        <div className="relative">
+          <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+            account_balance
+          </span>
+          <input
+            type="text"
+            id="iban"
+            name="iban"
+            className="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
+            value={formData.iban}
+            onChange={handleChange}
+            placeholder="ES00 0000 0000 0000 0000 0000"
+          />
+        </div>
       </div>
 
-      {/* Checkboxes Cambio de Titular y Nuevo Alta en una fila */}
-      <div className="mb-4 flex items-center space-x-4">
-        <label className="text-black flex items-center">
-          <input
-            type="checkbox"
-            name="holderChange"
-            checked={formData.holderChange}
-            onChange={handleChange}
-            className="mr-2"
-          />
-          Cambio Titular
-        </label>
+      {/* Checkboxes */}
+      <div className="neumorphic-card-inset p-4 rounded-lg">
+        <div className="flex flex-wrap gap-6">
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              name="holderChange"
+              checked={formData.holderChange}
+              onChange={handleChange}
+              className="mr-3 w-5 h-5 rounded text-primary focus:ring-primary"
+            />
+            <span className="text-sm text-slate-700 dark:text-slate-300">Cambio de Titular</span>
+          </label>
 
-        <label className="text-black flex items-center">
-          <input
-            type="checkbox"
-            name="newCreation"
-            checked={formData.newCreation}
-            onChange={handleChange}
-            className="mr-2"
-          />
-          Nuevo Alta
-        </label>
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              name="newCreation"
+              checked={formData.newCreation}
+              onChange={handleChange}
+              className="mr-3 w-5 h-5 rounded text-primary focus:ring-primary"
+            />
+            <span className="text-sm text-slate-700 dark:text-slate-300">Nuevo Alta</span>
+          </label>
+        </div>
       </div>
     </form>
   );
