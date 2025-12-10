@@ -175,6 +175,14 @@ export default function Sidebar({
               isActive={pathname === "/dashboard"}
             />
 
+            {/* Control Horario */}
+            <MenuItem
+              href="/control-horario"
+              icon="schedule"
+              label="Control Horario"
+              isActive={pathname.startsWith("/control-horario")}
+            />
+
             {/* Contratos */}
             <MenuItem
               href="/contratos"

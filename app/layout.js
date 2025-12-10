@@ -7,6 +7,7 @@ import localFont from "next/font/local";
 import { getCookie } from "cookies-next";
 import Sidebar from "@/components/Sidebar";
 import TopBar from "@/components/TopBar";
+import ClockInReminder from "@/components/time-tracking/clock-in-reminder.component";
 import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
@@ -126,6 +127,9 @@ export default function RootLayout({ children }) {
                   {children}
                 </main>
               </div>
+
+              {/* Clock-in Reminder */}
+              <ClockInReminder />
             </div>
           ) : (
             <div className="w-full h-screen">

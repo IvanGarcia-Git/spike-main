@@ -61,6 +61,8 @@ export const config = {
     "/emitir-factura",
     "/perfil",
     "/liquidaciones",
-    "/dashboard"
+    "/dashboard",
+    "/control-horario",
+    "/control-horario/historial"
   ],
 };
