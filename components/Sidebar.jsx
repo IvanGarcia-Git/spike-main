@@ -6,16 +6,19 @@ import { usePathname } from "next/navigation";
 /**
  * Sidebar Component
  *
- * Application sidebar navigation with neumorphic design.
- * Features collapsible submenus and permission-based menu items.
- * Now with responsive support and collapsible mode.
+ * Application sidebar navigation with collapsible design.
+ * Features:
+ * - Collapsed mode: narrow icon-only bar
+ * - Expanded mode: floating panel with icons and labels (on hover)
+ * - Permission-based menu items
+ * - Responsive mobile support
  *
  * @param {Object} props
  * @param {number} props.userGroupId - User group ID for permission checks
  * @param {boolean} props.isManager - Manager permission flag
  * @param {boolean} props.isMobileOpen - Whether sidebar is open on mobile
  * @param {function} props.onClose - Callback to close sidebar on mobile
- * @param {boolean} props.isCollapsed - Whether sidebar is in collapsed mode (icons only)
+ * @param {boolean} props.isCollapsed - Whether sidebar is in collapsed mode
  * @param {function} props.onToggleCollapse - Callback to toggle collapsed state
  */
 export default function Sidebar({
@@ -27,7 +30,11 @@ export default function Sidebar({
   onToggleCollapse
 }) {
   const pathname = usePathname();
-  const [openMenu, setOpenMenu] = useState(null); // null, 'tasks', 'leads', 'tools'
+  const [openMenu, setOpenMenu] = useState(null);
+
+  // Show icon bar only when collapsed, show expanded panel only when not collapsed
+  const showIconBar = isCollapsed;
+  const showExpanded = !isCollapsed;
 
   const toggleTaskMenu = () => setOpenMenu(openMenu === 'tasks' ? null : 'tasks');
   const toggleLeadsMenu = () => setOpenMenu(openMenu === 'leads' ? null : 'leads');
@@ -38,54 +45,132 @@ export default function Sidebar({
     if (onClose) onClose();
   };
 
-  // Menu item component
-  const MenuItem = ({ href, icon, label, isActive }) => (
-    <Link
-      href={href}
-      onClick={handleLinkClick}
-      title={isCollapsed ? label : undefined}
-      className={`
-        flex items-center p-3 rounded-xl transition-all duration-200
-        ${isCollapsed ? "justify-center" : ""}
-        ${
-          isActive
-            ? "shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark text-primary"
-            : "text-slate-600 dark:text-slate-400 hover:text-primary hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark"
-        }
-      `}
-    >
-      <span className={`material-icons-outlined flex-shrink-0 ${isActive ? "text-primary" : ""}`}>
+  // Menu items configuration
+  const menuItems = [
+    { href: "/dashboard", icon: "dashboard", label: "Dashboard" },
+    { href: "/control-horario", icon: "schedule", label: "Control Horario", matchStart: true },
+    { href: "/contratos", icon: "receipt_long", label: "Contratos" },
+    { href: "/comparativas", icon: "compare_arrows", label: "Comparativas" },
+    { href: "/notas", icon: "note_alt", label: "Notas Rápidas" },
+  ];
+
+  const taskSubItems = [
+    { href: "/agenda", icon: "book", label: "Agenda personal" },
+  ];
+
+  const leadsSubItems = [
+    ...(userGroupId === 1 ? [
+      { href: "/campaigns", icon: "campaign", label: "Campañas" },
+      { href: "/groups", icon: "groups", label: "Grupos" },
+    ] : []),
+    { href: "/gestor-lead", icon: "manage_search", label: "Gestor Leads" },
+  ];
+
+  const toolsSubItems = [
+    ...(userGroupId === 1 ? [
+      { href: "/emitir-factura", icon: "receipt_long", label: "Emitir Factura" },
+    ] : []),
+    { href: "/generar-justo-titulo", icon: "receipt_long", label: "Generar Justo Titulo" },
+    { href: "/studio", icon: "edit_note", label: "Studio Contratos" },
+  ];
+
+  const bottomItems = [
+    { href: "/drive?section=precios", icon: "folder", label: "Drive" },
+    { href: "/liquidaciones", icon: "payments", label: "Liquidaciones" },
+  ];
+
+  // Check if a path is active
+  const isActive = (href, matchStart = false) => {
+    if (matchStart) {
+      return pathname.startsWith(href.split('?')[0]);
+    }
+    return pathname === href || pathname === href.split('?')[0];
+  };
+
+  // Icon button component for collapsed state
+  const IconButton = ({ href, icon, label, active, onClick, isSubmenu = false }) => {
+    const content = (
+      <span className={`material-icons-outlined text-xl ${active ? "text-primary" : "text-slate-500 dark:text-slate-400"}`}>
         {icon}
       </span>
-      {!isCollapsed && (
-        <span className={`ml-4 ${isActive ? "font-semibold" : "font-medium"} whitespace-nowrap`}>
+    );
+
+    const className = `
+      w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200
+      ${active
+        ? "bg-primary/10 shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark"
+        : "hover:bg-slate-100 dark:hover:bg-slate-700"
+      }
+    `;
+
+    if (onClick) {
+      return (
+        <button onClick={onClick} className={className} title={label}>
+          {content}
+        </button>
+      );
+    }
+
+    return (
+      <Link href={href} onClick={handleLinkClick} className={className} title={label}>
+        {content}
+      </Link>
+    );
+  };
+
+  // Menu item component for expanded state
+  const MenuItem = ({ href, icon, label, active, onClick }) => {
+    const content = (
+      <>
+        <span className={`material-icons-outlined text-xl flex-shrink-0 ${active ? "text-primary" : ""}`}>
+          {icon}
+        </span>
+        <span className={`ml-3 font-medium whitespace-nowrap ${active ? "text-primary font-semibold" : ""}`}>
           {label}
         </span>
-      )}
-    </Link>
-  );
+      </>
+    );
 
-  // Submenu toggle component
-  const SubMenuToggle = ({ icon, label, isOpen, onClick }) => (
+    const className = `
+      flex items-center px-4 py-3 rounded-xl transition-all duration-200 w-full
+      ${active
+        ? "bg-primary/10 text-primary shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark"
+        : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-primary"
+      }
+    `;
+
+    if (onClick) {
+      return (
+        <button onClick={onClick} className={className}>
+          {content}
+          <span className="material-icons-outlined text-sm ml-auto">
+            {openMenu ? "expand_less" : "expand_more"}
+          </span>
+        </button>
+      );
+    }
+
+    return (
+      <Link href={href} onClick={handleLinkClick} className={className}>
+        {content}
+      </Link>
+    );
+  };
+
+  // Submenu toggle for expanded state
+  const SubMenuToggle = ({ icon, label, isOpen, onClick, menuKey }) => (
     <button
       onClick={onClick}
-      title={isCollapsed ? label : undefined}
       className={`
-        flex items-center p-3 rounded-xl text-slate-600 dark:text-slate-400
-        hover:text-primary hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark
-        transition-all duration-200 w-full
-        ${isCollapsed ? "justify-center pr-3" : "justify-between pr-2"}
+        flex items-center px-4 py-3 rounded-xl transition-all duration-200 w-full
+        text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-primary
       `}
     >
-      <div className={`flex items-center ${isCollapsed ? "" : "flex-1 min-w-0"}`}>
-        <span className="material-icons-outlined flex-shrink-0">{icon}</span>
-        {!isCollapsed && <span className="ml-4 font-medium whitespace-nowrap">{label}</span>}
-      </div>
-      {!isCollapsed && (
-        <span className="material-icons-outlined text-sm flex-shrink-0 ml-2">
-          {isOpen ? "expand_less" : "expand_more"}
-        </span>
-      )}
+      <span className="material-icons-outlined text-xl flex-shrink-0">{icon}</span>
+      <span className="ml-3 font-medium whitespace-nowrap">{label}</span>
+      <span className="material-icons-outlined text-sm ml-auto">
+        {isOpen ? "expand_less" : "expand_more"}
+      </span>
     </button>
   );
 
@@ -99,129 +184,161 @@ export default function Sidebar({
         />
       )}
 
-      {/* Sidebar */}
-      <aside
+      {/* Sidebar Container */}
+      <div
         className={`
-          fixed md:relative inset-y-0 left-0
-          flex-shrink-0 p-4 overflow-x-hidden
-          transform transition-all duration-300 ease-in-out
-          ${isMobileOpen ? 'translate-x-0 z-[60]' : '-translate-x-full z-50'}
-          md:translate-x-0 md:z-auto
-          bg-background-light dark:bg-background-dark
-          ${isCollapsed ? 'w-24' : 'w-80'}
+          fixed md:relative inset-y-0 left-0 z-50
+          flex h-full
+          transform transition-transform duration-300 ease-in-out
+          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
+          md:translate-x-0
         `}
       >
-        {/* Close button for mobile - outside the inner container */}
-        <button
-          onClick={onClose}
-          className="md:hidden absolute top-6 right-6 z-[60] w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-slate-800 shadow-md hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-        >
-          <span className="material-icons-outlined text-slate-600 dark:text-slate-300">
-            close
-          </span>
-        </button>
+        {/* Collapsed Icon Bar - Only visible when sidebar is collapsed */}
+        {showIconBar && (
+          <aside
+            className={`
+              flex flex-col items-center py-4 px-2
+              bg-background-light dark:bg-background-dark
+              border-r border-slate-200 dark:border-slate-700
+              transition-all duration-300 ease-in-out
+              w-16
+            `}
+          >
+          {/* Hamburger / Toggle button */}
+          <button
+            onClick={onToggleCollapse}
+            className="w-10 h-10 flex items-center justify-center rounded-xl mb-4 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            title={isCollapsed ? "Expandir menú" : "Colapsar menú"}
+          >
+            <span className="material-icons-outlined text-slate-600 dark:text-slate-400">
+              menu
+            </span>
+          </button>
 
-        <div className={`flex flex-col h-full bg-background-light dark:bg-background-dark rounded-xl p-5 overflow-x-hidden shadow-lg md:shadow-none ${isCollapsed ? 'items-center' : ''}`}>
-          {/* Logo */}
-          <div className={`flex items-center mb-10 p-2 ${isCollapsed ? 'justify-center' : ''}`}>
-            {isCollapsed ? (
-              <img
-                src="/images/logo-icon.png"
-                alt="SPIKES"
-                className="h-10 w-10 object-contain"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
+          {/* Icon-only menu items */}
+          <nav className="flex-1 flex flex-col items-center space-y-2 overflow-y-auto">
+            {menuItems.map((item) => (
+              <IconButton
+                key={item.href}
+                href={item.href}
+                icon={item.icon}
+                label={item.label}
+                active={isActive(item.href, item.matchStart)}
               />
-            ) : (
+            ))}
+
+            {/* Tasks submenu icon */}
+            <IconButton
+              icon="task_alt"
+              label="Tareas"
+              active={taskSubItems.some(item => isActive(item.href))}
+              onClick={toggleTaskMenu}
+            />
+
+            {/* Leads submenu icon */}
+            <IconButton
+              icon="leaderboard"
+              label="Leads"
+              active={leadsSubItems.some(item => isActive(item.href))}
+              onClick={toggleLeadsMenu}
+            />
+
+            {/* Tools submenu icon */}
+            <IconButton
+              icon="build"
+              label="Herramientas"
+              active={toolsSubItems.some(item => isActive(item.href))}
+              onClick={toggleToolsMenu}
+            />
+
+            {/* Separator */}
+            <div className="w-8 h-px bg-slate-200 dark:bg-slate-700 my-2" />
+
+            {/* Bottom items */}
+            {bottomItems.map((item) => (
+              <IconButton
+                key={item.href}
+                href={item.href}
+                icon={item.icon}
+                label={item.label}
+                active={isActive(item.href)}
+              />
+            ))}
+          </nav>
+        </aside>
+        )}
+
+        {/* Expanded Panel - Only visible when sidebar is not collapsed */}
+        {showExpanded && (
+          <aside
+            className={`
+              flex flex-col
+              bg-background-light dark:bg-background-dark
+              shadow-xl rounded-r-2xl md:rounded-2xl
+              transition-all duration-300 ease-in-out overflow-hidden
+              w-72
+            `}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
               <img
                 src="/images/logo.png"
                 alt="SPIKES Logo"
-                className="h-12 w-auto"
+                className="h-10 w-auto"
               />
-            )}
-            {isCollapsed && (
-              <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg hidden">
-                S
-              </div>
-            )}
-          </div>
+              <button
+                onClick={onToggleCollapse}
+                className="w-8 h-8 hidden md:flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                title="Colapsar menú"
+              >
+                <span className="material-icons-outlined text-slate-500 text-sm">
+                  chevron_left
+                </span>
+              </button>
 
-          {/* Toggle Button */}
-          <button
-            onClick={onToggleCollapse}
-            className={`
-              hidden md:flex items-center justify-center w-full p-2 mb-4 rounded-xl
-              text-slate-500 hover:text-primary
-              hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark
-              transition-all duration-200
-            `}
-            title={isCollapsed ? "Expandir menú" : "Colapsar menú"}
-          >
-            <span className="material-icons-outlined">
-              {isCollapsed ? "chevron_right" : "chevron_left"}
-            </span>
-            {!isCollapsed && <span className="ml-2 text-sm font-medium">Colapsar</span>}
-          </button>
+              {/* Mobile close button */}
+              <button
+                onClick={onClose}
+                className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+              >
+                <span className="material-icons-outlined text-slate-600 dark:text-slate-400">
+                  close
+                </span>
+              </button>
+            </div>
 
           {/* Navigation */}
-          <nav className={`flex-grow space-y-2 overflow-y-auto overflow-x-hidden ${isCollapsed ? 'w-full' : 'pr-2'}`}>
-            {/* Dashboard */}
-            <MenuItem
-              href="/dashboard"
-              icon="dashboard"
-              label="Dashboard"
-              isActive={pathname === "/dashboard"}
-            />
+          <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+            {menuItems.map((item) => (
+              <MenuItem
+                key={item.href}
+                href={item.href}
+                icon={item.icon}
+                label={item.label}
+                active={isActive(item.href, item.matchStart)}
+              />
+            ))}
 
-            {/* Control Horario */}
-            <MenuItem
-              href="/control-horario"
-              icon="schedule"
-              label="Control Horario"
-              isActive={pathname.startsWith("/control-horario")}
-            />
-
-            {/* Contratos */}
-            <MenuItem
-              href="/contratos"
-              icon="receipt_long"
-              label="Contratos"
-              isActive={pathname === "/contratos"}
-            />
-
-            {/* Comparativas */}
-            <MenuItem
-              href="/comparativas"
-              icon="compare_arrows"
-              label="Comparativas"
-              isActive={pathname === "/comparativas"}
-            />
-
-            {/* Notas Rápidas */}
-            <MenuItem
-              href="/notas"
-              icon="note_alt"
-              label="Notas Rápidas"
-              isActive={pathname === "/notas"}
-            />
-
-            {/* Tareas Submenu */}
+            {/* Tasks Submenu */}
             <SubMenuToggle
               icon="task_alt"
               label="Tareas"
               isOpen={openMenu === 'tasks'}
               onClick={toggleTaskMenu}
+              menuKey="tasks"
             />
-            {openMenu === 'tasks' && !isCollapsed && (
-              <div className="pl-4 space-y-2">
-                <MenuItem
-                  href="/agenda"
-                  icon="book"
-                  label="Agenda personal"
-                  isActive={pathname === "/agenda"}
-                />
+            {openMenu === 'tasks' && (
+              <div className="pl-4 space-y-1">
+                {taskSubItems.map((item) => (
+                  <MenuItem
+                    key={item.href}
+                    href={item.href}
+                    icon={item.icon}
+                    label={item.label}
+                    active={isActive(item.href)}
+                  />
+                ))}
               </div>
             )}
 
@@ -231,86 +348,61 @@ export default function Sidebar({
               label="Leads"
               isOpen={openMenu === 'leads'}
               onClick={toggleLeadsMenu}
+              menuKey="leads"
             />
-            {openMenu === 'leads' && !isCollapsed && (
-              <div className="pl-4 space-y-2">
-                {/* Super Admin only */}
-                {userGroupId === 1 && (
-                  <>
-                    <MenuItem
-                      href="/campaigns"
-                      icon="campaign"
-                      label="Campañas"
-                      isActive={pathname === "/campaigns"}
-                    />
-                    <MenuItem
-                      href="/groups"
-                      icon="groups"
-                      label="Grupos"
-                      isActive={pathname === "/groups"}
-                    />
-                  </>
-                )}
-                <MenuItem
-                  href="/gestor-lead"
-                  icon="manage_search"
-                  label="Gestor Leads"
-                  isActive={pathname === "/gestor-lead"}
-                />
+            {openMenu === 'leads' && (
+              <div className="pl-4 space-y-1">
+                {leadsSubItems.map((item) => (
+                  <MenuItem
+                    key={item.href}
+                    href={item.href}
+                    icon={item.icon}
+                    label={item.label}
+                    active={isActive(item.href)}
+                  />
+                ))}
               </div>
             )}
 
-            {/* Herramientas Submenu */}
+            {/* Tools Submenu */}
             <SubMenuToggle
               icon="build"
               label="Herramientas"
               isOpen={openMenu === 'tools'}
               onClick={toggleToolsMenu}
+              menuKey="tools"
             />
-            {openMenu === 'tools' && !isCollapsed && (
-              <div className="pl-4 space-y-2">
-                {/* Super Admin only */}
-                {userGroupId === 1 && (
+            {openMenu === 'tools' && (
+              <div className="pl-4 space-y-1">
+                {toolsSubItems.map((item) => (
                   <MenuItem
-                    href="/emitir-factura"
-                    icon="receipt_long"
-                    label="Emitir Factura"
-                    isActive={pathname === "/emitir-factura"}
+                    key={item.href}
+                    href={item.href}
+                    icon={item.icon}
+                    label={item.label}
+                    active={isActive(item.href)}
                   />
-                )}
-                <MenuItem
-                  href="/generar-justo-titulo"
-                  icon="receipt_long"
-                  label="Generar Justo Titulo"
-                  isActive={pathname === "/generar-justo-titulo"}
-                />
-                <MenuItem
-                  href="/studio"
-                  icon="edit_note"
-                  label="Studio Contratos"
-                  isActive={pathname === "/studio"}
-                />
+                ))}
               </div>
             )}
 
-            {/* Drive */}
-            <MenuItem
-              href="/drive?section=precios"
-              icon="folder"
-              label="Drive"
-              isActive={pathname === "/drive"}
-            />
+            {/* Separator */}
+            <div className="h-px bg-slate-200 dark:bg-slate-700 my-3" />
 
-            {/* Liquidaciones */}
-            <MenuItem
-              href="/liquidaciones"
-              icon="payments"
-              label="Liquidaciones"
-              isActive={pathname === "/liquidaciones"}
-            />
+            {/* Bottom items */}
+            {bottomItems.map((item) => (
+              <MenuItem
+                key={item.href}
+                href={item.href}
+                icon={item.icon}
+                label={item.label}
+                active={isActive(item.href)}
+              />
+            ))}
           </nav>
-        </div>
-      </aside>
+        </aside>
+        )}
+      </div>
     </>
   );
 }

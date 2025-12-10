@@ -33,7 +33,7 @@ export default function RootLayout({ children }) {
   const [isManager, setIsManager] = useState(false);
   const [sideBarHidden, setSideBarHidden] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true); // Start collapsed by default
 
   const pathname = usePathname();
 
