@@ -299,12 +299,16 @@ export default function LeadDetailPage() {
         const errorData = await response.json();
         console.error(errorData);
 
-        if (
-          response.status === 500 &&
-          errorData.message === "No available lead to assign"
-        ) {
-          alert("Por el momento no quedan mas leads sin asignar");
-          window.location.reload();
+        if (response.status === 500) {
+          if (errorData.message === "No available lead to assign") {
+            alert("Por el momento no quedan más leads sin asignar");
+          } else if (errorData.message === "No campaigns available for the user's groups") {
+            alert("Tu grupo no tiene campañas asignadas. Contacta con un administrador para configurar las campañas.");
+          } else if (errorData.message === "User does not belong to any group") {
+            alert("No perteneces a ningún grupo. Contacta con un administrador.");
+          } else {
+            setError("Ocurrió un error al solicitar el nuevo lead.");
+          }
         } else {
           setError("Ocurrió un error al solicitar el nuevo lead.");
         }

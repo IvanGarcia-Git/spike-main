@@ -41,7 +41,7 @@ export default function AnimatedLogo({ size = "md", className = "" }) {
 
   return (
     <div
-      className={`flex items-center ${config.gap} ${config.container} ${className}`}
+      className={`flex items-center ${config.gap} ${config.container} cursor-pointer ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
