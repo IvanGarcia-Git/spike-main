@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { getCookie } from "cookies-next";
 import { authGetFetch } from "@/helpers/server-fetch.helper";
 import NewCampaignModal from "@/components/new-campaign.modal";
+import ImportLeadsModal from "@/components/import-leads.modal";
 import RepeatedLeads from "@/components/repeated-leads.sections";
 import CommunicationModal from "@/components/communication.modal";
 import { useLayout } from "../layout";
@@ -40,6 +41,8 @@ export default function CampaignsPage() {
   const { sideBarHidden, setSideBarHidden } = useLayout();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [canImport, setCanImport] = useState(false);
 
   const openModal = () => setIsModalOpen(true);
 
@@ -106,6 +109,23 @@ export default function CampaignsPage() {
     fetchCampaigns();
     getAllUsers();
     getUnnotifiedNotifications();
+
+    // Check user permissions for import
+    const checkImportPermissions = async () => {
+      const jwtToken = getCookie("factura-token");
+      if (jwtToken) {
+        try {
+          // Decode JWT to get user info (payload is in second part)
+          const payload = JSON.parse(atob(jwtToken.split('.')[1]));
+          // Allow import for managers or super admin (groupId === 1)
+          setCanImport(payload.isManager === true || payload.groupId === 1);
+        } catch (err) {
+          console.error("Error decoding token:", err);
+          setCanImport(false);
+        }
+      }
+    };
+    checkImportPermissions();
   }, []);
 
   useEffect(() => {
@@ -162,13 +182,24 @@ export default function CampaignsPage() {
             Gestiona tus campañas y leads
           </p>
         </div>
-        <button
-          onClick={openModal}
-          className="px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium flex items-center gap-2"
-        >
-          <span className="material-icons-outlined">add</span>
-          Nueva Campaña
-        </button>
+        <div className="flex gap-3">
+          {canImport && (
+            <button
+              onClick={() => setIsImportModalOpen(true)}
+              className="px-5 py-3 rounded-lg neumorphic-button text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2"
+            >
+              <span className="material-icons-outlined">upload_file</span>
+              Importar Leads
+            </button>
+          )}
+          <button
+            onClick={openModal}
+            className="px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium flex items-center gap-2"
+          >
+            <span className="material-icons-outlined">add</span>
+            Nueva Campaña
+          </button>
+        </div>
       </div>
 
       {/* Buscador y Filtros */}
@@ -359,6 +390,13 @@ export default function CampaignsPage() {
         <NewCampaignModal
           closeModal={closeModal}
           onCampaignCreated={fetchCampaigns}
+        />
+      )}
+
+      {isImportModalOpen && (
+        <ImportLeadsModal
+          closeModal={() => setIsImportModalOpen(false)}
+          onImportComplete={fetchCampaigns}
         />
       )}
 
