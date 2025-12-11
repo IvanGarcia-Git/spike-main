@@ -107,44 +107,81 @@ const StatusDropdownPortal = ({
   );
 };
 
+// Tipos de liquidación
+const LIQUIDATION_TYPES = {
+  INGRESO: "INGRESO",
+  GASTO: "GASTO",
+};
+
 const NuevaLiquidacionModal = ({ isOpen, onClose, onSubmit, users, isLoading }) => {
   const [nombre, setNombre] = useState("");
   const [date, setDate] = useState(formatDateToYYYYMMDD(new Date()));
-  const [selectedUserIdForNewLiq, setSelectedUserIdForNewLiq] = useState(
-    users.length > 0 ? users[0].id.toString() : ""
-  );
+  const [selectedUserIdForNewLiq, setSelectedUserIdForNewLiq] = useState("");
+  const [liquidationType, setLiquidationType] = useState(LIQUIDATION_TYPES.INGRESO);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (isOpen) {
       setNombre("");
       setDate(formatDateToYYYYMMDD(new Date()));
-      if (users.length > 0) {
-        setSelectedUserIdForNewLiq(users[0].id.toString());
-      } else {
-        setSelectedUserIdForNewLiq("");
-      }
+      setSelectedUserIdForNewLiq(""); // Sin usuario por defecto (opcional)
+      setLiquidationType(LIQUIDATION_TYPES.INGRESO);
+      setErrors({});
     }
   }, [isOpen, users]);
 
   if (!isOpen) return null;
 
+  // Validar formato de fecha YYYY-MM-DD
+  const isValidDateFormat = (dateStr) => {
+    const regex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!regex.test(dateStr)) return false;
+    const d = new Date(dateStr);
+    return d instanceof Date && !isNaN(d);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!nombre.trim() || !date.trim()) {
-      alert("Nombre y Fecha son requeridos.");
+    const newErrors = {};
+
+    // Validación: nombre no vacío
+    if (!nombre.trim()) {
+      newErrors.nombre = "El nombre de la liquidación es obligatorio.";
+    }
+
+    // Validación: fecha válida YYYY-MM-DD
+    if (!date.trim()) {
+      newErrors.date = "La fecha es obligatoria.";
+    } else if (!isValidDateFormat(date)) {
+      newErrors.date = "La fecha debe tener formato válido (YYYY-MM-DD).";
+    }
+
+    // Validación: tipo obligatorio
+    if (!liquidationType) {
+      newErrors.type = "Selecciona un tipo de liquidación.";
+    }
+
+    // Si hay errores, mostrarlos y no enviar
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
-    if (!selectedUserIdForNewLiq) {
-      alert("Por favor, seleccione un usuario para la liquidación.");
-      return;
+    // Limpiar errores y enviar
+    setErrors({});
+
+    const payload = {
+      name: nombre.trim(),
+      date: date,
+      type: liquidationType,
+    };
+
+    // Solo agregar userId si se seleccionó uno
+    if (selectedUserIdForNewLiq) {
+      payload.userId = parseInt(selectedUserIdForNewLiq);
     }
 
-    onSubmit({
-      name: nombre,
-      date: date, // YYYY-MM-DD format
-      userId: parseInt(selectedUserIdForNewLiq),
-    });
+    onSubmit(payload);
   };
 
   return (
@@ -161,6 +198,43 @@ const NuevaLiquidacionModal = ({ isOpen, onClose, onSubmit, users, isLoading }) 
           </button>
         </div>
         <form onSubmit={handleSubmit}>
+          {/* Selector de Tipo: INGRESO / GASTO */}
+          <div className="mb-5">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Tipo de liquidación
+            </label>
+            <div className="flex rounded-lg overflow-hidden neumorphic-card-inset">
+              <button
+                type="button"
+                onClick={() => setLiquidationType(LIQUIDATION_TYPES.INGRESO)}
+                disabled={isLoading}
+                className={`flex-1 py-3 px-4 text-sm font-semibold transition-all ${
+                  liquidationType === LIQUIDATION_TYPES.INGRESO
+                    ? "bg-green-500 text-white shadow-md"
+                    : "bg-transparent text-slate-600 dark:text-slate-400 hover:bg-green-100 dark:hover:bg-green-900/30"
+                }`}
+              >
+                Ingreso
+              </button>
+              <button
+                type="button"
+                onClick={() => setLiquidationType(LIQUIDATION_TYPES.GASTO)}
+                disabled={isLoading}
+                className={`flex-1 py-3 px-4 text-sm font-semibold transition-all ${
+                  liquidationType === LIQUIDATION_TYPES.GASTO
+                    ? "bg-red-500 text-white shadow-md"
+                    : "bg-transparent text-slate-600 dark:text-slate-400 hover:bg-red-100 dark:hover:bg-red-900/30"
+                }`}
+              >
+                Gasto
+              </button>
+            </div>
+            {errors.type && (
+              <p className="mt-1 text-sm text-red-500">{errors.type}</p>
+            )}
+          </div>
+
+          {/* Campo Nombre */}
           <div className="mb-4">
             <label htmlFor="liq-nombre" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               Nombre de liquidación
@@ -169,12 +243,22 @@ const NuevaLiquidacionModal = ({ isOpen, onClose, onSubmit, users, isLoading }) 
               type="text"
               id="liq-nombre"
               value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              className="neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent w-full text-slate-800 dark:text-slate-100"
-              required
+              onChange={(e) => {
+                setNombre(e.target.value);
+                if (errors.nombre) setErrors({ ...errors, nombre: null });
+              }}
+              className={`neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent w-full text-slate-800 dark:text-slate-100 ${
+                errors.nombre ? "ring-2 ring-red-500" : ""
+              }`}
+              placeholder="Ej: Comisiones Diciembre 2025"
               disabled={isLoading}
             />
+            {errors.nombre && (
+              <p className="mt-1 text-sm text-red-500">{errors.nombre}</p>
+            )}
           </div>
+
+          {/* Campo Fecha */}
           <div className="mb-4">
             <label htmlFor="liq-date" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               Fecha (YYYY-MM-DD)
@@ -183,16 +267,25 @@ const NuevaLiquidacionModal = ({ isOpen, onClose, onSubmit, users, isLoading }) 
               type="date"
               id="liq-date"
               value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent w-full text-slate-800 dark:text-slate-100"
-              required
+              onChange={(e) => {
+                setDate(e.target.value);
+                if (errors.date) setErrors({ ...errors, date: null });
+              }}
+              className={`neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent w-full text-slate-800 dark:text-slate-100 ${
+                errors.date ? "ring-2 ring-red-500" : ""
+              }`}
               disabled={isLoading}
             />
+            {errors.date && (
+              <p className="mt-1 text-sm text-red-500">{errors.date}</p>
+            )}
           </div>
+
+          {/* Campo Usuario (opcional) */}
           {users.length > 0 && (
             <div className="mb-6">
               <label htmlFor="liq-user" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Asignar a Usuario
+                Asignar a Usuario <span className="text-slate-400 font-normal">(opcional)</span>
               </label>
               <div className="neumorphic-card-inset rounded-lg">
                 <select
@@ -200,9 +293,9 @@ const NuevaLiquidacionModal = ({ isOpen, onClose, onSubmit, users, isLoading }) 
                   value={selectedUserIdForNewLiq}
                   onChange={(e) => setSelectedUserIdForNewLiq(e.target.value)}
                   className="w-full p-2.5 border-none bg-transparent focus:ring-2 focus:ring-primary focus:ring-opacity-50 rounded-lg text-slate-800 dark:text-slate-100"
-                  required
                   disabled={isLoading}
                 >
+                  <option value="">-- Sin asignar --</option>
                   {users.map((user) => (
                     <option key={user.id} value={user.id.toString()}>
                       {getFullName(user)}
@@ -212,6 +305,8 @@ const NuevaLiquidacionModal = ({ isOpen, onClose, onSubmit, users, isLoading }) 
               </div>
             </div>
           )}
+
+          {/* Botones */}
           <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
             <button
               type="button"
@@ -391,8 +486,13 @@ const LiquidacionesPage = () => {
       const payload = {
         name: newLiquidationData.name,
         date: newLiquidationData.date, // Formato YYYY-MM-DD
-        userId: newLiquidationData.userId,
+        type: newLiquidationData.type, // INGRESO o GASTO
       };
+
+      // Solo agregar userId si está definido
+      if (newLiquidationData.userId) {
+        payload.userId = newLiquidationData.userId;
+      }
 
       const response = await authFetch("POST", "liquidations", payload, jwtToken);
       if (!response.ok) {
@@ -724,6 +824,9 @@ const LiquidacionesPage = () => {
                 <th className="p-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Fecha
                 </th>
+                <th className="p-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Tipo
+                </th>
                 <th className="p-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Nombre Liquidación
                 </th>
@@ -743,6 +846,17 @@ const LiquidacionesPage = () => {
                 displayedLiquidations.map((liq) => (
                   <tr key={liq.uuid} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors duration-150">
                     <td className="p-3 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">{liq.date}</td>
+                    <td className="p-3 text-center whitespace-nowrap">
+                      <span
+                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          liq.type === "GASTO"
+                            ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                            : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                        }`}
+                      >
+                        {liq.type || "INGRESO"}
+                      </span>
+                    </td>
                     <td
                       className="p-3 text-sm text-slate-800 dark:text-slate-100 font-medium hover:text-blue-600 cursor-pointer whitespace-nowrap"
                       onClick={() => handleLiquidationNameClick(liq)}
@@ -814,7 +928,7 @@ const LiquidacionesPage = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="p-6 text-center text-slate-500 dark:text-slate-400 text-sm">
+                  <td colSpan="6" className="p-6 text-center text-slate-500 dark:text-slate-400 text-sm">
                     {isLoading
                       ? "Cargando..."
                       : searchTerm
