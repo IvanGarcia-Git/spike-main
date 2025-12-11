@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { getCookie } from "cookies-next";
 import * as jose from "jose";
 import EmailResetPasswordModal from "@/components/email-reset-password.modal";
+import AnimatedLogo from "@/components/AnimatedLogo";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -84,12 +85,7 @@ export default function Login() {
         <div className="neumorphic-card p-8" style={{ boxShadow: 'none' }}>
           {/* Logo */}
           <div className="flex justify-center mb-8">
-            <img
-              src="/images/logo.png"
-              alt="SPIKES Logo"
-              className="h-20 w-auto"
-            />
-          </div>
+            <AnimatedLogo size="md" /></div>
 
           <form onSubmit={handleSubmit}>
             {/* Username Field */}

@@ -1,0 +1,122 @@
+/* ==========================================
+   ANIMATED LOGO & INTRO ANIMATIONS
+   ========================================== */
+
+/* Letter bounce animation - wave effect */
+@keyframes letterBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-12px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+  75% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-letter-bounce {
+  animation: letterBounce 0.6s ease-in-out forwards;
+}
+
+/* Cactus wiggle animation */
+@keyframes cactusWiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-cactus-wiggle {
+  animation: cactusWiggle 0.5s ease-in-out;
+  transform-origin: bottom center;
+}
+
+.animate-cactus-wiggle-delayed {
+  animation: cactusWiggle 0.5s ease-in-out 0.1s;
+  transform-origin: bottom center;
+}
+
+/* Water drop bounce */
+@keyframes dropBounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.1);
+  }
+}
+
+.animate-drop-bounce {
+  animation: dropBounce 0.4s ease-in-out;
+}
+
+/* Float animation for intro cactus */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Hand drag animation */
+@keyframes handDrag {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.animate-hand-drag {
+  animation: handDrag 1.5s ease-in-out infinite;
+}
+
+/* Swipe up animation */
+@keyframes swipeUp {
+  0% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  70% {
+    transform: translateX(-50%) translateY(-100px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-200px);
+    opacity: 0;
+  }
+}
+
+.animate-swipe-up {
+  animation: swipeUp 2s ease-in-out forwards;
+}
+
+/* Contracts page green pastel background */
+.contracts-pastel-bg {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #ecfdf5 100%);
+  min-height: 100%;
+}
+
+/* Dark mode support for contracts background */
+.dark .contracts-pastel-bg {
+  background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%);
+}

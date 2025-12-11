@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import AnimatedLogo from "@/components/AnimatedLogo";
 
 /**
  * Sidebar Component
@@ -282,11 +283,7 @@ export default function Sidebar({
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-              <img
-                src="/images/logo.png"
-                alt="SPIKES Logo"
-                className="h-10 w-auto"
-              />
+              <AnimatedLogo size="sm" />
               <button
                 onClick={onToggleCollapse}
                 className="w-8 h-8 hidden md:flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
