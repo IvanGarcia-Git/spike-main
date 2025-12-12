@@ -185,8 +185,8 @@ const NuevaLiquidacionModal = ({ isOpen, onClose, onSubmit, users, isLoading }) 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 lg:ml-72">
-      <div className="neumorphic-card rounded-xl p-6 md:p-8 w-full max-w-md">
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
+      <div className="bg-white dark:bg-slate-800 rounded-xl p-6 md:p-8 w-full max-w-md">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl sm:text-2xl font-semibold text-slate-800 dark:text-slate-100">Nueva Liquidación</h2>
           <button
