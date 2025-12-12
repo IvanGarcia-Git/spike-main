@@ -79,13 +79,14 @@ export default function AnimatedLogo({ size = "md", className = "" }) {
           <span
             key={index}
             className={`
-              ${config.text} font-bold text-primary inline-block
+              ${config.text} font-extrabold text-white inline-block
               transition-transform duration-300
               ${isHovered ? "animate-letter-bounce" : ""}
             `}
             style={{
               animationDelay: isHovered ? `${index * 50}ms` : "0ms",
-              fontFamily: "'Poppins', sans-serif"
+              fontFamily: "'Montserrat', 'Arial Black', sans-serif",
+              letterSpacing: "0.05em"
             }}
           >
             {letter}
