@@ -6,7 +6,11 @@
     "dev": "next dev -p 4000",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "npx playwright test",
+    "test:ui": "npx playwright test --ui",
+    "test:headed": "npx playwright test --headed",
+    "test:report": "npx playwright show-report"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

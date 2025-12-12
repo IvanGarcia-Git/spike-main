@@ -98,7 +98,16 @@ export default function NewTaskModal({
 
     const formData = new FormData();
     formData.append("subject", newTask.subject);
-    formData.append("startDate", `${newTask.startDate}T${newTask.startTime}`);
+
+    // Handle optional startDate: if no date, send empty; if date exists, combine with time (or use midnight)
+    if (newTask.startDate) {
+      const timeValue = newTask.startTime || "00:00";
+      formData.append("startDate", `${newTask.startDate}T${timeValue}`);
+    } else {
+      // No date = no startDate (will be null in backend)
+      formData.append("startDate", "");
+    }
+
     formData.append("initialComment", newTask.initialComment);
 
     if (selectedFile) {
@@ -286,20 +295,18 @@ export default function NewTaskModal({
         <form onSubmit={handleAddTask}>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <ModalInput
-              label="Fecha Inicio"
+              label="Fecha Inicio (opcional)"
               type="date"
               id="startDate"
               value={newTask.startDate}
               onChange={(e) => setNewTask({ ...newTask, startDate: e.target.value })}
-              required
             />
             <ModalInput
-              label="Hora Inicio"
+              label="Hora Inicio (opcional)"
               type="time"
               id="startTime"
               value={newTask.startTime}
               onChange={(e) => setNewTask({ ...newTask, startTime: e.target.value })}
-              required
             />
           </div>
 

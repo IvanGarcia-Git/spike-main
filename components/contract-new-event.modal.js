@@ -224,7 +224,7 @@ export default function ContractNewEventModal({
           <div className="mb-4 flex justify-between">
             <div className="w-1/2 pr-2">
               <label className="block text-black mb-2" htmlFor="startDate">
-                Fecha Inicio
+                Fecha Inicio (opcional)
               </label>
               <input
                 type="date"
@@ -234,7 +234,6 @@ export default function ContractNewEventModal({
                 onChange={(e) =>
                   setNewTask({ ...newTask, startDate: e.target.value })
                 }
-                required
               />
             </div>
           </div>

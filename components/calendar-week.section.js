@@ -121,6 +121,8 @@ export default function CalendarByWeek({ onChangeView }) {
     weekEnd.setHours(23, 59, 59, 999);
 
     return events.filter((event) => {
+      // Skip events without startDate
+      if (!event.startDate) return false;
       const eventDate = adjustToLocalTime(event.startDate);
       return eventDate >= weekStart && eventDate <= weekEnd;
     });

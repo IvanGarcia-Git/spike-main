@@ -45,6 +45,8 @@ export default function CalendarByDay({
   };
 
   const allDayTasks = tasks.filter((task) => {
+    // Skip tasks without startDate
+    if (!task.startDate) return false;
     const taskDate = new Date(task.startDate);
     return (
       taskDate.getDate() === currentDate.getDate() &&

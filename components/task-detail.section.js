@@ -104,7 +104,7 @@ export default function TaskDetailComponent({ uuid }) {
           <div className="text-center">
             <p>
               <strong>Fecha de inicio:</strong>{" "}
-              {new Date(task.startDate).toLocaleString()}
+              {task.startDate ? new Date(task.startDate).toLocaleString() : "Sin fecha definida"}
             </p>
           </div>
 

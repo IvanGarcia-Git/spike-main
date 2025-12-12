@@ -194,7 +194,7 @@ export default function SendTaskModal({ isOpen, onClose }) {
                       className="block text-black mb-2"
                       htmlFor="startDate"
                     >
-                      Fecha inicio
+                      Fecha inicio (opcional)
                     </label>
                     <input
                       type="date"
@@ -204,7 +204,6 @@ export default function SendTaskModal({ isOpen, onClose }) {
                       onChange={(e) =>
                         setNewTask({ ...newTask, startDate: e.target.value })
                       }
-                      required
                     />
                   </div>
                   <div className="mb-4">
@@ -322,7 +321,7 @@ export default function SendTaskModal({ isOpen, onClose }) {
                           className="bg-foreground hover:bg-background"
                         >
                           <td className="py-2 px-4 text-black">
-                            {new Date(task.startDate).toLocaleDateString()}
+                            {task.startDate ? new Date(task.startDate).toLocaleDateString() : "Sin fecha"}
                           </td>
                           <td className="py-2 px-4 text-black">
                             {task.subject}

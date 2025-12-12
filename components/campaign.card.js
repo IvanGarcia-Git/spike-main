@@ -320,18 +320,30 @@ export default function CampaignCard({
       }
 
       if (response.ok) {
-        setFilteredLeads((prevLeads) =>
-          prevLeads.map((lead) =>
-            lead.id === editableLead.id ? { ...lead, ...editableLead } : lead
-          )
-        );
+        const responseData = await response.json();
+
+        if (editableLead.id) {
+          // Actualizar lead existente
+          setFilteredLeads((prevLeads) =>
+            prevLeads.map((lead) =>
+              lead.id === editableLead.id ? { ...lead, ...editableLead } : lead
+            )
+          );
+        } else {
+          // Añadir nuevo lead a la lista
+          setFilteredLeads((prevLeads) => [responseData, ...prevLeads]);
+        }
 
         setIsEditing(null);
+        handleModalClose();
+        alert(editableLead.id ? "Lead actualizado correctamente" : "Lead creado correctamente");
       } else {
-        alert("Error actualizando el lead");
+        const errorData = await response.json().catch(() => ({}));
+        alert(errorData.message || "Error al guardar el lead");
       }
     } catch (error) {
       console.error("Error enviando la solicitud:", error);
+      alert("Error de conexión al guardar el lead");
     }
   };
 
