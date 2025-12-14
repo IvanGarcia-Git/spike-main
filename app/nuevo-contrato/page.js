@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import CreateCustomerForm from "@/components/create-customer.form";
 import CreateContractForm from "@/components/create-contract.form";
 import { useRouter } from "next/navigation";
@@ -8,6 +8,8 @@ import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
 import { isCustomerDataValid } from "@/helpers/validation.helper";
 import { validateIBANMath } from "@/helpers/validation.helper";
 import ConfirmContractModal from "@/components/confirm-create-contract.modal";
+import useAutoSaveDraft from "@/hooks/useAutoSaveDraft";
+import { AutoSaveIndicator, RestoreDraftModal } from "@/components/auto-save-indicator";
 
 export default function CreateContractPage() {
   const router = useRouter();
@@ -62,8 +64,10 @@ export default function CreateContractPage() {
     const leadSheetUuid = queryParams.get("leadSheetUuid");
 
     if (customerUuid) {
+      setIsLoadingFromLeadSheet(true);
       getCustomerDetails(customerUuid);
     } else if (leadSheetUuid) {
+      setIsLoadingFromLeadSheet(true);
       getLeadSheet(leadSheetUuid);
     }
   }, [router]);
@@ -200,6 +204,75 @@ export default function CreateContractPage() {
   const [duplicatedCustomers, setDuplicatedCustomers] = useState([]);
   const [openDuplicityModal, setOpenDuplicityModal] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const [isLoadingFromLeadSheet, setIsLoadingFromLeadSheet] = useState(false);
+
+  // Combinar todos los datos para el autoguardado
+  const draftData = useMemo(
+    () => ({
+      customerData,
+      contractLuzData,
+      contractGasData,
+      newContractComment,
+      documentType,
+    }),
+    [customerData, contractLuzData, contractGasData, newContractComment, documentType]
+  );
+
+  // Hook de autoguardado
+  const {
+    hasDraft,
+    draftData: savedDraftData,
+    lastSaved,
+    clearDraft,
+    getLastSavedText,
+  } = useAutoSaveDraft("contract_energy_new", draftData, {
+    enabled: !isLoadingFromLeadSheet,
+    debounceMs: 2000,
+  });
+
+  // Mostrar modal de restauración si hay borrador al montar
+  useEffect(() => {
+    // Solo mostrar si no viene de leadSheet/customer
+    const queryParams = new URLSearchParams(window.location.search);
+    const hasExternalData = queryParams.get("customerUuid") || queryParams.get("leadSheetUuid");
+
+    if (!hasExternalData && hasDraft && savedDraftData) {
+      // Verificar si el formulario está vacío
+      const isFormEmpty = !customerData.name && !customerData.surnames;
+      if (isFormEmpty) {
+        setShowRestoreModal(true);
+      }
+    }
+  }, [hasDraft]);
+
+  // Restaurar borrador
+  const handleRestoreDraft = () => {
+    if (savedDraftData) {
+      if (savedDraftData.customerData) {
+        setCustomerData(savedDraftData.customerData);
+      }
+      if (savedDraftData.contractLuzData) {
+        setContractLuzData(savedDraftData.contractLuzData);
+      }
+      if (savedDraftData.contractGasData) {
+        setContractGasData(savedDraftData.contractGasData);
+      }
+      if (savedDraftData.newContractComment) {
+        setNewContractComment(savedDraftData.newContractComment);
+      }
+      if (savedDraftData.documentType) {
+        setDocumentType(savedDraftData.documentType);
+      }
+    }
+    setShowRestoreModal(false);
+  };
+
+  // Descartar borrador
+  const handleDiscardDraft = () => {
+    clearDraft();
+    setShowRestoreModal(false);
+  };
 
   const handleCreateContract = async (isDraft = true) => {
     //Validaciones
@@ -414,6 +487,8 @@ export default function CreateContractPage() {
           }
         }
 
+        // Limpiar borrador al crear exitosamente
+        clearDraft();
         alert("Contratos creados con éxito");
 
         router.push("/contratos");
@@ -448,13 +523,16 @@ export default function CreateContractPage() {
             >
               <span className="material-icons-outlined">arrow_back</span>
             </button>
-            <div>
+            <div className="flex-1">
               <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">
                 Nuevo Contrato de Energía
               </h1>
-              <p className="text-slate-500 dark:text-slate-400">
-                Completa los datos del cliente y selecciona el tipo de contrato
-              </p>
+              <div className="flex items-center gap-4">
+                <p className="text-slate-500 dark:text-slate-400">
+                  Completa los datos del cliente y selecciona el tipo de contrato
+                </p>
+                <AutoSaveIndicator lastSavedText={getLastSavedText()} />
+              </div>
             </div>
           </div>
         </div>
@@ -552,7 +630,7 @@ export default function CreateContractPage() {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Modal de duplicados */}
       {openDuplicityModal && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black/50 z-[70] p-4"
@@ -565,6 +643,14 @@ export default function CreateContractPage() {
           />
         </div>
       )}
+
+      {/* Modal de restauración de borrador */}
+      <RestoreDraftModal
+        isOpen={showRestoreModal}
+        onRestore={handleRestoreDraft}
+        onDiscard={handleDiscardDraft}
+        lastSaved={lastSaved}
+      />
     </div>
   );
 }

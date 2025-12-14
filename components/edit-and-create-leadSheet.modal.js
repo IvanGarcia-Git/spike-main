@@ -4,6 +4,8 @@ import { getCookie } from "cookies-next";
 import { useRouter } from "next/navigation";
 import { validateIBANMath } from "@/helpers/validation.helper";
 import ContractsTypeModal from "./contracts-type.modal";
+import useAutoSaveDraft from "@/hooks/useAutoSaveDraft";
+import { AutoSaveIndicator, RestoreDraftModal } from "./auto-save-indicator";
 
 export default function EditAndCreateLeadSheet({
   isModalOpen,
@@ -32,6 +34,51 @@ export default function EditAndCreateLeadSheet({
   });
   const router = useRouter();
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
+
+  // Clave única para el borrador (diferente si es crear vs editar)
+  const draftKey = mode === "create" ? "leadSheet_new" : null;
+
+  // Hook de autoguardado (solo para modo crear)
+  const {
+    hasDraft,
+    draftData,
+    lastSaved,
+    restoreDraft,
+    clearDraft,
+    getLastSavedText,
+  } = useAutoSaveDraft(draftKey, formData, {
+    enabled: mode === "create" && isModalOpen,
+    debounceMs: 1500,
+  });
+
+  // Mostrar modal de restauración si hay borrador al abrir en modo crear
+  useEffect(() => {
+    if (mode === "create" && isModalOpen && hasDraft && draftData) {
+      // Solo mostrar si el formulario está vacío
+      const isFormEmpty = !formData.name && !formData.surnames && !formData.nationalId;
+      if (isFormEmpty) {
+        setShowRestoreModal(true);
+      }
+    }
+  }, [mode, isModalOpen, hasDraft]);
+
+  // Restaurar borrador
+  const handleRestore = () => {
+    if (draftData) {
+      setFormData((prev) => ({
+        ...prev,
+        ...draftData,
+      }));
+    }
+    setShowRestoreModal(false);
+  };
+
+  // Descartar borrador
+  const handleDiscard = () => {
+    clearDraft();
+    setShowRestoreModal(false);
+  };
 
   useEffect(() => {
     if (initialData) {
@@ -104,6 +151,10 @@ export default function EditAndCreateLeadSheet({
       const response = await authFetch(method, url, cleanedFormData, jwtToken);
 
       if (response.ok) {
+        // Limpiar borrador al guardar exitosamente
+        if (mode === "create") {
+          clearDraft();
+        }
         alert(mode === "edit" ? "Lead actualizado correctamente." : "Lead creado correctamente.");
         setIsModalOpen(false);
 
@@ -130,7 +181,12 @@ export default function EditAndCreateLeadSheet({
       } overflow-y-auto max-h-[80vh]`}
     >
       {/* Contenedor del botón */}
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-between items-center mb-4">
+        {/* Indicador de autoguardado */}
+        {mode === "create" && (
+          <AutoSaveIndicator lastSavedText={getLastSavedText()} />
+        )}
+        {mode !== "create" && <div />}
         <button
           type="button"
           className={`px-4 py-2 rounded text-white ${
@@ -414,6 +470,14 @@ export default function EditAndCreateLeadSheet({
           handleCreateContract={handleRedirectToCreateContract}
         />
       )}
+
+      {/* Modal de restauración de borrador */}
+      <RestoreDraftModal
+        isOpen={showRestoreModal}
+        onRestore={handleRestore}
+        onDiscard={handleDiscard}
+        lastSaved={lastSaved}
+      />
     </div>
   );
 }
