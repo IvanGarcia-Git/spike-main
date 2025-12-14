@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import CalendarDetailsDay from "./calendar-details-day.modal";
 import { authFetch } from "@/helpers/server-fetch.helper";
 import { getCookie } from "cookies-next";
+import { parseISO, isSameDay } from "date-fns";
 
-export default function CalendarByWeek({ onChangeView }) {
+export default function CalendarByWeek({ onChangeView, holidays = [], absences = [] }) {
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const daysOfWeek = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
@@ -18,17 +19,13 @@ export default function CalendarByWeek({ onChangeView }) {
   const [leadCalls, setLeadCalls] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEvents, setSelectedEvents] = useState([]);
-  const [view, setView] = useState("week");
 
   const fetchTasksByWeek = async () => {
     const startDate = new Date(
       currentWeekStart.getFullYear(),
       currentWeekStart.getMonth(),
       currentWeekStart.getDate(),
-      0,
-      0,
-      0,
-      0
+      0, 0, 0, 0
     );
 
     const endDate = new Date(startDate);
@@ -42,13 +39,7 @@ export default function CalendarByWeek({ onChangeView }) {
     };
 
     try {
-      const response = await authFetch(
-        "POST",
-        "search/calendar/",
-        data,
-        jwtToken
-      );
-
+      const response = await authFetch("POST", "search/calendar/", data, jwtToken);
       if (response.ok) {
         const allTasks = await response.json();
         setTasks(allTasks.tasks);
@@ -115,13 +106,11 @@ export default function CalendarByWeek({ onChangeView }) {
       currentWeekStart.getMonth(),
       currentWeekStart.getDate()
     );
-
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
     weekEnd.setHours(23, 59, 59, 999);
 
     return events.filter((event) => {
-      // Skip events without startDate
       if (!event.startDate) return false;
       const eventDate = adjustToLocalTime(event.startDate);
       return eventDate >= weekStart && eventDate <= weekEnd;
@@ -153,189 +142,201 @@ export default function CalendarByWeek({ onChangeView }) {
     setIsModalOpen(true);
   };
 
+  const isHolidayDay = (date) => {
+    return holidays.some((h) => {
+      const holidayDate = parseISO(h.date);
+      return isSameDay(holidayDate, date);
+    });
+  };
+
+  const isAbsenceDay = (date) => {
+    return absences.some((absence) => {
+      if (absence.status !== "aprobada") return false;
+      const startDate = parseISO(absence.startDate);
+      const endDate = parseISO(absence.endDate);
+      return date >= startDate && date <= endDate;
+    });
+  };
+
+  const isRedDay = (date) => {
+    return isHolidayDay(date) || isAbsenceDay(date);
+  };
+
+  const weekEndDate = new Date(currentWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+
   return (
     <>
+      {/* Header con navegación */}
       <div className="flex items-center justify-between mb-4">
-        {view === "week" && (
-          <>
-            <div className="flex items-center">
-              <button
-                onClick={handlePreviousWeek}
-                className="bg-blue-500 text-white py-2 px-3 rounded-l-md hover:bg-blue-600 focus:outline-none"
-              >
-                &lt;
-              </button>
-              <button
-                onClick={handleNextWeek}
-                className="bg-blue-500 text-white py-2 px-3 rounded-r-md hover:bg-blue-600 focus:outline-none"
-              >
-                &gt;
-              </button>
-            </div>
+        <div className="flex items-center space-x-1">
+          <button
+            onClick={handlePreviousWeek}
+            className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-300"
+          >
+            <span className="material-icons-outlined text-sm">chevron_left</span>
+          </button>
+          <button
+            onClick={handleNextWeek}
+            className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-300"
+          >
+            <span className="material-icons-outlined text-sm">chevron_right</span>
+          </button>
+        </div>
 
-            <h2 className="text-xl text-gray-800 text-center flex-grow">
-              {currentWeekStart.toLocaleDateString(undefined, {
-                day: "2-digit",
-              })}{" "}
-              {currentWeekStart
-                .toLocaleDateString(undefined, {
-                  month: "short",
-                })
-                .replace(/^\w/, (c) => c.toUpperCase())}{" "}
-              -{" "}
-              {new Date(
-                currentWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000
-              ).toLocaleDateString(undefined, {
-                day: "2-digit",
-              })}
-              ,{" "}
-              {new Date(
-                currentWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000
-              ).getFullYear()}
-            </h2>
+        <h2 className="text-base font-semibold text-slate-700 dark:text-slate-200 text-center flex-grow">
+          {currentWeekStart.toLocaleDateString(undefined, { day: "2-digit" })}{" "}
+          {currentWeekStart.toLocaleDateString(undefined, { month: "short" }).replace(/^\w/, (c) => c.toUpperCase())} -{" "}
+          {weekEndDate.toLocaleDateString(undefined, { day: "2-digit" })},{" "}
+          {weekEndDate.getFullYear()}
+        </h2>
 
-            <div className="flex items-center">
-              <button
-                onClick={() => onChangeView("month")}
-                className={`py-2 px-4 ${
-                  view === "month"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-300 text-gray-700"
-                } rounded-l-md hover:bg-blue-600 focus:outline-none`}
-              >
-                Mes
-              </button>
-              <button
-                onClick={() => onChangeView("week")}
-                className={`py-2 px-4 ${
-                  view === "week"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-300 text-gray-700"
-                } focus:outline-none`}
-              >
-                Semana
-              </button>
-              <button
-                onClick={() => onChangeView("day")}
-                className={`py-2 px-4 ${
-                  view === "day"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-300 text-gray-700"
-                } rounded-r-md hover:bg-blue-600 focus:outline-none`}
-              >
-                Día
-              </button>
-            </div>
-          </>
-        )}
+        <div className="flex items-center space-x-1 p-1 neumorphic-card-inset rounded-lg">
+          <button
+            onClick={() => onChangeView("month")}
+            className="px-3 py-1 text-xs rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-primary"
+          >
+            Mes
+          </button>
+          <button
+            className="px-3 py-1 text-xs rounded-md transition-colors text-white bg-primary"
+          >
+            Semana
+          </button>
+          <button
+            onClick={() => onChangeView("day")}
+            className="px-3 py-1 text-xs rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-primary"
+          >
+            Día
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-8 border">
-        <div className="border-r p-2 text-center bg-gray-100 font-semibold">
-          Horario
-        </div>
-        {daysOfWeek.map((day, index) => {
-          const today = new Date();
-          const dayDate = new Date(currentWeekStart);
-          dayDate.setDate(currentWeekStart.getDate() + index);
+      {/* Calendario semanal */}
+      <div className="neumorphic-card-inset p-2 rounded-xl overflow-x-auto">
+        <div className="grid grid-cols-8 gap-1 min-w-[700px]">
+          {/* Header - Horario */}
+          <div className="p-2 text-center text-xs font-semibold text-slate-500 dark:text-slate-400">
+            Hora
+          </div>
+          {/* Header - Días de la semana */}
+          {daysOfWeek.map((day, index) => {
+            const today = new Date();
+            const dayDate = new Date(currentWeekStart);
+            dayDate.setDate(currentWeekStart.getDate() + index);
 
-          const isToday = today.toDateString() === dayDate.toDateString();
+            const isToday = today.toDateString() === dayDate.toDateString();
+            const dayIsRed = isRedDay(dayDate);
 
-          return (
-            <div
-              key={index}
-              className={`border-r p-2 text-center font-semibold ${
-                isToday ? "bg-yellow-50" : "bg-gray-100"
-              }`}
-            >
-              {day} {getDayDate(index)}
-            </div>
-          );
-        })}
+            return (
+              <div
+                key={index}
+                className={`p-2 text-center rounded-lg text-xs font-semibold transition-all ${
+                  dayIsRed
+                    ? "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400"
+                    : isToday
+                    ? "bg-primary/20 text-primary"
+                    : "text-slate-600 dark:text-slate-400"
+                }`}
+              >
+                <div>{day}</div>
+                <div className="text-[10px] opacity-80">{getDayDate(index)}</div>
+              </div>
+            );
+          })}
 
-        <div className="border-r p-2 text-center font-semibold bg-gray-50">
-          Todo el día
-        </div>
-        {daysOfWeek.map((_, dayIndex) => {
-          const today = new Date();
-          const dayDate = new Date(currentWeekStart);
-          dayDate.setDate(currentWeekStart.getDate() + dayIndex);
+          {/* Fila Todo el día */}
+          <div className="p-2 text-center text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center justify-center">
+            Todo el día
+          </div>
+          {daysOfWeek.map((_, dayIndex) => {
+            const today = new Date();
+            const dayDate = new Date(currentWeekStart);
+            dayDate.setDate(currentWeekStart.getDate() + dayIndex);
 
-          const isToday = today.toDateString() === dayDate.toDateString();
+            const isToday = today.toDateString() === dayDate.toDateString();
+            const dayIsRed = isRedDay(dayDate);
 
-          const tasksForDay = allDayTasks.filter((task) => {
-            const taskDate = adjustToLocalTime(task.startDate);
-            return taskDate.getDay() === dayIndex;
-          });
+            const tasksForDay = allDayTasks.filter((task) => {
+              const taskDate = adjustToLocalTime(task.startDate);
+              return taskDate.getDay() === dayIndex;
+            });
 
-          return (
-            <div
-              key={dayIndex}
-              className={`border-t border-r p-2 relative hover:bg-gray-50 cursor-pointer ${
-                isToday ? "bg-yellow-50" : ""
-              }`}
-              onClick={() => {
-                setSelectedEvents(tasksForDay);
-                setIsModalOpen(true);
-              }}
-            >
-              {tasksForDay.map((task, idx) => (
-                <div
-                  key={idx}
-                  className="m-1 p-1 bg-fuchsia-300 text-xs rounded"
-                >
-                  {task.subject || "Tarea sin título"}
-                </div>
-              ))}
-            </div>
-          );
-        })}
+            return (
+              <div
+                key={dayIndex}
+                className={`min-h-[40px] p-1 rounded-lg cursor-pointer transition-all ${
+                  dayIsRed
+                    ? "bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30"
+                    : isToday
+                    ? "bg-primary/10 hover:bg-primary/20"
+                    : "bg-background-light dark:bg-background-dark hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
+                onClick={() => {
+                  setSelectedEvents(tasksForDay);
+                  setIsModalOpen(true);
+                }}
+              >
+                {tasksForDay.map((task, idx) => (
+                  <div
+                    key={idx}
+                    className="m-0.5 p-1 bg-fuchsia-200 dark:bg-fuchsia-800/60 text-fuchsia-800 dark:text-fuchsia-200 text-[10px] rounded truncate"
+                  >
+                    {task.subject || "Tarea"}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
 
-        {hours.map((hour) => (
-          <React.Fragment key={hour}>
-            <div className="border-t p-2 text-center bg-gray-50">
-              {formatTime(hour)}
-            </div>
-            {daysOfWeek.map((_, dayIndex) => {
-              const today = new Date();
-              const dayDate = new Date(currentWeekStart);
-              dayDate.setDate(currentWeekStart.getDate() + dayIndex);
+          {/* Filas de horas */}
+          {hours.map((hour) => (
+            <React.Fragment key={hour}>
+              <div className="p-2 text-center text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center">
+                {formatTime(hour)}
+              </div>
+              {daysOfWeek.map((_, dayIndex) => {
+                const today = new Date();
+                const dayDate = new Date(currentWeekStart);
+                dayDate.setDate(currentWeekStart.getDate() + dayIndex);
 
-              const isToday = today.toDateString() === dayDate.toDateString();
+                const isToday = today.toDateString() === dayDate.toDateString();
+                const dayIsRed = isRedDay(dayDate);
 
-              const eventsForCell = hourlyEvents.filter((event) => {
-                const eventDate = adjustToLocalTime(event.startDate);
+                const eventsForCell = hourlyEvents.filter((event) => {
+                  const eventDate = adjustToLocalTime(event.startDate);
+                  return eventDate.getDay() === dayIndex && eventDate.getHours() === hour;
+                });
+
                 return (
-                  eventDate.getDay() === dayIndex &&
-                  eventDate.getHours() === hour
+                  <div
+                    key={dayIndex}
+                    className={`min-h-[32px] p-0.5 rounded cursor-pointer transition-all border border-transparent ${
+                      dayIsRed
+                        ? "bg-red-50/50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20"
+                        : isToday
+                        ? "bg-primary/5 hover:bg-primary/10"
+                        : "hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-700"
+                    }`}
+                    onClick={() => handleCellClick(hour, dayIndex)}
+                  >
+                    {eventsForCell.map((event, idx) => (
+                      <div
+                        key={idx}
+                        className={`mb-0.5 p-1 text-[10px] rounded truncate ${
+                          event.type === "reminder"
+                            ? "bg-green-200 dark:bg-green-800/60 text-green-800 dark:text-green-200"
+                            : "bg-cyan-200 dark:bg-cyan-800/60 text-cyan-800 dark:text-cyan-200"
+                        }`}
+                      >
+                        {event.subject || "Evento"}
+                      </div>
+                    ))}
+                  </div>
                 );
-              });
-
-              return (
-                <div
-                  key={dayIndex}
-                  className={`border-t border-r p-2 relative hover:bg-gray-50 cursor-pointer ${
-                    isToday ? "bg-yellow-50" : ""
-                  }`}
-                  onClick={() => handleCellClick(hour, dayIndex)}
-                >
-                  {eventsForCell.map((event, idx) => (
-                    <div
-                      key={idx}
-                      className={`mb-4 p-1 text-xs rounded ${
-                        event.type === "reminder"
-                          ? "bg-green-200"
-                          : "bg-cyan-200"
-                      }`}
-                    >
-                      {event.subject || "Evento sin título"}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
-          </React.Fragment>
-        ))}
+              })}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
 
       <CalendarDetailsDay

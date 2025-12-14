@@ -2,14 +2,17 @@
 import { useState, useEffect, useRef } from "react";
 import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
 import { getCookie } from "cookies-next";
+import * as jose from "jose";
 import { FiTrash } from "react-icons/fi";
 import { FaPlus } from "react-icons/fa6";
 import { MdOutlineMessage } from "react-icons/md";
-import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, getDay } from "date-fns";
+import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, getDay, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import RemindersComponent from "@/components/reminders.section";
 import LeadsCallsComponent from "@/components/lead-calls.section";
 import NewTaskModal from "@/components/new-task.modal";
+import CalendarByWeek from "@/components/calendar-week.section";
+import CalendarByDay from "@/components/calendar-day.section";
 import TaskDetailModal from "@/components/task-detail.modal";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -47,6 +50,9 @@ export default function Agenda() {
   const calendarRef = useRef(null);
   const [isSendTaskModalOpen, setIsSendTaskModalOpen] = useState(false);
   const [calendarView, setCalendarView] = useState("semana"); // mes, semana, dia
+  const [holidays, setHolidays] = useState([]);
+  const [absences, setAbsences] = useState([]);
+  const [userId, setUserId] = useState(null);
 
   const fetchRemindersAndLeadsForMonth = async (date) => {
     const jwtToken = getCookie("factura-token");
@@ -124,6 +130,88 @@ export default function Agenda() {
     }
   };
 
+  const getUserIdFromToken = () => {
+    const jwtToken = getCookie("factura-token");
+    if (!jwtToken) return null;
+    try {
+      const payload = jose.decodeJwt(jwtToken);
+      return payload.userId;
+    } catch (error) {
+      console.error("Error decodificando token:", error);
+      return null;
+    }
+  };
+
+  const fetchPublicHolidays = async (year) => {
+    try {
+      const response = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/es`, {
+        method: "GET",
+        headers: { accept: "text/plain" },
+      });
+      if (!response.ok) return [];
+      const data = await response.json();
+      return data.filter((holiday) => holiday.global === true || holiday?.counties?.includes("ES-AN"));
+    } catch (error) {
+      console.error("Error cargando festivos públicos:", error);
+      return [];
+    }
+  };
+
+  const fetchHolidaysAndAbsences = async (currentUserId) => {
+    const jwtToken = getCookie("factura-token");
+    if (!jwtToken || !currentUserId) return;
+
+    try {
+      const year = calendarDate.getFullYear();
+      const [publicHolidays, holidaysRes, absencesRes] = await Promise.all([
+        fetchPublicHolidays(year),
+        authGetFetch("holidays", jwtToken),
+        authGetFetch(`absences/user/${currentUserId}`, jwtToken),
+      ]);
+
+      let allHolidays = publicHolidays || [];
+      if (holidaysRes.ok) {
+        const customHolidays = await holidaysRes.json();
+        allHolidays = [...allHolidays, ...customHolidays];
+      }
+      setHolidays(allHolidays);
+
+      if (absencesRes.ok) {
+        const userAbsences = await absencesRes.json();
+        setAbsences(userAbsences);
+      }
+    } catch (error) {
+      console.error("Error cargando festivos y ausencias:", error);
+    }
+  };
+
+  const isHoliday = (day) => {
+    return holidays.some((h) => {
+      const holidayDate = parseISO(h.date);
+      return isSameDay(holidayDate, day);
+    });
+  };
+
+  const isAbsenceDay = (day) => {
+    return absences.some((absence) => {
+      if (absence.status !== "aprobada") return false;
+      const startDate = parseISO(absence.startDate);
+      const endDate = parseISO(absence.endDate);
+      return day >= startDate && day <= endDate;
+    });
+  };
+
+  const getDayInfo = (day) => {
+    const holiday = holidays.find((h) => isSameDay(parseISO(h.date), day));
+    const absence = absences.find((absence) => {
+      if (absence.status !== "aprobada") return false;
+      const startDate = parseISO(absence.startDate);
+      const endDate = parseISO(absence.endDate);
+      return day >= startDate && day <= endDate;
+    });
+    return { holiday, absence };
+  };
+
   const handleShowTask = (uuid) => {
     setIsTaskModalOpen(true);
     setSelectedTaskUuid(uuid);
@@ -135,15 +223,26 @@ export default function Agenda() {
   };
 
   useEffect(() => {
+    const currentUserId = getUserIdFromToken();
+    setUserId(currentUserId);
     getTasksForUser();
     fetchRemindersAndLeadsForMonth(calendarDate);
     getContracts();
     getUnnotifiedNotifications();
+    if (currentUserId) {
+      fetchHolidaysAndAbsences(currentUserId);
+    }
   }, []);
 
   useEffect(() => {
     fetchRemindersAndLeadsForMonth(calendarDate);
   }, [calendarDate]);
+
+  useEffect(() => {
+    if (userId) {
+      fetchHolidaysAndAbsences(userId);
+    }
+  }, [calendarDate.getFullYear(), userId]);
 
   useEffect(() => {
     if (!isModalOpen) {
@@ -347,40 +446,73 @@ export default function Agenda() {
     }
 
     return (
-      <div className="grid grid-cols-7 gap-px text-center text-xs text-slate-500 dark:text-slate-400 bg-slate-300 dark:bg-slate-700 border border-slate-300 dark:border-slate-700">
-        {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((day) => (
-          <div key={day} className="py-2 bg-background-light dark:bg-background-dark font-semibold">
-            {day}
-          </div>
-        ))}
-        {totalCells.map((day, index) => {
-          if (!day) {
-            return <div key={`empty-${index}`} className="h-20 bg-background-light dark:bg-background-dark"></div>;
-          }
-
-          const isToday = isSameDay(day, new Date());
-          const isCurrentMonth = isSameMonth(day, calendarDate);
-
-          return (
-            <div
-              key={day.toString()}
-              className={`h-20 pt-1 cursor-pointer transition-colors ${
-                isToday
-                  ? "bg-primary/20 text-primary font-semibold"
-                  : "bg-background-light dark:bg-background-dark"
-              } ${
-                !isCurrentMonth ? "text-slate-400 dark:text-slate-600" : "text-slate-700 dark:text-slate-300"
-              } hover:bg-primary/10`}
-              onClick={() => {
-                setSelectedCalendarDate(day);
-                setActiveTab("task");
-                setIsModalOpen(true);
-              }}
-            >
-              <span className="p-1">{format(day, "d")}</span>
+      <div className="neumorphic-card-inset p-2 rounded-xl">
+        <div className="grid grid-cols-7 gap-1 text-center text-xs">
+          {/* Header - Días de la semana */}
+          {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((day) => (
+            <div key={day} className="py-2 font-semibold text-slate-600 dark:text-slate-400">
+              {day}
             </div>
-          );
-        })}
+          ))}
+          {/* Celdas de días */}
+          {totalCells.map((day, index) => {
+            if (!day) {
+              return (
+                <div
+                  key={`empty-${index}`}
+                  className="h-16 sm:h-20 rounded-lg bg-background-light/50 dark:bg-background-dark/50"
+                ></div>
+              );
+            }
+
+            const isToday = isSameDay(day, new Date());
+            const isCurrentMonth = isSameMonth(day, calendarDate);
+            const dayHoliday = isHoliday(day);
+            const dayAbsence = isAbsenceDay(day);
+            const isRedDay = dayHoliday || dayAbsence;
+            const { holiday, absence } = getDayInfo(day);
+
+            return (
+              <div
+                key={day.toString()}
+                className={`h-16 sm:h-20 p-1 rounded-lg cursor-pointer transition-all duration-200 flex flex-col ${
+                  isRedDay
+                    ? "bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/60"
+                    : isToday
+                    ? "neumorphic-button active bg-primary/10 dark:bg-primary/20"
+                    : "neumorphic-button bg-background-light dark:bg-background-dark hover:bg-primary/5"
+                } ${!isCurrentMonth ? "opacity-40" : ""}`}
+                onClick={() => {
+                  setSelectedCalendarDate(day);
+                  setActiveTab("task");
+                  setIsModalOpen(true);
+                }}
+                title={holiday ? (holiday.localName || holiday.name) : absence ? "Ausencia" : ""}
+              >
+                <span className={`text-sm font-medium ${
+                  isRedDay
+                    ? "text-red-600 dark:text-red-400"
+                    : isToday
+                    ? "text-primary font-bold"
+                    : "text-slate-700 dark:text-slate-300"
+                }`}>
+                  {format(day, "d")}
+                </span>
+                {isCurrentMonth && (holiday || absence) && (
+                  <div className="mt-auto">
+                    <span className={`text-[8px] sm:text-[9px] leading-tight block truncate px-0.5 py-0.5 rounded ${
+                      holiday
+                        ? "bg-pink-200/60 dark:bg-pink-800/40 text-pink-700 dark:text-pink-300"
+                        : "bg-red-200/60 dark:bg-red-800/40 text-red-700 dark:text-red-300"
+                    }`}>
+                      {holiday ? (holiday.localName || holiday.name) : absence?.description || "Ausencia"}
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   };
@@ -532,10 +664,12 @@ export default function Agenda() {
                     <span className="material-icons-outlined text-base">chevron_right</span>
                   </button>
                 </div>
-                <div className="flex items-center space-x-1 p-1 neumorphic-card-inset rounded-md">
+                <div className="flex items-center space-x-1 p-1 neumorphic-card-inset rounded-lg">
                   <button
                     className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                      calendarView === "mes" ? "" : ""
+                      calendarView === "mes"
+                        ? "text-white bg-primary"
+                        : "text-slate-600 dark:text-slate-400 hover:text-primary"
                     }`}
                     onClick={() => setCalendarView("mes")}
                   >
@@ -543,7 +677,9 @@ export default function Agenda() {
                   </button>
                   <button
                     className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                      calendarView === "semana" ? "text-white bg-primary" : ""
+                      calendarView === "semana"
+                        ? "text-white bg-primary"
+                        : "text-slate-600 dark:text-slate-400 hover:text-primary"
                     }`}
                     onClick={() => setCalendarView("semana")}
                   >
@@ -551,7 +687,9 @@ export default function Agenda() {
                   </button>
                   <button
                     className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                      calendarView === "dia" ? "" : ""
+                      calendarView === "dia"
+                        ? "text-white bg-primary"
+                        : "text-slate-600 dark:text-slate-400 hover:text-primary"
                     }`}
                     onClick={() => setCalendarView("dia")}
                   >
@@ -559,7 +697,26 @@ export default function Agenda() {
                   </button>
                 </div>
               </div>
-              {renderCalendar()}
+              {calendarView === "mes" && renderCalendar()}
+              {calendarView === "semana" && (
+                <CalendarByWeek
+                  onChangeView={(view) => setCalendarView(view === "month" ? "mes" : view === "week" ? "semana" : "dia")}
+                  holidays={holidays}
+                  absences={absences}
+                />
+              )}
+              {calendarView === "dia" && (
+                <CalendarByDay
+                  tasks={tasks}
+                  reminders={reminders}
+                  leadCalls={leads}
+                  currentDate={calendarDate}
+                  onDateChange={setCalendarDate}
+                  onChangeView={(view) => setCalendarView(view === "month" ? "mes" : view === "week" ? "semana" : "dia")}
+                  holidays={holidays}
+                  absences={absences}
+                />
+              )}
             </div>
           </div>
 

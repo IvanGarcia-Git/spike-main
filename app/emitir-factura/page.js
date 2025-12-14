@@ -1,10 +1,110 @@
 "use client";
 import { Suspense, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import dynamic from "next/dynamic";
 import EmitirFactura from "@/components/EmitirFactura";
+import InvoicePreview from "@/components/invoice-preview";
 import { authGetFetch } from "@/helpers/server-fetch.helper";
 import { getCookie } from "cookies-next";
 
-function InvoiceHistoryItem({ invoice, onClick }) {
+// Importar PDFDownloadLink dinámicamente para evitar errores de SSR
+const PDFDownloadLink = dynamic(
+  () => import("@react-pdf/renderer").then((mod) => mod.PDFDownloadLink),
+  { ssr: false, loading: () => <span>Cargando...</span> }
+);
+
+// Importar InvoiceDocument dinámicamente con un loading state
+const InvoiceDocument = dynamic(
+  () => import("@/components/invoice-document"),
+  { ssr: false }
+);
+
+// Componente wrapper para el PDF que maneja la carga dinámica
+function SafePDFDownloadLink({ pdfData, fileName, className, children }) {
+  const [isReady, setIsReady] = useState(false);
+  const [DocumentComponent, setDocumentComponent] = useState(null);
+
+  useEffect(() => {
+    // Importar el componente directamente para evitar problemas con dynamic()
+    import("@/components/invoice-document").then((mod) => {
+      setDocumentComponent(() => mod.default);
+      setIsReady(true);
+    });
+  }, []);
+
+  if (!isReady || !DocumentComponent) {
+    return (
+      <span className={className}>
+        <span className="material-icons-outlined mr-2 text-sm animate-spin">refresh</span>
+        Cargando...
+      </span>
+    );
+  }
+
+  return (
+    <PDFDownloadLink
+      document={<DocumentComponent {...pdfData} />}
+      fileName={fileName}
+      className={className}
+    >
+      {children}
+    </PDFDownloadLink>
+  );
+}
+
+// Datos del emisor (hardcodeado)
+const INVOICE_ISSUER = {
+  name: "Arrakis Gestión Empresarial S.L",
+  nationalId: "B75439786",
+  nif: "B75439786",
+  address: "Calle Ejemplo 123",
+  city: "Sevilla",
+  postalCode: "41015",
+  country: "España",
+};
+
+// Helper para preparar datos de factura para el PDF
+function prepareInvoiceForPDF(invoice) {
+  if (!invoice) return null;
+
+  let items = [];
+  try {
+    const parsedItems = invoice.items ? JSON.parse(invoice.items) : [];
+    items = parsedItems.map((item, index) => ({
+      id: item.id || index,
+      concepto: item.concepto || item.concept || "",
+      cantidad: Number(item.cantidad || item.quantity || 1),
+      precio: Number(item.precio || item.price || 0),
+      total: Number(item.total || (item.cantidad || 1) * (item.precio || 0)),
+    }));
+  } catch (e) {
+    items = [];
+  }
+
+  return {
+    issuer: INVOICE_ISSUER,
+    client: {
+      name: invoice.clientName || "",
+      nationalId: invoice.clientNationalId || "",
+      address: invoice.clientAddress || "",
+    },
+    invoiceNumber: invoice.invoiceNumber || "",
+    ibanNumber: invoice.iban || "",
+    invoiceDate: invoice.invoiceDate || "",
+    invoiceDueDate: invoice.dueDate || "",
+    paymentMethod: invoice.paymentMethod || "",
+    items: items,
+    ivaPercentage: Number(invoice.ivaPercentage) || 21,
+    irpfPercentage: Number(invoice.irpfPercentage) || 0,
+    subtotal: Number(invoice.subtotal) || 0,
+    totalIVA: Number(invoice.ivaAmount) || 0,
+    totalIRPF: Number(invoice.irpfAmount) || 0,
+    grandTotal: Number(invoice.total) || 0,
+    notes: invoice.notes || "",
+  };
+}
+
+function InvoiceHistoryItem({ invoice, onView, onDownload }) {
   const isCobro = invoice.type === "COBRO";
   const formattedDate = new Date(invoice.invoiceDate).toLocaleDateString("es-ES", {
     day: "2-digit",
@@ -12,11 +112,18 @@ function InvoiceHistoryItem({ invoice, onClick }) {
     year: "numeric",
   });
 
+  const handleViewClick = (e) => {
+    e.stopPropagation();
+    onView?.(invoice);
+  };
+
+  const handleDownloadClick = (e) => {
+    e.stopPropagation();
+    onDownload?.(invoice);
+  };
+
   return (
-    <div
-      onClick={() => onClick?.(invoice)}
-      className="neumorphic-card p-4 flex items-center justify-between hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all cursor-pointer"
-    >
+    <div className="neumorphic-card p-4 flex items-center justify-between hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all">
       <div className="flex items-center gap-4">
         <div
           className={`neumorphic-card-inset w-12 h-12 rounded-full flex items-center justify-center ${
@@ -39,26 +146,217 @@ function InvoiceHistoryItem({ invoice, onClick }) {
           </p>
         </div>
       </div>
-      <div className="text-right">
-        <span
-          className={`text-xl font-bold ${
-            isCobro
-              ? "text-green-600 dark:text-green-400"
-              : "text-red-600 dark:text-red-400"
-          }`}
-        >
-          {isCobro ? "+" : "-"}
-          {parseFloat(invoice.total).toFixed(2)} €
-        </span>
-        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-          {isCobro ? "Cobro" : "Pago"}
-        </p>
+      <div className="flex items-center gap-4">
+        <div className="text-right mr-4">
+          <span
+            className={`text-xl font-bold ${
+              isCobro
+                ? "text-green-600 dark:text-green-400"
+                : "text-red-600 dark:text-red-400"
+            }`}
+          >
+            {isCobro ? "+" : "-"}
+            {parseFloat(invoice.total).toFixed(2)} €
+          </span>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+            {isCobro ? "Cobro" : "Pago"}
+          </p>
+        </div>
+        {/* Botones de acción */}
+        <div className="flex gap-2">
+          <button
+            onClick={handleViewClick}
+            className="neumorphic-button p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
+            title="Ver factura"
+          >
+            <span className="material-icons-outlined text-xl">visibility</span>
+          </button>
+          <button
+            onClick={handleDownloadClick}
+            className="neumorphic-button p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
+            title="Descargar PDF"
+          >
+            <span className="material-icons-outlined text-xl">download</span>
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-function RecentInvoices({ invoices, loading, onRefresh }) {
+// Modal de vista previa de factura
+function InvoicePreviewModal({ invoice, isOpen, onClose }) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isOpen || !invoice) return null;
+
+  // Preparar datos para el PDF usando el helper
+  const pdfData = prepareInvoiceForPDF(invoice);
+  if (!pdfData) return null;
+
+  const modalContent = (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+      <div className="modal-card w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header del modal */}
+        <div className="flex justify-between items-center p-6 border-b border-slate-200 dark:border-slate-700">
+          <div className="flex items-center gap-3">
+            <div
+              className={`neumorphic-card-inset w-10 h-10 rounded-full flex items-center justify-center ${
+                invoice.type === "COBRO" ? "text-green-500" : "text-red-500"
+              }`}
+            >
+              <span className="material-icons-outlined">
+                {invoice.type === "COBRO" ? "arrow_downward" : "arrow_upward"}
+              </span>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
+                Factura {invoice.invoiceNumber}
+              </h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {invoice.type === "COBRO" ? "Cobro" : "Pago"} · {invoice.clientName}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {isClient && (
+              <SafePDFDownloadLink
+                pdfData={pdfData}
+                fileName={`Factura_${invoice.invoiceNumber}_${(invoice.clientName || "cliente").replace(/\s+/g, "_")}.pdf`}
+                className="neumorphic-button px-4 py-2 rounded-lg text-white bg-primary hover:bg-primary/90 font-medium inline-flex items-center"
+              >
+                {({ loading, error }) => {
+                  if (error) {
+                    console.error("PDF Error:", error);
+                    return "Error";
+                  }
+                  return (
+                    <>
+                      <span className="material-icons-outlined mr-2 text-sm">
+                        {loading ? "refresh" : "download"}
+                      </span>
+                      {loading ? "Generando..." : "Descargar PDF"}
+                    </>
+                  );
+                }}
+              </SafePDFDownloadLink>
+            )}
+            <button
+              onClick={onClose}
+              className="neumorphic-button p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-red-500 transition-colors"
+            >
+              <span className="material-icons-outlined">close</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Contenido del modal - Vista previa */}
+        <div className="flex-1 overflow-y-auto p-6 bg-slate-100 dark:bg-slate-800">
+          <InvoicePreview
+            issuer={pdfData.issuer}
+            client={pdfData.client}
+            invoiceNumber={pdfData.invoiceNumber}
+            ibanNumber={pdfData.ibanNumber}
+            invoiceDate={pdfData.invoiceDate}
+            invoiceDueDate={pdfData.invoiceDueDate}
+            paymentMethod={pdfData.paymentMethod}
+            items={pdfData.items}
+            ivaPercentage={pdfData.ivaPercentage}
+            irpfPercentage={pdfData.irpfPercentage}
+            subtotal={pdfData.subtotal}
+            totalIVA={pdfData.totalIVA}
+            totalIRPF={pdfData.totalIRPF}
+            grandTotal={pdfData.grandTotal}
+            notes={pdfData.notes}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  if (!isClient) return null;
+  return createPortal(modalContent, document.body);
+}
+
+// Componente para descargar PDF directamente
+function DirectPDFDownload({ invoice, onComplete }) {
+  const [isClient, setIsClient] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Función para manejar click en el link de descarga
+  const handleDownloadClick = () => {
+    setIsDownloading(true);
+    // Pequeño delay para que el PDF se genere y descargue
+    setTimeout(() => {
+      setIsDownloading(false);
+      onComplete?.();
+    }, 1500);
+  };
+
+  if (!isClient || !invoice) return null;
+
+  // Preparar datos para el PDF usando el helper
+  const pdfData = prepareInvoiceForPDF(invoice);
+  if (!pdfData) {
+    onComplete?.();
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div className="neumorphic-card p-6 text-center">
+        <div className="mb-4">
+          <span className={`material-icons-outlined text-4xl ${isDownloading ? 'animate-spin text-primary' : 'text-slate-600'}`}>
+            {isDownloading ? 'sync' : 'download'}
+          </span>
+        </div>
+        <p className="text-slate-700 dark:text-slate-300 mb-4">
+          {isDownloading ? 'Generando PDF...' : 'Haz clic para descargar'}
+        </p>
+        <div className="flex gap-3 justify-center">
+          <div onClick={handleDownloadClick}>
+            <SafePDFDownloadLink
+              pdfData={pdfData}
+              fileName={`Factura_${invoice.invoiceNumber}_${(invoice.clientName || "cliente").replace(/\s+/g, "_")}.pdf`}
+              className="neumorphic-button px-4 py-2 rounded-lg text-white bg-primary hover:bg-primary/90 font-medium inline-flex items-center"
+            >
+              {({ loading, error }) => {
+                if (error) {
+                  console.error("PDF Error:", error);
+                  return "Error";
+                }
+                return (
+                  <>
+                    <span className="material-icons-outlined mr-2 text-sm">
+                      {loading ? 'refresh' : 'download'}
+                    </span>
+                    {loading ? 'Generando...' : 'Descargar PDF'}
+                  </>
+                );
+              }}
+            </SafePDFDownloadLink>
+          </div>
+          <button
+            onClick={onComplete}
+            className="neumorphic-button px-4 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-red-500 font-medium"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RecentInvoices({ invoices, loading, onView, onDownload }) {
   if (loading) {
     return (
       <div className="text-center py-12 text-slate-600 dark:text-slate-400">
@@ -89,7 +387,12 @@ function RecentInvoices({ invoices, loading, onRefresh }) {
   return (
     <div className="space-y-4">
       {invoices.map((invoice) => (
-        <InvoiceHistoryItem key={invoice.uuid} invoice={invoice} />
+        <InvoiceHistoryItem
+          key={invoice.uuid}
+          invoice={invoice}
+          onView={onView}
+          onDownload={onDownload}
+        />
       ))}
     </div>
   );
@@ -99,6 +402,8 @@ export default function EmitirFacturaPage() {
   const [selectedType, setSelectedType] = useState(null);
   const [recentInvoices, setRecentInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [previewInvoice, setPreviewInvoice] = useState(null);
+  const [downloadInvoice, setDownloadInvoice] = useState(null);
 
   useEffect(() => {
     fetchRecentInvoices();
@@ -126,6 +431,22 @@ export default function EmitirFacturaPage() {
 
   const handleInvoiceSaved = async () => {
     await fetchRecentInvoices();
+  };
+
+  const handleViewInvoice = (invoice) => {
+    setPreviewInvoice(invoice);
+  };
+
+  const handleDownloadInvoice = (invoice) => {
+    setDownloadInvoice(invoice);
+  };
+
+  const handleClosePreview = () => {
+    setPreviewInvoice(null);
+  };
+
+  const handleDownloadComplete = () => {
+    setDownloadInvoice(null);
   };
 
   // Si hay un tipo seleccionado, mostrar el formulario de emisión
@@ -223,8 +544,24 @@ export default function EmitirFacturaPage() {
       <RecentInvoices
         invoices={recentInvoices}
         loading={loading}
-        onRefresh={fetchRecentInvoices}
+        onView={handleViewInvoice}
+        onDownload={handleDownloadInvoice}
       />
+
+      {/* Modal de vista previa */}
+      <InvoicePreviewModal
+        invoice={previewInvoice}
+        isOpen={!!previewInvoice}
+        onClose={handleClosePreview}
+      />
+
+      {/* Componente oculto para descarga directa */}
+      {downloadInvoice && (
+        <DirectPDFDownload
+          invoice={downloadInvoice}
+          onComplete={handleDownloadComplete}
+        />
+      )}
     </div>
   );
 }

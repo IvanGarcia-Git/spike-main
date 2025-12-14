@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: false,
   output: 'standalone',
+  transpilePackages: ['@react-pdf/renderer'],
   env: {
     API_URL: process.env.API_URL,
   },
