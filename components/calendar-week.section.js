@@ -4,7 +4,7 @@ import { authFetch } from "@/helpers/server-fetch.helper";
 import { getCookie } from "cookies-next";
 import { parseISO, isSameDay } from "date-fns";
 
-export default function CalendarByWeek({ onChangeView, holidays = [], absences = [] }) {
+export default function CalendarByWeek({ onChangeView, holidays = [], absences = [], selectedUserIds = [], currentUserId = null }) {
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const daysOfWeek = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
@@ -36,6 +36,7 @@ export default function CalendarByWeek({ onChangeView, holidays = [], absences =
     const data = {
       startDate: startDate.toISOString().split("T")[0] + "T00:00:00.000Z",
       endDate: endDate.toISOString().split("T")[0] + "T23:59:59.999Z",
+      userIds: selectedUserIds.length > 0 ? selectedUserIds : undefined,
     };
 
     try {
@@ -55,7 +56,7 @@ export default function CalendarByWeek({ onChangeView, holidays = [], absences =
 
   useEffect(() => {
     fetchTasksByWeek();
-  }, [currentWeekStart]);
+  }, [currentWeekStart, selectedUserIds]);
 
   const getDayDate = (offset) => {
     const date = new Date(currentWeekStart);
@@ -161,6 +162,15 @@ export default function CalendarByWeek({ onChangeView, holidays = [], absences =
   const isRedDay = (date) => {
     return isHolidayDay(date) || isAbsenceDay(date);
   };
+
+  const getEventUserName = (event) => {
+    // For tasks, user is in assigneeUser; for reminders/leadCalls, it's in user
+    const user = event.assigneeUser || event.user;
+    if (!user) return null;
+    return `${user.name} ${user.firstSurname || ""}`.trim();
+  };
+
+  const shouldShowUserBadge = selectedUserIds.length > 1;
 
   const weekEndDate = new Date(currentWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
 
@@ -279,9 +289,14 @@ export default function CalendarByWeek({ onChangeView, holidays = [], absences =
                 {tasksForDay.map((task, idx) => (
                   <div
                     key={idx}
-                    className="m-0.5 p-1 bg-fuchsia-200 dark:bg-fuchsia-800/60 text-fuchsia-800 dark:text-fuchsia-200 text-[10px] rounded truncate"
+                    className="m-0.5 p-1 bg-fuchsia-200 dark:bg-fuchsia-800/60 text-fuchsia-800 dark:text-fuchsia-200 text-[10px] rounded"
                   >
-                    {task.subject || "Tarea"}
+                    <div className="truncate">{task.subject || "Tarea"}</div>
+                    {shouldShowUserBadge && getEventUserName(task) && (
+                      <div className="text-[8px] opacity-75 truncate mt-0.5">
+                        {getEventUserName(task)}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -322,13 +337,18 @@ export default function CalendarByWeek({ onChangeView, holidays = [], absences =
                     {eventsForCell.map((event, idx) => (
                       <div
                         key={idx}
-                        className={`mb-0.5 p-1 text-[10px] rounded truncate ${
+                        className={`mb-0.5 p-1 text-[10px] rounded ${
                           event.type === "reminder"
                             ? "bg-green-200 dark:bg-green-800/60 text-green-800 dark:text-green-200"
                             : "bg-cyan-200 dark:bg-cyan-800/60 text-cyan-800 dark:text-cyan-200"
                         }`}
                       >
-                        {event.subject || "Evento"}
+                        <div className="truncate">{event.subject || "Evento"}</div>
+                        {shouldShowUserBadge && getEventUserName(event) && (
+                          <div className="text-[8px] opacity-75 truncate mt-0.5">
+                            {getEventUserName(event)}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

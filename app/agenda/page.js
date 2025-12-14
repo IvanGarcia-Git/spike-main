@@ -26,6 +26,7 @@ import { getNotificationDisplayProps } from "../../helpers/notification.helper";
 import GlobalLoadingOverlay from "@/components/global-loading.overlay";
 import ConfirmDeleteTaskModal from "@/components/confirm-delete-task-modal";
 import SendTaskModal from "@/components/send-task.modal";
+import UserMultiSelect from "@/components/user-multi-select.section";
 
 export default function Agenda() {
   const [calendarDate, setCalendarDate] = useState(new Date());
@@ -53,14 +54,16 @@ export default function Agenda() {
   const [holidays, setHolidays] = useState([]);
   const [absences, setAbsences] = useState([]);
   const [userId, setUserId] = useState(null);
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
 
-  const fetchRemindersAndLeadsForMonth = async (date) => {
+  const fetchRemindersAndLeadsForMonth = async (date, userIdsToFetch = null) => {
     const jwtToken = getCookie("factura-token");
     const startDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), 1));
     const endDate = new Date(Date.UTC(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999));
     const data = {
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
+      userIds: userIdsToFetch || selectedUserIds,
     };
 
     try {
@@ -157,16 +160,19 @@ export default function Agenda() {
     }
   };
 
-  const fetchHolidaysAndAbsences = async (currentUserId) => {
+  const fetchHolidaysAndAbsences = async (userIdsToFetch = null) => {
     const jwtToken = getCookie("factura-token");
-    if (!jwtToken || !currentUserId) return;
+    if (!jwtToken) return;
+
+    const targetUserIds = userIdsToFetch || selectedUserIds;
+    if (targetUserIds.length === 0) return;
 
     try {
       const year = calendarDate.getFullYear();
       const [publicHolidays, holidaysRes, absencesRes] = await Promise.all([
         fetchPublicHolidays(year),
         authGetFetch("holidays", jwtToken),
-        authGetFetch(`absences/user/${currentUserId}`, jwtToken),
+        authFetch("POST", "absences/users", { userIds: targetUserIds }, jwtToken),
       ]);
 
       let allHolidays = publicHolidays || [];
@@ -225,24 +231,33 @@ export default function Agenda() {
   useEffect(() => {
     const currentUserId = getUserIdFromToken();
     setUserId(currentUserId);
+    if (currentUserId) {
+      setSelectedUserIds([currentUserId]);
+    }
     getTasksForUser();
-    fetchRemindersAndLeadsForMonth(calendarDate);
     getContracts();
     getUnnotifiedNotifications();
-    if (currentUserId) {
-      fetchHolidaysAndAbsences(currentUserId);
-    }
   }, []);
 
+  // Fetch calendar data when selectedUserIds change
   useEffect(() => {
-    fetchRemindersAndLeadsForMonth(calendarDate);
+    if (selectedUserIds.length > 0) {
+      fetchRemindersAndLeadsForMonth(calendarDate, selectedUserIds);
+      fetchHolidaysAndAbsences(selectedUserIds);
+    }
+  }, [selectedUserIds]);
+
+  useEffect(() => {
+    if (selectedUserIds.length > 0) {
+      fetchRemindersAndLeadsForMonth(calendarDate, selectedUserIds);
+    }
   }, [calendarDate]);
 
   useEffect(() => {
-    if (userId) {
-      fetchHolidaysAndAbsences(userId);
+    if (selectedUserIds.length > 0) {
+      fetchHolidaysAndAbsences(selectedUserIds);
     }
-  }, [calendarDate.getFullYear(), userId]);
+  }, [calendarDate.getFullYear()]);
 
   useEffect(() => {
     if (!isModalOpen) {
@@ -560,7 +575,7 @@ export default function Agenda() {
                   <button
                     className="p-1 rounded-md neumorphic-button text-slate-600 dark:text-slate-300"
                     onClick={() => {
-                      setActiveTab("task");
+                      setActiveTab("leadCall");
                       setIsModalOpen(true);
                     }}
                   >
@@ -646,7 +661,7 @@ export default function Agenda() {
           {/* Columna Derecha - Calendario */}
           <div className="col-span-12 lg:col-span-8">
             <div className="neumorphic-card p-4">
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
                 <div className="flex items-center space-x-2">
                   <button
                     className="p-1 rounded-md neumorphic-button text-slate-600 dark:text-slate-300"
@@ -664,7 +679,13 @@ export default function Agenda() {
                     <span className="material-icons-outlined text-base">chevron_right</span>
                   </button>
                 </div>
-                <div className="flex items-center space-x-1 p-1 neumorphic-card-inset rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <UserMultiSelect
+                    selectedUserIds={selectedUserIds}
+                    onSelectionChange={setSelectedUserIds}
+                    currentUserId={userId}
+                  />
+                  <div className="flex items-center space-x-1 p-1 neumorphic-card-inset rounded-lg">
                   <button
                     className={`px-3 py-1 text-xs rounded-md transition-colors ${
                       calendarView === "mes"
@@ -695,6 +716,7 @@ export default function Agenda() {
                   >
                     Día
                   </button>
+                  </div>
                 </div>
               </div>
               {calendarView === "mes" && renderCalendar()}
@@ -703,6 +725,8 @@ export default function Agenda() {
                   onChangeView={(view) => setCalendarView(view === "month" ? "mes" : view === "week" ? "semana" : "dia")}
                   holidays={holidays}
                   absences={absences}
+                  selectedUserIds={selectedUserIds}
+                  currentUserId={userId}
                 />
               )}
               {calendarView === "dia" && (
@@ -715,6 +739,8 @@ export default function Agenda() {
                   onChangeView={(view) => setCalendarView(view === "month" ? "mes" : view === "week" ? "semana" : "dia")}
                   holidays={holidays}
                   absences={absences}
+                  selectedUserIds={selectedUserIds}
+                  currentUserId={userId}
                 />
               )}
             </div>

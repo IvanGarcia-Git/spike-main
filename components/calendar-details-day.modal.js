@@ -99,6 +99,13 @@ export default function CalendarDetailsDay({
     setIsModalOpen(false);
   };
 
+  const getEventUserName = (event) => {
+    // For tasks, user is in assigneeUser; for reminders/leadCalls, it's in user
+    const user = event.assigneeUser || event.user;
+    if (!user) return null;
+    return `${user.name} ${user.firstSurname || ""}`.trim();
+  };
+
   return (
     <div
       className={`fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center transition-opacity z-50 ${
@@ -164,6 +171,11 @@ export default function CalendarDetailsDay({
                         : event.type === "reminder"
                         ? "Recordatorio"
                         : "Llamada"}
+                      {getEventUserName(event) && (
+                        <span className="text-xs ml-1">
+                          - {getEventUserName(event)}
+                        </span>
+                      )}
                     </p>
                   </div>
                   <div className="flex items-center space-x-2 shrink-0">

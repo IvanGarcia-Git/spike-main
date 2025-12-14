@@ -10,6 +10,8 @@ export default function CalendarByDay({
   onChangeView,
   holidays = [],
   absences = [],
+  selectedUserIds = [],
+  currentUserId = null,
 }) {
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
@@ -79,6 +81,15 @@ export default function CalendarByDay({
   const isRedDay = isHolidayDay(currentDate) || isAbsenceDay(currentDate);
   const holidayInfo = holidays.find((h) => isSameDay(parseISO(h.date), currentDate));
   const isToday = currentDate.toDateString() === new Date().toDateString();
+
+  const getEventUserName = (event) => {
+    // For tasks, user is in assigneeUser; for reminders/leadCalls, it's in user
+    const user = event.assigneeUser || event.user;
+    if (!user) return null;
+    return `${user.name} ${user.firstSurname || ""}`.trim();
+  };
+
+  const shouldShowUserBadge = selectedUserIds.length > 1;
 
   return (
     <div>
@@ -161,7 +172,12 @@ export default function CalendarByDay({
                   task.taskStateId === 3 ? "line-through opacity-60" : ""
                 }`}
               >
-                {task.subject || "Tarea"}
+                <span>{task.subject || "Tarea"}</span>
+                {shouldShowUserBadge && getEventUserName(task) && (
+                  <span className="ml-1 text-[10px] opacity-75">
+                    ({getEventUserName(task)})
+                  </span>
+                )}
               </div>
             ))}
             {categorizedAllDayTasks.length === 0 && (
@@ -200,7 +216,12 @@ export default function CalendarByDay({
                           : "bg-cyan-200 dark:bg-cyan-800/60 text-cyan-800 dark:text-cyan-200"
                       }`}
                     >
-                      {event.subject || "Evento"}
+                      <span>{event.subject || "Evento"}</span>
+                      {shouldShowUserBadge && getEventUserName(event) && (
+                        <span className="ml-1 text-[10px] opacity-75">
+                          ({getEventUserName(event)})
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
