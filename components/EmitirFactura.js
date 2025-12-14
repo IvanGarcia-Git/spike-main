@@ -122,7 +122,7 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
           : null,
       };
 
-      const response = await authFetch("invoices", "POST", invoiceData, jwtToken);
+      const response = await authFetch("POST", "invoices", invoiceData, jwtToken);
 
       if (response.ok) {
         setInvoiceSaved(true);
@@ -395,38 +395,38 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
   const canDownload = clientDetails && pdfFilename.trim() !== "" && invoiceNumber.trim() !== "";
 
   return (
-    <div
-      className="min-h-screen p-6"
-      suppressHydrationWarning
-    >
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-2">
-            {onBack && (
-              <button
-                onClick={onBack}
-                className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
-                title="Volver"
-              >
-                <span className="material-icons-outlined">arrow_back</span>
-              </button>
-            )}
-            <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 flex items-center">
-              <span className={`material-icons-outlined mr-3 ${isCobro ? "text-green-500" : "text-red-500"}`}>
-                {isCobro ? "arrow_downward" : "arrow_upward"}
-              </span>
+    <div className="p-6" suppressHydrationWarning>
+      {/* Header */}
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex items-start gap-4">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="neumorphic-button p-3 rounded-lg text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
+              title="Volver"
+            >
+              <span className="material-icons-outlined">arrow_back</span>
+            </button>
+          )}
+          <div>
+            <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 flex items-center">
+              <div className={`neumorphic-card-inset w-10 h-10 rounded-full flex items-center justify-center mr-3 ${isCobro ? "text-green-500" : "text-red-500"}`}>
+                <span className="material-icons-outlined">
+                  {isCobro ? "arrow_downward" : "arrow_upward"}
+                </span>
+              </div>
               Nueva Factura de {isCobro ? "Cobro" : "Pago"}
-            </h1>
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400 mt-2">
+              {isCobro
+                ? "Registra un ingreso o cobro a cliente"
+                : "Registra un gasto o pago a proveedor"}
+            </p>
           </div>
-          <p className="text-slate-600 dark:text-slate-400 mt-2 ml-14">
-            {isCobro
-              ? "Registra un ingreso o cobro a cliente"
-              : "Registra un gasto o pago a proveedor"}
-          </p>
         </div>
+      </div>
 
-        <div className="neumorphic-card p-6 rounded-xl space-y-6">
+      <div className="neumorphic-card p-6 space-y-6">
           {/* Primera fila - Campos principales */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Contacto */}
@@ -947,7 +947,6 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
               </p>
             )}
           </div>
-        </div>
       </div>
     </div>
   );

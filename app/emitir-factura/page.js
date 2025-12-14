@@ -4,30 +4,44 @@ import EmitirFactura from "@/components/EmitirFactura";
 import { authGetFetch } from "@/helpers/server-fetch.helper";
 import { getCookie } from "cookies-next";
 
-function InvoiceHistoryItem({ invoice }) {
+function InvoiceHistoryItem({ invoice, onClick }) {
   const isCobro = invoice.type === "COBRO";
   const formattedDate = new Date(invoice.invoiceDate).toLocaleDateString("es-ES", {
     day: "2-digit",
     month: "2-digit",
-    year: "2-digit",
+    year: "numeric",
   });
 
   return (
-    <div className="neumorphic-card p-4 rounded-xl flex items-center justify-between hover:scale-[1.02] transition-transform cursor-pointer">
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-slate-800 dark:text-slate-100 truncate">
-          {invoice.clientName}
-        </p>
-        <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
-          {invoice.concept}
-        </p>
-        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-          {formattedDate}
-        </p>
+    <div
+      onClick={() => onClick?.(invoice)}
+      className="neumorphic-card p-4 flex items-center justify-between hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all cursor-pointer"
+    >
+      <div className="flex items-center gap-4">
+        <div
+          className={`neumorphic-card-inset w-12 h-12 rounded-full flex items-center justify-center ${
+            isCobro ? "text-green-500" : "text-red-500"
+          }`}
+        >
+          <span className="material-icons-outlined">
+            {isCobro ? "arrow_downward" : "arrow_upward"}
+          </span>
+        </div>
+        <div>
+          <p className="font-semibold text-slate-800 dark:text-slate-100">
+            {invoice.clientName}
+          </p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {invoice.concept || "Sin concepto"}
+          </p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+            {formattedDate} · {invoice.invoiceNumber}
+          </p>
+        </div>
       </div>
-      <div className="ml-4 text-right">
+      <div className="text-right">
         <span
-          className={`text-lg font-bold ${
+          className={`text-xl font-bold ${
             isCobro
               ? "text-green-600 dark:text-green-400"
               : "text-red-600 dark:text-red-400"
@@ -36,57 +50,44 @@ function InvoiceHistoryItem({ invoice }) {
           {isCobro ? "+" : "-"}
           {parseFloat(invoice.total).toFixed(2)} €
         </span>
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+          {isCobro ? "Cobro" : "Pago"}
+        </p>
       </div>
     </div>
   );
 }
 
-function InvoiceSelector({ onSelectType }) {
-  return (
-    <div className="flex flex-col items-center justify-center h-full py-12">
-      <h2 className="text-3xl font-light text-slate-700 dark:text-slate-200 mb-8 italic">
-        ¿Nueva factura?
-      </h2>
-      <div className="flex gap-6">
-        <button
-          onClick={() => onSelectType("COBRO")}
-          className="neumorphic-button px-8 py-4 rounded-xl text-green-600 dark:text-green-400 font-semibold text-xl hover:scale-105 transition-transform flex items-center gap-2"
-        >
-          <span className="material-icons-outlined">arrow_downward</span>
-          Cobro
-        </button>
-        <button
-          onClick={() => onSelectType("PAGO")}
-          className="neumorphic-button px-8 py-4 rounded-xl text-red-600 dark:text-red-400 font-semibold text-xl hover:scale-105 transition-transform flex items-center gap-2"
-        >
-          <span className="material-icons-outlined">arrow_upward</span>
-          Pago
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function RecentInvoices({ invoices, loading }) {
+function RecentInvoices({ invoices, loading, onRefresh }) {
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-48">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="text-center py-12 text-slate-600 dark:text-slate-400">
+        <span className="material-icons-outlined animate-spin text-4xl">sync</span>
+        <p className="mt-2">Cargando facturas...</p>
       </div>
     );
   }
 
   if (!invoices || invoices.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-48 text-slate-400 dark:text-slate-500">
-        <span className="material-icons-outlined text-4xl mb-2">receipt_long</span>
-        <p>No hay facturas recientes</p>
+      <div className="text-center py-12">
+        <div className="neumorphic-card-inset inline-flex items-center justify-center w-20 h-20 rounded-full mb-4">
+          <span className="material-icons-outlined text-4xl text-slate-400">
+            receipt_long
+          </span>
+        </div>
+        <p className="text-slate-600 dark:text-slate-400">
+          No tienes facturas aún
+        </p>
+        <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
+          Crea tu primera factura para empezar
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+    <div className="space-y-4">
       {invoices.map((invoice) => (
         <InvoiceHistoryItem key={invoice.uuid} invoice={invoice} />
       ))}
@@ -100,30 +101,11 @@ export default function EmitirFacturaPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchRecentInvoices = async () => {
-      try {
-        const jwtToken = getCookie("factura-token");
-        const response = await authGetFetch("invoices/recent?limit=10", jwtToken);
-        if (response.ok) {
-          const data = await response.json();
-          setRecentInvoices(data);
-        }
-      } catch (error) {
-        console.error("Error fetching recent invoices:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchRecentInvoices();
   }, []);
 
-  const handleBack = () => {
-    setSelectedType(null);
-  };
-
-  const handleInvoiceSaved = async () => {
-    // Recargar las facturas recientes después de guardar una nueva
+  const fetchRecentInvoices = async () => {
+    setLoading(true);
     try {
       const jwtToken = getCookie("factura-token");
       const response = await authGetFetch("invoices/recent?limit=10", jwtToken);
@@ -132,8 +114,18 @@ export default function EmitirFacturaPage() {
         setRecentInvoices(data);
       }
     } catch (error) {
-      console.error("Error refreshing invoices:", error);
+      console.error("Error fetching recent invoices:", error);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleBack = () => {
+    setSelectedType(null);
+  };
+
+  const handleInvoiceSaved = async () => {
+    await fetchRecentInvoices();
   };
 
   // Si hay un tipo seleccionado, mostrar el formulario de emisión
@@ -151,52 +143,88 @@ export default function EmitirFacturaPage() {
 
   // Vista principal con selector y historial
   return (
-    <div className="min-h-screen p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 flex items-center">
-            <span className="material-icons-outlined text-primary mr-3">receipt_long</span>
+    <div className="p-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
             Facturación
-          </h1>
+          </h3>
           <p className="text-slate-600 dark:text-slate-400 mt-2">
             Gestiona tus facturas de cobros y pagos
           </p>
         </div>
+      </div>
 
-        {/* Main Content - Two Columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Panel - New Invoice Selector */}
-          <div className="neumorphic-card p-6 rounded-xl min-h-[400px] flex flex-col">
-            <InvoiceSelector onSelectType={setSelectedType} />
-          </div>
+      {/* Selector de tipo de factura */}
+      <div className="neumorphic-card p-8 mb-8">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-light text-slate-700 dark:text-slate-200 italic">
+            ¿Nueva factura?
+          </h2>
+          <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">
+            Selecciona el tipo de factura que deseas crear
+          </p>
+        </div>
 
-          {/* Right Panel - Recent Invoices */}
-          <div className="neumorphic-card p-6 rounded-xl min-h-[400px]">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100 flex items-center">
-                <span className="material-icons-outlined mr-2 text-primary">history</span>
-                Últimas Facturas
-              </h3>
-              <button
-                onClick={() => {
-                  setLoading(true);
-                  const jwtToken = getCookie("factura-token");
-                  authGetFetch("invoices/recent?limit=10", jwtToken)
-                    .then((res) => res.json())
-                    .then((data) => setRecentInvoices(data))
-                    .finally(() => setLoading(false));
-                }}
-                className="p-2 rounded-lg neumorphic-button text-slate-500 hover:text-primary transition-colors"
-                title="Actualizar"
-              >
-                <span className="material-icons-outlined text-sm">refresh</span>
-              </button>
+        <div className="flex flex-col sm:flex-row justify-center gap-6">
+          <button
+            onClick={() => setSelectedType("COBRO")}
+            className="neumorphic-button flex flex-col items-center justify-center p-8 rounded-xl hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all group"
+          >
+            <div className="neumorphic-card-inset w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:bg-green-50 dark:group-hover:bg-green-900/20 transition-colors">
+              <span className="material-icons-outlined text-3xl text-green-500">
+                arrow_downward
+              </span>
             </div>
-            <RecentInvoices invoices={recentInvoices} loading={loading} />
-          </div>
+            <span className="text-xl font-semibold text-green-600 dark:text-green-400">
+              Cobro
+            </span>
+            <span className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Ingreso de cliente
+            </span>
+          </button>
+
+          <button
+            onClick={() => setSelectedType("PAGO")}
+            className="neumorphic-button flex flex-col items-center justify-center p-8 rounded-xl hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all group"
+          >
+            <div className="neumorphic-card-inset w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:bg-red-50 dark:group-hover:bg-red-900/20 transition-colors">
+              <span className="material-icons-outlined text-3xl text-red-500">
+                arrow_upward
+              </span>
+            </div>
+            <span className="text-xl font-semibold text-red-600 dark:text-red-400">
+              Pago
+            </span>
+            <span className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Gasto a proveedor
+            </span>
+          </button>
         </div>
       </div>
+
+      {/* Sección de últimas facturas */}
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+          Últimas Facturas
+        </h3>
+        <button
+          onClick={fetchRecentInvoices}
+          className="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-colors"
+          title="Actualizar"
+        >
+          <span className={`material-icons-outlined text-xl ${loading ? "animate-spin" : ""}`}>
+            {loading ? "sync" : "refresh"}
+          </span>
+        </button>
+      </div>
+
+      <RecentInvoices
+        invoices={recentInvoices}
+        loading={loading}
+        onRefresh={fetchRecentInvoices}
+      />
     </div>
   );
 }
