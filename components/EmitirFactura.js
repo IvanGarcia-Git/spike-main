@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import InvoiceDocument from "@/components/invoice-document";
 import InvoicePreview from "@/components/invoice-preview";
-import { authGetFetch } from "@/helpers/server-fetch.helper";
+import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
 import { getCookie } from "cookies-next";
 import { useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
@@ -33,7 +33,7 @@ const INVOICE_ISSUER = {
   country: "España",
 };
 
-export default function EmitirFactura() {
+export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoiceSaved }) {
   const searchParams = useSearchParams();
   const uuid = searchParams.get("liquidationUuid");
   const [channels, setChannels] = useState([]);
@@ -57,6 +57,90 @@ export default function EmitirFactura() {
   const [overrideAddress, setOverrideAddress] = useState("");
   const [overrideId, setOverrideId] = useState("");
   const [overridePhone, setOverridePhone] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [invoiceSaved, setInvoiceSaved] = useState(false);
+
+  const isCobro = invoiceType === "COBRO";
+
+  // Obtener siguiente número de factura sugerido
+  useEffect(() => {
+    const fetchNextInvoiceNumber = async () => {
+      try {
+        const jwtToken = getCookie("factura-token");
+        const response = await authGetFetch("invoices/next-number", jwtToken);
+        if (response.ok) {
+          const data = await response.json();
+          setInvoiceNumber(data.nextInvoiceNumber);
+        }
+      } catch (error) {
+        console.error("Error fetching next invoice number:", error);
+      }
+    };
+
+    if (!uuid) {
+      fetchNextInvoiceNumber();
+    }
+  }, [uuid]);
+
+  // Función para guardar la factura en la base de datos
+  const saveInvoice = async () => {
+    if (invoiceSaved) return; // Evitar guardar múltiples veces
+
+    setIsSaving(true);
+    try {
+      const jwtToken = getCookie("factura-token");
+
+      // Preparar el concepto principal (primer item o combinación)
+      const mainConcept = items.length > 0
+        ? items.map(i => i.concepto).filter(Boolean).join(", ") || "Sin concepto"
+        : "Sin concepto";
+
+      const invoiceData = {
+        invoiceNumber,
+        type: invoiceType,
+        clientName: clientDetails?.name
+          ? `${clientDetails.name} ${clientDetails.surnames || ""}`.trim()
+          : "Sin nombre",
+        clientNationalId: clientDetails?.nationalId || overrideId || null,
+        clientAddress: clientDetails?.address || overrideAddress || null,
+        concept: mainConcept,
+        invoiceDate,
+        dueDate: invoiceDueDate || null,
+        paymentMethod: paymentMethod || null,
+        iban: ibanNumber || null,
+        subtotal,
+        ivaPercentage: parseFloat(ivaPercentage) || 0,
+        ivaAmount: totalIVA,
+        irpfPercentage: parseFloat(irpfPercentage) || 0,
+        irpfAmount: totalIRPF,
+        total: grandTotal,
+        items: JSON.stringify(items),
+        notes: notes || null,
+        pdfFilename: pdfFilename || null,
+        channelId: selectedChannel && !String(selectedChannel).startsWith("prefilled-")
+          ? parseInt(selectedChannel)
+          : null,
+      };
+
+      const response = await authFetch("invoices", "POST", invoiceData, jwtToken);
+
+      if (response.ok) {
+        setInvoiceSaved(true);
+        toast.success("Factura guardada correctamente");
+        if (onInvoiceSaved) {
+          onInvoiceSaved();
+        }
+      } else {
+        const error = await response.json();
+        toast.error(error.message || "Error al guardar la factura");
+      }
+    } catch (error) {
+      console.error("Error saving invoice:", error);
+      toast.error("Error al guardar la factura");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleLogoChange = (event) => {
     const file = event.target.files[0];
@@ -318,12 +402,27 @@ export default function EmitirFactura() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 flex items-center">
-            <span className="material-icons-outlined text-primary mr-3">receipt_long</span>
-            Emitir Factura
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">
-            Genera y descarga facturas personalizadas
+          <div className="flex items-center gap-4 mb-2">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
+                title="Volver"
+              >
+                <span className="material-icons-outlined">arrow_back</span>
+              </button>
+            )}
+            <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 flex items-center">
+              <span className={`material-icons-outlined mr-3 ${isCobro ? "text-green-500" : "text-red-500"}`}>
+                {isCobro ? "arrow_downward" : "arrow_upward"}
+              </span>
+              Nueva Factura de {isCobro ? "Cobro" : "Pago"}
+            </h1>
+          </div>
+          <p className="text-slate-600 dark:text-slate-400 mt-2 ml-14">
+            {isCobro
+              ? "Registra un ingreso o cobro a cliente"
+              : "Registra un gasto o pago a proveedor"}
           </p>
         </div>
 
@@ -742,7 +841,7 @@ export default function EmitirFactura() {
             customLogo={customLogo}
           />
 
-          {/* Descargar PDF */}
+          {/* Guardar y Descargar PDF */}
           <div className="neumorphic-card-inset p-6 rounded-lg">
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-end">
               <div className="flex-1">
@@ -760,58 +859,91 @@ export default function EmitirFactura() {
                 />
               </div>
 
-              {isClient && (
-                <PDFDownloadLink
-                  document={
-                    <InvoiceDocument
-                      issuer={INVOICE_ISSUER}
-                      client={clientDetails}
-                      invoiceNumber={invoiceNumber}
-                      ibanNumber={ibanNumber}
-                      invoiceDate={invoiceDate}
-                      invoiceDueDate={invoiceDueDate}
-                      paymentMethod={paymentMethod}
-                      items={items}
-                      ivaPercentage={ivaPercentage}
-                      irpfPercentage={irpfPercentage}
-                      subtotal={subtotal}
-                      totalIVA={totalIVA}
-                      totalIRPF={totalIRPF}
-                      grandTotal={grandTotal}
-                      notes={notes}
-                      customLogo={customLogo}
-                    />
-                  }
-                  fileName={pdfFilename.endsWith(".pdf") ? pdfFilename : `${pdfFilename}.pdf`}
+              <div className="flex gap-3">
+                {/* Botón Guardar Factura */}
+                <button
+                  onClick={saveInvoice}
+                  disabled={!canDownload || isSaving || invoiceSaved}
                   className={`px-5 py-3 rounded-lg neumorphic-button font-medium inline-flex items-center ${
-                    canDownload
-                      ? "text-white bg-primary hover:bg-primary/90"
+                    canDownload && !invoiceSaved
+                      ? isCobro
+                        ? "text-white bg-green-600 hover:bg-green-700"
+                        : "text-white bg-red-600 hover:bg-red-700"
                       : "bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed"
                   }`}
-                  style={!canDownload ? { pointerEvents: "none" } : {}}
-                  aria-disabled={!canDownload}
                 >
-                  {({ loading }) => (
-                    <>
-                      <span className="material-icons-outlined mr-2">
-                        {loading ? "refresh" : "download"}
-                      </span>
-                      {loading ? "Generando PDF..." : "Descargar PDF"}
-                    </>
-                  )}
-                </PDFDownloadLink>
-              )}
-              {!isClient && (
-                <div className="px-5 py-3 rounded-lg neumorphic-button bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed inline-flex items-center">
-                  <span className="material-icons-outlined mr-2">download</span>
-                  Descargar PDF
-                </div>
-              )}
+                  <span className="material-icons-outlined mr-2">
+                    {isSaving ? "refresh" : invoiceSaved ? "check" : "save"}
+                  </span>
+                  {isSaving ? "Guardando..." : invoiceSaved ? "Guardada" : "Guardar"}
+                </button>
+
+                {/* Botón Descargar PDF */}
+                {isClient && (
+                  <PDFDownloadLink
+                    document={
+                      <InvoiceDocument
+                        issuer={INVOICE_ISSUER}
+                        client={clientDetails}
+                        invoiceNumber={invoiceNumber}
+                        ibanNumber={ibanNumber}
+                        invoiceDate={invoiceDate}
+                        invoiceDueDate={invoiceDueDate}
+                        paymentMethod={paymentMethod}
+                        items={items}
+                        ivaPercentage={ivaPercentage}
+                        irpfPercentage={irpfPercentage}
+                        subtotal={subtotal}
+                        totalIVA={totalIVA}
+                        totalIRPF={totalIRPF}
+                        grandTotal={grandTotal}
+                        notes={notes}
+                        customLogo={customLogo}
+                      />
+                    }
+                    fileName={pdfFilename.endsWith(".pdf") ? pdfFilename : `${pdfFilename}.pdf`}
+                    className={`px-5 py-3 rounded-lg neumorphic-button font-medium inline-flex items-center ${
+                      canDownload
+                        ? "text-white bg-primary hover:bg-primary/90"
+                        : "bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed"
+                    }`}
+                    style={!canDownload ? { pointerEvents: "none" } : {}}
+                    aria-disabled={!canDownload}
+                    onClick={() => {
+                      // Guardar automáticamente al descargar si no está guardada
+                      if (!invoiceSaved && canDownload) {
+                        saveInvoice();
+                      }
+                    }}
+                  >
+                    {({ loading }) => (
+                      <>
+                        <span className="material-icons-outlined mr-2">
+                          {loading ? "refresh" : "download"}
+                        </span>
+                        {loading ? "Generando PDF..." : "Descargar PDF"}
+                      </>
+                    )}
+                  </PDFDownloadLink>
+                )}
+                {!isClient && (
+                  <div className="px-5 py-3 rounded-lg neumorphic-button bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed inline-flex items-center">
+                    <span className="material-icons-outlined mr-2">download</span>
+                    Descargar PDF
+                  </div>
+                )}
+              </div>
             </div>
             {!canDownload && isClient && (
               <p className="text-xs text-red-500 mt-2 flex items-center">
                 <span className="material-icons-outlined text-sm mr-1">error</span>
                 Requiere Contacto, Nº Factura y Nombre de archivo
+              </p>
+            )}
+            {invoiceSaved && (
+              <p className="text-xs text-green-500 mt-2 flex items-center">
+                <span className="material-icons-outlined text-sm mr-1">check_circle</span>
+                Factura guardada en el historial
               </p>
             )}
           </div>

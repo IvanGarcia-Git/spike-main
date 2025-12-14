@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getCookie } from "cookies-next";
 import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
+import { NeumorphicCard, NeumorphicButton, NeumorphicInput } from "@/components/neumorphic";
 
 export default function EditChannel({ params }) {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function EditChannel({ params }) {
   const [commissionUsers, setCommissionUsers] = useState([]);
   const [commissionAssignments, setCommissionAssignments] = useState({});
   const [selectedUsers, setSelectedUsers] = useState({});
+  const [commissionTiers, setCommissionTiers] = useState({});
 
   const getChannelDetails = async () => {
     const jwtToken = getCookie("factura-token");
@@ -38,7 +40,6 @@ export default function EditChannel({ params }) {
       if (response.ok) {
         const channelData = await response.json();
         setChannel(channelData);
-
         getRates(jwtToken, channelData.id);
       } else {
         alert("Error al cargar los detalles del canal");
@@ -58,7 +59,6 @@ export default function EditChannel({ params }) {
           .flat()
           .filter((rate) => rate.channelId === channelId)
           .map((rate) => rate.id);
-
         setSelectedRates(channelRates);
       } else {
         alert("Error al cargar las tarifas disponibles");
@@ -97,6 +97,23 @@ export default function EditChannel({ params }) {
       });
   }, [channel.id]);
 
+  useEffect(() => {
+    if (selectedRates.length === 0) return;
+    const jwt = getCookie("factura-token");
+    selectedRates.forEach((rateId) => {
+      if (!commissionTiers[rateId]) {
+        authGetFetch(`commission-tiers?rateId=${rateId}`, jwt)
+          .then((res) => res.json())
+          .then((tiers) => {
+            setCommissionTiers((prev) => ({ ...prev, [rateId]: tiers }));
+          })
+          .catch(() => {
+            setCommissionTiers((prev) => ({ ...prev, [rateId]: [] }));
+          });
+      }
+    });
+  }, [selectedRates]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setChannel({ ...channel, [name]: value });
@@ -120,7 +137,6 @@ export default function EditChannel({ params }) {
         { channelId: newChannelId },
         jwtToken
       );
-
       if (!response.ok) {
         alert("Error actualizando el Rate");
       }
@@ -154,18 +170,7 @@ export default function EditChannel({ params }) {
     debounceRefPaymentDay.current = setTimeout(async () => {
       try {
         const jwtToken = getCookie("factura-token");
-        const response = await authFetch(
-          "PATCH",
-          `rates/${rateId}`,
-          { paymentDay: Number(paymentDay) },
-          jwtToken
-        );
-
-        if (!response.ok) {
-          throw new Error("Error al actualizar la tarifa en el servidor");
-        }
-
-        const updatedRate = await response.json();
+        await authFetch("PATCH", `rates/${rateId}`, { paymentDay: Number(paymentDay) }, jwtToken);
       } catch (error) {
         console.error("Error al actualizar paymentDay:", error);
         alert("No se pudo actualizar el día de pago");
@@ -215,6 +220,51 @@ export default function EditChannel({ params }) {
       await authFetch("PATCH", `rates/${rateId}`, { renewable: value }, jwtToken);
     } catch (error) {
       console.error(`Error al actualizar el campo renewable para rateId: ${rateId}`, error);
+    }
+  };
+
+  const addCommissionTier = (rateId) => {
+    setCommissionTiers((prev) => ({
+      ...prev,
+      [rateId]: [
+        ...(prev[rateId] || []),
+        { minConsumo: 0, maxConsumo: null, comision: 0, appliesToRenewal: false },
+      ],
+    }));
+  };
+
+  const removeCommissionTier = (rateId, index) => {
+    setCommissionTiers((prev) => ({
+      ...prev,
+      [rateId]: prev[rateId].filter((_, i) => i !== index),
+    }));
+  };
+
+  const updateCommissionTier = (rateId, index, field, value) => {
+    setCommissionTiers((prev) => ({
+      ...prev,
+      [rateId]: prev[rateId].map((tier, i) =>
+        i === index ? { ...tier, [field]: value } : tier
+      ),
+    }));
+  };
+
+  const saveCommissionTiers = async (rateId) => {
+    try {
+      const jwtToken = getCookie("factura-token");
+      const tiers = commissionTiers[rateId] || [];
+      const response = await authFetch("POST", "commission-tiers/bulk", { rateId, tiers }, jwtToken);
+      if (response.ok) {
+        const savedTiers = await response.json();
+        setCommissionTiers((prev) => ({ ...prev, [rateId]: savedTiers }));
+        alert("Tramos guardados correctamente");
+      } else {
+        const error = await response.json();
+        alert(error.message || "Error al guardar los tramos");
+      }
+    } catch (error) {
+      console.error("Error al guardar tramos:", error);
+      alert("Error al guardar los tramos de comisión");
     }
   };
 
@@ -288,417 +338,545 @@ export default function EditChannel({ params }) {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="neumorphic-card p-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push("/canales")}
+            className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
+          >
+            <span className="material-icons-outlined">arrow_back</span>
+          </button>
+          <h1 className="text-2xl font-semibold text-slate-700 dark:text-slate-200">
+            Editar Canal
+          </h1>
+        </div>
+      </div>
+
+      <NeumorphicCard size="lg">
         <form onSubmit={handleSubmit}>
-          <div className="flex flex-col sm:flex-row items-center sm:items-start mb-8">
-            <div className="mr-0 sm:mr-8 mb-4 sm:mb-0">
-              <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="image">
+          {/* Sección de información básica */}
+          <div className="flex flex-col lg:flex-row gap-8 mb-8">
+            {/* Imagen del canal */}
+            <div className="flex flex-col items-center lg:items-start">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Imagen del Canal
               </label>
-              <input
-                type="file"
-                accept="image/*"
-                id="image"
-                onChange={handleImageChange}
-                className="block w-full text-sm text-black bg-background border border-gray-600 rounded-lg cursor-pointer focus:outline-none"
-              />
-              {channel.imageUri && (
-                <img
-                  src={channel.imageUri}
-                  alt={channel.name}
-                  className="w-32 h-32 object-cover mt-4 rounded text-black"
+              <div className="neumorphic-card-inset p-4 rounded-xl">
+                {channel.imageUri ? (
+                  <img
+                    src={channel.imageUri}
+                    alt={channel.name}
+                    className="w-32 h-32 object-cover rounded-lg"
+                  />
+                ) : (
+                  <div className="w-32 h-32 flex items-center justify-center text-slate-400">
+                    <span className="material-icons-outlined text-5xl">image</span>
+                  </div>
+                )}
+              </div>
+              <label className="mt-3 cursor-pointer">
+                <span className="px-4 py-2 text-sm font-medium rounded-lg neumorphic-button text-primary inline-flex items-center gap-2">
+                  <span className="material-icons-outlined text-lg">upload</span>
+                  Cambiar imagen
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
                 />
-              )}
+              </label>
             </div>
 
-            <div className="w-full">
-              <div className="mb-4">
-                <label className="block text-black mb-2" htmlFor="name">
-                  Nombre del Canal
-                </label>
-                <input
-                  type="text"
-                  id="name"
+            {/* Campos de información */}
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <NeumorphicInput
+                  label="Nombre del Canal"
                   name="name"
                   value={channel.name}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
+                  icon="storefront"
                   required
                 />
               </div>
 
-              <hr className="border-gray-600 my-4" />
+              <NeumorphicInput
+                label="Nombre del Representante"
+                name="representativeName"
+                value={channel.representativeName}
+                onChange={handleInputChange}
+                icon="person"
+                required
+              />
 
-              <div className="mb-4">
-                <label className="block text-black mb-2" htmlFor="representativeName">
-                  Nombre del Representante
-                </label>
-                <input
-                  type="text"
-                  id="representativeName"
-                  name="representativeName"
-                  value={channel.representativeName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                  required
-                />
-              </div>
+              <NeumorphicInput
+                label="Teléfono"
+                name="representativePhone"
+                type="tel"
+                value={channel.representativePhone}
+                onChange={handleInputChange}
+                icon="phone"
+                required
+              />
 
-              <div className="mb-4">
-                <label className="block text-black mb-2" htmlFor="representativePhone">
-                  Teléfono del Representante
-                </label>
-                <input
-                  type="tel"
-                  id="representativePhone"
-                  name="representativePhone"
-                  value={channel.representativePhone}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                  required
-                />
-              </div>
+              <NeumorphicInput
+                label="Email"
+                name="representativeEmail"
+                type="email"
+                value={channel.representativeEmail}
+                onChange={handleInputChange}
+                icon="email"
+                required
+              />
 
-              <div className="mb-4">
-                <label className="block text-black mb-2" htmlFor="representativeEmail">
-                  Email del Representante
-                </label>
-                <input
-                  type="email"
-                  id="representativeEmail"
-                  name="representativeEmail"
-                  value={channel.representativeEmail}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                  required
-                />
-              </div>
+              <NeumorphicInput
+                label="Dirección Fiscal"
+                name="address"
+                value={channel.address || ""}
+                onChange={handleInputChange}
+                icon="location_on"
+              />
 
-              <div className="mb-4">
-                <label className="block text-black mb-2" htmlFor="address">
-                  Dirección fiscal
-                </label>
-                <input
-                  type="text"
-                  id="address"
-                  name="address"
-                  value={channel.address || ""}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                  placeholder="Dirección fiscal del canal"
-                />
-              </div>
+              <NeumorphicInput
+                label="CIF"
+                name="cif"
+                value={channel.cif || ""}
+                onChange={handleInputChange}
+                icon="badge"
+              />
 
-              <div className="mb-4">
-                <label className="block text-black mb-2" htmlFor="cif">
-                  CIF
-                </label>
-                <input
-                  type="text"
-                  id="cif"
-                  name="cif"
-                  value={channel.cif || ""}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                  placeholder="CIF del canal"
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-black mb-2" htmlFor="cif">
-                  IBAN
-                </label>
-                <input
-                  type="text"
-                  id="iban"
-                  name="iban"
-                  value={channel.iban || ""}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                  placeholder="IBAN del canal"
-                />
-              </div>
+              <NeumorphicInput
+                label="IBAN"
+                name="iban"
+                value={channel.iban || ""}
+                onChange={handleInputChange}
+                icon="account_balance"
+              />
             </div>
           </div>
 
+          {/* Separador */}
+          <div className="border-t border-slate-200 dark:border-slate-700 my-6" />
+
           {/* Navegación de Pestañas */}
-          <div className="flex gap-2 p-1 neumorphic-card rounded-lg w-min mb-6">
+          <div className="flex flex-wrap gap-2 p-1.5 neumorphic-card-inset rounded-xl w-fit mb-6">
             <button
               type="button"
               onClick={() => handleTabClick("rates")}
-              className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${
+              className={`px-5 py-2.5 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${
                 activeTab === "rates"
-                  ? "neumorphic-button active text-primary bg-primary/10 dark:bg-primary/20"
-                  : "neumorphic-button text-slate-600 dark:text-slate-400"
+                  ? "neumorphic-button active text-primary"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
               }`}
             >
+              <span className="material-icons-outlined text-lg">link</span>
               Tarifas Vinculadas
             </button>
             <button
               type="button"
               onClick={() => handleTabClick("payment")}
-              className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${
+              className={`px-5 py-2.5 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${
                 activeTab === "payment"
-                  ? "neumorphic-button active text-primary bg-primary/10 dark:bg-primary/20"
-                  : "neumorphic-button text-slate-600 dark:text-slate-400"
+                  ? "neumorphic-button active text-primary"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
               }`}
             >
-              Fecha cobro
+              <span className="material-icons-outlined text-lg">calendar_today</span>
+              Fecha Cobro
             </button>
             <button
               type="button"
               onClick={() => handleTabClick("commissions")}
-              className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${
+              className={`px-5 py-2.5 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${
                 activeTab === "commissions"
-                  ? "neumorphic-button active text-primary bg-primary/10 dark:bg-primary/20"
-                  : "neumorphic-button text-slate-600 dark:text-slate-400"
+                  ? "neumorphic-button active text-primary"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
               }`}
             >
+              <span className="material-icons-outlined text-lg">payments</span>
               Comisiones/Puntos
             </button>
           </div>
 
+          {/* Tab: Tarifas Vinculadas */}
           {activeTab === "rates" && (
-            <div className="mb-6">
-              <h3 className="text-xl text-black font-bold mb-4">Vincular Tarifas al Canal</h3>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                <span className="material-icons-outlined text-primary">link</span>
+                Vincular Tarifas al Canal
+              </h3>
               {Object.keys(rates).length === 0 ? (
-                <p>No hay tarifas disponibles</p>
+                <div className="neumorphic-card-inset p-6 rounded-xl text-center">
+                  <span className="material-icons-outlined text-4xl text-slate-400 mb-2">folder_off</span>
+                  <p className="text-slate-500 dark:text-slate-400">No hay tarifas disponibles</p>
+                </div>
               ) : (
-                Object.entries(rates).map(([companyName, companyRates]) => (
-                  <details key={companyName} className="mb-4">
-                    <summary className="cursor-pointer bg-background text-black p-2 rounded">
-                      {companyName}
-                    </summary>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-                      {companyRates.map((rate) => (
-                        <div key={rate.id} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            id={`rate-${rate.id}`}
-                            checked={selectedRates.includes(rate.id)}
-                            onChange={() => handleRateSelection(rate.id)}
-                            disabled={rate.channelId !== null && rate.channelId !== channel.id}
-                            className="mr-2"
-                          />
-                          <label htmlFor={`rate-${rate.id}`} className="text-black">
-                            {rate.name} - {rate.renewDays} días
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </details>
-                ))
-              )}
-            </div>
-          )}
-
-          {activeTab === "payment" && (
-            <div className="mb-6">
-              {Object.keys(rates).length === 0 ? (
-                <p>No hay tarifas disponibles</p>
-              ) : (
-                Object.entries(rates).map(([companyName, companyRates]) => {
-                  const checkedRates = companyRates.filter((rate) =>
-                    selectedRates.includes(rate.id)
-                  );
-
-                  return checkedRates.length > 0 ? (
-                    <details key={companyName} className="mb-4">
-                      <summary className="cursor-pointer bg-background text-black p-2 rounded">
-                        {companyName}
+                <div className="space-y-3">
+                  {Object.entries(rates).map(([companyName, companyRates]) => (
+                    <details key={companyName} className="group">
+                      <summary className="neumorphic-button px-4 py-3 rounded-xl cursor-pointer list-none flex items-center justify-between">
+                        <span className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                          <span className="material-icons-outlined text-primary">business</span>
+                          {companyName}
+                        </span>
+                        <span className="material-icons-outlined text-slate-400 group-open:rotate-180 transition-transform">
+                          expand_more
+                        </span>
                       </summary>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-                        {checkedRates.map((rate) => (
-                          <div key={rate.id} className="flex items-center">
-                            <label htmlFor={`paymentDay-${rate.id}`} className="text-black mr-2">
-                              {rate.name} :
-                            </label>
+                      <div className="mt-3 ml-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {companyRates.map((rate) => (
+                          <label
+                            key={rate.id}
+                            className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                              selectedRates.includes(rate.id)
+                                ? "neumorphic-card-inset"
+                                : "neumorphic-button hover:shadow-neumorphic-light-hover"
+                            } ${rate.channelId !== null && rate.channelId !== channel.id ? "opacity-50 cursor-not-allowed" : ""}`}
+                          >
                             <input
-                              type="number"
-                              id={`paymentDay-${rate.id}`}
-                              value={rate.paymentDay || ""}
-                              onChange={(e) => handlePaymentDayChange(rate.id, e.target.value)}
-                              min="0"
-                              max="31"
-                              className="w-16 px-2 py-1 border border-gray-300 rounded text-black"
+                              type="checkbox"
+                              checked={selectedRates.includes(rate.id)}
+                              onChange={() => handleRateSelection(rate.id)}
+                              disabled={rate.channelId !== null && rate.channelId !== channel.id}
+                              className="w-4 h-4 text-primary rounded focus:ring-primary"
                             />
-                          </div>
+                            <div>
+                              <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{rate.name}</p>
+                              <p className="text-xs text-slate-500">{rate.renewDays} días</p>
+                            </div>
+                          </label>
                         ))}
                       </div>
                     </details>
-                  ) : null;
-                })
+                  ))}
+                </div>
               )}
             </div>
           )}
 
-          {activeTab === "commissions" && (
-            <div className="mb-6">
+          {/* Tab: Fecha Cobro */}
+          {activeTab === "payment" && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                <span className="material-icons-outlined text-primary">calendar_today</span>
+                Configurar Fecha de Cobro
+              </h3>
               {Object.keys(rates).length === 0 ? (
-                <p>No hay tarifas disponibles</p>
+                <div className="neumorphic-card-inset p-6 rounded-xl text-center">
+                  <p className="text-slate-500 dark:text-slate-400">No hay tarifas disponibles</p>
+                </div>
               ) : (
-                Object.entries(rates).map(([companyName, companyRates]) => {
-                  const checkedRates = companyRates.filter((rate) =>
-                    selectedRates.includes(rate.id)
-                  );
-                  if (!checkedRates.length) return null;
+                <div className="space-y-3">
+                  {Object.entries(rates).map(([companyName, companyRates]) => {
+                    const checkedRates = companyRates.filter((rate) => selectedRates.includes(rate.id));
+                    if (!checkedRates.length) return null;
 
-                  return checkedRates.length > 0 ? (
-                    <details key={companyName} className="mb-4">
-                      <summary className="cursor-pointer bg-background text-black p-2 rounded">
-                        {companyName}
-                      </summary>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-                        {checkedRates.map((rate) => (
-                          <div
-                            key={rate.id}
-                            className="grid grid-cols-3 gap-4 items-center bg-gray-50 p-2 rounded shadow"
-                          >
-                            {/* 1) SELECT Supervisor/Agente */}
-                            <label
-                              htmlFor={`commUser-${rate.id}`}
-                              className="block text-sm text-black"
-                            >
-                              Supervisor/Agente
-                            </label>
-                            <select
-                              id={`commUser-${rate.id}`}
-                              value={selectedUsers[rate.id] ?? ""}
-                              onChange={(e) => {
-                                const userId = Number(e.target.value) || undefined;
-                                setSelectedUsers((prev) => ({ ...prev, [rate.id]: userId }));
-                              }}
-                              className="w-full px-2 py-1 border rounded text-black"
-                            >
-                              <option value="">— Selecciona —</option>
-                              {commissionUsers.map((u) => (
-                                <option key={u.id} value={u.id}>
-                                  {u.name} {u.firstSurname}
-                                </option>
-                              ))}
-                            </select>
-
-                            {/* 2) INPUT Comisión comercial */}
-                            {selectedUsers[rate.id] && (
-                              <div className="flex flex-col col-span-3">
-                                <label
-                                  htmlFor={`commAmt-${rate.id}`}
-                                  className="block text-sm text-black"
-                                >
-                                  Comisión comercial (€)
-                                </label>
+                    return (
+                      <details key={companyName} className="group">
+                        <summary className="neumorphic-button px-4 py-3 rounded-xl cursor-pointer list-none flex items-center justify-between">
+                          <span className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                            <span className="material-icons-outlined text-primary">business</span>
+                            {companyName}
+                          </span>
+                          <span className="material-icons-outlined text-slate-400 group-open:rotate-180 transition-transform">
+                            expand_more
+                          </span>
+                        </summary>
+                        <div className="mt-3 ml-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {checkedRates.map((rate) => (
+                            <div key={rate.id} className="neumorphic-card-inset p-3 rounded-lg">
+                              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-2">
+                                {rate.name}
+                              </label>
+                              <div className="flex items-center gap-2">
+                                <span className="material-icons-outlined text-slate-400 text-lg">event</span>
                                 <input
                                   type="number"
-                                  id={`commAmt-${rate.id}`}
-                                  value={
-                                    commissionAssignments[rate.id]?.[selectedUsers[rate.id]] ?? 0
-                                  }
-                                  onChange={(e) => {
-                                    const amount = parseInt(e.target.value) || 0;
-                                    setCommissionAssignments((prev) => ({
-                                      ...prev,
-                                      [rate.id]: {
-                                        ...prev[rate.id],
-                                        [selectedUsers[rate.id]]: amount,
-                                      },
-                                    }));
-                                  }}
-                                  className="w-full px-2 py-1 border rounded text-black"
+                                  value={rate.paymentDay || ""}
+                                  onChange={(e) => handlePaymentDayChange(rate.id, e.target.value)}
+                                  min="1"
+                                  max="31"
+                                  placeholder="Día"
+                                  className="flex-1 px-3 py-2 bg-transparent text-slate-700 dark:text-slate-300 outline-none text-sm"
                                 />
                               </div>
-                            )}
-
-                            {/* Nombre de la tarifa */}
-                            <div className="col-span-3 text-black text-base font-medium mb-2 sm:mb-0">
-                              {rate.name}
                             </div>
-
-                            {/* Campo para paymentMoney */}
-                            <div className="flex flex-col">
-                              <label
-                                htmlFor={`paymentMoney-${rate.id}`}
-                                className="text-black text-sm font-medium"
-                              >
-                                Comisión:
-                              </label>
-                              <input
-                                type="number"
-                                id={`paymentMoney-${rate.id}`}
-                                step="0.01"
-                                value={rate.paymentMoney || ""}
-                                onChange={(e) =>
-                                  handleCommissionChange(rate.id, "paymentMoney", e.target.value)
-                                }
-                                min="0"
-                                className="w-full px-2 py-1 border border-gray-300 rounded text-black text-sm"
-                              />
-                            </div>
-
-                            {/* Campo para paymentPoints */}
-                            <div className="flex flex-col">
-                              <label
-                                htmlFor={`paymentPoints-${rate.id}`}
-                                className="text-black text-sm font-medium"
-                              >
-                                Puntos:
-                              </label>
-                              <input
-                                type="number"
-                                id={`paymentPoints-${rate.id}`}
-                                step="0.01"
-                                value={rate.paymentPoints || ""}
-                                onChange={(e) =>
-                                  handleCommissionChange(rate.id, "paymentPoints", e.target.value)
-                                }
-                                min="0"
-                                className="w-full px-2 py-1 border border-gray-300 rounded text-black text-sm"
-                              />
-                            </div>
-
-                            {/* Checkbox para Renovar */}
-                            <div className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                id={`renewable-${rate.id}`}
-                                checked={rate.renewable || false}
-                                onChange={(e) => handleRenewableChange(rate.id, e.target.checked)}
-                                className="w-4 h-4"
-                              />
-                              <label
-                                htmlFor={`renewable-${rate.id}`}
-                                className="text-black text-sm font-medium"
-                              >
-                                Renovar
-                              </label>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </details>
-                  ) : null;
-                })
+                          ))}
+                        </div>
+                      </details>
+                    );
+                  })}
+                </div>
               )}
             </div>
           )}
 
-          {/* Botones */}
+          {/* Tab: Comisiones/Puntos */}
+          {activeTab === "commissions" && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                <span className="material-icons-outlined text-primary">payments</span>
+                Configurar Comisiones y Puntos
+              </h3>
+              {Object.keys(rates).length === 0 ? (
+                <div className="neumorphic-card-inset p-6 rounded-xl text-center">
+                  <p className="text-slate-500 dark:text-slate-400">No hay tarifas disponibles</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {Object.entries(rates).map(([companyName, companyRates]) => {
+                    const checkedRates = companyRates.filter((rate) => selectedRates.includes(rate.id));
+                    if (!checkedRates.length) return null;
+
+                    return (
+                      <details key={companyName} className="group" open>
+                        <summary className="neumorphic-button px-4 py-3 rounded-xl cursor-pointer list-none flex items-center justify-between">
+                          <span className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                            <span className="material-icons-outlined text-primary">business</span>
+                            {companyName}
+                          </span>
+                          <span className="material-icons-outlined text-slate-400 group-open:rotate-180 transition-transform">
+                            expand_more
+                          </span>
+                        </summary>
+                        <div className="mt-4 space-y-4">
+                          {checkedRates.map((rate) => (
+                            <NeumorphicCard key={rate.id} variant="inset" size="md" className="ml-4">
+                              {/* Nombre de la tarifa */}
+                              <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-200 dark:border-slate-700">
+                                <span className="material-icons-outlined text-primary">sell</span>
+                                <h4 className="font-semibold text-slate-700 dark:text-slate-200">{rate.name}</h4>
+                              </div>
+
+                              {/* Grid de configuración */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                                {/* Supervisor/Agente */}
+                                <div>
+                                  <label className="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">
+                                    Supervisor/Agente
+                                  </label>
+                                  <select
+                                    value={selectedUsers[rate.id] ?? ""}
+                                    onChange={(e) => {
+                                      const userId = Number(e.target.value) || undefined;
+                                      setSelectedUsers((prev) => ({ ...prev, [rate.id]: userId }));
+                                    }}
+                                    className="w-full px-3 py-2 rounded-lg bg-background-light dark:bg-background-dark shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark text-slate-700 dark:text-slate-300 text-sm outline-none"
+                                  >
+                                    <option value="">— Selecciona —</option>
+                                    {commissionUsers.map((u) => (
+                                      <option key={u.id} value={u.id}>
+                                        {u.name} {u.firstSurname}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+
+                                {/* Comisión comercial - solo si hay usuario seleccionado */}
+                                {selectedUsers[rate.id] && (
+                                  <div>
+                                    <label className="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">
+                                      Comisión Comercial (€)
+                                    </label>
+                                    <input
+                                      type="number"
+                                      value={commissionAssignments[rate.id]?.[selectedUsers[rate.id]] ?? 0}
+                                      onChange={(e) => {
+                                        const amount = parseInt(e.target.value) || 0;
+                                        setCommissionAssignments((prev) => ({
+                                          ...prev,
+                                          [rate.id]: { ...prev[rate.id], [selectedUsers[rate.id]]: amount },
+                                        }));
+                                      }}
+                                      className="w-full px-3 py-2 rounded-lg bg-background-light dark:bg-background-dark shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark text-slate-700 dark:text-slate-300 text-sm outline-none"
+                                    />
+                                  </div>
+                                )}
+
+                                {/* Comisión base */}
+                                <div>
+                                  <label className="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">
+                                    Comisión Base (€)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={rate.paymentMoney || ""}
+                                    onChange={(e) => handleCommissionChange(rate.id, "paymentMoney", e.target.value)}
+                                    min="0"
+                                    className="w-full px-3 py-2 rounded-lg bg-background-light dark:bg-background-dark shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark text-slate-700 dark:text-slate-300 text-sm outline-none"
+                                  />
+                                </div>
+
+                                {/* Puntos */}
+                                <div>
+                                  <label className="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">
+                                    Puntos
+                                  </label>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={rate.paymentPoints || ""}
+                                    onChange={(e) => handleCommissionChange(rate.id, "paymentPoints", e.target.value)}
+                                    min="0"
+                                    className="w-full px-3 py-2 rounded-lg bg-background-light dark:bg-background-dark shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark text-slate-700 dark:text-slate-300 text-sm outline-none"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Checkbox Renovar */}
+                              <label className="flex items-center gap-2 mb-4 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={rate.renewable || false}
+                                  onChange={(e) => handleRenewableChange(rate.id, e.target.checked)}
+                                  className="w-4 h-4 text-primary rounded focus:ring-primary"
+                                />
+                                <span className="text-sm text-slate-700 dark:text-slate-300">Renovar</span>
+                              </label>
+
+                              {/* Sección de tramos de comisión por consumo */}
+                              <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <h5 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                                    <span className="material-icons-outlined text-lg text-primary">trending_up</span>
+                                    Comisiones por Consumo
+                                  </h5>
+                                  <button
+                                    type="button"
+                                    onClick={() => addCommissionTier(rate.id)}
+                                    className="px-3 py-1.5 text-xs font-medium rounded-lg neumorphic-button text-primary flex items-center gap-1"
+                                  >
+                                    <span className="material-icons-outlined text-sm">add</span>
+                                    Añadir tramo
+                                  </button>
+                                </div>
+
+                                {(commissionTiers[rate.id] || []).length > 0 ? (
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                      <thead>
+                                        <tr className="border-b border-slate-200 dark:border-slate-700">
+                                          <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Min</th>
+                                          <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Max</th>
+                                          <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Comisión (€)</th>
+                                          <th className="px-3 py-2 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Renovación</th>
+                                          <th className="px-3 py-2 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Acción</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                        {(commissionTiers[rate.id] || []).map((tier, index) => (
+                                          <tr key={tier.id || index}>
+                                            <td className="px-3 py-2">
+                                              <input
+                                                type="number"
+                                                value={tier.minConsumo}
+                                                onChange={(e) => updateCommissionTier(rate.id, index, "minConsumo", parseFloat(e.target.value) || 0)}
+                                                className="w-20 px-2 py-1.5 rounded-lg bg-background-light dark:bg-background-dark shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark text-slate-700 dark:text-slate-300 text-sm outline-none"
+                                                min="0"
+                                                step="0.01"
+                                              />
+                                            </td>
+                                            <td className="px-3 py-2">
+                                              <input
+                                                type="number"
+                                                value={tier.maxConsumo ?? ""}
+                                                onChange={(e) => updateCommissionTier(rate.id, index, "maxConsumo", e.target.value === "" ? null : parseFloat(e.target.value))}
+                                                placeholder="∞"
+                                                className="w-20 px-2 py-1.5 rounded-lg bg-background-light dark:bg-background-dark shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark text-slate-700 dark:text-slate-300 text-sm outline-none placeholder:text-slate-400"
+                                                min="0"
+                                                step="0.01"
+                                              />
+                                            </td>
+                                            <td className="px-3 py-2">
+                                              <input
+                                                type="number"
+                                                value={tier.comision}
+                                                onChange={(e) => updateCommissionTier(rate.id, index, "comision", parseFloat(e.target.value) || 0)}
+                                                className="w-20 px-2 py-1.5 rounded-lg bg-background-light dark:bg-background-dark shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark text-slate-700 dark:text-slate-300 text-sm outline-none"
+                                                min="0"
+                                                step="0.01"
+                                              />
+                                            </td>
+                                            <td className="px-3 py-2 text-center">
+                                              <input
+                                                type="checkbox"
+                                                checked={tier.appliesToRenewal || false}
+                                                onChange={(e) => updateCommissionTier(rate.id, index, "appliesToRenewal", e.target.checked)}
+                                                className="w-4 h-4 text-primary rounded focus:ring-primary"
+                                              />
+                                            </td>
+                                            <td className="px-3 py-2 text-center">
+                                              <button
+                                                type="button"
+                                                onClick={() => removeCommissionTier(rate.id, index)}
+                                                className="p-1.5 rounded-lg text-danger hover:bg-danger/10 transition-colors"
+                                              >
+                                                <span className="material-icons-outlined text-lg">delete</span>
+                                              </button>
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                    <div className="mt-3 flex justify-end">
+                                      <button
+                                        type="button"
+                                        onClick={() => saveCommissionTiers(rate.id)}
+                                        className="px-4 py-2 text-sm font-medium rounded-lg neumorphic-button text-success flex items-center gap-2"
+                                      >
+                                        <span className="material-icons-outlined text-lg">save</span>
+                                        Guardar tramos
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-center py-4">
+                                    <span className="material-icons-outlined text-3xl text-slate-300 dark:text-slate-600 mb-2">
+                                      layers_clear
+                                    </span>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                                      Sin tramos. La comisión base ({rate.paymentMoney || 0}€) se aplicará a todos los consumos.
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </NeumorphicCard>
+                          ))}
+                        </div>
+                      </details>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Separador antes de botones */}
+          <div className="border-t border-slate-200 dark:border-slate-700 my-6" />
+
+          {/* Botones de acción */}
           <div className="flex justify-end gap-3">
-            <button
+            <NeumorphicButton
               type="button"
-              className="px-5 py-3 rounded-lg neumorphic-button text-slate-700 dark:text-slate-300 font-medium"
+              variant="secondary"
               onClick={() => router.push("/canales")}
+              icon="close"
             >
               Cancelar
-            </button>
-            <button
+            </NeumorphicButton>
+            <NeumorphicButton
               type="submit"
-              className="px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium"
+              variant="primary"
+              icon="save"
             >
               Guardar Cambios
-            </button>
+            </NeumorphicButton>
           </div>
         </form>
-      </div>
+      </NeumorphicCard>
     </div>
   );
 }
