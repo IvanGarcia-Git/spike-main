@@ -36,7 +36,8 @@ const LeadsPriorityConfigurationPage = () => {
   const [leadPriorities, setLeadPriorities] = useState(DEFAULT_LEAD_PRIORITIES);
   const [columnsOrder, setColumnsOrder] = useState(leadPriorities);
   const [users, setUsers] = useState([]);
-  const [selectedUserUuid, setSelectedUserUuid] = useState(null);
+  const [selectedUserUuids, setSelectedUserUuids] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   const getUsersManager = async () => {
     const jwtToken = getCookie("factura-token");
@@ -98,24 +99,64 @@ const LeadsPriorityConfigurationPage = () => {
   };
 
   const saveLeadPriorities = async () => {
-    const jwtToken = getCookie("factura-token");
+    if (selectedUserUuids.length === 0) {
+      alert("Por favor, selecciona al menos un usuario.");
+      return;
+    }
 
-    const data = {
-      userUuid: selectedUserUuid,
-      userData: { leadPriorities: columnsOrder.map((column) => column.value) },
-    };
+    const jwtToken = getCookie("factura-token");
+    const leadPrioritiesData = columnsOrder.map((column) => column.value);
+
+    setIsSaving(true);
 
     try {
-      const response = await authFetch("PATCH", "users", data, jwtToken);
+      const results = await Promise.all(
+        selectedUserUuids.map((userUuid) =>
+          authFetch(
+            "PATCH",
+            "users",
+            {
+              userUuid,
+              userData: { leadPriorities: leadPrioritiesData },
+            },
+            jwtToken
+          )
+        )
+      );
 
-      if (response.ok) {
-        alert("Configuración guardada con éxito.");
+      const allSuccessful = results.every((response) => response.ok);
+
+      if (allSuccessful) {
+        alert(
+          `Configuración guardada con éxito para ${selectedUserUuids.length} usuario(s).`
+        );
       } else {
-        const errorData = await response.json();
-        console.error("Error al guardar configuración:", errorData);
+        const failedCount = results.filter((r) => !r.ok).length;
+        alert(
+          `Error: ${failedCount} de ${selectedUserUuids.length} usuarios no se pudieron actualizar.`
+        );
       }
     } catch (error) {
       console.error("Error enviando la solicitud:", error);
+      alert("Error al guardar la configuración.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleUserToggle = (userUuid) => {
+    setSelectedUserUuids((prev) =>
+      prev.includes(userUuid)
+        ? prev.filter((uuid) => uuid !== userUuid)
+        : [...prev, userUuid]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedUserUuids.length === users.length) {
+      setSelectedUserUuids([]);
+    } else {
+      setSelectedUserUuids(users.map((user) => user.uuid));
     }
   };
 
@@ -124,54 +165,93 @@ const LeadsPriorityConfigurationPage = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedUserUuid) {
-      getUserLeadPriorities(selectedUserUuid);
+    if (selectedUserUuids.length === 1) {
+      getUserLeadPriorities(selectedUserUuids[0]);
+    } else {
+      setLeadPriorities(DEFAULT_LEAD_PRIORITIES);
+      setColumnsOrder(DEFAULT_LEAD_PRIORITIES);
     }
-  }, [selectedUserUuid]);
+  }, [selectedUserUuids]);
 
   return (
     <DndProvider backend={MultiBackend} options={BACKEND_OPTIONS}>
-      <div className="flex flex-col items-center justify-center gap-6 p-4 min-h-screen bg-background">
-        {/* Selector de usuario */}
-        <div className="flex flex-col items-center gap-2 text-slate-800 dark:text-slate-100 mb-6">
-          <label htmlFor="userSelector" className="text-lg font-bold">
-            Usuario:
-          </label>
-          <div className="neumorphic-card-inset rounded-lg w-60">
-            <select
-              id="userSelector"
-              className="p-2 w-full rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200 text-center"
-              value={selectedUserUuid || ""}
-              onChange={(e) => setSelectedUserUuid(e.target.value)}
-            >
-              <option value="" disabled>
-                Selecciona
-              </option>
-              {users.map((user) => (
-                <option key={user.id} value={user.uuid}>
-                  {user.name} {user.firstSurname}
-                </option>
-              ))}
-            </select>
+      <div className="flex flex-col items-center gap-6 p-4 min-h-screen bg-background">
+        <div className="flex flex-col lg:flex-row gap-6 w-full max-w-5xl">
+          {/* Panel de selección de usuarios */}
+          <div className="w-full lg:w-1/2">
+            <div className="neumorphic-card text-slate-800 dark:text-slate-100 rounded-lg p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold">Seleccionar Usuarios</h3>
+                <button
+                  onClick={handleSelectAll}
+                  className="text-sm px-3 py-1 rounded-lg neumorphic-button text-primary hover:bg-primary/10"
+                >
+                  {selectedUserUuids.length === users.length
+                    ? "Deseleccionar todos"
+                    : "Seleccionar todos"}
+                </button>
+              </div>
+              {selectedUserUuids.length > 0 && (
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                  {selectedUserUuids.length} usuario(s) seleccionado(s)
+                  {selectedUserUuids.length === 1 &&
+                    " - Se cargarán sus prioridades actuales"}
+                  {selectedUserUuids.length > 1 &&
+                    " - Se aplicarán las prioridades por defecto"}
+                </p>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-96 overflow-y-auto">
+                {users.map((user) => (
+                  <div
+                    key={user.id}
+                    className="flex items-center p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                    onClick={() => handleUserToggle(user.uuid)}
+                  >
+                    <input
+                      type="checkbox"
+                      id={`user-${user.id}`}
+                      className="mr-3 w-4 h-4 accent-primary cursor-pointer"
+                      checked={selectedUserUuids.includes(user.uuid)}
+                      onChange={() => handleUserToggle(user.uuid)}
+                    />
+                    <label
+                      htmlFor={`user-${user.id}`}
+                      className="text-slate-800 dark:text-slate-100 cursor-pointer select-none"
+                    >
+                      {user.name} {user.firstSurname}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Contenedor para ColumnsOrder */}
-        <div className="w-full max-w-3xl">
-          <ColumnsOrder
-            columnsOrder={columnsOrder}
-            setColumnsOrder={setColumnsOrder}
-          />
-        </div>
-
-        {/* Botón alineado al ancho de ColumnsOrder */}
-        <div className="w-full max-w-3xl">
-          <button
-            onClick={saveLeadPriorities}
-            className="px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium w-full"
-          >
-            Guardar Configuración
-          </button>
+          {/* Panel de prioridades */}
+          <div className="w-full lg:w-1/2 flex flex-col gap-4">
+            <ColumnsOrder
+              columnsOrder={columnsOrder}
+              setColumnsOrder={setColumnsOrder}
+            />
+            <button
+              onClick={saveLeadPriorities}
+              disabled={isSaving || selectedUserUuids.length === 0}
+              className={`px-5 py-3 rounded-lg neumorphic-button text-white font-medium w-full ${
+                isSaving || selectedUserUuids.length === 0
+                  ? "bg-slate-400 cursor-not-allowed"
+                  : "bg-primary hover:bg-primary/90"
+              }`}
+            >
+              {isSaving
+                ? "Guardando..."
+                : `Guardar Configuración${
+                    selectedUserUuids.length > 0
+                      ? ` (${selectedUserUuids.length} usuario${
+                          selectedUserUuids.length > 1 ? "s" : ""
+                        })`
+                      : ""
+                  }`}
+            </button>
+          </div>
         </div>
       </div>
     </DndProvider>
