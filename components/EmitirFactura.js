@@ -24,12 +24,12 @@ const getEffectiveCommission = (liquidationContract) => {
   return 0;
 };
 
-const INVOICE_ISSUER = {
-  name: "Arrakis Gestión Empresarial S.L",
-  nif: "B75439786",
-  address: "Cl Astronomía 1, 1, 1, 6",
-  city: "Sevilla",
-  postalCode: "41015",
+const DEFAULT_ISSUER = {
+  name: "",
+  nif: "",
+  address: "",
+  city: "",
+  postalCode: "",
   country: "España",
 };
 
@@ -60,7 +60,43 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
   const [isSaving, setIsSaving] = useState(false);
   const [invoiceSaved, setInvoiceSaved] = useState(false);
 
+  // Estado para datos fiscales del emisor
+  const [issuerData, setIssuerData] = useState(DEFAULT_ISSUER);
+  const [showIssuerSection, setShowIssuerSection] = useState(false);
+  const [isSavingIssuer, setIsSavingIssuer] = useState(false);
+  const [issuerDataLoaded, setIssuerDataLoaded] = useState(false);
+
   const isCobro = invoiceType === "COBRO";
+
+  // Cargar datos fiscales del emisor del usuario
+  useEffect(() => {
+    const fetchIssuerData = async () => {
+      try {
+        const jwtToken = getCookie("factura-token");
+        const response = await authGetFetch("users/issuer-fiscal-data", jwtToken);
+        if (response.ok) {
+          const data = await response.json();
+          setIssuerData({
+            name: data.issuerBusinessName || "",
+            nif: data.issuerNif || "",
+            address: data.issuerAddress || "",
+            city: data.issuerCity || "",
+            postalCode: data.issuerPostalCode || "",
+            country: data.issuerCountry || "España",
+          });
+          setIssuerDataLoaded(true);
+          // Si no hay datos configurados, mostrar sección abierta
+          if (!data.issuerBusinessName && !data.issuerNif) {
+            setShowIssuerSection(true);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching issuer fiscal data:", error);
+      }
+    };
+
+    fetchIssuerData();
+  }, []);
 
   // Obtener siguiente número de factura sugerido
   useEffect(() => {
@@ -155,6 +191,40 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  // Función para guardar los datos fiscales del emisor
+  const saveIssuerData = async () => {
+    setIsSavingIssuer(true);
+    try {
+      const jwtToken = getCookie("factura-token");
+      const response = await authFetch("PATCH", "users/issuer-fiscal-data", {
+        issuerBusinessName: issuerData.name,
+        issuerNif: issuerData.nif,
+        issuerAddress: issuerData.address,
+        issuerCity: issuerData.city,
+        issuerPostalCode: issuerData.postalCode,
+        issuerCountry: issuerData.country,
+      }, jwtToken);
+
+      if (response.ok) {
+        toast.success("Datos fiscales guardados correctamente");
+        setShowIssuerSection(false);
+      } else {
+        const error = await response.json();
+        toast.error(error.message || "Error al guardar datos fiscales");
+      }
+    } catch (error) {
+      console.error("Error saving issuer data:", error);
+      toast.error("Error al guardar datos fiscales");
+    } finally {
+      setIsSavingIssuer(false);
+    }
+  };
+
+  // Función para manejar cambios en los campos del emisor
+  const handleIssuerChange = (field, value) => {
+    setIssuerData(prev => ({ ...prev, [field]: value }));
   };
 
   useEffect(() => {
@@ -424,6 +494,141 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Sección desplegable de datos fiscales del emisor */}
+      <div className="neumorphic-card p-4 mb-6">
+        <button
+          type="button"
+          onClick={() => setShowIssuerSection(!showIssuerSection)}
+          className="w-full flex items-center justify-between text-left"
+        >
+          <div className="flex items-center gap-3">
+            <div className="neumorphic-card-inset w-8 h-8 rounded-full flex items-center justify-center text-primary">
+              <span className="material-icons-outlined text-sm">business</span>
+            </div>
+            <div>
+              <h4 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                Datos Fiscales del Emisor
+              </h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {issuerData.name || "Sin configurar"} {issuerData.nif ? `- ${issuerData.nif}` : ""}
+              </p>
+            </div>
+          </div>
+          <span className={`material-icons-outlined text-slate-500 transition-transform ${showIssuerSection ? "rotate-180" : ""}`}>
+            expand_more
+          </span>
+        </button>
+
+        {showIssuerSection && (
+          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Nombre/Razón Social *
+                </label>
+                <input
+                  type="text"
+                  value={issuerData.name}
+                  onChange={(e) => handleIssuerChange("name", e.target.value)}
+                  placeholder="Ej: Mi Empresa S.L."
+                  className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  NIF/CIF *
+                </label>
+                <input
+                  type="text"
+                  value={issuerData.nif}
+                  onChange={(e) => handleIssuerChange("nif", e.target.value)}
+                  placeholder="Ej: B12345678"
+                  className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Dirección
+                </label>
+                <input
+                  type="text"
+                  value={issuerData.address}
+                  onChange={(e) => handleIssuerChange("address", e.target.value)}
+                  placeholder="Calle, número, piso..."
+                  className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Ciudad
+                </label>
+                <input
+                  type="text"
+                  value={issuerData.city}
+                  onChange={(e) => handleIssuerChange("city", e.target.value)}
+                  placeholder="Ej: Madrid"
+                  className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Código Postal
+                </label>
+                <input
+                  type="text"
+                  value={issuerData.postalCode}
+                  onChange={(e) => handleIssuerChange("postalCode", e.target.value)}
+                  placeholder="Ej: 28001"
+                  className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  País
+                </label>
+                <input
+                  type="text"
+                  value={issuerData.country}
+                  onChange={(e) => handleIssuerChange("country", e.target.value)}
+                  placeholder="Ej: España"
+                  className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-4">
+              <button
+                type="button"
+                onClick={saveIssuerData}
+                disabled={isSavingIssuer || !issuerData.name || !issuerData.nif}
+                className={`px-5 py-2 rounded-lg neumorphic-button font-medium inline-flex items-center ${
+                  issuerData.name && issuerData.nif
+                    ? "text-white bg-primary hover:bg-primary/90"
+                    : "bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed"
+                }`}
+              >
+                <span className="material-icons-outlined mr-2 text-sm">
+                  {isSavingIssuer ? "refresh" : "save"}
+                </span>
+                {isSavingIssuer ? "Guardando..." : "Guardar datos fiscales"}
+              </button>
+            </div>
+
+            {(!issuerData.name || !issuerData.nif) && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 flex items-center">
+                <span className="material-icons-outlined text-sm mr-1">warning</span>
+                Nombre y NIF/CIF son obligatorios para generar facturas válidas
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="neumorphic-card p-6 space-y-6">
@@ -823,7 +1028,7 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
 
           {/* Vista previa de la factura */}
           <InvoicePreview
-            issuer={INVOICE_ISSUER}
+            issuer={issuerData}
             client={clientDetails}
             invoiceNumber={invoiceNumber}
             ibanNumber={ibanNumber}
@@ -883,7 +1088,7 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
                   <PDFDownloadLink
                     document={
                       <InvoiceDocument
-                        issuer={INVOICE_ISSUER}
+                        issuer={issuerData}
                         client={clientDetails}
                         invoiceNumber={invoiceNumber}
                         ibanNumber={ibanNumber}

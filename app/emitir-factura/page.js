@@ -52,19 +52,18 @@ function SafePDFDownloadLink({ pdfData, fileName, className, children }) {
   );
 }
 
-// Datos del emisor (hardcodeado)
-const INVOICE_ISSUER = {
-  name: "Arrakis Gestión Empresarial S.L",
-  nationalId: "B75439786",
-  nif: "B75439786",
-  address: "Calle Ejemplo 123",
-  city: "Sevilla",
-  postalCode: "41015",
+// Datos del emisor por defecto (se cargará dinámicamente del usuario)
+const DEFAULT_ISSUER = {
+  name: "",
+  nif: "",
+  address: "",
+  city: "",
+  postalCode: "",
   country: "España",
 };
 
 // Helper para preparar datos de factura para el PDF
-function prepareInvoiceForPDF(invoice) {
+function prepareInvoiceForPDF(invoice, issuerData = DEFAULT_ISSUER) {
   if (!invoice) return null;
 
   let items = [];
@@ -82,7 +81,7 @@ function prepareInvoiceForPDF(invoice) {
   }
 
   return {
-    issuer: INVOICE_ISSUER,
+    issuer: issuerData,
     client: {
       name: invoice.clientName || "",
       nationalId: invoice.clientNationalId || "",
@@ -185,7 +184,7 @@ function InvoiceHistoryItem({ invoice, onView, onDownload }) {
 }
 
 // Modal de vista previa de factura
-function InvoicePreviewModal({ invoice, isOpen, onClose }) {
+function InvoicePreviewModal({ invoice, isOpen, onClose, issuerData }) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -195,7 +194,7 @@ function InvoicePreviewModal({ invoice, isOpen, onClose }) {
   if (!isOpen || !invoice) return null;
 
   // Preparar datos para el PDF usando el helper
-  const pdfData = prepareInvoiceForPDF(invoice);
+  const pdfData = prepareInvoiceForPDF(invoice, issuerData);
   if (!pdfData) return null;
 
   const modalContent = (
@@ -283,7 +282,7 @@ function InvoicePreviewModal({ invoice, isOpen, onClose }) {
 }
 
 // Componente para descargar PDF directamente
-function DirectPDFDownload({ invoice, onComplete }) {
+function DirectPDFDownload({ invoice, onComplete, issuerData }) {
   const [isClient, setIsClient] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -304,7 +303,7 @@ function DirectPDFDownload({ invoice, onComplete }) {
   if (!isClient || !invoice) return null;
 
   // Preparar datos para el PDF usando el helper
-  const pdfData = prepareInvoiceForPDF(invoice);
+  const pdfData = prepareInvoiceForPDF(invoice, issuerData);
   if (!pdfData) {
     onComplete?.();
     return null;
@@ -404,10 +403,32 @@ export default function EmitirFacturaPage() {
   const [loading, setLoading] = useState(true);
   const [previewInvoice, setPreviewInvoice] = useState(null);
   const [downloadInvoice, setDownloadInvoice] = useState(null);
+  const [issuerData, setIssuerData] = useState(DEFAULT_ISSUER);
 
   useEffect(() => {
     fetchRecentInvoices();
+    fetchIssuerData();
   }, []);
+
+  const fetchIssuerData = async () => {
+    try {
+      const jwtToken = getCookie("factura-token");
+      const response = await authGetFetch("users/issuer-fiscal-data", jwtToken);
+      if (response.ok) {
+        const data = await response.json();
+        setIssuerData({
+          name: data.issuerBusinessName || "",
+          nif: data.issuerNif || "",
+          address: data.issuerAddress || "",
+          city: data.issuerCity || "",
+          postalCode: data.issuerPostalCode || "",
+          country: data.issuerCountry || "España",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching issuer fiscal data:", error);
+    }
+  };
 
   const fetchRecentInvoices = async () => {
     setLoading(true);
@@ -553,6 +574,7 @@ export default function EmitirFacturaPage() {
         invoice={previewInvoice}
         isOpen={!!previewInvoice}
         onClose={handleClosePreview}
+        issuerData={issuerData}
       />
 
       {/* Componente oculto para descarga directa */}
@@ -560,6 +582,7 @@ export default function EmitirFacturaPage() {
         <DirectPDFDownload
           invoice={downloadInvoice}
           onComplete={handleDownloadComplete}
+          issuerData={issuerData}
         />
       )}
     </div>
