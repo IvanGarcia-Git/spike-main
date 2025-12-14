@@ -272,21 +272,9 @@ export default function NewRateModal({
               {/* Luz */}
               {companyType === "Luz" && (
                 <>
-                  <div className="mb-4">
-                    <label className="block text-black mb-2" htmlFor="powerSlot1">
-                      Potencia Slot 1 (kW)
-                    </label>
-                    <input
-                      type="number"
-                      id="powerSlot1"
-                      className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                      value={newRate.powerSlot1}
-                      onChange={(e) => setNewRate({ ...newRate, powerSlot1: e.target.value })}
-                    />
-                  </div>
-
-                  {[2, 3, 4, 5, 6].map((slot) => (
-                    <div key={slot} className="mb-4">
+                  {/* Potencia - 2 tramos para 2.0, 6 tramos para 3.0/6.1 */}
+                  {(newRate.type === "2.0" ? [1, 2] : [1, 2, 3, 4, 5, 6]).map((slot) => (
+                    <div key={`power-${slot}`} className="mb-4">
                       <label className="block text-black mb-2" htmlFor={`powerSlot${slot}`}>
                         Potencia Slot {slot} (kW)
                       </label>
@@ -304,21 +292,9 @@ export default function NewRateModal({
                       />
                     </div>
                   ))}
-                  {/* Energía */}
-                  <div className="mb-4">
-                    <label className="block text-black mb-2" htmlFor="energySlot1">
-                      Energía Slot 1 (€/kWh)
-                    </label>
-                    <input
-                      type="number"
-                      id="energySlot1"
-                      className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                      value={newRate.energySlot1}
-                      onChange={(e) => setNewRate({ ...newRate, energySlot1: e.target.value })}
-                    />
-                  </div>
-                  {[2, 3, 4, 5, 6].map((slot) => (
-                    <div key={slot} className="mb-4">
+                  {/* Energía - 3 tramos para 2.0, 6 tramos para 3.0/6.1 */}
+                  {(newRate.type === "2.0" ? [1, 2, 3] : [1, 2, 3, 4, 5, 6]).map((slot) => (
+                    <div key={`energy-${slot}`} className="mb-4">
                       <label className="block text-black mb-2" htmlFor={`energySlot${slot}`}>
                         Energía Slot {slot} (€/kWh)
                       </label>
