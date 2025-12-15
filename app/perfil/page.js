@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function Perfil() {
   const [activeTab, setActiveTab] = useState("info-personal");
@@ -12,6 +12,10 @@ export default function Perfil() {
   // Modal state
   const [showEditModal, setShowEditModal] = useState(false);
   const [editForm, setEditForm] = useState({});
+
+  // Avatar upload state
+  const fileInputRef = useRef(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   useEffect(() => {
     fetchPerfilData();
@@ -64,6 +68,59 @@ export default function Perfil() {
     }
   };
 
+  const handleAvatarClick = () => {
+    if (!uploadingAvatar) {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de archivo
+    const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      alert("Por favor selecciona una imagen válida (JPG, PNG, GIF o WebP)");
+      return;
+    }
+
+    // Validar tamaño (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("La imagen no puede superar los 5MB");
+      return;
+    }
+
+    try {
+      setUploadingAvatar(true);
+
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      const response = await fetch("/api/perfil/avatar", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserData({ ...userData, avatar: data.avatar });
+      } else {
+        const error = await response.json();
+        alert(error.message || "Error al subir la imagen");
+      }
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      alert("Error al subir la imagen");
+    } finally {
+      setUploadingAvatar(false);
+      // Limpiar el input para permitir subir el mismo archivo de nuevo
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
   const getEstadoColor = (estado) => {
     switch (estado.toLowerCase()) {
       case "aprobada":
@@ -102,9 +159,22 @@ export default function Perfil() {
       <div className="grid grid-cols-12 gap-6">
         {/* Left Column - Profile Picture and Navigation */}
         <div className="col-span-12 lg:col-span-4 flex flex-col items-center">
+          {/* Hidden file input */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleAvatarChange}
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            className="hidden"
+          />
+
           {/* Profile Picture */}
-          <div className="neumorphic-card rounded-full p-2 mb-4">
-            <div className="w-32 h-32 rounded-full neumorphic-card-inset flex items-center justify-center overflow-hidden">
+          <div
+            className="neumorphic-card rounded-full p-2 mb-4 cursor-pointer group"
+            onClick={handleAvatarClick}
+            title="Haz clic para cambiar tu foto de perfil"
+          >
+            <div className="w-32 h-32 rounded-full neumorphic-card-inset flex items-center justify-center overflow-hidden relative">
               {userData?.avatar ? (
                 <img src={userData.avatar} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
@@ -112,6 +182,16 @@ export default function Perfil() {
                   person
                 </span>
               )}
+              {/* Overlay con icono de cámara */}
+              <div className={`absolute inset-0 bg-black/50 flex items-center justify-center rounded-full transition-opacity ${uploadingAvatar ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                {uploadingAvatar ? (
+                  <div className="animate-spin">
+                    <span className="material-icons-outlined text-3xl text-white">sync</span>
+                  </div>
+                ) : (
+                  <span className="material-icons-outlined text-3xl text-white">photo_camera</span>
+                )}
+              </div>
             </div>
           </div>
 
