@@ -1197,11 +1197,14 @@ export default function Contracts() {
           <div className="neumorphic-card-inset rounded-lg">
             <select
               value={entriesPerPage}
-              onChange={(e) => setEntriesPerPage(Number(e.target.value))}
+              onChange={(e) => {
+                setEntriesPerPage(Number(e.target.value));
+                setPagination((prev) => ({ ...prev, page: 1 }));
+              }}
               className="bg-transparent border-none focus:ring-0 text-sm font-medium py-2 px-3 text-slate-600 dark:text-slate-300"
             >
               <option value={10}>10 por página</option>
-              <option value={20}>20 por página</option>
+              <option value={25}>25 por página</option>
               <option value={50}>50 por página</option>
               <option value={100}>100 por página</option>
             </select>
