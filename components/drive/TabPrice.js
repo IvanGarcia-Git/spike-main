@@ -11,6 +11,7 @@ function TabPrice() {
 
   const [companies, setCompanies] = useState([]);
   const [rates, setRates] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [openCompanyIds, setOpenCompanyIds] = useState(new Set());
 
@@ -26,7 +27,7 @@ function TabPrice() {
         const companiesResponse = await response.json();
         setCompanies(companiesResponse);
       } else {
-        alert("Error cargando la información de las compañías");
+        console.error("Error cargando la información de las compañías");
       }
     } catch (error) {
       console.error("Error enviando la solicitud:", error);
@@ -42,7 +43,7 @@ function TabPrice() {
         const ratesData = await response.json();
         setRates(ratesData);
       } else {
-        alert("Error al cargar las tarifas disponibles");
+        console.error("Error al cargar las tarifas disponibles");
       }
     } catch (error) {
       console.error("Error al obtener las tarifas:", error);
@@ -62,8 +63,12 @@ function TabPrice() {
   };
 
   useEffect(() => {
-    getCompanies();
-    getRates();
+    const fetchData = async () => {
+      setLoading(true);
+      await Promise.all([getCompanies(), getRates()]);
+      setLoading(false);
+    };
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -75,303 +80,368 @@ function TabPrice() {
     }
   }, [activeTab, companies]);
 
-  return (
-    <div className="flex flex-wrap gap-11 mt-16 pb-16">
-      <div className={`flex flex-col  ${isMobile ? "w-full gap-7" : "gap-24"}`}>
-        <div className="flex flex-wrap border rounded-full border-black overflow-hidden relative z-0 items-center justify-center">
-          <button
-            className={`relative z-10 flex-1 text-center py-3 px-6 focus:outline-none transition duration-300 ease-in-out border-r border-black
-            ${
-              activeTab === "Luz"
-                ? "text-yellow-600 font-semibold bg-blue-100"
-                : "text-gray-600 hover:text-yellow-600 font-semibold"
-            }`}
-            onClick={() => setActiveTab("Luz")}
-          >
-            LUZ
-          </button>
+  const tabs = [
+    { id: "Luz", label: "LUZ", icon: "bolt" },
+    { id: "Gas", label: "GAS", icon: "local_fire_department" },
+    { id: "Telefonía", label: "TLF", icon: "phone" },
+  ];
 
-          <button
-            className={`relative z-10 flex-1 text-center py-3 px-6 focus:outline-none transition duration-300 ease-in-out  border-r border-black
-            ${
-              activeTab === "Gas"
-                ? "text-red-600 font-semibold bg-blue-100"
-                : "text-gray-600 hover:text-red-600 font-semibold"
-            }`}
-            onClick={() => setActiveTab("Gas")}
-          >
-            GAS
-          </button>
+  const tarifaTabs = [
+    { id: "2.0", label: "Tarifa 2.0" },
+    { id: "3.0", label: "Tarifa 3.0" },
+    { id: "6.1", label: "Tarifa 6.1" },
+  ];
 
-          <button
-            className={`relative z-10 flex-1 text-center py-3 px-6 focus:outline-none transition duration-300 ease-in-out
-            ${
-              activeTab === "Telefonía"
-                ? "font-semibold bg-blue-100 text-blue-600"
-                : "text-gray-600 hover:text-blue-600 font-semibold"
-            }`}
-            onClick={() => setActiveTab("Telefonía")}
-          >
-            TLF
-          </button>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="neumorphic-card p-8 rounded-xl text-center">
+          <span className="material-icons-outlined text-5xl text-primary animate-spin">
+            refresh
+          </span>
+          <p className="mt-4 text-slate-600 dark:text-slate-400">
+            Cargando precios...
+          </p>
         </div>
+      </div>
+    );
+  }
 
-        {activeTab !== "Telefonía" && (
-          <div
-            className={`flex ${
-              !isMobile && "flex-col"
-            } gap-5 overflow-hidden relative z-0 items-center justify-center`}
-          >
-            <button
-              className={`relative z-10 w-auto text-center py-3 px-6 focus:outline-none transition duration-300 ease-in-out
-            ${
-              activeTabVertical === "2.0"
-                ? "font-semibold border-b-2 border-blue-100"
-                : "text-gray-600 hover:text-blue-600 font-semibold"
-            }`}
-              onClick={() => setActiveTabVertical("2.0")}
-            >
-              Tarifa 2.0
-            </button>
-
-            <button
-              className={`relative z-10 w-auto text-center py-3 px-6 focus:outline-none transition duration-300 ease-in-out
-            ${
-              activeTabVertical === "3.0"
-                ? "font-semibold border-b-2 border-blue-100"
-                : "text-gray-600 hover:text-blue-600 font-semibold"
-            }`}
-              onClick={() => setActiveTabVertical("3.0")}
-            >
-              Tarifa 3.0
-            </button>
-
-            <button
-              className={`relative z-10 w-auto text-center py-3 px-6 focus:outline-none transition duration-300 ease-in-out
-            ${
-              activeTabVertical === "6.1"
-                ? "font-semibold border-b-2 border-blue-100"
-                : "text-gray-600 hover:text-blue-600 font-semibold"
-            }`}
-              onClick={() => setActiveTabVertical("6.1")}
-            >
-              Tarifa 6.1
-            </button>
+  return (
+    <div className={`flex ${isMobile ? "flex-col" : "flex-row"} gap-6`}>
+      {/* Sidebar de filtros */}
+      <div className={`${isMobile ? "w-full" : "w-64"} flex-shrink-0`}>
+        <div className="neumorphic-card p-6 sticky top-6">
+          {/* Tabs de tipo de energía */}
+          <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">
+            Tipo de Servicio
+          </h3>
+          <div className="flex flex-col gap-2 mb-6">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center p-3 rounded-lg transition-all ${
+                  activeTab === tab.id
+                    ? "neumorphic-button active bg-primary/10 text-primary"
+                    : "neumorphic-button text-slate-600 dark:text-slate-400 hover:text-primary"
+                }`}
+              >
+                <span className="material-icons-outlined mr-3">{tab.icon}</span>
+                <span className="font-medium">{tab.label}</span>
+              </button>
+            ))}
           </div>
-        )}
+
+          {/* Tabs de tarifa (solo para Luz y Gas) */}
+          {activeTab !== "Telefonía" && (
+            <>
+              <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">
+                Tipo de Tarifa
+              </h3>
+              <div className="flex flex-col gap-2">
+                {tarifaTabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTabVertical(tab.id)}
+                    className={`flex items-center p-3 rounded-lg transition-all ${
+                      activeTabVertical === tab.id
+                        ? "neumorphic-button active bg-primary/10 text-primary"
+                        : "neumorphic-button text-slate-600 dark:text-slate-400 hover:text-primary"
+                    }`}
+                  >
+                    <span className="material-icons-outlined mr-3">
+                      electric_meter
+                    </span>
+                    <span className="font-medium">{tab.label}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
-      <div className={`w-[2px] bg-blue-100 self-stretch ${isMobile ? "hidden" : "block"}`}></div>
+      {/* Contenido principal */}
+      <div className="flex-1">
+        <div className="space-y-4">
+          {companies
+            .filter((company) => company.type === activeTab)
+            .map((company) => {
+              const isThisCompanyOpen = openCompanyIds.has(company.id);
 
-      <div className={`flex flex-col gap-7 ${isMobile ? "w-full" : "w-4/6"}`}>
-        {companies
-          .filter((company) => company.type === activeTab)
-          .map((company) => {
-            const isThisCompanyOpen = openCompanyIds.has(company.id);
-
-            return (
-              <div key={company.id} className="shadow-md">
-                <div
-                  className={`bg-blue-100 cursor-pointer flex justify-between items-center p-4 ${
-                    isThisCompanyOpen ? "border-b border-blue-50" : ""
-                  }`}
-                  onClick={() => toggleCompany(company.id)}
-                >
-                  <img
-                    src={company.imageUri}
-                    alt={company.name}
-                    className="h-24 w-auto object-contain"
-                  />
-                  <svg
-                    className={`w-5 h-5 transform transition-transform duration-200 ${
-                      isThisCompanyOpen ? "rotate-180" : "rotate-0"
+              return (
+                <div key={company.id} className="neumorphic-card overflow-hidden">
+                  {/* Header de la compañía */}
+                  <div
+                    className={`cursor-pointer flex justify-between items-center p-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 ${
+                      isThisCompanyOpen
+                        ? "border-b border-slate-200 dark:border-slate-700"
+                        : ""
                     }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
+                    onClick={() => toggleCompany(company.id)}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"
-                    ></path>{" "}
-                  </svg>
-                </div>
-
-                {isThisCompanyOpen && (
-                  <>
-                    <div
-                      className={`grid ${
-                        activeTab === "Telefonía" ? "grid-cols-2" : "grid-cols-6"
-                      } gap-4 font-semibold bg-blue-50 px-4 py-5 text-center items-center`}
-                    >
-                      {activeTab === "Telefonía" ? (
-                        <>
-                          <div>Tarifa</div>
-                          <div>Precio Final</div>
-                        </>
+                    <div className="flex items-center gap-4">
+                      {company.imageUri ? (
+                        <img
+                          src={company.imageUri}
+                          alt={company.name}
+                          className="h-16 w-auto object-contain"
+                        />
                       ) : (
-                        <>
-                          <div>Tarifa</div> <div>P.Punta</div>
-                          <div>P.Valle</div>
-                          <div>Energía</div>
-                          <div>Excedentes</div>
-                          <div>Retro</div>
-                        </>
-                      )}
-                    </div>
-                    <div className="px-4 bg-blue-50 text-center items-center pb-7">
-                      {rates
-                        .filter((rate) => {
-                          if (activeTab === "Telefonía") {
-                            return rate.companyId === company.id;
-                          } else {
-                            return rate.companyId === company.id && rate.type === activeTabVertical;
-                          }
-                        })
-                        .map((rate) => (
-                          <div
-                            key={rate.id}
-                            className={`grid hover:bg-blue-100 ${
-                              activeTab === "Telefonía" ? "grid-cols-2" : "grid-cols-6"
-                            } gap-4 py-3`}
-                          >
-                            {activeTab === "Telefonía" ? (
-                              <>
-                                <div className="flex items-center justify-center">{rate.name}</div>
-                                <div className="flex items-center justify-center">
-                                  {rate.finalPrice || "-"}
-                                </div>
-                              </>
-                            ) : (
-                              <>
-                                <div className="flex items-center justify-center">
-                                  {rate.name || "-"}{" "}
-                                </div>
-                                <div className="flex items-center justify-center">
-                                  {(() => {
-                                    const powerValues = [
-                                      rate.powerSlot1,
-                                      rate.powerSlot2,
-                                      rate.powerSlot3,
-                                      rate.powerSlot4,
-                                      rate.powerSlot5,
-                                      rate.powerSlot6,
-                                    ]
-                                      .map((value) => parseFloat(value))
-                                      .filter((value) => !isNaN(value));
-                                    const maxPower =
-                                      powerValues.length > 0 ? Math.max(...powerValues) : null;
-
-                                    return (
-                                      maxPower !== null && (
-                                        <span className="bg-yellow-300 text-black px-4 py-2 rounded-full text-sm font-medium flex flex-wrap items-center justify-center">
-                                          {maxPower}
-                                        </span>
-                                      )
-                                    );
-                                  })()}
-                                </div>
-
-                                <div className="flex items-center justify-center">
-                                  {(() => {
-                                    const powerValues = [
-                                      rate.powerSlot1,
-                                      rate.powerSlot2,
-                                      rate.powerSlot3,
-                                      rate.powerSlot4,
-                                      rate.powerSlot5,
-                                      rate.powerSlot6,
-                                    ]
-                                      .map((value) => parseFloat(value))
-                                      .filter((value) => !isNaN(value));
-                                    const minPower =
-                                      powerValues.length > 0 ? Math.min(...powerValues) : null;
-
-                                    return (
-                                      minPower !== null && (
-                                        <span className="bg-yellow-300 text-black px-4 py-2 rounded-full text-sm font-medium flex flex-wrap items-center justify-center">
-                                          {minPower}
-                                        </span>
-                                      )
-                                    );
-                                  })()}
-                                </div>
-
-                                <div className="flex flex-wrap items-center justify-center gap-2">
-                                  {rate.energySlot1 && (
-                                    <span className="bg-blue-400 text-black px-4 py-2 rounded-full text-sm font-medium">
-                                      {rate.energySlot1}
-                                    </span>
-                                  )}
-                                  {rate.energySlot2 && (
-                                    <span className="bg-blue-400 text-black px-4 py-2 rounded-full text-sm font-medium">
-                                      {rate.energySlot2}
-                                    </span>
-                                  )}
-                                  {rate.energySlot3 && (
-                                    <span className="bg-blue-400 text-black px-4 py-2 rounded-full text-sm font-medium">
-                                      {rate.energySlot3}
-                                    </span>
-                                  )}
-                                  {rate.energySlot4 && (
-                                    <span className="bg-blue-400 text-black px-4 py-2 rounded-full text-sm font-medium">
-                                      {rate.energySlot4}
-                                    </span>
-                                  )}
-                                  {rate.energySlot5 && (
-                                    <span className="bg-blue-400 text-black px-4 py-2 rounded-full text-sm font-medium">
-                                      {rate.energySlot5}
-                                    </span>
-                                  )}
-                                  {rate.energySlot6 && (
-                                    <span className="bg-blue-400 text-black px-4 py-2 rounded-full text-sm font-medium">
-                                      {rate.energySlot6}
-                                    </span>
-                                  )}
-                                </div>
-
-                                <div className="flex items-center justify-center">
-                                  {rate.surplusSlot1 && (
-                                    <span className="bg-pink-400 text-black px-4 py-2 rounded-full text-sm font-medium flex flex-wrap items-center justify-center">
-                                      {rate.surplusSlot1}
-                                    </span>
-                                  )}
-                                </div>
-
-                                <div className="flex items-center justify-center">
-                                  {rate.renewDays || "-"}
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        ))}
-
-                      {rates.filter((rate) =>
-                        activeTab === "Telefonía"
-                          ? rate.companyId === company.id
-                          : rate.companyId === company.id && rate.type === activeTabVertical
-                      ).length === 0 && (
-                        <div className="text-center text-gray-500 text-sm py-4">
-                          {activeTab === "Telefonía"
-                            ? `No hay tarifas de telefonía disponibles para "${company.name}".`
-                            : `No hay tarifas disponibles para la tarifa "${activeTabVertical}" de "${company.name}".`}
+                        <div className="h-16 w-32 neumorphic-card-inset rounded-lg flex items-center justify-center">
+                          <span className="text-lg font-bold text-slate-400">
+                            {company.name}
+                          </span>
                         </div>
                       )}
                     </div>
-                  </>
-                )}
-              </div>
-            );
-          })}
+                    <span
+                      className={`material-icons-outlined text-slate-500 transition-transform duration-200 ${
+                        isThisCompanyOpen ? "rotate-180" : "rotate-0"
+                      }`}
+                    >
+                      expand_more
+                    </span>
+                  </div>
 
-        {companies.filter((company) => company.type === activeTab).length === 0 && (
-          <div className="text-center text-gray-500 py-8">
-            No hay datos disponibles para "{activeTab}".
-          </div>
-        )}
+                  {/* Contenido expandible */}
+                  {isThisCompanyOpen && (
+                    <div className="p-4">
+                      {/* Header de la tabla */}
+                      <div
+                        className={`grid ${
+                          activeTab === "Telefonía" ? "grid-cols-2" : "grid-cols-6"
+                        } gap-4 mb-4`}
+                      >
+                        {activeTab === "Telefonía" ? (
+                          <>
+                            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">
+                              Tarifa
+                            </div>
+                            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">
+                              Precio Final
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">
+                              Tarifa
+                            </div>
+                            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">
+                              P.Punta
+                            </div>
+                            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">
+                              P.Valle
+                            </div>
+                            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">
+                              Energía
+                            </div>
+                            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">
+                              Excedentes
+                            </div>
+                            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">
+                              Retro
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Filas de tarifas */}
+                      <div className="space-y-2">
+                        {rates
+                          .filter((rate) => {
+                            if (activeTab === "Telefonía") {
+                              return rate.companyId === company.id;
+                            } else {
+                              return (
+                                rate.companyId === company.id &&
+                                rate.type === activeTabVertical
+                              );
+                            }
+                          })
+                          .map((rate) => (
+                            <div
+                              key={rate.id}
+                              className={`grid ${
+                                activeTab === "Telefonía"
+                                  ? "grid-cols-2"
+                                  : "grid-cols-6"
+                              } gap-4 p-3 rounded-lg neumorphic-card-inset hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors`}
+                            >
+                              {activeTab === "Telefonía" ? (
+                                <>
+                                  <div className="flex items-center justify-center">
+                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                      {rate.name}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-center">
+                                    <span className="px-3 py-1 rounded-full text-sm font-semibold bg-primary/20 text-primary">
+                                      {rate.finalPrice || "-"}
+                                    </span>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  {/* Nombre de tarifa */}
+                                  <div className="flex items-center justify-center">
+                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                      {rate.name || "-"}
+                                    </span>
+                                  </div>
+
+                                  {/* P.Punta (máximo de power slots) */}
+                                  <div className="flex items-center justify-center">
+                                    {(() => {
+                                      const powerValues = [
+                                        rate.powerSlot1,
+                                        rate.powerSlot2,
+                                        rate.powerSlot3,
+                                        rate.powerSlot4,
+                                        rate.powerSlot5,
+                                        rate.powerSlot6,
+                                      ]
+                                        .map((value) => parseFloat(value))
+                                        .filter((value) => !isNaN(value));
+                                      const maxPower =
+                                        powerValues.length > 0
+                                          ? Math.max(...powerValues)
+                                          : null;
+
+                                      return maxPower !== null ? (
+                                        <span className="px-3 py-1 rounded-full text-sm font-semibold bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400">
+                                          {maxPower}
+                                        </span>
+                                      ) : (
+                                        <span className="text-slate-400">-</span>
+                                      );
+                                    })()}
+                                  </div>
+
+                                  {/* P.Valle (mínimo de power slots) */}
+                                  <div className="flex items-center justify-center">
+                                    {(() => {
+                                      const powerValues = [
+                                        rate.powerSlot1,
+                                        rate.powerSlot2,
+                                        rate.powerSlot3,
+                                        rate.powerSlot4,
+                                        rate.powerSlot5,
+                                        rate.powerSlot6,
+                                      ]
+                                        .map((value) => parseFloat(value))
+                                        .filter((value) => !isNaN(value));
+                                      const minPower =
+                                        powerValues.length > 0
+                                          ? Math.min(...powerValues)
+                                          : null;
+
+                                      return minPower !== null ? (
+                                        <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400">
+                                          {minPower}
+                                        </span>
+                                      ) : (
+                                        <span className="text-slate-400">-</span>
+                                      );
+                                    })()}
+                                  </div>
+
+                                  {/* Energía (slots de energía) */}
+                                  <div className="flex flex-wrap items-center justify-center gap-1">
+                                    {[
+                                      rate.energySlot1,
+                                      rate.energySlot2,
+                                      rate.energySlot3,
+                                      rate.energySlot4,
+                                      rate.energySlot5,
+                                      rate.energySlot6,
+                                    ]
+                                      .filter(Boolean)
+                                      .map((value, index) => (
+                                        <span
+                                          key={index}
+                                          className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400"
+                                        >
+                                          {value}
+                                        </span>
+                                      ))}
+                                    {![
+                                      rate.energySlot1,
+                                      rate.energySlot2,
+                                      rate.energySlot3,
+                                      rate.energySlot4,
+                                      rate.energySlot5,
+                                      rate.energySlot6,
+                                    ].some(Boolean) && (
+                                      <span className="text-slate-400">-</span>
+                                    )}
+                                  </div>
+
+                                  {/* Excedentes */}
+                                  <div className="flex items-center justify-center">
+                                    {rate.surplusSlot1 ? (
+                                      <span className="px-3 py-1 rounded-full text-sm font-semibold bg-pink-100 dark:bg-pink-900/50 text-pink-700 dark:text-pink-400">
+                                        {rate.surplusSlot1}
+                                      </span>
+                                    ) : (
+                                      <span className="text-slate-400">-</span>
+                                    )}
+                                  </div>
+
+                                  {/* Retro */}
+                                  <div className="flex items-center justify-center">
+                                    {rate.renewDays ? (
+                                      <span className="px-3 py-1 rounded-full text-sm font-semibold bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-400">
+                                        {rate.renewDays} días
+                                      </span>
+                                    ) : (
+                                      <span className="text-slate-400">-</span>
+                                    )}
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          ))}
+
+                        {/* Mensaje si no hay tarifas */}
+                        {rates.filter((rate) =>
+                          activeTab === "Telefonía"
+                            ? rate.companyId === company.id
+                            : rate.companyId === company.id &&
+                              rate.type === activeTabVertical
+                        ).length === 0 && (
+                          <div className="text-center py-8">
+                            <span className="material-icons-outlined text-4xl text-slate-300 dark:text-slate-600 mb-2">
+                              info
+                            </span>
+                            <p className="text-slate-500 dark:text-slate-400 text-sm">
+                              {activeTab === "Telefonía"
+                                ? `No hay tarifas de telefonía disponibles para "${company.name}".`
+                                : `No hay tarifas disponibles para la tarifa "${activeTabVertical}" de "${company.name}".`}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+          {/* Mensaje si no hay compañías */}
+          {companies.filter((company) => company.type === activeTab).length ===
+            0 && (
+            <div className="neumorphic-card p-8 text-center">
+              <span className="material-icons-outlined text-6xl text-slate-300 dark:text-slate-600 mb-4">
+                business
+              </span>
+              <p className="text-slate-500 dark:text-slate-400">
+                No hay compañías disponibles para "{activeTab}".
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

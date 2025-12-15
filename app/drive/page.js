@@ -1,8 +1,13 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import TabPrice from "@/components/drive/TabPrice";
 
 export default function Drive() {
+  const searchParams = useSearchParams();
+  const section = searchParams.get("section");
+
   const [activeSection, setActiveSection] = useState("mi-unidad");
   const [carpetas, setCarpetas] = useState([]);
   const [archivos, setArchivos] = useState([]);
@@ -285,6 +290,26 @@ export default function Drive() {
     const date = new Date(dateStr);
     return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
+
+  // Si la sección es "precios", mostrar la página de precios
+  if (section === "precios") {
+    return (
+      <div className="p-6">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+            Precios por Compañía
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400">
+            Consulta las tarifas y precios de cada compañía
+          </p>
+        </div>
+
+        {/* Componente de precios */}
+        <TabPrice />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
