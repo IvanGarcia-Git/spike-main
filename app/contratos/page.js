@@ -1060,7 +1060,10 @@ export default function Contracts() {
             </thead>
             <tbody>
               {contracts.map((contract) => (
-                <tr key={contract.uuid} className="table-row-divider">
+                <tr
+                  key={contract.uuid}
+                  className={`table-row-divider ${contract.isRenewed ? 'renewed-contract-row' : ''}`}
+                >
                   <td className="p-3">
                     <input
                       type="checkbox"
@@ -1093,9 +1096,17 @@ export default function Contracts() {
                     {contract.type}
                   </td>
                   <td className="p-3">
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary">
-                      {contract.contractState.name}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary">
+                        {contract.contractState.name}
+                      </span>
+                      {contract.isRenewed && (
+                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                          <span className="material-icons-outlined text-xs">autorenew</span>
+                          Renovado
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="p-3 text-slate-600 dark:text-slate-400">
                     {contract?.channel?.name || contract?.rate?.channel?.name || "No asignado"}

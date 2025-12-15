@@ -164,6 +164,34 @@ export default function ContractDetail({ params }) {
       : router.push(`/nuevo-contrato?customerUuid=${customerUuid}`);
   };
 
+  const handleRenewDuplicate = async () => {
+    if (!confirm("¿Estás seguro de que quieres renovar este contrato? Se creará una copia del contrato con fecha de hoy y el contrato actual quedará marcado como 'Ya renovado'.")) {
+      return;
+    }
+
+    const jwtToken = getCookie("factura-token");
+    try {
+      const response = await authFetch(
+        "POST",
+        `contracts/renew-duplicate/${contractUuid}`,
+        {},
+        jwtToken
+      );
+
+      if (response.ok) {
+        const newContract = await response.json();
+        alert("Contrato renovado con éxito");
+        router.push(`/contratos/${customerUuid}/${newContract.uuid}`);
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || "Error al renovar el contrato");
+      }
+    } catch (error) {
+      console.error("Error renovando el contrato:", error);
+      alert("Error al renovar el contrato");
+    }
+  };
+
   const handleCustomerUpdate = async (updatedCustomerData) => {
     const jwtToken = getCookie("factura-token");
     try {
@@ -383,7 +411,7 @@ export default function ContractDetail({ params }) {
             {/* Información de la tarifa */}
             <RatesPricing contract={activeContract} />
 
-            {/* Botón Duplicar Ficha */}
+            {/* Botones de acciones */}
             <div className="flex flex-col space-y-2">
               <button
                 onClick={openEventModal}
@@ -399,6 +427,21 @@ export default function ContractDetail({ params }) {
                 <span className="material-icons-outlined mr-2 text-base">content_copy</span>
                 Duplicar Ficha
               </button>
+              {!contract?.isRenewed && (
+                <button
+                  onClick={handleRenewDuplicate}
+                  className="flex items-center px-5 py-2 rounded-lg neumorphic-button font-medium text-emerald-600 dark:text-emerald-400 border-2 border-emerald-500"
+                >
+                  <span className="material-icons-outlined mr-2 text-base">autorenew</span>
+                  Renovar
+                </button>
+              )}
+              {contract?.isRenewed && (
+                <span className="flex items-center px-5 py-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 font-medium text-sm">
+                  <span className="material-icons-outlined mr-2 text-base">check_circle</span>
+                  Ya renovado
+                </span>
+              )}
             </div>
           </div>
         </div>

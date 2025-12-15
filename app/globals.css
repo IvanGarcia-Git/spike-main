@@ -731,3 +731,96 @@ span[data-field-id].field-completed {
   display: flex;
   align-items: center;
 }
+
+/* Estilos para contratos renovados - efecto de tarjetas apiladas */
+.stacked-card-container {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.stacked-card-container .stacked-card-back {
+  position: absolute;
+  top: 6px;
+  left: 4px;
+  right: -4px;
+  bottom: -6px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 8px;
+  box-shadow: 2px 2px 8px rgba(251, 191, 36, 0.3);
+  z-index: 0;
+  border: 1px solid #fcd34d;
+}
+
+.stacked-card-container .stacked-card-back::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: -3px;
+  width: 3px;
+  height: calc(100% - 8px);
+  background: linear-gradient(to bottom, #fcd34d, #f59e0b);
+  border-radius: 0 4px 4px 0;
+}
+
+.dark .stacked-card-container .stacked-card-back {
+  background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
+  border-color: #b45309;
+  box-shadow: 2px 2px 8px rgba(180, 83, 9, 0.4);
+}
+
+.dark .stacked-card-container .stacked-card-back::before {
+  background: linear-gradient(to bottom, #b45309, #d97706);
+}
+
+.stacked-card-container .stacked-card-front {
+  position: relative;
+  z-index: 1;
+  background: var(--background);
+  border-radius: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stacked-card-container:hover .stacked-card-front {
+  transform: translateY(-2px) translateX(-2px);
+  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dark .stacked-card-container:hover .stacked-card-front {
+  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Animación sutil de vibración para indicar que hay más tarjetas */
+@keyframes subtle-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(1px); }
+  75% { transform: translateX(-1px); }
+}
+
+.stacked-card-container:hover .stacked-card-back {
+  animation: subtle-shake 0.3s ease-in-out;
+}
+
+/* Estilos para la fila de la tabla con efecto de tarjeta renovada */
+.renewed-contract-row {
+  position: relative;
+}
+
+.renewed-contract-row > td:first-child {
+  position: relative;
+}
+
+.renewed-contract-row > td:first-child::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 70%;
+  background: linear-gradient(to bottom, #fcd34d, #f59e0b);
+  border-radius: 4px;
+}
+
+.dark .renewed-contract-row > td:first-child::before {
+  background: linear-gradient(to bottom, #d97706, #b45309);
+}
