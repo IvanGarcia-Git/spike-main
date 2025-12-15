@@ -646,23 +646,23 @@ export default function Contracts() {
 
     const contractData = contractsToExport.map((contract) => ({
       Identificador: contract.uuid,
-      Cliente: `${contract.customer.name} ${contract.customer.surnames}`,
-      Email_Cliente: contract.customer.email,
-      Dirección_Cliente: `${contract.customer.address}, ${contract.customer.zipCode}, ${contract.customer.province}, ${contract.customer.populace}`,
-      Teléfono: contract.customer.phoneNumber,
-      IBAN: contract.customer.iban,
-      Tipo_Cliente: contract.customer.type,
-      DNI_CIF: contract?.cif ? contract.customer.cif : contract.customer.nationalId,
+      Cliente: `${contract.customer?.name || ""} ${contract.customer?.surnames || ""}`,
+      Email_Cliente: contract.customer?.email || "",
+      Dirección_Cliente: `${contract.customer?.address || ""}, ${contract.customer?.zipCode || ""}, ${contract.customer?.province || ""}, ${contract.customer?.populace || ""}`,
+      Teléfono: contract.customer?.phoneNumber || "",
+      IBAN: contract.customer?.iban || "",
+      Tipo_Cliente: contract.customer?.type || "",
+      DNI_CIF: contract?.cif ? contract.customer?.cif : contract.customer?.nationalId || "",
       CUPS: contract.cups,
       Mantenimiento: contract.maintenance ? "Sí" : "No",
       Factura_Electronica: contract.electronicBill ? "Sí" : "No",
       Pagado: contract.payed ? "Sí" : "No",
       Tipo: contract.type,
-      Estado: contract.contractState.name,
+      Estado: contract.contractState?.name || "Sin estado",
       Canal: contract?.channel?.name || contract?.rate?.channel?.name || "No Asignado",
       Compañía: contract?.company?.name || "",
       Tarifa: contract?.rate?.name || "",
-      Agente: `${contract.user.name} ${contract.user.firstSurname}`,
+      Agente: `${contract.user?.name || ""} ${contract.user?.firstSurname || ""}`,
       Información_Adicional: contract.extraInfo,
       BAT_Virtual: contract?.virtualBat ? "Sí" : "No",
       Placas: contract?.solarPlates ? "Sí" : "No",
@@ -1106,10 +1106,10 @@ export default function Contracts() {
                       )}
                       <div>
                         <p className="font-medium text-slate-800 dark:text-slate-200">
-                          {contract.customer.name} {contract.customer.surnames}
+                          {contract.customer?.name || ""} {contract.customer?.surnames || ""}
                         </p>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {contract.customer.email}
+                          {contract.customer?.email || ""}
                         </p>
                       </div>
                     </div>
@@ -1123,7 +1123,7 @@ export default function Contracts() {
                   <td className="p-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary">
-                        {contract.contractState.name}
+                        {contract.contractState?.name || "Sin estado"}
                       </span>
                       {contract.isRenewed && (
                         <div className="stacked-card-container" style={{ display: 'inline-block' }}>
@@ -1140,7 +1140,7 @@ export default function Contracts() {
                     {contract?.channel?.name || contract?.rate?.channel?.name || "No asignado"}
                   </td>
                   <td className="p-3 text-slate-600 dark:text-slate-400">
-                    {contract.user.name} {contract.user.firstSurname}
+                    {contract.user?.name || ""} {contract.user?.firstSurname || ""}
                   </td>
                   <td className="p-3 text-slate-600 dark:text-slate-400 text-sm">
                     {formatDayDate(contract.createdAt)}
@@ -1148,7 +1148,7 @@ export default function Contracts() {
                   <td className="p-3">
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => router.push(`/contratos/${contract.customer.uuid}/${contract.uuid}`)}
+                        onClick={() => router.push(`/contratos/${contract.customer?.uuid}/${contract.uuid}`)}
                         className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-400"
                       >
                         <span className="material-icons-outlined text-lg">visibility</span>
