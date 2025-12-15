@@ -1065,20 +1065,45 @@ export default function Contracts() {
                   className={`table-row-divider ${contract.isRenewed ? 'renewed-contract-row' : ''}`}
                 >
                   <td className="p-3">
-                    <input
-                      type="checkbox"
-                      checked={selectedContracts.includes(contract.uuid)}
-                      onChange={() => handleSelectContract(contract.uuid)}
-                      className="accent-primary"
-                    />
+                    {contract.isRenewed ? (
+                      <div className="stacked-card-container" style={{ width: '20px', height: '20px' }}>
+                        <div className="stacked-card-back" style={{ top: '3px', left: '2px', right: '-2px', bottom: '-3px' }}></div>
+                        <div className="stacked-card-front">
+                          <input
+                            type="checkbox"
+                            checked={selectedContracts.includes(contract.uuid)}
+                            onChange={() => handleSelectContract(contract.uuid)}
+                            className="accent-primary"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <input
+                        type="checkbox"
+                        checked={selectedContracts.includes(contract.uuid)}
+                        onChange={() => handleSelectContract(contract.uuid)}
+                        className="accent-primary"
+                      />
+                    )}
                   </td>
                   <td className="p-3">
                     <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full neumorphic-card p-0.5 flex items-center justify-center mr-3">
-                        <span className="material-icons-outlined text-xl text-slate-500">
-                          person
-                        </span>
-                      </div>
+                      {contract.isRenewed ? (
+                        <div className="stacked-card-container mr-3" style={{ width: '32px', height: '32px' }}>
+                          <div className="stacked-card-back" style={{ top: '3px', left: '2px', right: '-2px', bottom: '-3px', borderRadius: '50%' }}></div>
+                          <div className="stacked-card-front w-8 h-8 rounded-full neumorphic-card p-0.5 flex items-center justify-center">
+                            <span className="material-icons-outlined text-xl text-amber-500">
+                              autorenew
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 rounded-full neumorphic-card p-0.5 flex items-center justify-center mr-3">
+                          <span className="material-icons-outlined text-xl text-slate-500">
+                            person
+                          </span>
+                        </div>
+                      )}
                       <div>
                         <p className="font-medium text-slate-800 dark:text-slate-200">
                           {contract.customer.name} {contract.customer.surnames}
@@ -1096,15 +1121,18 @@ export default function Contracts() {
                     {contract.type}
                   </td>
                   <td className="p-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary">
                         {contract.contractState.name}
                       </span>
                       {contract.isRenewed && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 flex items-center gap-1">
-                          <span className="material-icons-outlined text-xs">autorenew</span>
-                          Renovado
-                        </span>
+                        <div className="stacked-card-container" style={{ display: 'inline-block' }}>
+                          <div className="stacked-card-back" style={{ top: '2px', left: '2px', right: '-2px', bottom: '-2px', borderRadius: '9999px' }}></div>
+                          <span className="stacked-card-front px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 flex items-center gap-1 border border-amber-300 dark:border-amber-700">
+                            <span className="material-icons-outlined text-xs">layers</span>
+                            Ya renovado
+                          </span>
+                        </div>
                       )}
                     </div>
                   </td>
