@@ -5,7 +5,7 @@ import { authGetFetch } from "@/helpers/server-fetch.helper";
 import { validateIBANMath } from "@/helpers/validation.helper";
 import { countries } from "@/public/countries";
 
-function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contractIsDraft }, ref) {
+function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contractIsDraft, electronicBill = true }, ref) {
   const [origins, setOrigins] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -89,7 +89,6 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
         "name",
         "surnames",
         "nationalId",
-        "email",
         "address",
         "zipCode",
         "province",
@@ -97,6 +96,11 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
         "phoneNumber",
         "iban",
       ];
+
+      // Email solo es obligatorio si es factura electrónica
+      if (electronicBill) {
+        requiredFields.push("email");
+      }
 
       for (const field of requiredFields) {
         if (!formData[field] || formData[field].toString().trim() === "") {
@@ -310,7 +314,7 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
       {/* Campo Correo */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="email">
-          Correo
+          Correo {electronicBill ? "*" : "(opcional fra. papel)"}
         </label>
         <input
           type="email"
@@ -320,7 +324,7 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
           value={formData.email}
           disabled={fieldsDisabled}
           onChange={handleChange}
-          required={!contractIsDraft}
+          required={!contractIsDraft && electronicBill}
         />
       </div>
 

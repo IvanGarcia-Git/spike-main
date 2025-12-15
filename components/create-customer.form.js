@@ -9,6 +9,7 @@ export default function CreateCustomerForm({
   onCustomerUpdate,
   documentType,
   onDocumentTypeChange,
+  electronicBill = true,
 }) {
   const [origins, setOrigins] = useState([]);
   const [formData, setFormData] = useState({
@@ -271,7 +272,7 @@ export default function CreateCustomerForm({
       {/* Email */}
       <div className="mb-6">
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="email">
-          Correo Electrónico *
+          Correo Electrónico {electronicBill ? "*" : "(opcional fra. papel)"}
         </label>
         <div className="relative">
           <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
@@ -284,7 +285,7 @@ export default function CreateCustomerForm({
             className="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
             value={formData.email}
             onChange={handleChange}
-            required
+            required={electronicBill}
             placeholder="cliente@ejemplo.com"
           />
         </div>

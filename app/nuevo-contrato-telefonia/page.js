@@ -243,7 +243,10 @@ export default function CreateTelephonyContractPage() {
   const handleCreateContract = async (isDraft = true) => {
     //Validaciones
     if (!isDraft) {
-      if (!isCustomerDataValid(customerData)) {
+      // Email solo obligatorio si el contrato tiene factura electrónica
+      const requireEmailValidation = contractTelephonyData?.electronicBill;
+
+      if (!isCustomerDataValid(customerData, requireEmailValidation)) {
         alert("Por favor, rellena todos los campos del cliente.");
         return;
       }
@@ -317,7 +320,10 @@ export default function CreateTelephonyContractPage() {
         }
       }
 
-      const customerResponse = await authFetch("POST", `customers/`, customerDataToSend, jwtToken);
+      // Email solo obligatorio si el contrato tiene factura electrónica
+      const requireEmail = contractTelephonyData?.electronicBill;
+
+      const customerResponse = await authFetch("POST", `customers/`, { ...customerDataToSend, requireEmail }, jwtToken);
 
       if (customerResponse.ok) {
         const createdCustomer = await customerResponse.json();
@@ -466,6 +472,7 @@ export default function CreateTelephonyContractPage() {
           onCustomerUpdate={handleCustomerUpdate}
           documentType={documentType}
           onDocumentTypeChange={handleSelectChange}
+          electronicBill={contractTelephonyData?.electronicBill}
         />
 
         {/* Telephony Contract Form */}

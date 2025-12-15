@@ -1,16 +1,21 @@
-export function isCustomerDataValid(customerData) {
-  return (
+export function isCustomerDataValid(customerData, requireEmail = true) {
+  const baseValid =
     customerData?.name &&
     customerData?.surnames &&
     customerData?.nationalId &&
-    customerData?.email &&
     customerData?.address &&
     customerData?.zipCode &&
     customerData?.province &&
     customerData?.populace &&
     customerData?.phoneNumber &&
-    customerData?.iban
-  );
+    customerData?.iban;
+
+  // Email solo es obligatorio si requireEmail es true (factura electrónica)
+  if (requireEmail) {
+    return baseValid && customerData?.email;
+  }
+
+  return baseValid;
 }
 
 export function validateIBANMath(iban) {

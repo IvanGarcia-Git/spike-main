@@ -458,6 +458,7 @@ export default function ContractDetail({ params }) {
               customerData={customer}
               onCustomerUpdate={handleCustomerUpdate}
               contractIsDraft={activeContract.isDraft}
+              electronicBill={activeContract.electronicBill}
               ref={customerInformationFormRef}
             />
 

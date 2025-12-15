@@ -277,7 +277,12 @@ export default function CreateContractPage() {
   const handleCreateContract = async (isDraft = true) => {
     //Validaciones
     if (!isDraft) {
-      if (!isCustomerDataValid(customerData)) {
+      // Email solo obligatorio si algún contrato tiene factura electrónica
+      const requireEmail =
+        (contractLuzData?.isSelected && contractLuzData?.electronicBill) ||
+        (contractGasData?.isSelected && contractGasData?.electronicBill);
+
+      if (!isCustomerDataValid(customerData, requireEmail)) {
         alert("Por favor, rellena todos los campos del cliente.");
         return;
       }
@@ -355,7 +360,12 @@ export default function CreateContractPage() {
         }
       }
 
-      const customerResponse = await authFetch("POST", `customers/`, customerDataToSend, jwtToken);
+      // Email solo obligatorio si algún contrato tiene factura electrónica
+      const requireEmail =
+        (contractLuzData?.isSelected && contractLuzData?.electronicBill) ||
+        (contractGasData?.isSelected && contractGasData?.electronicBill);
+
+      const customerResponse = await authFetch("POST", `customers/`, { ...customerDataToSend, requireEmail }, jwtToken);
 
       if (customerResponse.ok) {
         const createdCustomer = await customerResponse.json();
@@ -543,6 +553,10 @@ export default function CreateContractPage() {
           onCustomerUpdate={handleCustomerUpdate}
           documentType={documentType}
           onDocumentTypeChange={handleSelectChange}
+          electronicBill={
+            (contractLuzData?.isSelected && contractLuzData?.electronicBill) ||
+            (contractGasData?.isSelected && contractGasData?.electronicBill)
+          }
         />
 
         {/* Contract Forms */}
