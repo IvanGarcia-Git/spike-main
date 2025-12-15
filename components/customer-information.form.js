@@ -21,6 +21,7 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
     iban: "",
     holderChange: false,
     newCreation: false,
+    powerChange: false,
     type: "B2C",
     cif: "",
     tradeName: "",
@@ -44,6 +45,7 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
         iban: customerData.iban || "",
         holderChange: customerData.holderChange || false,
         newCreation: customerData.newCreation || false,
+        powerChange: customerData.powerChange || false,
         type: customerData.type || "B2C",
         cif: customerData?.cif || "",
         tradeName: customerData?.tradeName || "",
@@ -457,6 +459,18 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
             className="mr-2 w-4 h-4 accent-primary"
           />
           Nuevo Alta
+        </label>
+
+        <label className="text-slate-700 dark:text-slate-300 flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            name="powerChange"
+            checked={formData.powerChange}
+            onChange={handleChange}
+            disabled={fieldsDisabled}
+            className="mr-2 w-4 h-4 accent-primary"
+          />
+          Cambio Potencia
         </label>
       </div>
     </form>

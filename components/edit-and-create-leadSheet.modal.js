@@ -27,6 +27,7 @@ export default function EditAndCreateLeadSheet({
     iban: "",
     holderChange: false,
     newCreation: false,
+    powerChange: false,
     type: "B2C",
     cif: "",
     tradeName: "",
@@ -444,6 +445,17 @@ export default function EditAndCreateLeadSheet({
               className="mr-2"
             />
             Nuevo Alta
+          </label>
+
+          <label className="text-black flex items-center">
+            <input
+              type="checkbox"
+              name="powerChange"
+              checked={formData.powerChange}
+              onChange={handleChange}
+              className="mr-2"
+            />
+            Cambio Potencia
           </label>
         </div>
 

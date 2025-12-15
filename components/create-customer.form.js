@@ -26,6 +26,7 @@ export default function CreateCustomerForm({
     iban: "",
     holderChange: false,
     newCreation: false,
+    powerChange: false,
     type: "B2C",
     cif: "",
     tradeName: "",
@@ -423,6 +424,17 @@ export default function CreateCustomerForm({
               className="mr-3 w-5 h-5 rounded text-primary focus:ring-primary"
             />
             <span className="text-sm text-slate-700 dark:text-slate-300">Nuevo Alta</span>
+          </label>
+
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              name="powerChange"
+              checked={formData.powerChange}
+              onChange={handleChange}
+              className="mr-3 w-5 h-5 rounded text-primary focus:ring-primary"
+            />
+            <span className="text-sm text-slate-700 dark:text-slate-300">Cambio Potencia</span>
           </label>
         </div>
       </div>
