@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import InvoiceDocument from "@/components/invoice-document";
 import InvoicePreview from "@/components/invoice-preview";
+import TerceroModal from "@/components/tercero-modal.component";
 import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
 import { getCookie } from "cookies-next";
 import { useSearchParams } from "next/navigation";
@@ -59,6 +60,7 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
   const [overridePhone, setOverridePhone] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [invoiceSaved, setInvoiceSaved] = useState(false);
+  const [isTerceroModalOpen, setIsTerceroModalOpen] = useState(false);
 
   // Estado para datos fiscales del emisor
   const [issuerData, setIssuerData] = useState(DEFAULT_ISSUER);
@@ -464,6 +466,68 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
 
   const canDownload = clientDetails && pdfFilename.trim() !== "" && invoiceNumber.trim() !== "";
 
+  // Handler cuando se selecciona un tercero existente del modal
+  const handleTerceroSelect = (tercero) => {
+    // Añadir a la lista de contactos si no existe
+    const existsInContacts = contactOptions.some((c) => String(c.id) === String(tercero.id));
+    if (!existsInContacts) {
+      setContactOptions((prev) => [tercero, ...prev]);
+    }
+
+    // Seleccionar el canal
+    setSelectedChannel(tercero.id);
+
+    // Rellenar los campos de override con los datos del tercero
+    setOverrideAddress(tercero.address || "");
+    setOverrideId(tercero.cif || "");
+    setOverridePhone(tercero.phone || "");
+
+    // Si tiene IBAN, rellenarlo
+    if (tercero.iban) {
+      setIbanNumber(tercero.iban);
+    }
+
+    // Desactivar modo custom si estaba activo
+    setCustomInputMode(false);
+    setCustomChannelName("");
+  };
+
+  // Handler cuando se crea un nuevo tercero desde el modal
+  const handleTerceroCreate = (tercero) => {
+    // Crear un ID temporal para el nuevo tercero
+    const tempId = tercero.id || `new-${Date.now()}`;
+
+    // Añadir a la lista de contactos
+    const newContact = {
+      id: tempId,
+      name: tercero.name,
+      cif: tercero.cif,
+      address: tercero.address,
+      representativeEmail: tercero.email,
+      representativePhone: tercero.phone,
+    };
+
+    setContactOptions((prev) => [newContact, ...prev]);
+
+    // Seleccionar el nuevo contacto
+    setSelectedChannel(tempId);
+
+    // Rellenar los campos de override
+    setOverrideAddress(tercero.address || "");
+    setOverrideId(tercero.cif || "");
+    setOverridePhone(tercero.phone || "");
+
+    // Desactivar modo custom
+    setCustomInputMode(false);
+    setCustomChannelName("");
+  };
+
+  // Handler cuando se crea un canal en la DB (para refrescar la lista)
+  const handleChannelCreated = (newChannel) => {
+    // Añadir el nuevo canal a la lista de channels
+    setChannels((prev) => [newChannel, ...prev]);
+  };
+
   return (
     <div className="p-6" suppressHydrationWarning>
       {/* Header */}
@@ -640,46 +704,17 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                   Contacto
                 </label>
-                {!customInputMode && (
-                  <button
+                <button
                     type="button"
-                    onClick={() => {
-                      setCustomInputMode(true);
-                      setSelectedChannel("");
-                    }}
+                    onClick={() => setIsTerceroModalOpen(true)}
                     className="p-2 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90"
+                    title={isCobro ? "Agregar cliente" : "Agregar proveedor"}
                   >
                     <span className="material-icons-outlined text-sm">add</span>
                   </button>
-                )}
               </div>
 
-              {customInputMode ? (
-                <div className="space-y-2">
-                  <input
-                    type="text"
-                    placeholder="Nombre del cliente"
-                    value={customChannelName}
-                    onChange={(e) => {
-                      setCustomChannelName(e.target.value);
-                      setSelectedChannel(e.target.value);
-                    }}
-                    className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCustomInputMode(false);
-                      setCustomChannelName("");
-                      setSelectedChannel("");
-                    }}
-                    className="text-xs text-primary hover:underline"
-                  >
-                    Cancelar entrada personalizada
-                  </button>
-                </div>
-              ) : (
-                <select
+              <select
                   name="contact"
                   id="contact"
                   value={selectedChannel}
@@ -695,7 +730,6 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
                     </option>
                   ))}
                 </select>
-              )}
             </div>
 
             {/* Método de pago */}
@@ -1153,6 +1187,17 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
             )}
           </div>
       </div>
+
+      {/* Modal para seleccionar/crear tercero */}
+      <TerceroModal
+        isOpen={isTerceroModalOpen}
+        onClose={() => setIsTerceroModalOpen(false)}
+        existingContacts={channels}
+        onSelect={handleTerceroSelect}
+        onCreate={handleTerceroCreate}
+        onChannelCreated={handleChannelCreated}
+        invoiceType={invoiceType}
+      />
     </div>
   );
 }
