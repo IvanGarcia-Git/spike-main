@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AnimatedLogo from "@/components/AnimatedLogo";
@@ -11,8 +11,9 @@ import AnimatedLogo from "@/components/AnimatedLogo";
  * Features:
  * - Collapsed mode: narrow icon-only bar
  * - Expanded mode: floating panel with icons and labels (on hover)
+ * - Hover to expand on desktop with delay to prevent flickering
  * - Permission-based menu items
- * - Responsive mobile support
+ * - Responsive mobile support (click/tap only)
  *
  * @param {Object} props
  * @param {number} props.userGroupId - User group ID for permission checks
@@ -33,9 +34,70 @@ export default function Sidebar({
   const pathname = usePathname();
   const [openMenu, setOpenMenu] = useState(null);
 
-  // Show icon bar only when collapsed, show expanded panel only when not collapsed
-  const showIconBar = isCollapsed;
-  const showExpanded = !isCollapsed;
+  // Hover delay configuration (ms)
+  const HOVER_DELAY = 200;
+
+  // Refs for hover timeout management
+  const hoverTimeoutRef = useRef(null);
+  const sidebarRef = useRef(null);
+
+  // Check if we're on mobile (used to disable hover behavior on touch devices)
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Handle mouse enter - expand sidebar after delay (desktop only)
+  const handleMouseEnter = useCallback(() => {
+    if (isMobile || isMobileOpen) return;
+
+    // Clear any pending close timeout
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+
+    // Only expand if currently collapsed
+    if (isCollapsed) {
+      hoverTimeoutRef.current = setTimeout(() => {
+        onToggleCollapse?.();
+      }, HOVER_DELAY);
+    }
+  }, [isMobile, isMobileOpen, isCollapsed, onToggleCollapse]);
+
+  // Handle mouse leave - collapse sidebar after delay (desktop only)
+  const handleMouseLeave = useCallback(() => {
+    if (isMobile || isMobileOpen) return;
+
+    // Clear any pending open timeout
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+
+    // Only collapse if currently expanded
+    if (!isCollapsed) {
+      hoverTimeoutRef.current = setTimeout(() => {
+        onToggleCollapse?.();
+      }, HOVER_DELAY);
+    }
+  }, [isMobile, isMobileOpen, isCollapsed, onToggleCollapse]);
 
   const toggleTaskMenu = () => setOpenMenu(openMenu === 'tasks' ? null : 'tasks');
   const toggleLeadsMenu = () => setOpenMenu(openMenu === 'leads' ? null : 'leads');
@@ -88,318 +150,268 @@ export default function Sidebar({
     return pathname === href || pathname === href.split('?')[0];
   };
 
-  // Icon button component for collapsed state
-  const IconButton = ({ href, icon, label, active, onClick, isSubmenu = false }) => {
-    const content = (
-      <span className={`material-icons-outlined text-xl ${active ? "text-primary" : "text-slate-500 dark:text-slate-400"}`}>
-        {icon}
-      </span>
-    );
-
-    const className = `
-      w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200
+  // Unified sidebar item component with animations
+  const SidebarItem = ({ href, icon, label, active, isCollapsed, onClick, hasSubmenu, isOpen, onToggle }) => {
+    const baseClasses = `
+      flex items-center rounded-xl transition-all duration-300
+      ${isCollapsed ? 'w-10 h-10 justify-center' : 'w-full px-4 py-3'}
       ${active
         ? "bg-primary/10 shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark"
         : "hover:bg-slate-100 dark:hover:bg-slate-700"
       }
     `;
 
-    if (onClick) {
-      return (
-        <button onClick={onClick} className={className} title={label}>
-          {content}
-        </button>
-      );
-    }
+    const iconClasses = `
+      material-icons-outlined text-xl flex-shrink-0 transition-colors duration-300
+      ${active ? "text-primary" : "text-slate-500 dark:text-slate-400"}
+    `;
 
-    return (
-      <Link href={href} onClick={handleLinkClick} className={className} title={label}>
-        {content}
-      </Link>
-    );
-  };
+    const labelClasses = `
+      font-medium whitespace-nowrap transition-all duration-300 overflow-hidden
+      ${active ? "text-primary font-semibold" : "text-slate-600 dark:text-slate-400"}
+      ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'w-auto opacity-100 ml-3'}
+    `;
 
-  // Menu item component for expanded state
-  const MenuItem = ({ href, icon, label, active, onClick }) => {
     const content = (
       <>
-        <span className={`material-icons-outlined text-xl flex-shrink-0 ${active ? "text-primary" : ""}`}>
-          {icon}
-        </span>
-        <span className={`ml-3 font-medium whitespace-nowrap ${active ? "text-primary font-semibold" : ""}`}>
-          {label}
-        </span>
+        <span className={iconClasses}>{icon}</span>
+        <span className={labelClasses}>{label}</span>
+        {hasSubmenu && !isCollapsed && (
+          <span className={`
+            material-icons-outlined text-sm ml-auto transition-transform duration-300
+            ${isOpen ? 'rotate-180' : 'rotate-0'}
+          `}>
+            expand_more
+          </span>
+        )}
       </>
     );
 
-    const className = `
-      flex items-center px-4 py-3 rounded-xl transition-all duration-200 w-full
-      ${active
-        ? "bg-primary/10 text-primary shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark"
-        : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-primary"
-      }
-    `;
-
-    if (onClick) {
+    if (hasSubmenu) {
       return (
-        <button onClick={onClick} className={className}>
+        <button onClick={onToggle} className={baseClasses} title={isCollapsed ? label : undefined}>
           {content}
-          <span className="material-icons-outlined text-sm ml-auto">
-            {openMenu ? "expand_less" : "expand_more"}
-          </span>
         </button>
       );
     }
 
+    if (href) {
+      return (
+        <Link href={href} onClick={onClick} className={baseClasses} title={isCollapsed ? label : undefined}>
+          {content}
+        </Link>
+      );
+    }
+
     return (
-      <Link href={href} onClick={handleLinkClick} className={className}>
+      <button onClick={onClick} className={baseClasses} title={isCollapsed ? label : undefined}>
         {content}
-      </Link>
+      </button>
     );
   };
-
-  // Submenu toggle for expanded state
-  const SubMenuToggle = ({ icon, label, isOpen, onClick, menuKey }) => (
-    <button
-      onClick={onClick}
-      className={`
-        flex items-center px-4 py-3 rounded-xl transition-all duration-200 w-full
-        text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-primary
-      `}
-    >
-      <span className="material-icons-outlined text-xl flex-shrink-0">{icon}</span>
-      <span className="ml-3 font-medium whitespace-nowrap">{label}</span>
-      <span className="material-icons-outlined text-sm ml-auto">
-        {isOpen ? "expand_less" : "expand_more"}
-      </span>
-    </button>
-  );
 
   return (
     <>
       {/* Mobile overlay */}
-      {isMobileOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={onClose}
-        />
-      )}
-
-      {/* Sidebar Container */}
       <div
         className={`
+          fixed inset-0 bg-black/50 z-40 md:hidden
+          transition-opacity duration-300
+          ${isMobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
+        `}
+        onClick={onClose}
+      />
+
+      {/* Sidebar Container */}
+      <aside
+        ref={sidebarRef}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className={`
           fixed md:relative inset-y-0 left-0 z-50
-          flex h-full
-          transform transition-transform duration-300 ease-in-out
+          flex flex-col h-full
+          bg-background-light dark:bg-background-dark
+          border-r border-slate-200 dark:border-slate-700
+          transition-all duration-300 ease-in-out
+          ${isCollapsed ? 'w-16' : 'w-72'}
           ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
           md:translate-x-0
+          overflow-hidden
         `}
       >
-        {/* Collapsed Icon Bar - Only visible when sidebar is collapsed */}
-        {showIconBar && (
-          <aside
-            className={`
-              flex flex-col items-center py-4 px-2
-              bg-background-light dark:bg-background-dark
-              border-r border-slate-200 dark:border-slate-700
-              transition-all duration-300 ease-in-out
-              w-16
-            `}
-          >
-          {/* Hamburger / Toggle button */}
+        {/* Header */}
+        <div className={`
+          flex items-center justify-between p-4
+          border-b border-slate-200 dark:border-slate-700
+          transition-all duration-300
+          ${isCollapsed ? 'justify-center' : ''}
+        `}>
+          {/* Logo - visible when expanded */}
+          <div className={`
+            transition-all duration-300 overflow-hidden
+            ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}
+          `}>
+            <AnimatedLogo size="sm" />
+          </div>
+
+          {/* Toggle button */}
           <button
             onClick={onToggleCollapse}
-            className="w-10 h-10 flex items-center justify-center rounded-xl mb-4 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            className={`
+              w-10 h-10 flex items-center justify-center rounded-xl
+              hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors
+              ${isCollapsed ? '' : 'hidden md:flex w-8 h-8'}
+            `}
             title={isCollapsed ? "Expandir menú" : "Colapsar menú"}
           >
-            <span className="material-icons-outlined text-slate-600 dark:text-slate-400">
-              menu
+            <span className="material-icons-outlined text-slate-600 dark:text-slate-400 transition-transform duration-300"
+              style={{ transform: isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)' }}
+            >
+              {isCollapsed ? 'menu' : 'chevron_left'}
             </span>
           </button>
 
-          {/* Icon-only menu items */}
-          <nav className="flex-1 flex flex-col items-center space-y-2 overflow-y-auto">
+          {/* Mobile close button - only when expanded on mobile */}
+          {!isCollapsed && (
+            <button
+              onClick={onClose}
+              className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+            >
+              <span className="material-icons-outlined text-slate-600 dark:text-slate-400">
+                close
+              </span>
+            </button>
+          )}
+        </div>
+
+        {/* Navigation */}
+        <nav className={`
+          flex-1 overflow-y-auto overflow-x-hidden
+          transition-all duration-300
+          ${isCollapsed ? 'p-2' : 'p-3'}
+        `}>
+          <div className={`space-y-1 ${isCollapsed ? 'flex flex-col items-center' : ''}`}>
             {menuItems.map((item) => (
-              <IconButton
+              <SidebarItem
                 key={item.href}
                 href={item.href}
                 icon={item.icon}
                 label={item.label}
                 active={isActive(item.href, item.matchStart)}
-              />
-            ))}
-
-            {/* Tasks submenu icon */}
-            <IconButton
-              icon="task_alt"
-              label="Tareas"
-              active={taskSubItems.some(item => isActive(item.href))}
-              onClick={toggleTaskMenu}
-            />
-
-            {/* Leads submenu icon */}
-            <IconButton
-              icon="leaderboard"
-              label="Leads"
-              active={leadsSubItems.some(item => isActive(item.href))}
-              onClick={toggleLeadsMenu}
-            />
-
-            {/* Tools submenu icon */}
-            <IconButton
-              icon="build"
-              label="Herramientas"
-              active={toolsSubItems.some(item => isActive(item.href))}
-              onClick={toggleToolsMenu}
-            />
-
-            {/* Separator */}
-            <div className="w-8 h-px bg-slate-200 dark:bg-slate-700 my-2" />
-
-            {/* Bottom items */}
-            {bottomItems.map((item) => (
-              <IconButton
-                key={item.href}
-                href={item.href}
-                icon={item.icon}
-                label={item.label}
-                active={isActive(item.href)}
-              />
-            ))}
-          </nav>
-        </aside>
-        )}
-
-        {/* Expanded Panel - Only visible when sidebar is not collapsed */}
-        {showExpanded && (
-          <aside
-            className={`
-              flex flex-col
-              bg-background-light dark:bg-background-dark
-              shadow-xl rounded-r-2xl md:rounded-2xl
-              transition-all duration-300 ease-in-out overflow-hidden
-              w-72
-            `}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-              <AnimatedLogo size="sm" />
-              <button
-                onClick={onToggleCollapse}
-                className="w-8 h-8 hidden md:flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                title="Colapsar menú"
-              >
-                <span className="material-icons-outlined text-slate-500 text-sm">
-                  chevron_left
-                </span>
-              </button>
-
-              {/* Mobile close button */}
-              <button
-                onClick={onClose}
-                className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
-              >
-                <span className="material-icons-outlined text-slate-600 dark:text-slate-400">
-                  close
-                </span>
-              </button>
-            </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-            {menuItems.map((item) => (
-              <MenuItem
-                key={item.href}
-                href={item.href}
-                icon={item.icon}
-                label={item.label}
-                active={isActive(item.href, item.matchStart)}
+                isCollapsed={isCollapsed}
+                onClick={handleLinkClick}
               />
             ))}
 
             {/* Tasks Submenu */}
-            <SubMenuToggle
+            <SidebarItem
               icon="task_alt"
               label="Tareas"
+              active={taskSubItems.some(item => isActive(item.href))}
+              isCollapsed={isCollapsed}
+              hasSubmenu
               isOpen={openMenu === 'tasks'}
-              onClick={toggleTaskMenu}
-              menuKey="tasks"
+              onToggle={toggleTaskMenu}
             />
-            {openMenu === 'tasks' && (
+            <div className={`
+              overflow-hidden transition-all duration-300
+              ${openMenu === 'tasks' && !isCollapsed ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}
+            `}>
               <div className="pl-4 space-y-1">
                 {taskSubItems.map((item) => (
-                  <MenuItem
+                  <SidebarItem
                     key={item.href}
                     href={item.href}
                     icon={item.icon}
                     label={item.label}
                     active={isActive(item.href)}
+                    isCollapsed={false}
+                    onClick={handleLinkClick}
                   />
                 ))}
               </div>
-            )}
+            </div>
 
             {/* Leads Submenu */}
-            <SubMenuToggle
+            <SidebarItem
               icon="leaderboard"
               label="Leads"
+              active={leadsSubItems.some(item => isActive(item.href))}
+              isCollapsed={isCollapsed}
+              hasSubmenu
               isOpen={openMenu === 'leads'}
-              onClick={toggleLeadsMenu}
-              menuKey="leads"
+              onToggle={toggleLeadsMenu}
             />
-            {openMenu === 'leads' && (
+            <div className={`
+              overflow-hidden transition-all duration-300
+              ${openMenu === 'leads' && !isCollapsed ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}
+            `}>
               <div className="pl-4 space-y-1">
                 {leadsSubItems.map((item) => (
-                  <MenuItem
+                  <SidebarItem
                     key={item.href}
                     href={item.href}
                     icon={item.icon}
                     label={item.label}
                     active={isActive(item.href)}
+                    isCollapsed={false}
+                    onClick={handleLinkClick}
                   />
                 ))}
               </div>
-            )}
+            </div>
 
             {/* Tools Submenu */}
-            <SubMenuToggle
+            <SidebarItem
               icon="build"
               label="Herramientas"
+              active={toolsSubItems.some(item => isActive(item.href))}
+              isCollapsed={isCollapsed}
+              hasSubmenu
               isOpen={openMenu === 'tools'}
-              onClick={toggleToolsMenu}
-              menuKey="tools"
+              onToggle={toggleToolsMenu}
             />
-            {openMenu === 'tools' && (
+            <div className={`
+              overflow-hidden transition-all duration-300
+              ${openMenu === 'tools' && !isCollapsed ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'}
+            `}>
               <div className="pl-4 space-y-1">
                 {toolsSubItems.map((item) => (
-                  <MenuItem
+                  <SidebarItem
                     key={item.href}
                     href={item.href}
                     icon={item.icon}
                     label={item.label}
                     active={isActive(item.href)}
+                    isCollapsed={false}
+                    onClick={handleLinkClick}
                   />
                 ))}
               </div>
-            )}
+            </div>
 
             {/* Separator */}
-            <div className="h-px bg-slate-200 dark:bg-slate-700 my-3" />
+            <div className={`
+              h-px bg-slate-200 dark:bg-slate-700 my-3
+              transition-all duration-300
+              ${isCollapsed ? 'w-8 mx-auto' : 'w-full'}
+            `} />
 
             {/* Bottom items */}
             {bottomItems.map((item) => (
-              <MenuItem
+              <SidebarItem
                 key={item.href}
                 href={item.href}
                 icon={item.icon}
                 label={item.label}
                 active={isActive(item.href)}
+                isCollapsed={isCollapsed}
+                onClick={handleLinkClick}
               />
             ))}
-          </nav>
-        </aside>
-        )}
-      </div>
+          </div>
+        </nav>
+      </aside>
     </>
   );
 }
