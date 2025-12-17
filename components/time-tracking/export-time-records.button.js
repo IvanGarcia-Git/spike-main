@@ -34,8 +34,9 @@ export default function ExportTimeRecordsButton({ filters, isManager = false }) 
 
       if (response.ok) {
         const data = await response.json();
+        const entries = Array.isArray(data) ? data : [];
 
-        if (data.length === 0) {
+        if (entries.length === 0) {
           toast.info("No hay datos para exportar en el rango seleccionado");
           setIsExporting(false);
           return;
@@ -43,7 +44,7 @@ export default function ExportTimeRecordsButton({ filters, isManager = false }) 
 
         // Create workbook
         const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet(data);
+        const ws = XLSX.utils.json_to_sheet(entries);
 
         // Set column widths
         ws["!cols"] = [

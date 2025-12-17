@@ -23,17 +23,29 @@ export default function TimeEditModal({
 
   useEffect(() => {
     if (record) {
-      const clockIn = new Date(record.clockInTime);
-      const clockInStr = `${clockIn.toISOString().split("T")[0]}T${clockIn
-        .toTimeString()
-        .slice(0, 5)}`;
-
+      let clockInStr = "";
       let clockOutStr = "";
-      if (record.clockOutTime) {
-        const clockOut = new Date(record.clockOutTime);
-        clockOutStr = `${clockOut.toISOString().split("T")[0]}T${clockOut
-          .toTimeString()
-          .slice(0, 5)}`;
+
+      try {
+        if (record.clockInTime) {
+          const clockIn = new Date(record.clockInTime);
+          if (!isNaN(clockIn.getTime())) {
+            clockInStr = `${clockIn.toISOString().split("T")[0]}T${clockIn
+              .toTimeString()
+              .slice(0, 5)}`;
+          }
+        }
+
+        if (record.clockOutTime) {
+          const clockOut = new Date(record.clockOutTime);
+          if (!isNaN(clockOut.getTime())) {
+            clockOutStr = `${clockOut.toISOString().split("T")[0]}T${clockOut
+              .toTimeString()
+              .slice(0, 5)}`;
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing dates:", error);
       }
 
       setFormData({
@@ -66,9 +78,9 @@ export default function TimeEditModal({
       onClose={onClose}
       title="Editar Registro"
       subtitle={`Registro del ${
-        record
+        record?.clockInTime && !isNaN(new Date(record.clockInTime).getTime())
           ? new Date(record.clockInTime).toLocaleDateString("es-ES")
-          : ""
+          : "-"
       }`}
       maxWidth="max-w-lg"
     >

@@ -27,6 +27,7 @@ export default function HistorialHorario() {
   const [isManager, setIsManager] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
 
   // Modals
   const [selectedRecord, setSelectedRecord] = useState(null);
@@ -50,6 +51,7 @@ export default function HistorialHorario() {
     if (!filters.startDate || !filters.endDate) return;
 
     setIsLoading(true);
+    setFetchError(null);
     const jwtToken = getCookie("factura-token");
 
     try {
@@ -71,18 +73,24 @@ export default function HistorialHorario() {
 
       if (response.ok) {
         const data = await response.json();
-        setRecords(data.entries || []);
+        // Ensure entries is always an array
+        const entries = Array.isArray(data?.entries) ? data.entries : [];
+        setRecords(entries);
         setPagination((prev) => ({
           ...prev,
-          total: data.total || 0,
-          totalPages: data.totalPages || 0,
+          total: data?.total || 0,
+          totalPages: data?.totalPages || 0,
         }));
       } else {
+        setFetchError("Error al cargar los registros");
         toast.error("Error al cargar los registros");
+        setRecords([]);
       }
     } catch (error) {
       console.error("Error fetching records:", error);
+      setFetchError("Error de conexion al servidor");
       toast.error("Error de conexion");
+      setRecords([]);
     }
 
     setIsLoading(false);
@@ -192,6 +200,23 @@ export default function HistorialHorario() {
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+        </div>
+      ) : fetchError ? (
+        /* Error State */
+        <div className="neumorphic-card p-8 text-center">
+          <span className="material-icons-outlined text-4xl text-danger mb-2">
+            error_outline
+          </span>
+          <p className="text-slate-600 dark:text-slate-400 mb-4">{fetchError}</p>
+          <button
+            onClick={fetchRecords}
+            className="px-4 py-2 neumorphic-button rounded-lg text-primary font-medium hover:bg-primary/10 transition-colors"
+          >
+            <span className="flex items-center gap-2">
+              <span className="material-icons-outlined text-sm">refresh</span>
+              Reintentar
+            </span>
+          </button>
         </div>
       ) : (
         <>

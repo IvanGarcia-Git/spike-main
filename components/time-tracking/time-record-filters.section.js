@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getCookie } from "cookies-next";
 import { authGetFetch } from "@/helpers/server-fetch.helper";
 
@@ -9,6 +9,7 @@ export default function TimeRecordFilters({
   isManager = false,
 }) {
   const [users, setUsers] = useState([]);
+  const initializedRef = useRef(false);
 
   useEffect(() => {
     if (isManager) {
@@ -22,10 +23,11 @@ export default function TimeRecordFilters({
       const response = await authGetFetch("users", jwtToken);
       if (response.ok) {
         const data = await response.json();
-        setUsers(data);
+        setUsers(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error("Error fetching users:", error);
+      setUsers([]);
     }
   };
 
@@ -43,20 +45,26 @@ export default function TimeRecordFilters({
     });
   };
 
-  // Set default date range (last 30 days)
+  // Set default date range (last 30 days) - only runs once on mount
   useEffect(() => {
+    if (initializedRef.current) return;
     if (!filters.startDate && !filters.endDate) {
-      const today = new Date();
-      const thirtyDaysAgo = new Date(today);
-      thirtyDaysAgo.setDate(today.getDate() - 30);
+      initializedRef.current = true;
+      try {
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(today.getDate() - 30);
 
-      onFilterChange({
-        ...filters,
-        startDate: thirtyDaysAgo.toISOString().split("T")[0],
-        endDate: today.toISOString().split("T")[0],
-      });
+        onFilterChange({
+          ...filters,
+          startDate: thirtyDaysAgo.toISOString().split("T")[0],
+          endDate: today.toISOString().split("T")[0],
+        });
+      } catch (error) {
+        console.error("Error setting default dates:", error);
+      }
     }
-  }, []);
+  }, [filters, onFilterChange]);
 
   return (
     <div className="neumorphic-card p-4 mb-6">

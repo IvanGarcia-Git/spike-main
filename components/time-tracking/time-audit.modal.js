@@ -44,28 +44,39 @@ export default function TimeAuditModal({ isOpen, onClose, recordUuid }) {
   };
 
   const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleString("es-ES", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    if (!dateStr) return "-";
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return "-";
+      return date.toLocaleString("es-ES", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "-";
+    }
   };
 
   const formatValue = (value) => {
     if (!value) return "-";
-    // Try to parse as date
-    const date = new Date(value);
-    if (!isNaN(date.getTime())) {
-      return date.toLocaleString("es-ES", {
-        day: "2-digit",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+    try {
+      // Try to parse as date
+      const date = new Date(value);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleString("es-ES", {
+          day: "2-digit",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+      return value;
+    } catch {
+      return value;
     }
-    return value;
   };
 
   return (
@@ -100,12 +111,12 @@ export default function TimeAuditModal({ isOpen, onClose, recordUuid }) {
                 <div className="flex items-start justify-between mb-2">
                   <span
                     className={`px-2 py-1 rounded text-xs font-medium ${
-                      audit.action.includes("edit") || audit.action === "delete"
+                      audit.action?.includes("edit") || audit.action === "delete"
                         ? "bg-warning/10 text-warning"
                         : "bg-primary/10 text-primary"
                     }`}
                   >
-                    {actionLabels[audit.action] || audit.action}
+                    {actionLabels[audit.action] || audit.action || "-"}
                   </span>
                   <span className="text-xs text-slate-500 dark:text-slate-400">
                     {formatDate(audit.createdAt)}

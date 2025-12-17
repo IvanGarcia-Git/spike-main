@@ -8,29 +8,48 @@ export default function TimeRecordsTable({
   showUserColumn = false,
 }) {
   const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString("es-ES", {
-      weekday: "short",
-      day: "2-digit",
-      month: "short",
-    });
+    if (!dateStr) return "-";
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return "-";
+      return date.toLocaleDateString("es-ES", {
+        weekday: "short",
+        day: "2-digit",
+        month: "short",
+      });
+    } catch {
+      return "-";
+    }
   };
 
   const formatTime = (dateStr) => {
     if (!dateStr) return "-";
-    return new Date(dateStr).toLocaleTimeString("es-ES", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return "-";
+      return date.toLocaleTimeString("es-ES", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "-";
+    }
   };
 
   const calculateHours = (entry) => {
+    if (!entry?.clockInTime) return "-";
     if (!entry.clockOutTime) return "En curso";
-    const clockIn = new Date(entry.clockInTime).getTime();
-    const clockOut = new Date(entry.clockOutTime).getTime();
-    const breakMs = (entry.totalBreakMinutes || 0) * 60 * 1000;
-    const netMs = clockOut - clockIn - breakMs;
-    const hours = netMs / (1000 * 60 * 60);
-    return `${hours.toFixed(2)}h`;
+    try {
+      const clockIn = new Date(entry.clockInTime).getTime();
+      const clockOut = new Date(entry.clockOutTime).getTime();
+      if (isNaN(clockIn) || isNaN(clockOut)) return "-";
+      const breakMs = (entry.totalBreakMinutes || 0) * 60 * 1000;
+      const netMs = clockOut - clockIn - breakMs;
+      const hours = netMs / (1000 * 60 * 60);
+      return hours >= 0 ? `${hours.toFixed(2)}h` : "-";
+    } catch {
+      return "-";
+    }
   };
 
   if (!records?.length) {
