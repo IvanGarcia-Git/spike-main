@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { getCookie } from "cookies-next";
 import { authFetch, authGetFetch } from "@/helpers/server-fetch.helper";
 import GroupLinkModal from "./group-link.modal";
+import CampaignBulkImportModal from "./campaign-bulk-import.modal";
 import * as XLSX from "xlsx";
 
 const LeadDocumentsModal = ({ lead, onClose }) => {
@@ -167,6 +168,8 @@ export default function CampaignCard({
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGroupLinkModalOpen, setIsGroupLinkModalModalOpen] = useState(false);
+  const [isBulkImportModalOpen, setIsBulkImportModalOpen] = useState(false);
+  const [canBulkImport, setCanBulkImport] = useState(false);
 
   const [isEditing, setIsEditing] = useState(null);
 
@@ -431,6 +434,23 @@ export default function CampaignCard({
       fetchAllLeads();
     }
   }, [globalSearchTerm, globalAssignedFilter, globalBillFilter, dateFrom, dateTo]);
+
+  // Check user permissions for bulk import
+  useEffect(() => {
+    const checkBulkImportPermissions = () => {
+      const jwtToken = getCookie("factura-token");
+      if (jwtToken) {
+        try {
+          const payload = JSON.parse(atob(jwtToken.split('.')[1]));
+          setCanBulkImport(payload.isManager === true || payload.groupId === 1);
+        } catch (err) {
+          console.error("Error decoding token:", err);
+          setCanBulkImport(false);
+        }
+      }
+    };
+    checkBulkImportPermissions();
+  }, []);
 
   useEffect(() => {
     const normalize = (str) => (str || "").toString().toLowerCase().replace(/\s+/g, "");
@@ -768,30 +788,44 @@ export default function CampaignCard({
 
       {/* Botones de acción */}
       <div className="flex justify-between items-center mt-6 flex-wrap gap-4">
-        <button
-          onClick={openNewLeadModal}
-          className="neumorphic-button flex items-center text-primary font-semibold px-4 py-2 rounded-lg transition-all"
-        >
-          <span className="material-icons-outlined mr-2">add</span>
-          Nuevo Lead
-        </button>
-
-        {!allLeadsFetched && filteredLeads.length > 9 && (
+        <div className="flex gap-3 flex-wrap">
           <button
-            onClick={fetchAllLeads}
-            className="neumorphic-button bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all"
+            onClick={openNewLeadModal}
+            className="neumorphic-button flex items-center text-primary font-semibold px-4 py-2 rounded-lg transition-all"
           >
-            Mostrar todos
+            <span className="material-icons-outlined mr-2">add</span>
+            Nuevo Lead
           </button>
-        )}
 
-        <button
-          className="neumorphic-button bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary/90 transition-all flex items-center gap-2"
-          onClick={handleOpenModal}
-        >
-          <span className="material-icons-outlined text-sm">group_add</span>
-          Vincular a grupo
-        </button>
+          {canBulkImport && (
+            <button
+              onClick={() => setIsBulkImportModalOpen(true)}
+              className="neumorphic-button flex items-center text-green-600 font-semibold px-4 py-2 rounded-lg transition-all"
+            >
+              <span className="material-icons-outlined mr-2">upload_file</span>
+              Subida masiva (Excel)
+            </button>
+          )}
+        </div>
+
+        <div className="flex gap-3 flex-wrap">
+          {!allLeadsFetched && filteredLeads.length > 9 && (
+            <button
+              onClick={fetchAllLeads}
+              className="neumorphic-button bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all"
+            >
+              Mostrar todos
+            </button>
+          )}
+
+          <button
+            className="neumorphic-button bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary/90 transition-all flex items-center gap-2"
+            onClick={handleOpenModal}
+          >
+            <span className="material-icons-outlined text-sm">group_add</span>
+            Vincular a grupo
+          </button>
+        </div>
 
         <GroupLinkModal
           isOpen={isGroupLinkModalOpen}
@@ -941,6 +975,16 @@ export default function CampaignCard({
 
       {viewingLeadDocs && (
         <LeadDocumentsModal lead={viewingLeadDocs} onClose={() => setViewingLeadDocs(null)} />
+      )}
+
+      {isBulkImportModalOpen && (
+        <CampaignBulkImportModal
+          campaign={campaign}
+          closeModal={() => setIsBulkImportModalOpen(false)}
+          onImportComplete={() => {
+            fetchAllLeads();
+          }}
+        />
       )}
     </div>
   );
