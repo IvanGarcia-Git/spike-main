@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
 import { getCookie } from "cookies-next";
 import * as jose from "jose";
@@ -27,6 +27,148 @@ import GlobalLoadingOverlay from "@/components/global-loading.overlay";
 import ConfirmDeleteTaskModal from "@/components/confirm-delete-task-modal";
 import SendTaskModal from "@/components/send-task.modal";
 import UserMultiSelect from "@/components/user-multi-select.section";
+
+// Componente de tarjeta de tarea draggable
+const TaskCard = ({ task, onShowTask, taskStates }) => {
+  const ref = React.useRef(null);
+
+  const [{ isDragging }, drag] = useDrag({
+    type: "TASK",
+    item: { task },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  drag(ref);
+
+  const stateColor = taskStates[task.taskStateId]?.colorHex || "#57a9de";
+
+  return (
+    <div
+      ref={ref}
+      className={`p-3 neumorphic-card-inset rounded-lg cursor-grab active:cursor-grabbing transition-all duration-200 ${
+        isDragging ? "opacity-40 scale-95" : "hover:scale-[1.02]"
+      }`}
+      onClick={() => onShowTask(task.uuid)}
+      style={{ borderLeft: `4px solid ${stateColor}` }}
+    >
+      <h4 className="font-medium text-sm text-slate-700 dark:text-slate-200 truncate">
+        {task.subject || "Sin título"}
+      </h4>
+      {task.description && (
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+          {task.description}
+        </p>
+      )}
+      {task.dueDate && (
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
+          📅 {format(new Date(task.dueDate), "dd/MM/yyyy")}
+        </p>
+      )}
+      {task.assignedUsers && task.assignedUsers.length > 0 && (
+        <div className="flex items-center mt-2 -space-x-1">
+          {task.assignedUsers.slice(0, 3).map((user, idx) => (
+            <div
+              key={idx}
+              className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium text-primary border-2 border-background-light dark:border-background-dark"
+              title={user.name || user.email}
+            >
+              {(user.name || user.email || "?")[0].toUpperCase()}
+            </div>
+          ))}
+          {task.assignedUsers.length > 3 && (
+            <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-medium text-slate-600 dark:text-slate-300 border-2 border-background-light dark:border-background-dark">
+              +{task.assignedUsers.length - 3}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Componente de columna Kanban droppable
+const KanbanColumn = ({ column, onDrop, onAddTask, onShowTask, taskStates }) => {
+  const ref = React.useRef(null);
+
+  const [{ isOver, canDrop }, drop] = useDrop({
+    accept: "TASK",
+    drop: (item) => {
+      if (item.task.taskStateId !== column.id) {
+        onDrop(item.task, column.id);
+      }
+    },
+    canDrop: (item) => item.task.taskStateId !== column.id,
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+      canDrop: monitor.canDrop(),
+    }),
+  });
+
+  drop(ref);
+
+  const isActive = isOver && canDrop;
+
+  return (
+    <div
+      ref={ref}
+      className={`neumorphic-card p-4 min-h-[300px] transition-all duration-200 ${
+        isActive
+          ? "ring-2 ring-primary ring-offset-2 bg-primary/5"
+          : canDrop && isOver
+          ? ""
+          : ""
+      }`}
+    >
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center space-x-2">
+          <div
+            className="w-3 h-3 rounded-full"
+            style={{ backgroundColor: column.colorHex }}
+          />
+          <span className="font-semibold text-slate-700 dark:text-slate-200">
+            {column.name}
+          </span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+            {column.tasks.length}
+          </span>
+          <button
+            className="p-1 rounded-md neumorphic-button text-slate-600 dark:text-slate-300"
+            onClick={onAddTask}
+          >
+            <span className="material-icons-outlined text-base">add</span>
+          </button>
+        </div>
+      </div>
+      <div className={`space-y-3 transition-all duration-200 ${isActive ? "opacity-60" : ""}`}>
+        {column.tasks.length === 0 ? (
+          <div className={`text-center py-8 text-slate-400 dark:text-slate-500 text-sm border-2 border-dashed rounded-lg ${
+            isActive ? "border-primary bg-primary/10" : "border-slate-200 dark:border-slate-700"
+          }`}>
+            {isActive ? "Soltar aquí" : "Sin tareas"}
+          </div>
+        ) : (
+          column.tasks.map((task) => (
+            <TaskCard
+              key={task.uuid}
+              task={task}
+              onShowTask={onShowTask}
+              taskStates={taskStates}
+            />
+          ))
+        )}
+        {column.tasks.length > 0 && isActive && (
+          <div className="text-center py-4 text-primary text-sm border-2 border-dashed border-primary rounded-lg bg-primary/10">
+            Soltar aquí
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default function Agenda() {
   const [calendarDate, setCalendarDate] = useState(new Date());
@@ -746,27 +888,21 @@ export default function Agenda() {
             </div>
           </div>
 
-          {/* Grid de Columnas Kanban */}
+          {/* Grid de Columnas Kanban con Drag & Drop */}
           <div className="col-span-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {columns.map((column) => (
-              <div key={column.id} className="neumorphic-card p-4">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-slate-700 dark:text-slate-200">{column.name}</span>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-slate-500 dark:text-slate-400">{column.tasks.length}</span>
-                    <button
-                      className="p-1 rounded-md neumorphic-button text-slate-600 dark:text-slate-300"
-                      onClick={() => {
-                        setTaskStateName(column.name);
-                        setActiveTab("task");
-                        setIsModalOpen(true);
-                      }}
-                    >
-                      <span className="material-icons-outlined text-base">add</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <KanbanColumn
+                key={column.id}
+                column={column}
+                onDrop={handleTaskStateChange}
+                onAddTask={() => {
+                  setTaskStateName(column.name);
+                  setActiveTab("task");
+                  setIsModalOpen(true);
+                }}
+                onShowTask={handleShowTask}
+                taskStates={taskStates}
+              />
             ))}
           </div>
         </div>
