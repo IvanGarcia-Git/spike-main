@@ -197,6 +197,7 @@ export default function Agenda() {
   const [absences, setAbsences] = useState([]);
   const [userId, setUserId] = useState(null);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
+  const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
 
   const fetchRemindersAndLeadsForMonth = async (date, userIdsToFetch = null) => {
     const jwtToken = getCookie("factura-token");
@@ -546,6 +547,12 @@ export default function Agenda() {
   const handleTaskCreated = () => {
     setIsModalOpen(false);
     getTasksForUser();
+    // Refetch reminders y leadCalls para que aparezcan inmediatamente
+    if (selectedUserIds.length > 0) {
+      fetchRemindersAndLeadsForMonth(calendarDate, selectedUserIds);
+    }
+    // Incrementar key para forzar refetch en vistas de calendario (semana/día)
+    setCalendarRefreshKey(prev => prev + 1);
   };
 
   const handleTaskDelete = async () => {
@@ -682,8 +689,8 @@ export default function Agenda() {
     setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1));
   };
 
-  const todayLeads = leads.filter(lead => isSameDay(new Date(lead.date), new Date()));
-  const todayReminders = reminders.filter(reminder => isSameDay(new Date(reminder.date), new Date()));
+  const todayLeads = leads.filter(lead => isSameDay(new Date(lead.startDate), new Date()));
+  const todayReminders = reminders.filter(reminder => isSameDay(new Date(reminder.startDate), new Date()));
   const leadsProgress = todayLeads.length > 0 ? (todayLeads.filter(l => l.completed).length / todayLeads.length) * 100 : 0;
   const remindersProgress = todayReminders.length > 0 ? (todayReminders.filter(r => r.completed).length / todayReminders.length) * 100 : 0;
 
@@ -869,6 +876,7 @@ export default function Agenda() {
                   absences={absences}
                   selectedUserIds={selectedUserIds}
                   currentUserId={userId}
+                  refreshKey={calendarRefreshKey}
                 />
               )}
               {calendarView === "dia" && (
@@ -883,6 +891,7 @@ export default function Agenda() {
                   absences={absences}
                   selectedUserIds={selectedUserIds}
                   currentUserId={userId}
+                  refreshKey={calendarRefreshKey}
                 />
               )}
             </div>

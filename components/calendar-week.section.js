@@ -4,7 +4,7 @@ import { authFetch } from "@/helpers/server-fetch.helper";
 import { getCookie } from "cookies-next";
 import { parseISO, isSameDay } from "date-fns";
 
-export default function CalendarByWeek({ onChangeView, holidays = [], absences = [], selectedUserIds = [], currentUserId = null }) {
+export default function CalendarByWeek({ onChangeView, holidays = [], absences = [], selectedUserIds = [], currentUserId = null, refreshKey = 0 }) {
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const daysOfWeek = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
@@ -56,7 +56,7 @@ export default function CalendarByWeek({ onChangeView, holidays = [], absences =
 
   useEffect(() => {
     fetchTasksByWeek();
-  }, [currentWeekStart, selectedUserIds]);
+  }, [currentWeekStart, selectedUserIds, refreshKey]);
 
   const getDayDate = (offset) => {
     const date = new Date(currentWeekStart);
