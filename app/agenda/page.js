@@ -909,19 +909,15 @@ export default function Agenda() {
       </div>
 
       {/* Modals */}
-      {isModalOpen && (
-        <div className={`fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 ${isModalOpen ? "lg:ml-72" : ""}`}>
-          <NewTaskModal
-            isModalOpen={isModalOpen}
-            setIsModalOpen={setIsModalOpen}
-            onTaskCreated={handleTaskCreated}
-            contracts={contracts}
-            initialTab={activeTab}
-            taskStateName={taskStateName}
-            selectedDate={selectedCalendarDate}
-          />
-        </div>
-      )}
+      <NewTaskModal
+        isModalOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
+        onTaskCreated={handleTaskCreated}
+        contracts={contracts}
+        initialTab={activeTab}
+        taskStateName={taskStateName}
+        selectedDate={selectedCalendarDate}
+      />
 
       <TaskDetailModal
         uuid={selectedTaskUuid}

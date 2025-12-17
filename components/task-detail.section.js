@@ -2,14 +2,13 @@
 import { useState, useEffect, useRef } from "react";
 import { getCookie } from "cookies-next";
 import { authGetFetch } from "@/helpers/server-fetch.helper";
-import { FaDownload } from "react-icons/fa6";
+import { ModalTextarea, ModalActions, ModalButton } from "./base-modal.component";
 
-export default function TaskDetailComponent({ uuid }) {
+export default function TaskDetailComponent({ uuid, onClose }) {
   const [task, setTask] = useState(null);
-  const [newComment, setNewComment] = useState({
-    text: "",
-  });
+  const [newComment, setNewComment] = useState({ text: "" });
   const [file, setFile] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
 
   const getTaskDetails = async () => {
@@ -30,11 +29,16 @@ export default function TaskDetailComponent({ uuid }) {
   };
 
   useEffect(() => {
-    getTaskDetails();
+    if (uuid) {
+      getTaskDetails();
+    }
   }, [uuid]);
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();
+    if (!newComment.text.trim() && !file) return;
+
+    setIsSubmitting(true);
     const jwtToken = getCookie("factura-token");
 
     const formData = new FormData();
@@ -58,157 +62,222 @@ export default function TaskDetailComponent({ uuid }) {
       if (response.ok) {
         setNewComment({ text: "" });
         setFile(null);
-        fileInputRef.current.value = null;
-
+        if (fileInputRef.current) {
+          fileInputRef.current.value = null;
+        }
         await getTaskDetails();
       } else {
         alert("Error al agregar el comentario");
       }
     } catch (error) {
       console.error("Error enviando el comentario:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   if (!task) {
     return (
-      <div className="flex justify-center items-start bg-background min-h-screen">
-        <div className="w-full max-w-7xl bg-foreground text-black p-6 rounded-lg">
-          <h2 className="text-3xl font-bold mb-4">Cargando...</h2>
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="w-12 h-12 rounded-full neumorphic-card-inset flex items-center justify-center mb-4">
+          <span className="material-icons-outlined text-3xl text-primary animate-spin">
+            sync
+          </span>
         </div>
+        <p className="text-slate-500 dark:text-slate-400">Cargando tarea...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex justify-center items-start bg-background">
-      <div className="w-full max-w-5xl bg-foreground text-black p-6 rounded-lg ">
-        {/* Encabezado centrado */}
-        <div className="flex justify-center mb-6">
-          <h2 className="text-3xl font-bold text-center">{task.subject}</h2>
-        </div>
+    <div>
+      {/* Título de la tarea */}
+      <div className="mb-6">
+        <h4 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-2">
+          {task.subject}
+        </h4>
+        {task.description && (
+          <p className="text-slate-600 dark:text-slate-400">
+            {task.description}
+          </p>
+        )}
+      </div>
 
-        {/* Estado, Fecha y Destinatario en 3 columnas */}
-        <div className="grid grid-cols-3 gap-6 text-lg mb-6">
-          <div className="text-center">
+      {/* Info en grid como el formulario de crear tarea */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* Estado */}
+        <div className="mb-4">
+          <label className="block text-slate-700 dark:text-slate-300 font-medium mb-2">
+            Estado
+          </label>
+          <div className="px-4 py-3 rounded-lg neumorphic-card-inset">
             <span
-              className="px-4 py-1 rounded-full text-lg font-semibold"
+              className="px-3 py-1 rounded-full text-sm font-medium"
               style={{
-                backgroundColor: task.taskState.colorHex,
+                backgroundColor: task.taskState?.colorHex || "#57a9de",
                 color: "#fff",
               }}
             >
-              {task.taskState.name}
+              {task.taskState?.name || "Sin estado"}
             </span>
           </div>
+        </div>
 
-          <div className="text-center">
-            <p>
-              <strong>Fecha de inicio:</strong>{" "}
-              {task.startDate ? new Date(task.startDate).toLocaleString() : "Sin fecha definida"}
-            </p>
+        {/* Fecha */}
+        <div className="mb-4">
+          <label className="block text-slate-700 dark:text-slate-300 font-medium mb-2">
+            Fecha de inicio
+          </label>
+          <div className="px-4 py-3 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300">
+            {task.startDate
+              ? new Date(task.startDate).toLocaleDateString("es-ES", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "Sin fecha definida"}
           </div>
+        </div>
 
-          <div className="text-center">
+        {/* Destinatario o Contrato */}
+        <div className="mb-4">
+          <label className="block text-slate-700 dark:text-slate-300 font-medium mb-2">
+            {task.contractUrl ? "Contrato" : "Destinatario"}
+          </label>
+          <div className="px-4 py-3 rounded-lg neumorphic-card-inset">
             {task.contractUrl ? (
               <a
                 href={task.contractUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-green-500 hover:text-green-700 py-1 px-4 border border-green-500 rounded-full"
+                className="inline-flex items-center text-primary hover:text-primary-dark font-medium transition-colors"
               >
+                <span className="material-icons-outlined text-sm mr-1">description</span>
                 Ver Ficha
               </a>
             ) : (
-              <p>
-                <strong>Destinatario:</strong> {task.assigneeUser.name}
-                {" " + task.assigneeUser.firstSurname}
-              </p>
-            )
-
-            }
-
+              <span className="text-slate-700 dark:text-slate-300">
+                {task.assigneeUser?.name || "Sin asignar"}
+                {task.assigneeUser?.firstSurname ? ` ${task.assigneeUser.firstSurname}` : ""}
+              </span>
+            )}
           </div>
         </div>
+      </div>
 
-        {/* Tabla de comentarios */}
-        <div className="border-t-2 pt-4">
-          <h3 className="text-2xl font-bold mb-4">Comentarios</h3>
-
-          {task.comments.length > 0 ? (
-            <table className="min-w-full bg-foreground text-black">
-              <thead className="bg-background">
-                <tr>
-                  <th className="py-2 px-4">Fecha</th>
-                  <th className="py-2 px-4">Usuario</th>
-                  <th className="py-2 px-4">Comentario</th>
-                  <th className="py-2 px-4">Adjunto</th>
-                </tr>
-              </thead>
-              <tbody className="text-gray-300 divide-y divide-gray-600">
-                {task.comments.map((comment, index) => (
-                  <tr key={index} className="bg-foreground hover:bg-background">
-                    <td className="py-2 px-4 text-center text-black">
-                      {new Date(comment.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="py-2 px-4 text-center text-black">
-                      {(comment.user?.name || "Usuario desconocido") +
-                        " " +
-                        (comment.user?.firstSurname || "")}
-                    </td>
-                    <td className="py-2 px-4 text-center text-black">
-                      {comment.text}
-                    </td>
-                    <td className="py-2 px-4 text-center flex justify-center items-center text-black">
-                      {comment.documentUri ? (
-                        <a
-                          href={comment.documentUri}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <FaDownload />
-                        </a>
-                      ) : (
-                        <span>No hay adjunto</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p>No hay comentarios para esta tarea.</p>
-          )}
+      {/* Sección de Comentarios */}
+      <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h5 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+            Comentarios
+          </h5>
+          <span className="text-sm text-slate-500 dark:text-slate-400">
+            {task.comments?.length || 0} comentarios
+          </span>
         </div>
 
-        {/* Nuevo comentario */}
-        <div className="border-t-2 pt-4 mt-6">
-          <h3 className="text-2xl font-bold mb-2">+ Nuevo Comentario</h3>
-          <textarea
-            placeholder="Escribe aquí..."
-            value={newComment.text}
-            onChange={(e) =>
-              setNewComment({ ...newComment, text: e.target.value })
-            }
-            className="w-full p-3 rounded-md border border-gray-300 mb-4 focus:outline-none focus:ring"
-            rows="4"
-          ></textarea>
+        {task.comments && task.comments.length > 0 ? (
+          <div className="space-y-3 max-h-64 overflow-y-auto mb-6 pr-2">
+            {task.comments.map((comment, index) => (
+              <div
+                key={index}
+                className="p-4 rounded-lg neumorphic-card-inset"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mr-3">
+                      <span className="text-sm font-semibold text-primary">
+                        {(comment.user?.name?.[0] || "U").toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-700 dark:text-slate-200">
+                        {(comment.user?.name || "Usuario") +
+                          " " +
+                          (comment.user?.firstSurname || "")}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {new Date(comment.createdAt).toLocaleDateString("es-ES", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  {comment.documentUri && (
+                    <a
+                      href={comment.documentUri}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 rounded-lg neumorphic-button text-slate-500 hover:text-primary transition-colors"
+                      title="Descargar adjunto"
+                    >
+                      <span className="material-icons-outlined text-lg">download</span>
+                    </a>
+                  )}
+                </div>
+                <p className="text-slate-600 dark:text-slate-300 ml-11">
+                  {comment.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 mb-6 rounded-lg neumorphic-card-inset">
+            <span className="material-icons-outlined text-4xl text-slate-400 dark:text-slate-500 mb-2 block">
+              chat_bubble_outline
+            </span>
+            <p className="text-slate-500 dark:text-slate-400">No hay comentarios aún</p>
+          </div>
+        )}
 
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={(e) => setFile(e.target.files[0])}
-            className="mb-4"
+        {/* Formulario de nuevo comentario */}
+        <form onSubmit={handleSubmitComment}>
+          <ModalTextarea
+            label="Nuevo Comentario"
+            id="newComment"
+            value={newComment.text}
+            onChange={(e) => setNewComment({ text: e.target.value })}
+            placeholder="Escribe tu comentario aquí..."
+            rows={3}
           />
 
-          <div className="flex justify-end">
-            <button
-              className="bg-secondary text-white px-4 py-2 rounded-md hover:bg-secondaryHover"
-              onClick={handleSubmitComment}
-            >
-              Comentar
-            </button>
+          <div className="mb-4">
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-2">
+              Archivo adjunto
+            </label>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={(e) => setFile(e.target.files[0])}
+              className="w-full px-4 py-3 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark"
+            />
+            {file && (
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                Archivo seleccionado: {file.name}
+              </p>
+            )}
           </div>
-        </div>
+
+          <ModalActions>
+            <ModalButton variant="ghost" onClick={onClose}>
+              Cerrar
+            </ModalButton>
+            <ModalButton
+              variant="primary"
+              type="submit"
+              disabled={isSubmitting || (!newComment.text.trim() && !file)}
+              icon={isSubmitting ? "sync" : "send"}
+            >
+              {isSubmitting ? "Enviando..." : "Enviar Comentario"}
+            </ModalButton>
+          </ModalActions>
+        </form>
       </div>
     </div>
   );
