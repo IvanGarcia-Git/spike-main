@@ -168,7 +168,7 @@ export default function CalendarByDay({
             {categorizedAllDayTasks.map((task, idx) => (
               <div
                 key={idx}
-                className={`px-2 py-1 rounded text-xs bg-fuchsia-200 dark:bg-fuchsia-800/60 text-fuchsia-800 dark:text-fuchsia-200 ${
+                className={`px-2 py-1 rounded text-xs bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 ${
                   task.taskStateId === 3 ? "line-through opacity-60" : ""
                 }`}
               >

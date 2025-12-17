@@ -289,7 +289,7 @@ export default function CalendarByWeek({ onChangeView, holidays = [], absences =
                 {tasksForDay.map((task, idx) => (
                   <div
                     key={idx}
-                    className="m-0.5 p-1 bg-fuchsia-200 dark:bg-fuchsia-800/60 text-fuchsia-800 dark:text-fuchsia-200 text-[10px] rounded"
+                    className="m-0.5 p-1 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] rounded border border-slate-300 dark:border-slate-600"
                   >
                     <div className="truncate">{task.subject || "Tarea"}</div>
                     {shouldShowUserBadge && getEventUserName(task) && (

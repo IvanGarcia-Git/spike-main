@@ -6,7 +6,7 @@ export const getNotificationDisplayProps = (notification) => {
       switch (notification.eventType) {
         case "task":
           icon = "📋";
-          bgColor = "#e879f9";
+          bgColor = "#ffffff";
           subject = notification.subject || "Nueva tarea";
           break;
         case "reminder":

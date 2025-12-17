@@ -135,7 +135,7 @@ export default function CalendarDetailsDay({
 
               let bgColor;
               if (event.type === "task") {
-                bgColor = "bg-fuchsia-300";
+                bgColor = "bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600";
               } else if (event.type === "reminder") {
                 bgColor = "bg-green-200";
               } else if (event.type === "leadCall") {
