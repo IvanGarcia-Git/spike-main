@@ -17,10 +17,16 @@ const InvoicePreview = ({
   grandTotal,
   notes,
   customLogo,
+  invoiceType = "COBRO",
 }) => {
+  const isCobro = invoiceType === "COBRO";
+  const receiverLabel = isCobro ? "Cliente" : "Receptor";
+
   return (
     <div className="mt-8 p-6 border border-gray-300 rounded-lg bg-white shadow-md max-w-3xl mx-auto">
-      <h2 className="text-xl font-bold mb-6 text-center text-gray-700">Vista Previa Factura</h2>
+      <h2 className="text-xl font-bold mb-6 text-center text-gray-700">
+        Vista Previa Factura {isCobro ? "(Cobro)" : "(Pago)"}
+      </h2>
 
       {/* Header */}
       <div className="flex justify-between mb-6">
@@ -37,29 +43,48 @@ const InvoicePreview = ({
           </div>
         </div>
 
-        <img src={customLogo || "/logo.jpeg"} alt="logo" className="w-40 object-contain" />
+        {/* Logo: mostrar solo si hay customLogo o si es COBRO (logo por defecto) */}
+        {(customLogo || isCobro) && (
+          <img src={customLogo || "/logo.jpeg"} alt="logo" className="w-40 object-contain" />
+        )}
+        {!customLogo && !isCobro && (
+          <div className="w-40 h-20 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400 text-xs text-center">
+            Sin logo del proveedor
+          </div>
+        )}
       </div>
 
-      {/* Issuer Info */}
+      {/* Issuer and Receiver Info */}
       <div className="flex justify-between mb-6 pb-4 border-b border-gray-200">
+        {/* Emisor (izquierda) */}
         <div className="text-sm">
-          <p className="font-bold text-base">{issuer.name}</p>
-          <p>{issuer.address}</p>
-          <p>{`${issuer.city}, ${issuer.postalCode}, ${issuer.country}`}</p>
-          <p>{issuer.nif}</p>
+          <p className="font-bold text-base text-gray-500 mb-1">Emisor:</p>
+          {issuer?.name ? (
+            <>
+              <p className="font-bold text-base">{issuer.name}</p>
+              {issuer.address && <p>{issuer.address}</p>}
+              {(issuer.city || issuer.postalCode || issuer.country) && (
+                <p>{[issuer.city, issuer.postalCode, issuer.country].filter(Boolean).join(", ")}</p>
+              )}
+              {issuer.nif && <p>{issuer.nif}</p>}
+            </>
+          ) : (
+            <p className="text-red-500 italic">Sin datos del emisor</p>
+          )}
         </div>
+        {/* Receptor (derecha) */}
         <div className="text-sm text-right">
-          <p className="font-bold text-base">Cliente:</p>
+          <p className="font-bold text-base text-gray-500 mb-1">{receiverLabel}:</p>
           {client ? (
             <>
               <p className="font-bold">{`${client?.name || ""} ${client?.surnames || ""}`}</p>
-              <p>{client?.address}</p>
+              {client?.address && <p>{client?.address}</p>}
               <p>{`${client?.province ? client?.province + ", " : ""}${
                 client?.zipCode ? client?.zipCode + ", " : ""
               }${client?.populace || ""}`}</p>
-              <p>{client?.nationalId}</p>
-              <p>{client?.phoneNumber}</p>
-              <p>{client?.email}</p>
+              {client?.nationalId && <p>{client?.nationalId}</p>}
+              {client?.phoneNumber && <p>{client?.phoneNumber}</p>}
+              {client?.email && <p>{client?.email}</p>}
             </>
           ) : (
             <p className="text-red-500 italic">Seleccionar contacto</p>

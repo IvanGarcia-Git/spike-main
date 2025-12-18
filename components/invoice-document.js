@@ -174,15 +174,27 @@ const InvoiceDocument = ({
   grandTotal,
   notes,
   customLogo,
-}) => (
+  invoiceType = "COBRO",
+}) => {
+  const isCobro = invoiceType === "COBRO";
+  const receiverLabel = isCobro ? "Cliente:" : "Receptor:";
+
+  // En PAGO sin logo personalizado, no mostrar logo
+  const showLogo = customLogo || isCobro;
+
+  return (
   <Document>
     <Page size="A4" style={styles.page}>
       {/* Header: Logo and Invoice Meta */}
       <View style={styles.headerSection}>
-        <Image
-          style={styles.logo}
-          src={customLogo || "/logo.jpeg"}
-        />
+        {showLogo ? (
+          <Image
+            style={styles.logo}
+            src={customLogo || "/logo.jpeg"}
+          />
+        ) : (
+          <View style={styles.logo} />
+        )}
         <View style={styles.invoiceMeta}>
           <View style={styles.metaItem}>
             <Text>
@@ -204,28 +216,37 @@ const InvoiceDocument = ({
         </View>
       </View>
 
-      {/* Issuer and Client Info */}
+      {/* Issuer and Receiver Info */}
       <View style={styles.issuerClientSection}>
         <View style={styles.infoBlock}>
-          <Text style={styles.infoTitle}>{issuer.name}</Text>
-          <Text>{issuer.address}</Text>
-          <Text>{`${issuer.city}, ${issuer.postalCode}, ${issuer.country}`}</Text>
-          <Text>{issuer.nif}</Text>
+          <Text style={styles.infoTitle}>Emisor:</Text>
+          {issuer?.name ? (
+            <>
+              <Text style={styles.boldText}>{issuer.name}</Text>
+              {issuer.address && <Text>{issuer.address}</Text>}
+              {(issuer.city || issuer.postalCode || issuer.country) && (
+                <Text>{[issuer.city, issuer.postalCode, issuer.country].filter(Boolean).join(", ")}</Text>
+              )}
+              {issuer.nif && <Text>{issuer.nif}</Text>}
+            </>
+          ) : (
+            <Text style={styles.italicText}>Sin datos del emisor</Text>
+          )}
         </View>
         <View style={styles.clientInfoBlock}>
-          <Text style={styles.infoTitle}>Cliente:</Text>
+          <Text style={styles.infoTitle}>{receiverLabel}</Text>
           {client ? (
             <>
               <Text style={styles.clientName}>
-                {client?.name + " "}
+                {(client?.name || "") + " " + (client?.surnames || "")}
               </Text>
-              <Text>{client?.address}</Text>
+              {client?.address && <Text>{client?.address}</Text>}
               <Text>{`${client?.province ? client?.province + ", " : ""}${
                 client?.zipCode ? client?.zipCode + ", " : ""
               }${client?.populace || ""}`}</Text>
-              <Text>{client?.nationalId}</Text>
-              <Text>{client?.phoneNumber}</Text>
-              <Text>{client?.email}</Text>
+              {client?.nationalId && <Text>{client?.nationalId}</Text>}
+              {client?.phoneNumber && <Text>{client?.phoneNumber}</Text>}
+              {client?.email && <Text>{client?.email}</Text>}
             </>
           ) : (
             <Text style={styles.italicText}>Seleccionar contacto</Text>
@@ -318,6 +339,7 @@ const InvoiceDocument = ({
       )}
     </Page>
   </Document>
-);
+  );
+};
 
 export default InvoiceDocument;

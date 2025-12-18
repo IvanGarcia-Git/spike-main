@@ -426,7 +426,8 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
   const totalIRPF = calculateTotalIRPF(subtotal);
   const grandTotal = calculateGrandTotal();
 
-  const clientDetails = (() => {
+  // Datos del tercero seleccionado (cliente/proveedor)
+  const terceroDetails = (() => {
     if (customChannelName.trim()) {
       return {
         name: customChannelName.trim(),
@@ -464,7 +465,41 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
       : null;
   })();
 
-  const canDownload = clientDetails && pdfFilename.trim() !== "" && invoiceNumber.trim() !== "";
+  // Para compatibilidad con el guardado
+  const clientDetails = terceroDetails;
+
+  // Calcular emisor y receptor según tipo de factura
+  // COBRO: Usuario emite factura → Usuario es EMISOR, Tercero es RECEPTOR
+  // PAGO: Usuario recibe factura de proveedor → Tercero es EMISOR, Usuario es RECEPTOR
+  const effectiveIssuer = isCobro
+    ? issuerData
+    : terceroDetails
+      ? {
+          name: terceroDetails.name || "",
+          nif: terceroDetails.nationalId || "",
+          address: terceroDetails.address || "",
+          city: "",
+          postalCode: "",
+          country: "",
+        }
+      : { name: "", nif: "", address: "", city: "", postalCode: "", country: "" };
+
+  const effectiveReceiver = isCobro
+    ? terceroDetails
+    : {
+        name: issuerData.name || "",
+        surnames: "",
+        nationalId: issuerData.nif || "",
+        address: issuerData.address || "",
+        province: issuerData.city || "",
+        zipCode: issuerData.postalCode || "",
+        populace: issuerData.country || "",
+      };
+
+  // Logo efectivo: en COBRO usar logo del usuario, en PAGO usar logo del proveedor o ninguno
+  const effectiveLogo = isCobro ? customLogo : customLogo;
+
+  const canDownload = terceroDetails && pdfFilename.trim() !== "" && invoiceNumber.trim() !== "";
 
   // Handler cuando se selecciona un tercero existente del modal
   const handleTerceroSelect = (tercero) => {
@@ -560,7 +595,7 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
         </div>
       </div>
 
-      {/* Sección desplegable de datos fiscales del emisor */}
+      {/* Sección desplegable de datos fiscales del emisor/receptor */}
       <div className="neumorphic-card p-4 mb-6">
         <button
           type="button"
@@ -573,7 +608,7 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
             </div>
             <div>
               <h4 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                Datos Fiscales del Emisor
+                {isCobro ? "Tus Datos Fiscales (Emisor)" : "Tus Datos Fiscales (Receptor)"}
               </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {issuerData.name || "Sin configurar"} {issuerData.nif ? `- ${issuerData.nif}` : ""}
@@ -698,11 +733,11 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
       <div className="neumorphic-card p-6 space-y-6">
           {/* Primera fila - Campos principales */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {/* Contacto */}
+            {/* Contacto (Cliente/Proveedor según tipo) */}
             <div className="lg:col-span-1">
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Contacto
+                  {isCobro ? "Cliente" : "Proveedor"}
                 </label>
                 <button
                     type="button"
@@ -722,7 +757,7 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
                   className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
                 >
                   <option disabled value="">
-                    Seleccionar
+                    {isCobro ? "Seleccionar cliente" : "Seleccionar proveedor"}
                   </option>
                   {contactOptions.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -926,11 +961,11 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
             </div>
           </div>
 
-          {/* Dirección y CIF opcionales */}
+          {/* Dirección y CIF opcionales del tercero */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Dirección (opcional)
+                Dirección {isCobro ? "del Cliente" : "del Proveedor"} (opcional)
               </label>
               <input
                 type="text"
@@ -943,7 +978,7 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
 
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                CIF/DNI (opcional)
+                CIF/DNI {isCobro ? "del Cliente" : "del Proveedor"} (opcional)
               </label>
               <input
                 type="text"
@@ -1004,7 +1039,7 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
           {/* Logo de factura */}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Logo de factura (opcional)
+              {isCobro ? "Tu Logo (Emisor)" : "Logo del Proveedor (opcional)"}
             </label>
             <div className="flex items-center gap-3">
               <input
@@ -1024,7 +1059,9 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
               )}
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Formatos aceptados: PNG, JPG
+              {isCobro
+                ? "Formatos aceptados: PNG, JPG. Si no subes ninguno, se usará el logo por defecto."
+                : "Formatos aceptados: PNG, JPG. Si no subes ninguno, la factura no mostrará logo."}
             </p>
           </div>
 
@@ -1062,8 +1099,8 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
 
           {/* Vista previa de la factura */}
           <InvoicePreview
-            issuer={issuerData}
-            client={clientDetails}
+            issuer={effectiveIssuer}
+            client={effectiveReceiver}
             invoiceNumber={invoiceNumber}
             ibanNumber={ibanNumber}
             invoiceDate={invoiceDate}
@@ -1077,7 +1114,8 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
             totalIRPF={totalIRPF}
             grandTotal={grandTotal}
             notes={notes}
-            customLogo={customLogo}
+            customLogo={effectiveLogo}
+            invoiceType={invoiceType}
           />
 
           {/* Guardar y Descargar PDF */}
@@ -1122,8 +1160,8 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
                   <PDFDownloadLink
                     document={
                       <InvoiceDocument
-                        issuer={issuerData}
-                        client={clientDetails}
+                        issuer={effectiveIssuer}
+                        client={effectiveReceiver}
                         invoiceNumber={invoiceNumber}
                         ibanNumber={ibanNumber}
                         invoiceDate={invoiceDate}
@@ -1137,7 +1175,8 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
                         totalIRPF={totalIRPF}
                         grandTotal={grandTotal}
                         notes={notes}
-                        customLogo={customLogo}
+                        customLogo={effectiveLogo}
+                        invoiceType={invoiceType}
                       />
                     }
                     fileName={pdfFilename.endsWith(".pdf") ? pdfFilename : `${pdfFilename}.pdf`}
@@ -1176,7 +1215,7 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
             {!canDownload && isClient && (
               <p className="text-xs text-red-500 mt-2 flex items-center">
                 <span className="material-icons-outlined text-sm mr-1">error</span>
-                Requiere Contacto, Nº Factura y Nombre de archivo
+                Requiere {isCobro ? "Cliente" : "Proveedor"}, Nº Factura y Nombre de archivo
               </p>
             )}
             {invoiceSaved && (

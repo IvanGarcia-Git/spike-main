@@ -26,7 +26,6 @@ export async function middleware(req) {
         "/campaigns",
         "/contract-customize",
         "/prioridad-leads",
-        "/emitir-factura",
       ];
       if (superAdminRoutes.includes(req.nextUrl.pathname)) {
         return NextResponse.redirect(new URL("/contratos", req.url));
