@@ -824,3 +824,63 @@ span[data-field-id].field-completed {
 .dark .renewed-contract-row > td:first-child::before {
   background: linear-gradient(to bottom, #d97706, #b45309);
 }
+
+/* ========================================
+   LEGAL DOCUMENT (Justo Título) STYLES
+   ======================================== */
+
+/* Contenedor del documento legal para PDF */
+.legal-document-container {
+  font-family: 'Times New Roman', Times, serif !important;
+  color: #000 !important;
+  background-color: #fff !important;
+  line-height: 1.6;
+}
+
+.legal-document-container * {
+  font-family: 'Times New Roman', Times, serif !important;
+  color: #000 !important;
+}
+
+.legal-document-container h2 {
+  font-weight: bold;
+  font-size: 1.125rem;
+  margin-bottom: 1.75rem;
+}
+
+.legal-document-container p {
+  text-align: justify;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+/* Preview wrapper con fondo gris */
+.legal-preview-wrapper {
+  width: 100%;
+}
+
+.legal-preview-container {
+  background-color: #e5e7eb;
+  border-radius: 0.5rem;
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+/* Dark mode adjustments para preview */
+.dark .legal-preview-container {
+  background-color: #374151;
+}
+
+/* Asegurar que el documento dentro del preview mantenga colores claros */
+.legal-preview-container .legal-document-container,
+.legal-preview-container .legal-document-container * {
+  color: #000 !important;
+  background-color: transparent;
+}
+
+.legal-preview-container .bg-white {
+  background-color: #fff !important;
+}

@@ -501,16 +501,15 @@ function LegalTitleForms({ formData, setFormData, currentStep, nextStep, documen
                             <span className="material-icons-outlined text-primary mr-2">preview</span>
                             Previsualización del Contrato
                         </h2>
-                        <div className="neumorphic-card-inset p-6 rounded-xl">
-                            <LegalTittlePreview formData={formData} documentType={documentType} />
-                        </div>
+                        <LegalTittlePreview formData={formData} documentType={documentType} />
                         <div
                             ref={printableAreaRef}
                             style={{
                                 position: 'absolute',
                                 left: '-9999px',
-                                top: '-9999px',
+                                top: '0',
                                 zIndex: -1,
+                                width: '210mm',
                             }}
                         >
                             <LegalTittleDocument formData={formData} documentType={documentType} />

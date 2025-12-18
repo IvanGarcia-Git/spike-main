@@ -2,9 +2,9 @@ import React from "react";
 
 const LegalTittleDocument = ({ formData, documentType }) => {
     return (
-        <>
-            <div className="p-6 border bg-white shadow-md max-w-3xl mx-auto w-[150mm] h-[212mm]">
-                <div className="px-12 py-12">
+        <div className="legal-document-container">
+            <div className="bg-white w-[210mm] min-h-[297mm] mx-auto" style={{ fontFamily: 'Times New Roman, serif' }}>
+                <div className="px-16 py-12">
                     <h2 className="text-lg mb-7 text-center text-black">
                         CONTRATO DE ARRENDAMIENTO
                     </h2>
@@ -39,12 +39,7 @@ const LegalTittleDocument = ({ formData, documentType }) => {
 
                     <p className="w-full mb-7 font-sans text-base">El Propietario y el Inquilino serán denominados conjuntamente como las "Partes".</p>
 
-                    <p className="w-full mb-7 font-sans text-base">Ambas partes en la calidad con la que actúan, se reconocen recíprocamente capacidad jurídica para contratar y obligarse y en especial para el otorgamiento del presente CONTRATO DE ARRENDAMIENTO DE VIVIENDA, y </p>
-                </div>
-            </div>
-
-            <div className="p-6 border bg-white shadow-md max-w-3xl mx-auto w-[150mm] h-[212mm]">
-                <div className="px-12 py-12">
+                    <p className="w-full mb-7 text-base" style={{ fontFamily: 'Times New Roman, serif' }}>Ambas partes en la calidad con la que actúan, se reconocen recíprocamente capacidad jurídica para contratar y obligarse y en especial para el otorgamiento del presente CONTRATO DE ARRENDAMIENTO DE VIVIENDA, y </p>
 
                     <h2 className="text-lg mb-7 text-center text-black">
                         EXPONEN
@@ -92,7 +87,7 @@ const LegalTittleDocument = ({ formData, documentType }) => {
 
                 </div>
             </div>
-        </>
+        </div>
     )
 }
 export default LegalTittleDocument;
