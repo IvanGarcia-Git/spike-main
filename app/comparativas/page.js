@@ -319,69 +319,72 @@ export default function ComparativasPage() {
                   </p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-slate-800 dark:text-slate-100">
-                  {parseFloat(comparativa.calculatedNewPrice).toFixed(2)}€
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 line-through">
-                  {parseFloat(comparativa.calculatedOldPrice).toFixed(2)}€
-                </p>
-              </div>
+              {/* Contenedor de Acciones (precios + dropdown) */}
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="font-bold text-slate-800 dark:text-slate-100">
+                    {parseFloat(comparativa.calculatedNewPrice).toFixed(2)}€
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 line-through">
+                    {parseFloat(comparativa.calculatedOldPrice).toFixed(2)}€
+                  </p>
+                </div>
 
-              {/* Dropdown menu */}
-              <div className="relative ml-2" ref={openDropdownId === comparativa.id ? dropdownRef : null}>
-                <button
-                  onClick={(e) => handleDropdownToggle(comparativa.id, e)}
-                  className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700/50"
-                >
-                  <span className="material-icons-outlined">more_vert</span>
-                </button>
+                {/* Dropdown menu */}
+                <div className="relative" ref={openDropdownId === comparativa.id ? dropdownRef : null}>
+                  <button
+                    onClick={(e) => handleDropdownToggle(comparativa.id, e)}
+                    className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700/50"
+                  >
+                    <span className="material-icons-outlined">more_vert</span>
+                  </button>
 
-                {openDropdownId === comparativa.id && (
-                  <div className="absolute right-0 top-full mt-1 w-48 neumorphic-card rounded-lg shadow-lg z-50 py-1 animate-fade-in">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleExport(comparativa);
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 flex items-center"
-                    >
-                      <span className="material-icons-outlined text-lg mr-3">download</span>
-                      Exportar
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRename(comparativa);
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 flex items-center"
-                    >
-                      <span className="material-icons-outlined text-lg mr-3">edit</span>
-                      Renombrar
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(comparativa);
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 flex items-center"
-                    >
-                      <span className="material-icons-outlined text-lg mr-3">tune</span>
-                      Editar
-                    </button>
-                    <div className="border-t border-slate-200 dark:border-slate-700 my-1"></div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(comparativa);
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center"
-                    >
-                      <span className="material-icons-outlined text-lg mr-3">delete</span>
-                      Borrar
-                    </button>
-                  </div>
-                )}
+                  {openDropdownId === comparativa.id && (
+                    <div className="absolute right-0 top-full mt-1 w-48 neumorphic-card rounded-lg shadow-lg z-50 py-1 animate-fade-in">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleExport(comparativa);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 flex items-center"
+                      >
+                        <span className="material-icons-outlined text-lg mr-3">download</span>
+                        Exportar
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRename(comparativa);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 flex items-center"
+                      >
+                        <span className="material-icons-outlined text-lg mr-3">edit</span>
+                        Renombrar
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(comparativa);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 flex items-center"
+                      >
+                        <span className="material-icons-outlined text-lg mr-3">tune</span>
+                        Editar
+                      </button>
+                      <div className="border-t border-slate-200 dark:border-slate-700 my-1"></div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(comparativa);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center"
+                      >
+                        <span className="material-icons-outlined text-lg mr-3">delete</span>
+                        Borrar
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))}
