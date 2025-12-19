@@ -133,7 +133,7 @@ export default function Sidebar({
   ];
 
   const bottomItems = [
-    { href: "/drive?section=precios", icon: "folder", label: "Drive" },
+    { href: "/drive", icon: "folder", label: "Drive" },
     { href: "/liquidaciones", icon: "payments", label: "Liquidaciones" },
   ];
 

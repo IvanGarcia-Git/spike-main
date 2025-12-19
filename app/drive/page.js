@@ -7,30 +7,54 @@ import TabPrice from "@/components/drive/TabPrice";
 // Componente interno que usa useSearchParams
 function DriveContent() {
   const searchParams = useSearchParams();
-  const section = searchParams.get("section");
+  const initialSection = searchParams.get("section");
 
-  // Si la sección es "precios", mostrar la página de precios
-  if (section === "precios") {
-    return (
-      <div className="p-6">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+  // Estado para controlar qué tab está activa - respeta el parámetro URL inicial
+  const [activeTab, setActiveTab] = useState(initialSection === "precios" ? "precios" : "drive");
+
+  return (
+    <div className="p-6">
+      {/* Header con Tabs */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-4">
+          Drive
+        </h1>
+
+        {/* Tabs de navegación */}
+        <div className="flex space-x-2 border-b border-slate-200 dark:border-slate-700">
+          <button
+            onClick={() => setActiveTab("drive")}
+            className={`px-4 py-3 font-medium transition-all border-b-2 -mb-px ${
+              activeTab === "drive"
+                ? "text-primary border-primary"
+                : "text-slate-500 dark:text-slate-400 border-transparent hover:text-slate-700 dark:hover:text-slate-300"
+            }`}
+          >
+            <span className="material-icons-outlined text-lg mr-2 align-middle">folder</span>
+            Archivos
+          </button>
+          <button
+            onClick={() => setActiveTab("precios")}
+            className={`px-4 py-3 font-medium transition-all border-b-2 -mb-px ${
+              activeTab === "precios"
+                ? "text-primary border-primary"
+                : "text-slate-500 dark:text-slate-400 border-transparent hover:text-slate-700 dark:hover:text-slate-300"
+            }`}
+          >
+            <span className="material-icons-outlined text-lg mr-2 align-middle">attach_money</span>
             Precios por Compañía
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400">
-            Consulta las tarifas y precios de cada compañía
-          </p>
+          </button>
         </div>
-
-        {/* Componente de precios */}
-        <TabPrice />
       </div>
-    );
-  }
 
-  // Si no es precios, renderizar el Drive normal
-  return <DriveFiles />;
+      {/* Contenido según tab activa */}
+      {activeTab === "precios" ? (
+        <TabPrice />
+      ) : (
+        <DriveFilesContent />
+      )}
+    </div>
+  );
 }
 
 // Componente principal con Suspense
@@ -53,8 +77,8 @@ export default function Drive() {
   );
 }
 
-// Componente de archivos de Drive
-function DriveFiles() {
+// Componente de archivos de Drive (contenido sin header principal)
+function DriveFilesContent() {
   const [activeSection, setActiveSection] = useState("mi-unidad");
   const [carpetas, setCarpetas] = useState([]);
   const [archivos, setArchivos] = useState([]);
@@ -340,17 +364,14 @@ function DriveFiles() {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-slate-500">Cargando archivos...</div>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-slate-500">Cargando archivos...</div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
-      <div className="flex space-x-6">
+    <div className="flex space-x-6">
         {/* Sidebar */}
         <div className="w-64 flex-shrink-0">
           <div className="neumorphic-card p-6 sticky top-6">
