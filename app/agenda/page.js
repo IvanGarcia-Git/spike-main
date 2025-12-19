@@ -27,6 +27,7 @@ import GlobalLoadingOverlay from "@/components/global-loading.overlay";
 import ConfirmDeleteTaskModal from "@/components/confirm-delete-task-modal";
 import SendTaskModal from "@/components/send-task.modal";
 import UserMultiSelect from "@/components/user-multi-select.section";
+import HolidayManagementModal from "@/components/holiday-management.modal";
 
 // Componente de tarjeta de tarea draggable
 const TaskCard = ({ task, onShowTask, taskStates }) => {
@@ -198,6 +199,8 @@ export default function Agenda() {
   const [userId, setUserId] = useState(null);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
+  const [isManager, setIsManager] = useState(false);
+  const [isHolidayModalOpen, setIsHolidayModalOpen] = useState(false);
 
   const fetchRemindersAndLeadsForMonth = async (date, userIdsToFetch = null) => {
     const jwtToken = getCookie("factura-token");
@@ -276,15 +279,18 @@ export default function Agenda() {
     }
   };
 
-  const getUserIdFromToken = () => {
+  const getUserInfoFromToken = () => {
     const jwtToken = getCookie("factura-token");
-    if (!jwtToken) return null;
+    if (!jwtToken) return { userId: null, isManager: false };
     try {
       const payload = jose.decodeJwt(jwtToken);
-      return payload.userId;
+      return {
+        userId: payload.userId,
+        isManager: payload.isManager || false,
+      };
     } catch (error) {
       console.error("Error decodificando token:", error);
-      return null;
+      return { userId: null, isManager: false };
     }
   };
 
@@ -372,10 +378,11 @@ export default function Agenda() {
   };
 
   useEffect(() => {
-    const currentUserId = getUserIdFromToken();
-    setUserId(currentUserId);
-    if (currentUserId) {
-      setSelectedUserIds([currentUserId]);
+    const userInfo = getUserInfoFromToken();
+    setUserId(userInfo.userId);
+    setIsManager(userInfo.isManager);
+    if (userInfo.userId) {
+      setSelectedUserIds([userInfo.userId]);
     }
     getTasksForUser();
     getContracts();
@@ -829,6 +836,15 @@ export default function Agenda() {
                   </button>
                 </div>
                 <div className="flex items-center space-x-2">
+                  {isManager && (
+                    <button
+                      onClick={() => setIsHolidayModalOpen(true)}
+                      className="p-2 rounded-md neumorphic-button text-red-500 dark:text-red-400"
+                      title="Gestionar Festivos"
+                    >
+                      <span className="material-icons-outlined text-base">event_busy</span>
+                    </button>
+                  )}
                   <UserMultiSelect
                     selectedUserIds={selectedUserIds}
                     onSelectionChange={setSelectedUserIds}
@@ -964,6 +980,16 @@ export default function Agenda() {
       {isSendTaskModalOpen && (
         <SendTaskModal isOpen={isSendTaskModalOpen} onClose={() => setIsSendTaskModalOpen(false)} />
       )}
+
+      <HolidayManagementModal
+        isOpen={isHolidayModalOpen}
+        onClose={() => setIsHolidayModalOpen(false)}
+        onHolidayChange={() => {
+          if (selectedUserIds.length > 0) {
+            fetchHolidaysAndAbsences(selectedUserIds);
+          }
+        }}
+      />
     </DndProvider>
   );
 }
