@@ -827,7 +827,7 @@ export default function CampaignCard({
               className="neumorphic-button flex items-center text-green-600 font-semibold px-4 py-2 rounded-lg transition-all"
             >
               <span className="material-icons-outlined mr-2">upload_file</span>
-              Subida masiva (Excel)
+              Importar Leads (Excel)
             </button>
           )}
         </div>
