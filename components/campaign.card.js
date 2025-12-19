@@ -278,6 +278,25 @@ export default function CampaignCard({
       return;
     }
 
+    // Validación del teléfono (requerido y formato español)
+    if (!editableLead.phoneNumber || !editableLead.phoneNumber.trim()) {
+      alert("El teléfono es obligatorio");
+      return;
+    }
+
+    const cleanedPhone = editableLead.phoneNumber.replace(/[\s\-]/g, "");
+    const phoneRegex = /^(\+34)?[6789]\d{8}$/;
+    if (!phoneRegex.test(cleanedPhone)) {
+      alert("El teléfono debe ser un número español válido (9 dígitos, empezando por 6, 7, 8 o 9)");
+      return;
+    }
+
+    // Validación del nombre (si se proporciona, mínimo 2 caracteres)
+    if (editableLead.fullName && editableLead.fullName.trim().length > 0 && editableLead.fullName.trim().length < 2) {
+      alert("El nombre debe tener al menos 2 caracteres");
+      return;
+    }
+
     try {
       let response;
       const formData = new FormData();
@@ -342,7 +361,9 @@ export default function CampaignCard({
         alert(editableLead.id ? "Lead actualizado correctamente" : "Lead creado correctamente");
       } else {
         const errorData = await response.json().catch(() => ({}));
-        alert(errorData.message || "Error al guardar el lead");
+        // El backend devuelve { success: false, error: { message, code, statusCode } }
+        const errorMessage = errorData.error?.message || errorData.message || "Error al guardar el lead";
+        alert(errorMessage);
       }
     } catch (error) {
       console.error("Error enviando la solicitud:", error);
@@ -391,8 +412,11 @@ export default function CampaignCard({
         if (response.ok) {
           alert("Archivo .xlsx procesado y datos enviados exitosamente.");
           handleModalClose();
+          fetchAllLeads();
         } else {
-          alert("Error al enviar los datos procesados al backend.");
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.error?.message || errorData.message || "Error al enviar los datos procesados al backend.";
+          alert(errorMessage);
         }
       };
 
