@@ -99,7 +99,6 @@ export default function Sidebar({
     }
   }, [isMobile, isMobileOpen, isCollapsed, onToggleCollapse]);
 
-  const toggleTaskMenu = () => setOpenMenu(openMenu === 'tasks' ? null : 'tasks');
   const toggleLeadsMenu = () => setOpenMenu(openMenu === 'leads' ? null : 'leads');
   const toggleToolsMenu = () => setOpenMenu(openMenu === 'tools' ? null : 'tools');
 
@@ -115,10 +114,6 @@ export default function Sidebar({
     { href: "/contratos", icon: "receipt_long", label: "Contratos" },
     { href: "/comparativas", icon: "compare_arrows", label: "Comparativas" },
     { href: "/notas", icon: "note_alt", label: "Notas Rápidas" },
-  ];
-
-  const taskSubItems = [
-    { href: "/agenda", icon: "book", label: "Agenda personal" },
   ];
 
   const leadsSubItems = [
@@ -303,34 +298,15 @@ export default function Sidebar({
               />
             ))}
 
-            {/* Tasks Submenu */}
+            {/* Agenda Personal - Direct link */}
             <SidebarItem
-              icon="task_alt"
-              label="Tareas"
-              active={taskSubItems.some(item => isActive(item.href))}
+              href="/agenda"
+              icon="book"
+              label="Agenda Personal"
+              active={isActive("/agenda")}
               isCollapsed={isCollapsed}
-              hasSubmenu
-              isOpen={openMenu === 'tasks'}
-              onToggle={toggleTaskMenu}
+              onClick={handleLinkClick}
             />
-            <div className={`
-              overflow-hidden transition-all duration-300
-              ${openMenu === 'tasks' && !isCollapsed ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}
-            `}>
-              <div className="pl-4 space-y-1">
-                {taskSubItems.map((item) => (
-                  <SidebarItem
-                    key={item.href}
-                    href={item.href}
-                    icon={item.icon}
-                    label={item.label}
-                    active={isActive(item.href)}
-                    isCollapsed={false}
-                    onClick={handleLinkClick}
-                  />
-                ))}
-              </div>
-            </div>
 
             {/* Leads Submenu */}
             <SidebarItem
