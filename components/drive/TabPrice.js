@@ -14,8 +14,13 @@ function TabPrice() {
   const [loading, setLoading] = useState(true);
 
   const [openCompanyIds, setOpenCompanyIds] = useState(new Set());
+  const [failedImages, setFailedImages] = useState(new Set());
 
   const isMobile = useIsMobile();
+
+  const handleImageError = (companyId) => {
+    setFailedImages((prev) => new Set([...prev, companyId]));
+  };
 
   const getCompanies = async () => {
     const jwtToken = getCookie("factura-token");
@@ -182,15 +187,19 @@ function TabPrice() {
                     onClick={() => toggleCompany(company.id)}
                   >
                     <div className="flex items-center gap-4">
-                      {company.imageUri ? (
+                      {company.imageUri && !failedImages.has(company.id) ? (
                         <img
                           src={company.imageUri}
                           alt={company.name}
                           className="h-16 w-auto object-contain"
+                          onError={() => handleImageError(company.id)}
                         />
                       ) : (
-                        <div className="h-16 w-32 neumorphic-card-inset rounded-lg flex items-center justify-center">
-                          <span className="text-lg font-bold text-slate-400">
+                        <div className="h-16 w-32 neumorphic-card-inset rounded-lg flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800">
+                          <span className="material-icons-outlined text-3xl text-slate-400 dark:text-slate-500 mr-2">
+                            business
+                          </span>
+                          <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 truncate max-w-20">
                             {company.name}
                           </span>
                         </div>
