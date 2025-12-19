@@ -82,6 +82,32 @@ export default function TopBar({ userGroupId, isManager, onMenuClick }) {
     setUnreadNotifications(parseInt(count) || 0);
   }, []);
 
+  // Escuchar evento de actualización de avatar desde la página de perfil
+  useEffect(() => {
+    const handleAvatarUpdated = (event) => {
+      if (event.detail?.avatar) {
+        // Actualizar inmediatamente con la nueva URL
+        setProfileImageUri(event.detail.avatar);
+      } else {
+        // Si no hay URL directa, refetch desde el servidor
+        const token = getCookie("factura-token");
+        if (token) {
+          try {
+            const payload = jose.decodeJwt(token);
+            fetchProfilePicture(payload.userId);
+          } catch (error) {
+            console.error("Error al refetch avatar:", error);
+          }
+        }
+      }
+    };
+
+    window.addEventListener("avatarUpdated", handleAvatarUpdated);
+    return () => {
+      window.removeEventListener("avatarUpdated", handleAvatarUpdated);
+    };
+  }, []);
+
   return (
     <div className="sticky top-0 z-50 bg-background-light dark:bg-background-dark border-b border-slate-200 dark:border-slate-700 px-4 md:px-6 py-4 no-print">
       <div className="flex items-center justify-between md:justify-end">

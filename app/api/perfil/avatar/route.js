@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import * as jose from "jose";
 
 export async function POST(req) {
   try {
@@ -9,6 +10,25 @@ export async function POST(req) {
     if (!token) {
       return NextResponse.json(
         { error: "No autenticado" },
+        { status: 401 }
+      );
+    }
+
+    // Decodificar el token para obtener el userUuid
+    let userUuid;
+    try {
+      const payload = jose.decodeJwt(token.value);
+      userUuid = payload.userUuid;
+      if (!userUuid) {
+        return NextResponse.json(
+          { message: "No se pudo obtener el ID del usuario" },
+          { status: 400 }
+        );
+      }
+    } catch (decodeError) {
+      console.error("Error decodificando token:", decodeError);
+      return NextResponse.json(
+        { message: "Token inválido" },
         { status: 401 }
       );
     }
@@ -41,14 +61,20 @@ export async function POST(req) {
     }
 
     try {
-      // Crear nuevo FormData para enviar al backend
+      // Crear FormData para enviar al backend
+      // El backend espera: userUuid, userData (JSON string), y userImage (archivo)
       const backendFormData = new FormData();
-      backendFormData.append("avatar", file);
+      backendFormData.append("userUuid", userUuid);
+      backendFormData.append("userData", JSON.stringify({})); // Solo actualizamos la imagen
+      backendFormData.append("userImage", file, file.name);
 
-      const apiResponse = await fetch(`${process.env.BACKEND_URL}/perfil/avatar`, {
-        method: "POST",
+      const apiUrl = process.env.API_URL || process.env.BACKEND_URL || "http://localhost:3000";
+
+      const apiResponse = await fetch(`${apiUrl}/users/`, {
+        method: "PATCH",
         headers: {
           "Authorization": `Bearer ${token.value}`,
+          // No incluir Content-Type, fetch lo establece automáticamente para FormData
         },
         body: backendFormData,
         signal: AbortSignal.timeout(30000), // 30 segundos para subida de archivos
@@ -56,18 +82,43 @@ export async function POST(req) {
 
       if (apiResponse.ok) {
         const data = await apiResponse.json();
-        return NextResponse.json(data, { status: 200 });
+        // El backend devuelve el usuario actualizado con imageUri
+        // Necesitamos obtener la URL firmada de la imagen
+        let avatarUrl = data.imageUri;
+
+        // Si tenemos imageUri, obtener la URL firmada
+        if (avatarUrl && !avatarUrl.startsWith("data:")) {
+          try {
+            const profilePicResponse = await fetch(`${apiUrl}/users/profile-picture/${data.id}`, {
+              headers: {
+                "Authorization": `Bearer ${token.value}`,
+              },
+            });
+            if (profilePicResponse.ok) {
+              const profilePicData = await profilePicResponse.json();
+              avatarUrl = profilePicData.profileImageUri;
+            }
+          } catch (e) {
+            console.log("No se pudo obtener URL firmada, usando imageUri directa");
+          }
+        }
+
+        return NextResponse.json({
+          avatar: avatarUrl,
+          message: "Avatar actualizado correctamente"
+        }, { status: 200 });
       } else {
         const errorData = await apiResponse.json().catch(() => ({}));
+        console.error("Error del backend:", errorData);
         return NextResponse.json(
           { message: errorData.message || "Error al subir la imagen" },
           { status: apiResponse.status }
         );
       }
     } catch (fetchError) {
-      console.log("Backend no disponible para avatar:", fetchError.message);
+      console.error("Error conectando al backend:", fetchError.message);
 
-      // Fallback: convertir imagen a base64 para simular respuesta
+      // Fallback: convertir imagen a base64 para simular respuesta (modo desarrollo)
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
       const base64 = buffer.toString("base64");

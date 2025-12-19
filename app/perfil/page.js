@@ -16,6 +16,8 @@ export default function Perfil() {
   // Avatar upload state
   const fileInputRef = useRef(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
     fetchPerfilData();
@@ -91,29 +93,62 @@ export default function Perfil() {
       return;
     }
 
+    // Mostrar preview inmediatamente
+    const previewUrl = URL.createObjectURL(file);
+    setAvatarPreview(previewUrl);
+
     try {
       setUploadingAvatar(true);
+      setUploadProgress(10);
 
       const formData = new FormData();
       formData.append("avatar", file);
+
+      // Simular progreso inicial
+      setUploadProgress(30);
 
       const response = await fetch("/api/perfil/avatar", {
         method: "POST",
         body: formData,
       });
 
+      setUploadProgress(70);
+
       if (response.ok) {
         const data = await response.json();
-        setUserData({ ...userData, avatar: data.avatar });
+        setUploadProgress(100);
+
+        // Pequeña pausa para mostrar el 100%
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // Limpiar preview y usar la URL real del servidor
+        setAvatarPreview(null);
+        // Añadir timestamp para evitar caché del navegador
+        const avatarWithTimestamp = data.avatar ?
+          (data.avatar.includes("?") ? `${data.avatar}&t=${Date.now()}` : `${data.avatar}?t=${Date.now()}`)
+          : data.avatar;
+        setUserData({ ...userData, avatar: avatarWithTimestamp });
+
+        // Disparar evento personalizado para que TopBar actualice su avatar
+        window.dispatchEvent(new CustomEvent("avatarUpdated", {
+          detail: { avatar: avatarWithTimestamp }
+        }));
       } else {
         const error = await response.json();
+        setAvatarPreview(null);
         alert(error.message || "Error al subir la imagen");
       }
     } catch (error) {
       console.error("Error uploading avatar:", error);
+      setAvatarPreview(null);
       alert("Error al subir la imagen");
     } finally {
       setUploadingAvatar(false);
+      setUploadProgress(0);
+      // Limpiar la URL del preview para liberar memoria
+      if (avatarPreview) {
+        URL.revokeObjectURL(avatarPreview);
+      }
       // Limpiar el input para permitir subir el mismo archivo de nuevo
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -170,29 +205,61 @@ export default function Perfil() {
 
           {/* Profile Picture */}
           <div
-            className="neumorphic-card rounded-full p-2 mb-4 cursor-pointer group"
+            className="neumorphic-card rounded-full p-2 mb-4 cursor-pointer group relative"
             onClick={handleAvatarClick}
             title="Haz clic para cambiar tu foto de perfil"
           >
             <div className="w-32 h-32 rounded-full neumorphic-card-inset flex items-center justify-center overflow-hidden relative">
-              {userData?.avatar ? (
+              {/* Mostrar preview si existe, sino el avatar actual, sino el icono por defecto */}
+              {avatarPreview ? (
+                <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+              ) : userData?.avatar ? (
                 <img src={userData.avatar} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
                 <span className="material-icons-outlined text-7xl text-slate-400">
                   person
                 </span>
               )}
-              {/* Overlay con icono de cámara */}
-              <div className={`absolute inset-0 bg-black/50 flex items-center justify-center rounded-full transition-opacity ${uploadingAvatar ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+              {/* Overlay con icono de cámara o progreso */}
+              <div className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center rounded-full transition-opacity ${uploadingAvatar ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                 {uploadingAvatar ? (
-                  <div className="animate-spin">
-                    <span className="material-icons-outlined text-3xl text-white">sync</span>
+                  <div className="flex flex-col items-center">
+                    <div className="animate-spin mb-2">
+                      <span className="material-icons-outlined text-3xl text-white">sync</span>
+                    </div>
+                    <span className="text-white text-xs font-medium">{uploadProgress}%</span>
                   </div>
                 ) : (
                   <span className="material-icons-outlined text-3xl text-white">photo_camera</span>
                 )}
               </div>
             </div>
+            {/* Barra de progreso circular */}
+            {uploadingAvatar && (
+              <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+                <circle
+                  className="text-slate-200 dark:text-slate-700"
+                  strokeWidth="4"
+                  stroke="currentColor"
+                  fill="transparent"
+                  r="46"
+                  cx="50"
+                  cy="50"
+                />
+                <circle
+                  className="text-primary transition-all duration-300"
+                  strokeWidth="4"
+                  strokeDasharray={289}
+                  strokeDashoffset={289 - (289 * uploadProgress) / 100}
+                  strokeLinecap="round"
+                  stroke="currentColor"
+                  fill="transparent"
+                  r="46"
+                  cx="50"
+                  cy="50"
+                />
+              </svg>
+            )}
           </div>
 
           {/* User Name and Role */}
