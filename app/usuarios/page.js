@@ -4,16 +4,21 @@ import { useState, useEffect } from "react";
 import { getCookie } from "cookies-next";
 import * as jose from "jose";
 import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
-import { FiEdit, FiTrash } from "react-icons/fi";
+import { FiEdit, FiTrash, FiUser } from "react-icons/fi";
 import UserModal from "@/components/new-user.modal";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Users() {
+  const router = useRouter();
   const [users, setUsers] = useState([]);
   const [loggedUserData, setLoggedUserData] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+
+  // Check if current user is admin (groupId === 1)
+  const isAdmin = loggedUserData.groupId === 1;
 
   const getUsers = async () => {
     const jwtToken = getCookie("factura-token");
@@ -294,15 +299,27 @@ export default function Users() {
                   </td>
                   <td className="p-3">
                     <div className="flex space-x-2">
+                      {/* Ver perfil - solo admin */}
+                      {isAdmin && (
+                        <button
+                          className="p-2 rounded-lg neumorphic-button text-primary hover:bg-primary/10"
+                          onClick={() => router.push(`/usuarios/${user.uuid}`)}
+                          title="Gestionar perfil"
+                        >
+                          <span className="material-icons-outlined text-lg">person</span>
+                        </button>
+                      )}
                       <button
                         className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-400"
                         onClick={() => handleEditUser(user)}
+                        title="Editar usuario"
                       >
                         <span className="material-icons-outlined text-lg">edit</span>
                       </button>
                       <button
                         className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-400"
                         onClick={() => handleDeleteUser(user.uuid)}
+                        title="Eliminar usuario"
                       >
                         <span className="material-icons-outlined text-lg">delete</span>
                       </button>
