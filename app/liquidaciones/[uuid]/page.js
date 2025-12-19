@@ -445,7 +445,10 @@ export default function LiquidacionDetailPage() {
   const [isEditingLiquidationName, setIsEditingLiquidationName] = useState(false);
   const [currentEditedLiquidationName, setCurrentEditedLiquidationName] = useState("");
 
-  const [editingCommissionState, setEditingCommissionState] = useState({ lcUuid: null, value: "" });
+  // Estado para edición masiva de comisiones
+  const [pendingChanges, setPendingChanges] = useState({}); // { lcUuid: newValue }
+  const [isSavingBatch, setIsSavingBatch] = useState(false);
+
   const [itemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [savingStates, setSavingStates] = useState({});
@@ -523,7 +526,8 @@ export default function LiquidacionDetailPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const getEffectiveCommission = useCallback((liquidationContract) => {
+  // Obtiene la comisión guardada (sin cambios pendientes)
+  const getSavedCommission = useCallback((liquidationContract) => {
     if (
       liquidationContract.overrideCommission !== null &&
       liquidationContract.overrideCommission !== undefined
@@ -538,6 +542,33 @@ export default function LiquidacionDetailPage() {
     }
     return 0;
   }, []);
+
+  // Obtiene la comisión efectiva (considerando cambios pendientes)
+  const getEffectiveCommission = useCallback((liquidationContract) => {
+    const lcUuid = liquidationContract.uuid;
+
+    // Si hay un cambio pendiente, usar ese valor
+    if (pendingChanges.hasOwnProperty(lcUuid)) {
+      const pendingValue = pendingChanges[lcUuid];
+      if (pendingValue === "" || pendingValue === null) {
+        // Si está vacío, usar la comisión asignada original
+        return parseFloat(liquidationContract.assignedCommissionAmount || 0);
+      }
+      return parseFloat(pendingValue) || 0;
+    }
+
+    return getSavedCommission(liquidationContract);
+  }, [pendingChanges, getSavedCommission]);
+
+  // Verificar si hay cambios pendientes
+  const hasPendingChanges = useMemo(() => {
+    return Object.keys(pendingChanges).length > 0;
+  }, [pendingChanges]);
+
+  // Número de cambios pendientes
+  const pendingChangesCount = useMemo(() => {
+    return Object.keys(pendingChanges).length;
+  }, [pendingChanges]);
 
   const totalLiquidationCommission = useMemo(() => {
     if (!liquidation?.liquidationContracts) return 0;
@@ -650,81 +681,143 @@ export default function LiquidacionDetailPage() {
     return Math.ceil((filteredContracts?.length || 0) / itemsPerPage);
   }, [filteredContracts, itemsPerPage]);
 
-  const handleEditCommission = (lc) => {
-    const currentDisplayValue =
-      lc.overrideCommission !== null && lc.overrideCommission !== undefined
-        ? String(lc.overrideCommission)
-        : "";
-    setEditingCommissionState({ lcUuid: lc.uuid, value: currentDisplayValue });
-  };
+  // Maneja el cambio de valor en una celda de comisión
+  const handleCommissionChange = (lcUuid, newValue) => {
+    const lc = liquidation.liquidationContracts.find((l) => l.uuid === lcUuid);
+    if (!lc) return;
 
-  const handleCancelEditCommission = () => {
-    setEditingCommissionState({ lcUuid: null, value: "" });
-  };
+    const originalValue = lc.overrideCommission !== null && lc.overrideCommission !== undefined
+      ? String(lc.overrideCommission)
+      : "";
 
-  async function handleSaveCommission(lcUuid) {
-    const lcToUpdate = liquidation.liquidationContracts.find((lc) => lc.uuid === lcUuid);
-    if (!lcToUpdate) return;
-
-    const newCommissionValue =
-      editingCommissionState.value.trim() === "" ? null : parseFloat(editingCommissionState.value);
-
-    if (editingCommissionState.value.trim() !== "" && isNaN(newCommissionValue)) {
-      toast.error(
-        "Por favor, introduce un número válido para la comisión o déjalo vacío para cálculo automático."
-      );
-      return;
-    }
-    if (
-      lcToUpdate.overrideCommission === newCommissionValue &&
-      (lcToUpdate.overrideCommission !== null || newCommissionValue !== null)
-    ) {
-      handleCancelEditCommission();
-      return;
-    }
-
-    setSavingStates((prev) => ({ ...prev, [lcUuid + "_save"]: true }));
-    try {
-      const jwtToken = getCookie("factura-token");
-      const response = await authFetch(
-        "PATCH",
-        `liquidation-contracts/${lcUuid}`,
-        { overrideCommission: newCommissionValue },
-        jwtToken
-      );
-      if (!response.ok) {
-        const errData = await response
-          .json()
-          .catch(() => ({ message: "Error al actualizar comisión" }));
-        throw new Error(errData.message);
-      }
-      const updatedLcResponse = await response.json();
-
-      setLiquidation((prev) => ({
-        ...prev,
-        liquidationContracts: prev.liquidationContracts.map((lc) =>
-          lc.uuid === lcUuid
-            ? {
-                ...lc,
-                overrideCommission: updatedLcResponse.overrideCommission,
-                updatedAt: updatedLcResponse.updatedAt,
-              }
-            : lc
-        ),
-      }));
-      toast.success("Comisión actualizada.", {
-        position: "top-right",
-        draggable: true,
-        icon: false,
-        hideProgressBar: false,
-        autoClose: 5000,
-        className: `transition-all transform hover:-translate-y-1 hover:shadow-l border border-gray-400`,
+    // Si el nuevo valor es igual al original, eliminar de pendingChanges
+    if (newValue === originalValue) {
+      setPendingChanges((prev) => {
+        const updated = { ...prev };
+        delete updated[lcUuid];
+        return updated;
       });
-      handleCancelEditCommission();
+    } else {
+      // Agregar o actualizar en pendingChanges
+      setPendingChanges((prev) => ({
+        ...prev,
+        [lcUuid]: newValue,
+      }));
+    }
+  };
+
+  // Obtiene el valor a mostrar en el input de una fila
+  const getInputValue = (lc) => {
+    if (pendingChanges.hasOwnProperty(lc.uuid)) {
+      return pendingChanges[lc.uuid];
+    }
+    return lc.overrideCommission !== null && lc.overrideCommission !== undefined
+      ? String(lc.overrideCommission)
+      : "";
+  };
+
+  // Verifica si una fila tiene cambios pendientes
+  const hasRowChanged = (lcUuid) => {
+    return pendingChanges.hasOwnProperty(lcUuid);
+  };
+
+  // Cancelar todos los cambios pendientes
+  const handleCancelAllChanges = () => {
+    setPendingChanges({});
+  };
+
+  // Guardar todos los cambios en batch
+  async function handleSaveAllChanges() {
+    if (!hasPendingChanges) return;
+
+    // Validar todos los valores
+    for (const [lcUuid, value] of Object.entries(pendingChanges)) {
+      if (value !== "" && isNaN(parseFloat(value))) {
+        toast.error("Hay valores de comisión inválidos. Por favor, revisa los campos marcados.");
+        return;
+      }
+    }
+
+    setIsSavingBatch(true);
+    const jwtToken = getCookie("factura-token");
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      // Ejecutar todas las actualizaciones en paralelo
+      const updatePromises = Object.entries(pendingChanges).map(async ([lcUuid, value]) => {
+        const newCommissionValue = value === "" ? null : parseFloat(value);
+
+        try {
+          const response = await authFetch(
+            "PATCH",
+            `liquidation-contracts/${lcUuid}`,
+            { overrideCommission: newCommissionValue },
+            jwtToken
+          );
+
+          if (!response.ok) {
+            throw new Error("Error al actualizar");
+          }
+
+          const updatedLc = await response.json();
+          return { success: true, lcUuid, updatedLc };
+        } catch (err) {
+          return { success: false, lcUuid, error: err };
+        }
+      });
+
+      const results = await Promise.all(updatePromises);
+
+      // Procesar resultados
+      const successfulUpdates = results.filter((r) => r.success);
+      const failedUpdates = results.filter((r) => !r.success);
+
+      successCount = successfulUpdates.length;
+      errorCount = failedUpdates.length;
+
+      // Actualizar estado local con las actualizaciones exitosas
+      if (successfulUpdates.length > 0) {
+        setLiquidation((prev) => ({
+          ...prev,
+          liquidationContracts: prev.liquidationContracts.map((lc) => {
+            const update = successfulUpdates.find((u) => u.lcUuid === lc.uuid);
+            if (update) {
+              return {
+                ...lc,
+                overrideCommission: update.updatedLc.overrideCommission,
+                updatedAt: update.updatedLc.updatedAt,
+              };
+            }
+            return lc;
+          }),
+        }));
+
+        // Limpiar los cambios exitosos de pendingChanges
+        setPendingChanges((prev) => {
+          const updated = { ...prev };
+          successfulUpdates.forEach((u) => delete updated[u.lcUuid]);
+          return updated;
+        });
+      }
+
+      // Mostrar resultado
+      if (errorCount === 0) {
+        toast.success(`${successCount} comisión(es) actualizada(s) correctamente.`, {
+          position: "top-right",
+          autoClose: 5000,
+        });
+      } else if (successCount === 0) {
+        toast.error(`Error al actualizar las comisiones. Ningún cambio fue guardado.`);
+      } else {
+        toast.warning(
+          `${successCount} comisión(es) actualizada(s), ${errorCount} error(es). Revisa los cambios pendientes.`
+        );
+      }
     } catch (err) {
-      toast.error(err.message);
+      toast.error("Error al guardar los cambios: " + err.message);
     } finally {
-      setSavingStates((prev) => ({ ...prev, [lcUuid + "_save"]: false }));
+      setIsSavingBatch(false);
     }
   }
 
@@ -1362,67 +1455,32 @@ export default function LiquidacionDetailPage() {
                             </td>
                           ))}
                           {/* Celdas fijas para Importe y Acciones */}
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300 text-right">
-                            {editingCommissionState.lcUuid === lc.uuid ? (
-                              <input
-                                type="number"
-                                step="0.01"
-                                placeholder="Override"
-                                value={editingCommissionState.value}
-                                onChange={(e) =>
-                                  setEditingCommissionState((prev) => ({
-                                    ...prev,
-                                    value: e.target.value,
-                                  }))
-                                }
-                                className="neumorphic-card-inset w-28 p-1 border-none rounded-lg text-right text-sm bg-transparent text-slate-800 dark:text-slate-100"
-                                onKeyDown={(e) =>
-                                  e.key === "Enter" && handleSaveCommission(lc.uuid)
-                                }
-                                onClick={(e) => e.stopPropagation()}
-                                autoFocus
-                              />
-                            ) : (
-                              <div
-                                className="cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditCommission(lc);
-                                }}
-                              >
-                                {formatCurrency(effectiveComm)}
-                              </div>
+                          <td className={`px-4 py-3 whitespace-nowrap text-sm text-right ${
+                            hasRowChanged(lc.uuid) ? "bg-amber-50 dark:bg-amber-900/20" : ""
+                          }`}>
+                            <input
+                              type="number"
+                              step="0.01"
+                              placeholder={formatCurrency(lc.assignedCommissionAmount || 0)}
+                              value={getInputValue(lc)}
+                              onChange={(e) => handleCommissionChange(lc.uuid, e.target.value)}
+                              className={`w-28 p-1.5 border rounded-lg text-right text-sm bg-transparent transition-all ${
+                                hasRowChanged(lc.uuid)
+                                  ? "border-amber-400 dark:border-amber-500 ring-1 ring-amber-300 dark:ring-amber-600"
+                                  : "border-slate-200 dark:border-slate-600 hover:border-primary focus:border-primary focus:ring-1 focus:ring-primary"
+                              } text-slate-800 dark:text-slate-100`}
+                              onClick={(e) => e.stopPropagation()}
+                              disabled={isSavingBatch}
+                            />
+                            {hasRowChanged(lc.uuid) && (
+                              <span className="ml-1 text-amber-500 text-xs">●</span>
                             )}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
                             <div className="flex items-center justify-center space-x-2">
-                              {editingCommissionState.lcUuid === lc.uuid ? (
-                                <>
-                                  <button
-                                    onClick={() => handleSaveCommission(lc.uuid)}
-                                    disabled={savingStates[lc.uuid + "_save"]}
-                                    className="text-green-500 hover:text-green-700 disabled:opacity-50"
-                                    title="Guardar Comisión"
-                                  >
-                                    {savingStates[lc.uuid + "_save"] ? (
-                                      <FaSpinner className="animate-spin" />
-                                    ) : (
-                                      <FaSave size={16} />
-                                    )}
-                                  </button>
-                                  <button
-                                    onClick={handleCancelEditCommission}
-                                    disabled={savingStates[lc.uuid + "_save"]}
-                                    className="text-gray-500 hover:text-gray-700 disabled:opacity-50"
-                                    title="Cancelar Edición"
-                                  >
-                                    <FaTimes size={16} />
-                                  </button>
-                                </>
-                              ) : null}
                               <button
                                 onClick={() => handleDeleteLiquidationContract(lc.uuid)}
-                                disabled={savingStates[lc.uuid + "_delete"]}
+                                disabled={savingStates[lc.uuid + "_delete"] || isSavingBatch}
                                 className="text-red-500 hover:text-red-700 disabled:opacity-50"
                                 title="Desvincular Contrato"
                               >
@@ -1488,6 +1546,52 @@ export default function LiquidacionDetailPage() {
           onClose={() => setIsAddContractModalOpen(false)}
           onContractsAdded={fetchLiquidacion}
         />
+      )}
+
+      {/* Barra sticky para guardar cambios pendientes */}
+      {hasPendingChanges && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-lg z-40">
+          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 text-sm font-semibold">
+                {pendingChangesCount}
+              </span>
+              <span className="text-sm text-slate-600 dark:text-slate-300">
+                {pendingChangesCount === 1
+                  ? "Hay 1 cambio pendiente"
+                  : `Hay ${pendingChangesCount} cambios pendientes`}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleCancelAllChanges}
+                disabled={isSavingBatch}
+                className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors font-medium disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveAllChanges}
+                disabled={isSavingBatch}
+                className="px-5 py-2 rounded-lg bg-primary text-white font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
+              >
+                {isSavingBatch ? (
+                  <>
+                    <FaSpinner className="animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <FaSave />
+                    Guardar cambios
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
