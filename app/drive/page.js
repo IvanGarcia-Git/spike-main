@@ -708,7 +708,6 @@ function DriveFilesContent() {
             </div>
           </div>
         </div>
-      </div>
 
       {/* Folder Modal */}
       {showFolderModal && (
