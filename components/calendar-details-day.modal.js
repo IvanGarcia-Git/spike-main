@@ -4,6 +4,8 @@ import { authFetch } from "@/helpers/server-fetch.helper";
 import { useRouter } from "next/navigation";
 import { FaPlus } from "react-icons/fa";
 import { FiFileText, FiTrash } from "react-icons/fi";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 export default function CalendarDetailsDay({
   isModalOpen,
@@ -18,6 +20,10 @@ export default function CalendarDetailsDay({
   };
 
   const router = useRouter();
+
+  const formattedDate = currentDate
+    ? format(currentDate, "EEEE, d 'de' MMMM", { locale: es })
+    : "";
 
   const handleDeleteEvent = async (event) => {
     const eventTypeName =
@@ -106,41 +112,66 @@ export default function CalendarDetailsDay({
     return `${user.name} ${user.firstSurname || ""}`.trim();
   };
 
+  if (!isModalOpen) return null;
+
   return (
-    <div
-      className={`fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center transition-opacity z-50 ${
-        isModalOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-      }`}
-    >
-      <div className="bg-white p-6 rounded-lg w-96 lg:ml-72 z-60">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Eventos del día</h2>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="neumorphic-card p-6 rounded-xl w-full max-w-md animate-in fade-in zoom-in duration-200">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-200 dark:border-slate-700">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-700 dark:text-slate-200">
+              Actividades del día
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 capitalize">
+              {formattedDate}
+            </p>
+          </div>
           <button
-            onClick={(e) => handleAddTaskClickAndClose(e, currentDate.getDate())}
-            className="text-blue-500 hover:text-blue-700 p-1"
+            onClick={(e) => handleAddTaskClickAndClose(e, currentDate?.getDate())}
+            className="p-2 rounded-lg neumorphic-button text-primary hover:text-primary-dark transition-colors"
+            title="Crear nueva actividad"
           >
             <FaPlus size={16} />
           </button>
         </div>
-        <div className="overflow-y-auto max-h-64">
+
+        {/* Events List */}
+        <div className="overflow-y-auto max-h-80 space-y-2">
           {events.length > 0 ? (
             events.map((event, index) => {
               let timeString = "";
-              if (event.startDate && event.type !== "task") {
+              if (event.startDate) {
                 const eventDate = new Date(event.startDate);
-                timeString = `${String(eventDate.getUTCHours()).padStart(2, "0")}:${String(
-                  eventDate.getUTCMinutes()
-                ).padStart(2, "0")}`;
+                const hours = eventDate.getHours();
+                const minutes = eventDate.getMinutes();
+                if (hours !== 0 || minutes !== 0) {
+                  timeString = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+                }
               }
 
-              let bgColor;
-              if (event.type === "task") {
-                bgColor = "bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600";
-              } else if (event.type === "reminder") {
-                bgColor = "bg-green-200";
-              } else if (event.type === "leadCall") {
-                bgColor = "bg-cyan-200";
-              }
+              const typeConfig = {
+                task: {
+                  bg: "bg-slate-100 dark:bg-slate-800",
+                  border: "border-l-4 border-blue-500",
+                  label: "Tarea",
+                  icon: "📋",
+                },
+                reminder: {
+                  bg: "bg-green-50 dark:bg-green-900/30",
+                  border: "border-l-4 border-green-500",
+                  label: "Recordatorio",
+                  icon: "🔔",
+                },
+                leadCall: {
+                  bg: "bg-cyan-50 dark:bg-cyan-900/30",
+                  border: "border-l-4 border-cyan-500",
+                  label: "Llamada",
+                  icon: "📞",
+                },
+              };
+
+              const config = typeConfig[event.type] || typeConfig.task;
 
               const isCompleted =
                 event.completed || (event.type === "task" && event.taskStateId === 3);
@@ -154,68 +185,80 @@ export default function CalendarDetailsDay({
               return (
                 <div
                   key={index}
-                  className={`${bgColor} mb-2 p-2 border rounded flex justify-between items-center`}
+                  className={`${config.bg} ${config.border} p-3 rounded-lg flex justify-between items-start gap-2 transition-all hover:shadow-md`}
                 >
-                  <div className={`flex flex-col`} onClick={handleClick}>
-                    <p className={`font-medium ${isCompleted ? "line-through text-gray-500" : ""}`}>
-                      {timeString ? `${timeString} - ` : ""}
-                      {event.subject}
-                    </p>
-                    <p
-                      className={`text-sm ${
-                        isCompleted ? "line-through text-gray-400" : "text-gray-600"
-                      }`}
-                    >
-                      {event.type === "task"
-                        ? "Tarea"
-                        : event.type === "reminder"
-                        ? "Recordatorio"
-                        : "Llamada"}
-                      {getEventUserName(event) && (
-                        <span className="text-xs ml-1">
-                          - {getEventUserName(event)}
+                  <div className="flex-1 min-w-0 cursor-pointer" onClick={handleClick}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm">{config.icon}</span>
+                      <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
+                        {config.label}
+                      </span>
+                      {timeString && (
+                        <span className="text-xs text-slate-400 dark:text-slate-500">
+                          {timeString}
                         </span>
                       )}
+                    </div>
+                    <p className={`font-medium text-sm truncate ${
+                      isCompleted
+                        ? "line-through text-slate-400 dark:text-slate-500"
+                        : "text-slate-700 dark:text-slate-200"
+                    }`}>
+                      {event.subject}
                     </p>
+                    {getEventUserName(event) && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        👤 {getEventUserName(event)}
+                      </p>
+                    )}
                   </div>
-                  <div className="flex items-center space-x-2 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0">
                     {event.contractUrl && (
                       <a
                         href={event.contractUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-green-500 hover:text-green-700"
+                        className="p-1.5 rounded-md hover:bg-green-100 dark:hover:bg-green-900/50 text-green-600 dark:text-green-400 transition-colors"
                         title="Ver contrato"
                       >
-                        <FiFileText size={18} />
+                        <FiFileText size={16} />
                       </a>
                     )}
-
-                    {(event.type === "task" ||
-                      event.type === "reminder" ||
-                      event.type === "leadCall") && (
-                      <button
-                        onClick={() => handleDeleteEvent(event)}
-                        className="p-1 text-red-500 hover:text-red-700"
-                        title="Eliminar"
-                      >
-                        <FiTrash size={18} />
-                      </button>
-                    )}
+                    <button
+                      onClick={() => handleDeleteEvent(event)}
+                      className="p-1.5 rounded-md hover:bg-red-100 dark:hover:bg-red-900/50 text-red-500 dark:text-red-400 transition-colors"
+                      title="Eliminar"
+                    >
+                      <FiTrash size={16} />
+                    </button>
                   </div>
                 </div>
               );
             })
           ) : (
-            <p className="text-gray-500">No hay eventos.</p>
+            <div className="text-center py-8 text-slate-400 dark:text-slate-500">
+              <span className="text-3xl mb-2 block">📭</span>
+              <p className="text-sm">No hay actividades programadas</p>
+            </div>
           )}
         </div>
-        <button
-          onClick={handleClose}
-          className="mt-4 hover:bg-secondaryHover text-white p-2 rounded-lg shadow-md bg-secondary w-full"
-        >
-          Cerrar
-        </button>
+
+        {/* Footer */}
+        <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700 flex gap-2">
+          <button
+            onClick={(e) => handleAddTaskClickAndClose(e, currentDate?.getDate())}
+            className="flex-1 py-2.5 px-4 rounded-lg neumorphic-button text-primary font-medium text-sm flex items-center justify-center gap-2 hover:bg-primary/5 transition-colors"
+          >
+            <FaPlus size={12} />
+            Crear actividad
+          </button>
+          <button
+            onClick={handleClose}
+            className="py-2.5 px-6 rounded-lg neumorphic-button text-slate-600 dark:text-slate-300 font-medium text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+          >
+            Cerrar
+          </button>
+        </div>
       </div>
     </div>
   );

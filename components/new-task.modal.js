@@ -12,6 +12,7 @@ export default function NewTaskModal({
   initialTab = "task",
   taskStateName = null,
   selectedDate = null,
+  onPreviewChange = null,
 }) {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedCups, setSelectedCups] = useState("");
@@ -91,6 +92,44 @@ export default function NewTaskModal({
       }));
     }
   }, [selectedDate]);
+
+  // Emit preview changes to parent component
+  useEffect(() => {
+    if (!onPreviewChange) return;
+
+    if (!isModalOpen) {
+      onPreviewChange(null);
+      return;
+    }
+
+    let previewData = null;
+
+    if (activeTab === "task" && newTask.startDate && newTask.subject) {
+      previewData = {
+        type: "task",
+        subject: newTask.subject,
+        startDate: newTask.startDate,
+        startTime: newTask.startTime,
+        isPreview: true,
+      };
+    } else if (activeTab === "reminder" && newReminder.startDate && newReminder.subject) {
+      previewData = {
+        type: "reminder",
+        subject: newReminder.subject,
+        startDate: newReminder.startDate,
+        isPreview: true,
+      };
+    } else if (activeTab === "leadCall" && newLeadCall.startDate && newLeadCall.subject) {
+      previewData = {
+        type: "leadCall",
+        subject: newLeadCall.subject,
+        startDate: newLeadCall.startDate,
+        isPreview: true,
+      };
+    }
+
+    onPreviewChange(previewData);
+  }, [isModalOpen, activeTab, newTask, newReminder, newLeadCall, onPreviewChange]);
 
   const handleAddTask = async (e) => {
     e.preventDefault();

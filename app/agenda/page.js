@@ -28,6 +28,7 @@ import ConfirmDeleteTaskModal from "@/components/confirm-delete-task-modal";
 import SendTaskModal from "@/components/send-task.modal";
 import UserMultiSelect from "@/components/user-multi-select.section";
 import HolidayManagementModal from "@/components/holiday-management.modal";
+import CalendarDetailsDay from "@/components/calendar-details-day.modal";
 
 // Componente de tarjeta de tarea draggable
 const TaskCard = ({ task, onShowTask, taskStates }) => {
@@ -202,6 +203,9 @@ export default function Agenda() {
   const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
   const [isManager, setIsManager] = useState(false);
   const [isHolidayModalOpen, setIsHolidayModalOpen] = useState(false);
+  const [previewEvent, setPreviewEvent] = useState(null);
+  const [isDayDetailModalOpen, setIsDayDetailModalOpen] = useState(false);
+  const [dayDetailDate, setDayDetailDate] = useState(null);
 
   const fetchRemindersAndLeadsForMonth = async (date, userIdsToFetch = null) => {
     const jwtToken = getCookie("factura-token");
@@ -601,6 +605,60 @@ export default function Agenda() {
     }
   };
 
+  // Handler for preview changes from NewTaskModal
+  const handlePreviewChange = (preview) => {
+    setPreviewEvent(preview);
+  };
+
+  // Helper function to get preview event for a specific day
+  const getPreviewForDay = (day) => {
+    if (!previewEvent || !previewEvent.startDate) return null;
+    const previewDate = new Date(previewEvent.startDate);
+    if (isSameDay(previewDate, day)) {
+      return previewEvent;
+    }
+    return null;
+  };
+
+  // Handler for day click - show detail modal if events exist, otherwise open create modal
+  const handleDayClick = (day) => {
+    const dayEvents = getEventsForDay(day);
+    const totalEvents = dayEvents.tasks.length + dayEvents.reminders.length + dayEvents.leads.length;
+
+    if (totalEvents > 0) {
+      // There are events, show the detail modal
+      setDayDetailDate(day);
+      setIsDayDetailModalOpen(true);
+    } else {
+      // No events, open create task modal directly
+      setSelectedCalendarDate(day);
+      setActiveTab("task");
+      setIsModalOpen(true);
+    }
+  };
+
+  // Get events for detail modal
+  const getEventsForDetailModal = () => {
+    if (!dayDetailDate) return [];
+    const dayEvents = getEventsForDay(dayDetailDate);
+    const allEvents = [
+      ...dayEvents.tasks.map(t => ({ ...t, type: "task" })),
+      ...dayEvents.reminders.map(r => ({ ...r, type: "reminder" })),
+      ...dayEvents.leads.map(l => ({ ...l, type: "leadCall" })),
+    ];
+    return allEvents;
+  };
+
+  // Handle add task click from detail modal
+  const handleAddTaskFromDetail = (e, dayNumber) => {
+    setIsDayDetailModalOpen(false);
+    if (dayDetailDate) {
+      setSelectedCalendarDate(dayDetailDate);
+    }
+    setActiveTab("task");
+    setIsModalOpen(true);
+  };
+
   // Helper functions for calendar events
   const getEventsForDay = (day) => {
     const dayTasks = calendarTasks.filter((task) => {
@@ -663,6 +721,7 @@ export default function Agenda() {
             const { holiday, absence } = getDayInfo(day);
             const dayEvents = getEventsForDay(day);
             const totalEvents = dayEvents.tasks.length + dayEvents.reminders.length + dayEvents.leads.length;
+            const dayPreview = getPreviewForDay(day);
 
             return (
               <div
@@ -674,11 +733,7 @@ export default function Agenda() {
                     ? "neumorphic-button active bg-primary/10 dark:bg-primary/20"
                     : "neumorphic-button bg-background-light dark:bg-background-dark hover:bg-primary/5"
                 } ${!isCurrentMonth ? "opacity-40" : ""}`}
-                onClick={() => {
-                  setSelectedCalendarDate(day);
-                  setActiveTab("task");
-                  setIsModalOpen(true);
-                }}
+                onClick={() => handleDayClick(day)}
                 title={holiday ? (holiday.localName || holiday.name) : absence ? "Ausencia" : ""}
               >
                 <span className={`text-sm font-medium ${
@@ -692,10 +747,24 @@ export default function Agenda() {
                 </span>
 
                 {/* Events preview */}
-                {isCurrentMonth && totalEvents > 0 && (
+                {isCurrentMonth && (totalEvents > 0 || dayPreview) && (
                   <div className="flex-1 mt-0.5 space-y-0.5 overflow-hidden">
+                    {/* Preview event (being created) */}
+                    {dayPreview && (
+                      <div
+                        className={`text-[8px] sm:text-[9px] leading-tight truncate px-1 py-0.5 rounded border-2 border-dashed animate-pulse ${
+                          dayPreview.type === "task"
+                            ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 border-blue-400"
+                            : dayPreview.type === "reminder"
+                            ? "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-300 border-green-400"
+                            : "bg-cyan-50 dark:bg-cyan-900/20 text-cyan-600 dark:text-cyan-300 border-cyan-400"
+                        }`}
+                      >
+                        {dayPreview.subject || (dayPreview.type === "task" ? "Nueva tarea..." : dayPreview.type === "reminder" ? "Nuevo recordatorio..." : "Nueva llamada...")}
+                      </div>
+                    )}
                     {/* Tasks */}
-                    {dayEvents.tasks.slice(0, 1).map((task, idx) => (
+                    {dayEvents.tasks.slice(0, dayPreview ? 0 : 1).map((task, idx) => (
                       <div
                         key={`task-${idx}`}
                         className="text-[8px] sm:text-[9px] leading-tight truncate px-1 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border-l-2 border-blue-500"
@@ -704,7 +773,7 @@ export default function Agenda() {
                       </div>
                     ))}
                     {/* Reminders */}
-                    {dayEvents.reminders.slice(0, 1).map((reminder, idx) => (
+                    {dayEvents.reminders.slice(0, dayPreview ? 0 : 1).map((reminder, idx) => (
                       <div
                         key={`reminder-${idx}`}
                         className="text-[8px] sm:text-[9px] leading-tight truncate px-1 py-0.5 rounded bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-l-2 border-green-500"
@@ -713,7 +782,7 @@ export default function Agenda() {
                       </div>
                     ))}
                     {/* Lead Calls */}
-                    {dayEvents.leads.slice(0, 1).map((lead, idx) => (
+                    {dayEvents.leads.slice(0, dayPreview ? 0 : 1).map((lead, idx) => (
                       <div
                         key={`lead-${idx}`}
                         className="text-[8px] sm:text-[9px] leading-tight truncate px-1 py-0.5 rounded bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 border-l-2 border-cyan-500"
@@ -722,7 +791,7 @@ export default function Agenda() {
                       </div>
                     ))}
                     {/* More events indicator */}
-                    {totalEvents > 3 && (
+                    {totalEvents > 3 && !dayPreview && (
                       <div className="text-[8px] text-slate-500 dark:text-slate-400 text-center">
                         +{totalEvents - 3} más
                       </div>
@@ -731,7 +800,7 @@ export default function Agenda() {
                 )}
 
                 {/* Holiday/Absence indicator */}
-                {isCurrentMonth && (holiday || absence) && !totalEvents && (
+                {isCurrentMonth && (holiday || absence) && !totalEvents && !dayPreview && (
                   <div className="mt-auto">
                     <span className={`text-[8px] sm:text-[9px] leading-tight block truncate px-0.5 py-0.5 rounded ${
                       holiday
@@ -1004,6 +1073,7 @@ export default function Agenda() {
         initialTab={activeTab}
         taskStateName={taskStateName}
         selectedDate={selectedCalendarDate}
+        onPreviewChange={handlePreviewChange}
       />
 
       <TaskDetailModal
@@ -1050,6 +1120,20 @@ export default function Agenda() {
           if (selectedUserIds.length > 0) {
             fetchHolidaysAndAbsences(selectedUserIds);
           }
+        }}
+      />
+
+      <CalendarDetailsDay
+        isModalOpen={isDayDetailModalOpen}
+        setIsModalOpen={setIsDayDetailModalOpen}
+        events={getEventsForDetailModal()}
+        currentDate={dayDetailDate || new Date()}
+        handleAddTaskClick={handleAddTaskFromDetail}
+        fetchEvents={() => {
+          if (selectedUserIds.length > 0) {
+            fetchRemindersAndLeadsForMonth(calendarDate, selectedUserIds);
+          }
+          setCalendarRefreshKey(prev => prev + 1);
         }}
       />
     </DndProvider>
