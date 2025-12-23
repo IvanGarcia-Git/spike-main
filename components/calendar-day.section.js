@@ -12,6 +12,7 @@ export default function CalendarByDay({
   absences = [],
   selectedUserIds = [],
   currentUserId = null,
+  refreshKey = 0,
 }) {
   const hours = Array.from({ length: 24 }, (_, i) => i);
 

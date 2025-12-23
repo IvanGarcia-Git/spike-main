@@ -251,8 +251,19 @@ export default function CreateTelephonyContractPage() {
         return;
       }
 
+      if (!contractTelephonyData?.isSelected) {
+        alert("Por favor, activa el contrato de telefonía marcando la casilla correspondiente.");
+        return;
+      }
+
       if (!isContractTelephonyValid()) {
-        alert("Por favor, rellena todos los campos del contrato.");
+        if (!contractTelephonyData?.companyId) {
+          alert("Por favor, selecciona una compañía para el contrato de telefonía.");
+        } else if (!contractTelephonyData?.rates?.length) {
+          alert("Por favor, selecciona al menos una tarifa para el contrato de telefonía.");
+        } else {
+          alert("Por favor, rellena todos los campos del contrato de telefonía.");
+        }
         return;
       }
       if (!validateIBANMath(customerData.iban)) {

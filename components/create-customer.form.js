@@ -35,7 +35,27 @@ export default function CreateCustomerForm({
 
   useEffect(() => {
     if (customerData) {
-      setFormData(customerData);
+      // Merge con valores por defecto para evitar undefined en inputs controlados
+      setFormData((prev) => ({
+        name: customerData.name ?? prev.name ?? "",
+        surnames: customerData.surnames ?? prev.surnames ?? "",
+        nationalId: customerData.nationalId ?? prev.nationalId ?? "",
+        nationality: customerData.nationality ?? prev.nationality ?? "",
+        email: customerData.email ?? prev.email ?? "",
+        address: customerData.address ?? prev.address ?? "",
+        zipCode: customerData.zipCode ?? prev.zipCode ?? "",
+        province: customerData.province ?? prev.province ?? "",
+        populace: customerData.populace ?? prev.populace ?? "",
+        phoneNumber: customerData.phoneNumber ?? prev.phoneNumber ?? "",
+        iban: customerData.iban ?? prev.iban ?? "",
+        holderChange: customerData.holderChange ?? prev.holderChange ?? false,
+        newCreation: customerData.newCreation ?? prev.newCreation ?? false,
+        powerChange: customerData.powerChange ?? prev.powerChange ?? false,
+        type: customerData.type ?? prev.type ?? "B2C",
+        cif: customerData.cif ?? prev.cif ?? "",
+        tradeName: customerData.tradeName ?? prev.tradeName ?? "",
+        originId: customerData.originId ?? prev.originId ?? "",
+      }));
     }
   }, [customerData]);
 
@@ -295,7 +315,7 @@ export default function CreateCustomerForm({
       {/* Dirección */}
       <div className="mb-6">
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="address">
-          Dirección
+          Dirección *
         </label>
         <div className="relative">
           <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
@@ -317,7 +337,7 @@ export default function CreateCustomerForm({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="zipCode">
-            Código Postal
+            Código Postal *
           </label>
           <input
             type="text"
@@ -331,7 +351,7 @@ export default function CreateCustomerForm({
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="province">
-            Provincia
+            Provincia *
           </label>
           <input
             type="text"
@@ -345,7 +365,7 @@ export default function CreateCustomerForm({
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="populace">
-            Población
+            Población *
           </label>
           <input
             type="text"
@@ -362,7 +382,7 @@ export default function CreateCustomerForm({
       {/* Teléfono */}
       <div className="mb-6">
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="phoneNumber">
-          Teléfono
+          Teléfono *
         </label>
         <div className="relative">
           <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
@@ -383,7 +403,7 @@ export default function CreateCustomerForm({
       {/* IBAN */}
       <div className="mb-6">
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="iban">
-          IBAN
+          IBAN *
         </label>
         <div className="relative">
           <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">

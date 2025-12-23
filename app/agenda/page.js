@@ -174,6 +174,7 @@ const KanbanColumn = ({ column, onDrop, onAddTask, onShowTask, taskStates }) => 
 export default function Agenda() {
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [tasks, setTasks] = useState([]);
+  const [calendarTasks, setCalendarTasks] = useState([]);
   const [reminders, setReminders] = useState([]);
   const [leads, setLeads] = useState([]);
   const [filteredNotifications, setFilteredNotifications] = useState([]);
@@ -216,6 +217,7 @@ export default function Agenda() {
       const response = await authFetch("POST", "search/calendar/", data, jwtToken);
       if (response.ok) {
         const allEvents = await response.json();
+        setCalendarTasks(allEvents.tasks || []);
         setReminders(allEvents.reminders || []);
         setLeads(allEvents.leadCalls || []);
       } else {
@@ -599,6 +601,23 @@ export default function Agenda() {
     }
   };
 
+  // Helper functions for calendar events
+  const getEventsForDay = (day) => {
+    const dayTasks = calendarTasks.filter((task) => {
+      if (!task.startDate) return false;
+      return isSameDay(new Date(task.startDate), day);
+    });
+    const dayReminders = reminders.filter((reminder) => {
+      if (!reminder.startDate) return false;
+      return isSameDay(new Date(reminder.startDate), day);
+    });
+    const dayLeads = leads.filter((lead) => {
+      if (!lead.startDate) return false;
+      return isSameDay(new Date(lead.startDate), day);
+    });
+    return { tasks: dayTasks, reminders: dayReminders, leads: dayLeads };
+  };
+
   // Calendar rendering
   const renderCalendar = () => {
     const monthStart = startOfMonth(calendarDate);
@@ -631,7 +650,7 @@ export default function Agenda() {
               return (
                 <div
                   key={`empty-${index}`}
-                  className="h-16 sm:h-20 rounded-lg bg-background-light/50 dark:bg-background-dark/50"
+                  className="h-20 sm:h-24 rounded-lg bg-background-light/50 dark:bg-background-dark/50"
                 ></div>
               );
             }
@@ -642,11 +661,13 @@ export default function Agenda() {
             const dayAbsence = isAbsenceDay(day);
             const isRedDay = dayHoliday || dayAbsence;
             const { holiday, absence } = getDayInfo(day);
+            const dayEvents = getEventsForDay(day);
+            const totalEvents = dayEvents.tasks.length + dayEvents.reminders.length + dayEvents.leads.length;
 
             return (
               <div
                 key={day.toString()}
-                className={`h-16 sm:h-20 p-1 rounded-lg cursor-pointer transition-all duration-200 flex flex-col ${
+                className={`h-20 sm:h-24 p-1 rounded-lg cursor-pointer transition-all duration-200 flex flex-col overflow-hidden ${
                   isRedDay
                     ? "bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/60"
                     : isToday
@@ -669,7 +690,48 @@ export default function Agenda() {
                 }`}>
                   {format(day, "d")}
                 </span>
-                {isCurrentMonth && (holiday || absence) && (
+
+                {/* Events preview */}
+                {isCurrentMonth && totalEvents > 0 && (
+                  <div className="flex-1 mt-0.5 space-y-0.5 overflow-hidden">
+                    {/* Tasks */}
+                    {dayEvents.tasks.slice(0, 1).map((task, idx) => (
+                      <div
+                        key={`task-${idx}`}
+                        className="text-[8px] sm:text-[9px] leading-tight truncate px-1 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border-l-2 border-blue-500"
+                      >
+                        {task.subject || "Tarea"}
+                      </div>
+                    ))}
+                    {/* Reminders */}
+                    {dayEvents.reminders.slice(0, 1).map((reminder, idx) => (
+                      <div
+                        key={`reminder-${idx}`}
+                        className="text-[8px] sm:text-[9px] leading-tight truncate px-1 py-0.5 rounded bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-l-2 border-green-500"
+                      >
+                        {reminder.subject || "Recordatorio"}
+                      </div>
+                    ))}
+                    {/* Lead Calls */}
+                    {dayEvents.leads.slice(0, 1).map((lead, idx) => (
+                      <div
+                        key={`lead-${idx}`}
+                        className="text-[8px] sm:text-[9px] leading-tight truncate px-1 py-0.5 rounded bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 border-l-2 border-cyan-500"
+                      >
+                        {lead.subject || "Llamada"}
+                      </div>
+                    ))}
+                    {/* More events indicator */}
+                    {totalEvents > 3 && (
+                      <div className="text-[8px] text-slate-500 dark:text-slate-400 text-center">
+                        +{totalEvents - 3} más
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Holiday/Absence indicator */}
+                {isCurrentMonth && (holiday || absence) && !totalEvents && (
                   <div className="mt-auto">
                     <span className={`text-[8px] sm:text-[9px] leading-tight block truncate px-0.5 py-0.5 rounded ${
                       holiday
@@ -897,7 +959,7 @@ export default function Agenda() {
               )}
               {calendarView === "dia" && (
                 <CalendarByDay
-                  tasks={tasks}
+                  tasks={calendarTasks}
                   reminders={reminders}
                   leadCalls={leads}
                   currentDate={calendarDate}

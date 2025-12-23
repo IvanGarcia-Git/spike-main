@@ -905,6 +905,27 @@ export default function Contracts() {
     }
   };
 
+  const handleDeleteSingleContract = async (contractUuid) => {
+    if (!confirm("¿Estás seguro de que quieres eliminar este contrato?")) {
+      return;
+    }
+
+    const jwtToken = getCookie("factura-token");
+
+    try {
+      await authFetch("DELETE", `contracts/${contractUuid}`, {}, jwtToken);
+
+      setContracts((prevContracts) =>
+        prevContracts.filter((contract) => contract.uuid !== contractUuid)
+      );
+
+      toast.success("Contrato eliminado correctamente");
+    } catch (error) {
+      console.error("Error al eliminar contrato:", error);
+      toast.error("Error al eliminar el contrato");
+    }
+  };
+
   const handleSelectAll = (e) => {
     if (e.target.checked) {
       setSelectedContracts(contracts.map((c) => c.uuid));
@@ -1161,6 +1182,13 @@ export default function Contracts() {
                         className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-400"
                       >
                         <span className="material-icons-outlined text-lg">folder</span>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSingleContract(contract.uuid)}
+                        className="p-2 rounded-lg neumorphic-button text-red-500 hover:text-red-600"
+                        title="Eliminar contrato"
+                      >
+                        <span className="material-icons-outlined text-lg">delete</span>
                       </button>
                     </div>
                   </td>
