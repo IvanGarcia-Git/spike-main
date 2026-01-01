@@ -1,14 +1,17 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { getCookie } from "cookies-next";
-import { authGetFetch } from "@/helpers/server-fetch.helper";
+import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
 import { ModalTextarea, ModalActions, ModalButton } from "./base-modal.component";
+import { toast } from "react-toastify";
 
-export default function TaskDetailComponent({ uuid, onClose }) {
+export default function TaskDetailComponent({ uuid, onClose, onDelete }) {
   const [task, setTask] = useState(null);
   const [newComment, setNewComment] = useState({ text: "" });
   const [file, setFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const fileInputRef = useRef(null);
 
   const getTaskDetails = async () => {
@@ -33,6 +36,33 @@ export default function TaskDetailComponent({ uuid, onClose }) {
       getTaskDetails();
     }
   }, [uuid]);
+
+  const handleDeleteTask = async () => {
+    if (!uuid) return;
+
+    setIsDeleting(true);
+    const jwtToken = getCookie("factura-token");
+
+    try {
+      const response = await authFetch("DELETE", `tasks/${uuid}`, {}, jwtToken);
+
+      if (response.ok) {
+        toast.success("Tarea eliminada correctamente");
+        if (onDelete) {
+          onDelete();
+        }
+        onClose();
+      } else {
+        toast.error("Error al eliminar la tarea");
+      }
+    } catch (error) {
+      console.error("Error eliminando la tarea:", error);
+      toast.error("Error de red al eliminar la tarea");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();
@@ -91,16 +121,68 @@ export default function TaskDetailComponent({ uuid, onClose }) {
 
   return (
     <div>
+      {/* Confirmación de eliminación */}
+      {showDeleteConfirm && (
+        <div className="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+          <div className="flex items-start gap-3">
+            <span className="material-icons-outlined text-danger text-2xl">warning</span>
+            <div className="flex-1">
+              <p className="font-medium text-slate-800 dark:text-slate-200 mb-2">
+                ¿Eliminar esta tarea?
+              </p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                Esta acción no se puede deshacer. Se eliminarán también todos los comentarios asociados.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isDeleting}
+                  className="px-3 py-1.5 text-sm rounded-lg neumorphic-button text-slate-600 dark:text-slate-300"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDeleteTask}
+                  disabled={isDeleting}
+                  className="px-3 py-1.5 text-sm rounded-lg bg-danger text-white hover:bg-red-600 transition-colors flex items-center gap-1"
+                >
+                  {isDeleting ? (
+                    <>
+                      <span className="material-icons-outlined text-sm animate-spin">sync</span>
+                      Eliminando...
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-icons-outlined text-sm">delete</span>
+                      Eliminar
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Título de la tarea */}
-      <div className="mb-6">
-        <h4 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-2">
-          {task.subject}
-        </h4>
-        {task.description && (
-          <p className="text-slate-600 dark:text-slate-400">
-            {task.description}
-          </p>
-        )}
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div className="flex-1">
+          <h4 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-2">
+            {task.subject}
+          </h4>
+          {task.description && (
+            <p className="text-slate-600 dark:text-slate-400">
+              {task.description}
+            </p>
+          )}
+        </div>
+        <button
+          onClick={() => setShowDeleteConfirm(true)}
+          className="p-2 rounded-lg neumorphic-button text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          title="Eliminar tarea"
+        >
+          <span className="material-icons-outlined">delete_outline</span>
+        </button>
       </div>
 
       {/* Info en grid como el formulario de crear tarea */}

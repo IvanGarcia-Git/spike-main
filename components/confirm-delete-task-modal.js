@@ -1,25 +1,29 @@
-export default function ConfirmDeleteTaskModal({ onClose, onDelete }) {
+import BaseModal, { ModalActions, ModalButton } from "./base-modal.component";
+
+export default function ConfirmDeleteTaskModal({ isOpen = true, onClose, onDelete }) {
   return (
-    <div className="fixed inset-0 flex justify-center bg-black bg-opacity-50 z-50 overflow-y-auto lg:ml-72">
-      <div className="bg-background text-black p-8 rounded-lg shadow-lg w-full max-w-lg relative my-auto overflow-y-auto max-h-[90vh]">
-        <h2 className="text-2xl font-bold mb-4">
-          ¿Estás seguro de querer eliminar esta tarea?
-        </h2>
-        <div className="flex gap-4">
-          <button
-            className="bg-slate-400 hover:bg-slate-500 text-white px-4 py-2 rounded-md"
-            onClick={onClose}
-          >
-            Cancelar
-          </button>
-          <button
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
-            onClick={onDelete}
-          >
-            Eliminar
-          </button>
-        </div>
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Eliminar tarea"
+      subtitle="Esta acción no se puede deshacer"
+      maxWidth="max-w-md"
+    >
+      <div className="flex items-center gap-4 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 mb-4">
+        <span className="material-icons-outlined text-danger text-3xl">warning</span>
+        <p className="text-slate-700 dark:text-slate-300">
+          ¿Estás seguro de que quieres eliminar esta tarea? Se eliminarán también todos los comentarios asociados.
+        </p>
       </div>
-    </div>
+
+      <ModalActions alignment="end">
+        <ModalButton variant="ghost" onClick={onClose}>
+          Cancelar
+        </ModalButton>
+        <ModalButton variant="danger" onClick={onDelete} icon="delete">
+          Eliminar
+        </ModalButton>
+      </ModalActions>
+    </BaseModal>
   );
 }

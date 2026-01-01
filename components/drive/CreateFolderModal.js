@@ -2,10 +2,11 @@ import { useState } from "react";
 import { getCookie } from "cookies-next";
 import { authFetch } from "@/helpers/server-fetch.helper";
 import { toast } from "react-toastify";
+import BaseModal, { ModalActions, ModalButton, ModalInput } from "../base-modal.component";
 
 const MAX_FOLDER_NAME_LENGTH = 255;
 
-export default function CreateFolderModal({ section, setFolders, setIsModalOpen }) {
+export default function CreateFolderModal({ section, setFolders, setIsModalOpen, isOpen = true }) {
   const [folderName, setFolderName] = useState("");
   const [error, setError] = useState("");
 
@@ -41,54 +42,56 @@ export default function CreateFolderModal({ section, setFolders, setIsModalOpen 
         theme: "light",
       });
       setIsModalOpen(false);
-      setFolders( prevFolders => [...prevFolders, data]);
+      setFolders(prevFolders => [...prevFolders, data]);
     } catch (error) {
       console.error("Error al crear la carpeta:", error);
-      setError(
-        "Hubo un error al crear la carpeta. Por favor, inténtalo de nuevo."
-      );
+      setError("Hubo un error al crear la carpeta. Por favor, inténtalo de nuevo.");
     }
   };
 
-  return (
-    <div
-      className="fixed lg:ml-72 inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20 px-4"
-      onClick={() => setIsModalOpen(false)}
-    >
-      <div
-        className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md md:max-w-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-lg font-semibold mb-4">Crear Nueva Carpeta</h2>
+  const handleClose = () => {
+    setIsModalOpen(false);
+    setFolderName("");
+    setError("");
+  };
 
-        <input
+  return (
+    <BaseModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Crear nueva carpeta"
+      subtitle="Ingresa un nombre para la carpeta"
+      maxWidth="max-w-md"
+    >
+      <div className="mb-4">
+        <ModalInput
+          label="Nombre de la carpeta"
           type="text"
-          placeholder="Nombre de la carpeta"
+          id="folderName"
           value={folderName}
           onChange={(e) => {
             setFolderName(e.target.value);
             setError("");
           }}
-          className="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:border-blue-500"
+          placeholder="Ej: Documentos 2024"
+          required
         />
-
-        {error && <p className="text-red-500 text-md mb-4">{error}</p>}
-
-        <div className="flex justify-end gap-2">
-          <button
-            onClick={() => setIsModalOpen(false)}
-            className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-          >
-            Cerrar
-          </button>
-          <button
-            onClick={handleCreateFolder}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-          >
-            Crear
-          </button>
-        </div>
+        {error && (
+          <p className="text-danger text-sm mt-2 flex items-center gap-1">
+            <span className="material-icons-outlined text-sm">error</span>
+            {error}
+          </p>
+        )}
       </div>
-    </div>
+
+      <ModalActions alignment="end">
+        <ModalButton variant="ghost" onClick={handleClose}>
+          Cancelar
+        </ModalButton>
+        <ModalButton variant="primary" onClick={handleCreateFolder} icon="create_new_folder">
+          Crear carpeta
+        </ModalButton>
+      </ModalActions>
+    </BaseModal>
   );
 }

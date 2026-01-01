@@ -277,12 +277,8 @@ export default function CreateContractPage() {
   const handleCreateContract = async (isDraft = true) => {
     //Validaciones
     if (!isDraft) {
-      // Email solo obligatorio si algún contrato tiene factura electrónica
-      const requireEmail =
-        (contractLuzData?.isSelected && contractLuzData?.electronicBill) ||
-        (contractGasData?.isSelected && contractGasData?.electronicBill);
-
-      if (!isCustomerDataValid(customerData, requireEmail)) {
+      // Email siempre es opcional
+      if (!isCustomerDataValid(customerData, false)) {
         alert("Por favor, rellena todos los campos del cliente.");
         return;
       }

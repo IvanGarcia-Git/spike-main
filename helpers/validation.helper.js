@@ -1,4 +1,4 @@
-export function isCustomerDataValid(customerData, requireEmail = true) {
+export function isCustomerDataValid(customerData, requireEmail = false) {
   const baseValid =
     customerData?.name &&
     customerData?.surnames &&

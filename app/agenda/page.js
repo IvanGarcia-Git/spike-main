@@ -967,6 +967,14 @@ export default function Agenda() {
                   </button>
                 </div>
                 <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setIsSendTaskModalOpen(true)}
+                    className="px-3 py-2 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 text-sm font-medium flex items-center space-x-1"
+                    title="Enviar Tareas"
+                  >
+                    <span className="material-icons-outlined text-base">send</span>
+                    <span className="hidden sm:inline">Enviar Tareas</span>
+                  </button>
                   {isManager && (
                     <button
                       onClick={() => setIsHolidayModalOpen(true)}
@@ -1080,6 +1088,13 @@ export default function Agenda() {
         uuid={selectedTaskUuid}
         isOpen={isTaskModalOpen}
         onClose={closeTaskModal}
+        onDelete={() => {
+          getTasksForUser();
+          if (selectedUserIds.length > 0) {
+            fetchRemindersAndLeadsForMonth(calendarDate, selectedUserIds);
+          }
+          setCalendarRefreshKey(prev => prev + 1);
+        }}
       />
 
       {isCommunicationModalOpen && communications[communicationsCurrentIndex] && (

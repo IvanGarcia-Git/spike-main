@@ -990,6 +990,35 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
             </div>
           </div>
 
+          {/* Logo de factura del Proveedor (solo para PAGO - el proveedor es el emisor) */}
+          {!isCobro && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Logo de factura (opcional)
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="file"
+                  accept=".png,.jpg,.jpeg"
+                  onChange={handleLogoChange}
+                  className="flex-1 px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-primary/90"
+                />
+                {customLogo && (
+                  <button
+                    onClick={() => setCustomLogo(null)}
+                    className="p-2 rounded-lg neumorphic-button text-red-500 hover:text-red-600"
+                    title="Eliminar logo"
+                  >
+                    <span className="material-icons-outlined text-sm">delete</span>
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Formatos aceptados: PNG, JPG
+              </p>
+            </div>
+          )}
+
           {/* Totales */}
           <div className="neumorphic-card-inset p-6 rounded-lg">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
@@ -1036,34 +1065,34 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
             </div>
           </div>
 
-          {/* Logo de factura */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              {isCobro ? "Tu Logo (Emisor)" : "Logo del Proveedor (opcional)"}
-            </label>
-            <div className="flex items-center gap-3">
-              <input
-                type="file"
-                accept=".png,.jpg,.jpeg"
-                onChange={handleLogoChange}
-                className="flex-1 px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-primary/90"
-              />
-              {customLogo && (
-                <button
-                  onClick={() => setCustomLogo(null)}
-                  className="p-2 rounded-lg neumorphic-button text-red-500 hover:text-red-600"
-                  title="Eliminar logo"
-                >
-                  <span className="material-icons-outlined text-sm">delete</span>
-                </button>
-              )}
+          {/* Logo de factura (solo para COBRO - el usuario es el emisor) */}
+          {isCobro && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Logo de factura (opcional)
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="file"
+                  accept=".png,.jpg,.jpeg"
+                  onChange={handleLogoChange}
+                  className="flex-1 px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-primary/90"
+                />
+                {customLogo && (
+                  <button
+                    onClick={() => setCustomLogo(null)}
+                    className="p-2 rounded-lg neumorphic-button text-red-500 hover:text-red-600"
+                    title="Eliminar logo"
+                  >
+                    <span className="material-icons-outlined text-sm">delete</span>
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Formatos aceptados: PNG, JPG
+              </p>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              {isCobro
-                ? "Formatos aceptados: PNG, JPG. Si no subes ninguno, se usará el logo por defecto."
-                : "Formatos aceptados: PNG, JPG. Si no subes ninguno, la factura no mostrará logo."}
-            </p>
-          </div>
+          )}
 
           {/* Notas */}
           <div>

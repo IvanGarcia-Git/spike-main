@@ -2,7 +2,7 @@
 import BaseModal from "./base-modal.component";
 import TaskDetailComponent from "./task-detail.section";
 
-export default function TaskDetailModal({ uuid, isOpen, onClose }) {
+export default function TaskDetailModal({ uuid, isOpen, onClose, onDelete }) {
   return (
     <BaseModal
       isOpen={isOpen}
@@ -10,7 +10,7 @@ export default function TaskDetailModal({ uuid, isOpen, onClose }) {
       title="Detalle de Tarea"
       maxWidth="max-w-3xl"
     >
-      <TaskDetailComponent uuid={uuid} onClose={onClose} />
+      <TaskDetailComponent uuid={uuid} onClose={onClose} onDelete={onDelete} />
     </BaseModal>
   );
 }

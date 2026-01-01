@@ -243,10 +243,8 @@ export default function CreateTelephonyContractPage() {
   const handleCreateContract = async (isDraft = true) => {
     //Validaciones
     if (!isDraft) {
-      // Email solo obligatorio si el contrato tiene factura electrónica
-      const requireEmailValidation = contractTelephonyData?.electronicBill;
-
-      if (!isCustomerDataValid(customerData, requireEmailValidation)) {
+      // Email siempre es opcional
+      if (!isCustomerDataValid(customerData, false)) {
         alert("Por favor, rellena todos los campos del cliente.");
         return;
       }

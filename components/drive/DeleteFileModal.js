@@ -1,24 +1,29 @@
-export default function DeleteFileModal({ onConfirm, onCancel }) {
-    return (
-      <div className="fixed lg:ml-72 inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-10">
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-xl font-bold mb-4">¿Eliminar archivo?</h2>
-          <p className="mb-6">¿Estás seguro de que quieres eliminar este archivo? Esta acción no se puede deshacer.</p>
-          <div className="flex justify-end space-x-4">
-            <button
-              className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
-              onClick={onCancel}
-            >
-              Cancelar
-            </button>
-            <button
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-              onClick={onConfirm}
-            >
-              Eliminar
-            </button>
-          </div>
-        </div>
+import BaseModal, { ModalActions, ModalButton } from "../base-modal.component";
+
+export default function DeleteFileModal({ isOpen = true, onConfirm, onCancel }) {
+  return (
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onCancel}
+      title="Eliminar archivo"
+      subtitle="Esta acción no se puede deshacer"
+      maxWidth="max-w-md"
+    >
+      <div className="flex items-center gap-4 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 mb-4">
+        <span className="material-icons-outlined text-danger text-3xl">delete_forever</span>
+        <p className="text-slate-700 dark:text-slate-300">
+          ¿Estás seguro de que quieres eliminar este archivo? Se eliminará permanentemente del sistema.
+        </p>
       </div>
-    )
-  }
+
+      <ModalActions alignment="end">
+        <ModalButton variant="ghost" onClick={onCancel}>
+          Cancelar
+        </ModalButton>
+        <ModalButton variant="danger" onClick={onConfirm} icon="delete">
+          Eliminar
+        </ModalButton>
+      </ModalActions>
+    </BaseModal>
+  );
+}

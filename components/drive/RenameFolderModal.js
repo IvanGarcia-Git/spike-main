@@ -1,61 +1,70 @@
 import { useState } from "react";
+import BaseModal, { ModalActions, ModalButton, ModalInput } from "../base-modal.component";
 
-export default function RenameFolderModal({ onConfirm, onCancel, folder }) {
-  const [newName, setNewName] = useState(folder.name);
+export default function RenameFolderModal({ isOpen = true, onConfirm, onCancel, folder }) {
+  const [newName, setNewName] = useState(folder?.name || "");
+  const [error, setError] = useState("");
 
   const handleConfirm = (e) => {
-    e.stopPropagation();
+    e?.stopPropagation?.();
     if (newName.trim() === "") {
-      alert("El nombre de la carpeta no puede estar vacío.");
+      setError("El nombre de la carpeta no puede estar vacío.");
       return;
     }
     onConfirm({ ...folder, name: newName });
   };
 
   const handleCancel = (e) => {
-    e.stopPropagation();
+    e?.stopPropagation?.();
     onCancel();
   };
 
   return (
-    <div
-      className="fixed lg:ml-72 inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-10"
-      onClick={(e) => e.stopPropagation()}
+    <BaseModal
+      isOpen={isOpen}
+      onClose={handleCancel}
+      title="Renombrar carpeta"
+      subtitle="Cambia el nombre de la carpeta"
+      maxWidth="max-w-md"
     >
-      <div
-        className="bg-white p-6 rounded-lg shadow-lg"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-xl font-bold mb-4">Cambiar nombre de la carpeta</h2>
-        <p className="mb-6">
-          Al confirmar el cambio de nombre, no será posible deshacer esta acción.
-        </p>
-        <input
+      <div className="mb-4">
+        <ModalInput
+          label="Nuevo nombre"
           type="text"
+          id="newFolderName"
           value={newName}
           onChange={(e) => {
             e.stopPropagation();
             setNewName(e.target.value);
+            setError("");
           }}
-          className="w-full p-2 border border-gray-300 rounded-md mb-4"
-          placeholder="Nuevo nombre de la carpeta"
           onClick={(e) => e.stopPropagation()}
+          placeholder="Nuevo nombre de la carpeta"
+          required
         />
-        <div className="flex justify-end space-x-4">
-          <button
-            className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
-            onClick={handleCancel}
-          >
-            Cancelar
-          </button>
-          <button
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-            onClick={handleConfirm}
-          >
-            Renombrar
-          </button>
-        </div>
+        {error && (
+          <p className="text-danger text-sm mt-2 flex items-center gap-1">
+            <span className="material-icons-outlined text-sm">error</span>
+            {error}
+          </p>
+        )}
       </div>
-    </div>
+
+      <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 mb-4">
+        <p className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2">
+          <span className="material-icons-outlined text-amber-500 text-lg">info</span>
+          Al confirmar el cambio de nombre, no será posible deshacer esta acción.
+        </p>
+      </div>
+
+      <ModalActions alignment="end">
+        <ModalButton variant="ghost" onClick={handleCancel}>
+          Cancelar
+        </ModalButton>
+        <ModalButton variant="primary" onClick={handleConfirm} icon="drive_file_rename_outline">
+          Renombrar
+        </ModalButton>
+      </ModalActions>
+    </BaseModal>
   );
 }

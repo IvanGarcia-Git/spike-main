@@ -39,6 +39,133 @@ const getFullName = (user) => {
     .trim();
 };
 
+// Column configuration for dynamic table rendering
+const COLUMN_CONFIG = {
+  userName: {
+    label: "Agente",
+    render: (contract) => `${contract.user?.name || ""} ${contract.user?.firstSurname || ""}`,
+  },
+  customerFullName: {
+    label: "Cliente",
+    render: (contract) => (
+      <div className="flex items-center">
+        <div className="w-8 h-8 rounded-full neumorphic-card p-0.5 flex items-center justify-center mr-3">
+          <span className="material-icons-outlined text-xl text-slate-500">person</span>
+        </div>
+        <div>
+          <p className="font-medium text-slate-800 dark:text-slate-200">
+            {contract.customer?.name || ""} {contract.customer?.surnames || ""}
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {contract.customer?.email || ""}
+          </p>
+        </div>
+      </div>
+    ),
+  },
+  cups: {
+    label: "CUPS",
+    render: (contract) => (
+      <span className="font-mono text-sm">{contract.cups || "-"}</span>
+    ),
+  },
+  customerPhoneNumber: {
+    label: "Teléfono",
+    render: (contract) => contract.customer?.phoneNumber || "-",
+  },
+  customerEmail: {
+    label: "Email",
+    render: (contract) => contract.customer?.email || "-",
+  },
+  customerAddress: {
+    label: "Dirección",
+    render: (contract) => contract.customer?.address || "-",
+  },
+  customerIban: {
+    label: "IBAN",
+    render: (contract) => contract.customer?.iban || "-",
+  },
+  customerNationalId: {
+    label: "DNI/CIF",
+    render: (contract) => contract.customer?.nationalId || contract.customer?.cif || "-",
+  },
+  electronicBill: {
+    label: "E-FACT",
+    render: (contract) => (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${contract.electronicBill ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}>
+        {contract.electronicBill ? "Sí" : "No"}
+      </span>
+    ),
+  },
+  rateName: {
+    label: "Tarifa",
+    render: (contract) => contract.rate?.name || "-",
+  },
+  ratePowerSlot1: {
+    label: "Potencia",
+    render: (contract) => contract.rate?.powerSlot1 || "-",
+  },
+  expiresAt: {
+    label: "Retro",
+    render: (contract, formatDayDate) => contract.expiresAt ? formatDayDate(contract.expiresAt) : "-",
+  },
+  extraInfo: {
+    label: "Observaciones",
+    render: (contract) => (
+      <span className="max-w-[150px] truncate inline-block" title={contract.extraInfo || ""}>
+        {contract.extraInfo || "-"}
+      </span>
+    ),
+  },
+  contractStateName: {
+    label: "Estado",
+    render: (contract) => (
+      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary">
+        {contract.contractState?.name || "Sin estado"}
+      </span>
+    ),
+  },
+  payed: {
+    label: "Pagado",
+    render: (contract) => (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${contract.payed ? "bg-green-100 text-green-700" : "bg-red-100 text-red-500"}`}>
+        {contract.payed ? "Sí" : "No"}
+      </span>
+    ),
+  },
+  channelName: {
+    label: "Canal",
+    render: (contract) => contract?.channel?.name || contract?.rate?.channel?.name || "No asignado",
+  },
+  companyName: {
+    label: "Compañía",
+    render: (contract) => contract?.company?.name || "-",
+  },
+  updatedAt: {
+    label: "Fecha",
+    render: (contract, formatDayDate) => formatDayDate(contract.updatedAt),
+  },
+  type: {
+    label: "Tipo",
+    render: (contract) => contract.type || "-",
+  },
+  createdAt: {
+    label: "Creado",
+    render: (contract, formatDayDate) => formatDayDate(contract.createdAt),
+  },
+};
+
+// Default columns if user has no preferences
+const DEFAULT_COLUMNS = [
+  "customerFullName",
+  "cups",
+  "type",
+  "contractStateName",
+  "channelName",
+  "userName",
+  "updatedAt",
+];
+
 const CreateLiquidationSubModal = ({ isOpen, onClose, onSubmit, users, isLoading }) => {
   const [nombre, setNombre] = useState("");
   const [date, setDate] = useState(formatDateToYYYYMMDD(new Date()));
@@ -1069,13 +1196,16 @@ export default function Contracts() {
                     className="accent-primary"
                   />
                 </th>
-                <th className="p-3">Cliente</th>
-                <th className="p-3">CUPS</th>
-                <th className="p-3">Tipo</th>
-                <th className="p-3">Estado</th>
-                <th className="p-3">Canal</th>
-                <th className="p-3">Agente</th>
-                <th className="p-3">Fecha</th>
+                {/* Dynamic column headers based on user preferences */}
+                {(columnsOrder.length > 0 ? columnsOrder : DEFAULT_COLUMNS).map((columnKey) => {
+                  const columnConfig = COLUMN_CONFIG[columnKey];
+                  if (!columnConfig) return null;
+                  return (
+                    <th key={columnKey} className="p-3">
+                      {columnConfig.label}
+                    </th>
+                  );
+                })}
                 <th className="p-3">Acciones</th>
               </tr>
             </thead>
@@ -1083,89 +1213,26 @@ export default function Contracts() {
               {contracts.map((contract) => (
                 <tr
                   key={contract.uuid}
-                  className={`table-row-divider ${contract.isRenewed ? 'renewed-contract-row' : ''}`}
+                  className="table-row-divider"
                 >
                   <td className="p-3">
-                    {contract.isRenewed ? (
-                      <div className="stacked-card-container" style={{ width: '20px', height: '20px' }}>
-                        <div className="stacked-card-back" style={{ top: '3px', left: '2px', right: '-2px', bottom: '-3px' }}></div>
-                        <div className="stacked-card-front">
-                          <input
-                            type="checkbox"
-                            checked={selectedContracts.includes(contract.uuid)}
-                            onChange={() => handleSelectContract(contract.uuid)}
-                            className="accent-primary"
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <input
-                        type="checkbox"
-                        checked={selectedContracts.includes(contract.uuid)}
-                        onChange={() => handleSelectContract(contract.uuid)}
-                        className="accent-primary"
-                      />
-                    )}
+                    <input
+                      type="checkbox"
+                      checked={selectedContracts.includes(contract.uuid)}
+                      onChange={() => handleSelectContract(contract.uuid)}
+                      className="accent-primary"
+                    />
                   </td>
-                  <td className="p-3">
-                    <div className="flex items-center">
-                      {contract.isRenewed ? (
-                        <div className="stacked-card-container mr-3" style={{ width: '32px', height: '32px' }}>
-                          <div className="stacked-card-back" style={{ top: '3px', left: '2px', right: '-2px', bottom: '-3px', borderRadius: '50%' }}></div>
-                          <div className="stacked-card-front w-8 h-8 rounded-full neumorphic-card p-0.5 flex items-center justify-center">
-                            <span className="material-icons-outlined text-xl text-amber-500">
-                              autorenew
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="w-8 h-8 rounded-full neumorphic-card p-0.5 flex items-center justify-center mr-3">
-                          <span className="material-icons-outlined text-xl text-slate-500">
-                            person
-                          </span>
-                        </div>
-                      )}
-                      <div>
-                        <p className="font-medium text-slate-800 dark:text-slate-200">
-                          {contract.customer?.name || ""} {contract.customer?.surnames || ""}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {contract.customer?.email || ""}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-3 text-slate-600 dark:text-slate-400 font-mono text-sm">
-                    {contract.cups || "-"}
-                  </td>
-                  <td className="p-3 text-slate-600 dark:text-slate-400">
-                    {contract.type}
-                  </td>
-                  <td className="p-3">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary">
-                        {contract.contractState?.name || "Sin estado"}
-                      </span>
-                      {contract.isRenewed && (
-                        <div className="stacked-card-container" style={{ display: 'inline-block' }}>
-                          <div className="stacked-card-back" style={{ top: '2px', left: '2px', right: '-2px', bottom: '-2px', borderRadius: '9999px' }}></div>
-                          <span className="stacked-card-front px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 flex items-center gap-1 border border-amber-300 dark:border-amber-700">
-                            <span className="material-icons-outlined text-xs">layers</span>
-                            Ya renovado
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="p-3 text-slate-600 dark:text-slate-400">
-                    {contract?.channel?.name || contract?.rate?.channel?.name || "No asignado"}
-                  </td>
-                  <td className="p-3 text-slate-600 dark:text-slate-400">
-                    {contract.user?.name || ""} {contract.user?.firstSurname || ""}
-                  </td>
-                  <td className="p-3 text-slate-600 dark:text-slate-400 text-sm">
-                    {formatDayDate(contract.createdAt)}
-                  </td>
+                  {/* Dynamic column cells based on user preferences */}
+                  {(columnsOrder.length > 0 ? columnsOrder : DEFAULT_COLUMNS).map((columnKey) => {
+                    const columnConfig = COLUMN_CONFIG[columnKey];
+                    if (!columnConfig) return null;
+                    return (
+                      <td key={columnKey} className="p-3 text-slate-600 dark:text-slate-400">
+                        {columnConfig.render(contract, formatDayDate)}
+                      </td>
+                    );
+                  })}
                   <td className="p-3">
                     <div className="flex space-x-2">
                       <button

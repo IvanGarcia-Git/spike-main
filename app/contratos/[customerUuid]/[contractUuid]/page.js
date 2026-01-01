@@ -436,12 +436,6 @@ export default function ContractDetail({ params }) {
                   Renovar
                 </button>
               )}
-              {contract?.isRenewed && (
-                <span className="flex items-center px-5 py-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 font-medium text-sm">
-                  <span className="material-icons-outlined mr-2 text-base">check_circle</span>
-                  Ya renovado
-                </span>
-              )}
             </div>
           </div>
         </div>

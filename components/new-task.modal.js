@@ -53,6 +53,13 @@ export default function NewTaskModal({
     }));
   }, [contracts]);
 
+  // Update activeTab when initialTab prop changes (e.g., when opening from different buttons)
+  useEffect(() => {
+    if (isModalOpen) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab, isModalOpen]);
+
   useEffect(() => {
     if (taskStateName) {
       const matchedState = Object.entries(taskStates).find(

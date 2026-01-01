@@ -430,180 +430,454 @@ export default function ContractSearch({
       {/* Advanced Search Section */}
       {showAdvancedSearch && (
         <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Estado */}
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
-                <span className="material-icons-outlined text-base mr-2 text-slate-400">check_circle</span>
-                Estado
-              </label>
-              <div className="neumorphic-card-inset rounded-lg p-3 max-h-40 overflow-y-auto">
-                {allStateOptions.map((state) => {
-                  const isSelected = multifilterSelected.contractStateIds.includes(state.id);
-                  return (
-                    <div
-                      key={state.id}
-                      className={`flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                        isSelected
-                          ? "bg-primary/10 dark:bg-primary/20"
-                          : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
-                      }`}
-                      onClick={() => handleMultifilterChange("contractStateIds", state.id)}
-                    >
-                      <input
-                        type="checkbox"
-                        id={`contractState-${state.id}`}
-                        className="mr-3 accent-primary"
-                        checked={isSelected}
-                        onChange={() => handleMultifilterChange("contractStateIds", state.id)}
-                      />
-                      <label
-                        htmlFor={`contractState-${state.id}`}
-                        className={`text-sm cursor-pointer ${
-                          isSelected
-                            ? "font-semibold text-primary"
-                            : "text-slate-600 dark:text-slate-400"
-                        }`}
-                      >
-                        {state.name}
-                      </label>
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={toggleAdvancedSearch}
+              className="text-sm text-primary hover:text-primary/80 flex items-center"
+            >
+              <span className="material-icons-outlined text-base mr-1">expand_less</span>
+              Ocultar
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Columna Izquierda */}
+            <div className="space-y-4">
+              {/* Tipo de Cliente */}
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Tipo de Cliente
+                </label>
+                <div className="neumorphic-card-inset rounded-lg">
+                  <select
+                    name="customerType"
+                    value={contractSearch.customerType || ""}
+                    onChange={handleInputChange}
+                    className="w-full bg-transparent border-none focus:ring-0 text-sm py-3 px-4 text-slate-600 dark:text-slate-300"
+                  >
+                    <option value="">Seleccionar</option>
+                    <option value="B2C">B2C</option>
+                    <option value="B2B">B2B</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Tipo de Contrato */}
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Tipo de Contrato
+                </label>
+                <div className="neumorphic-card-inset rounded-lg">
+                  <select
+                    name="type"
+                    value={contractSearch.type || ""}
+                    onChange={handleInputChange}
+                    className="w-full bg-transparent border-none focus:ring-0 text-sm py-3 px-4 text-slate-600 dark:text-slate-300"
+                  >
+                    <option value="">Seleccionar</option>
+                    <option value="Luz">Luz</option>
+                    <option value="Gas">Gas</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Placas */}
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="solarPlates"
+                  name="solarPlates"
+                  checked={contractSearch.solarPlates || false}
+                  onChange={(e) => {
+                    setContractSearch((prev) => ({
+                      ...prev,
+                      solarPlates: e.target.checked ? true : undefined,
+                    }));
+                  }}
+                  className="mr-3 accent-primary w-4 h-4"
+                />
+                <label
+                  htmlFor="solarPlates"
+                  className="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
+                >
+                  Placas
+                </label>
+              </div>
+
+              {/* Buscar Provincia */}
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
+                  <span className="material-icons-outlined text-base mr-2 text-slate-400">search</span>
+                  Buscar Provincia
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Escribe para buscar..."
+                    value={searchProvince}
+                    onChange={(e) => setSearchProvince(e.target.value)}
+                    className="w-full neumorphic-card-inset pl-4 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm bg-transparent"
+                  />
+                  {searchProvince && provincesFiltered.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 neumorphic-card rounded-lg max-h-40 overflow-y-auto">
+                      {provincesFiltered.slice(0, 10).map((province) => (
+                        <div
+                          key={province}
+                          className="p-2 text-sm cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 text-slate-600 dark:text-slate-300"
+                          onClick={() => {
+                            setContractSearch((prev) => ({
+                              ...prev,
+                              customerProvince: province,
+                            }));
+                            setSearchProvince(province);
+                          }}
+                        >
+                          {province}
+                        </div>
+                      ))}
                     </div>
-                  );
-                })}
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Agente */}
-            {isManager && (
+            {/* Columna Derecha */}
+            <div className="space-y-4">
+              {/* Producto */}
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Producto
+                </label>
+                <div className="neumorphic-card-inset rounded-lg">
+                  <select
+                    name="product"
+                    value={contractSearch.product || ""}
+                    onChange={handleInputChange}
+                    className="w-full bg-transparent border-none focus:ring-0 text-sm py-3 px-4 text-slate-600 dark:text-slate-300"
+                  >
+                    <option value="">Seleccione un producto</option>
+                    {products.map((product) => (
+                      <option key={product} value={product}>
+                        {product}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Potencia de la tarifa */}
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Potencia de la tarifa
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">Desde</span>
+                    <input
+                      type="number"
+                      name="contractPowerFrom"
+                      placeholder="Mínima..."
+                      value={contractSearch.contractPowerFrom || ""}
+                      onChange={handleInputChange}
+                      className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm bg-transparent"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">Hasta</span>
+                    <input
+                      type="number"
+                      name="contractPowerTo"
+                      placeholder="Máxima..."
+                      value={contractSearch.contractPowerTo || ""}
+                      onChange={handleInputChange}
+                      className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm bg-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Seleccione una tarifa */}
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Seleccione una tarifa
+                </label>
+                <div className="neumorphic-card-inset rounded-lg">
+                  <select
+                    name="rateId"
+                    value={contractSearch.rateId || ""}
+                    onChange={handleInputChange}
+                    className="w-full bg-transparent border-none focus:ring-0 text-sm py-3 px-4 text-slate-600 dark:text-slate-300"
+                  >
+                    <option value="">Seleccione una tarifa</option>
+                    {Array.isArray(rates) && rates.map((rate) => (
+                      <option key={rate.id} value={rate.id}>
+                        {rate.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Tipo de Tarifa */}
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Tipo de Tarifa
+                </label>
+                <div className="neumorphic-card-inset rounded-lg">
+                  <select
+                    name="rateType"
+                    value={contractSearch.rateType || ""}
+                    onChange={handleInputChange}
+                    className="w-full bg-transparent border-none focus:ring-0 text-sm py-3 px-4 text-slate-600 dark:text-slate-300"
+                  >
+                    <option value="">Seleccione un tipo de tarifa</option>
+                    <option value="2.0">2.0</option>
+                    <option value="3.0">3.0</option>
+                    <option value="6.1">6.1</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Estado del Pago */}
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Estado del Pago
+                </label>
+                <div className="flex items-center space-x-6">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="payedFalse"
+                      checked={contractSearch.payed === false}
+                      onChange={() => handlePaymentStatusChange(false)}
+                      className="mr-2 accent-primary w-4 h-4"
+                    />
+                    <label
+                      htmlFor="payedFalse"
+                      className="text-sm text-slate-600 dark:text-slate-300 cursor-pointer"
+                    >
+                      Sin Cobrar
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="payedTrue"
+                      checked={contractSearch.payed === true}
+                      onChange={() => handlePaymentStatusChange(true)}
+                      className="mr-2 accent-primary w-4 h-4"
+                    />
+                    <label
+                      htmlFor="payedTrue"
+                      className="text-sm text-slate-600 dark:text-slate-300 cursor-pointer"
+                    >
+                      Cobrado
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Canal */}
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Canal
+                </label>
+                <div className="neumorphic-card-inset rounded-lg">
+                  <select
+                    name="channelId"
+                    value={contractSearch.channelId || ""}
+                    onChange={handleInputChange}
+                    className="w-full bg-transparent border-none focus:ring-0 text-sm py-3 px-4 text-slate-600 dark:text-slate-300"
+                  >
+                    <option value="">Seleccione un canal</option>
+                    {channels.map((channel) => (
+                      <option key={channel.id} value={channel.id}>
+                        {channel.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Filtros adicionales - Segunda fila */}
+          <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Estado */}
               <div className="flex flex-col">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
-                  <span className="material-icons-outlined text-base mr-2 text-slate-400">person</span>
-                  Agente
+                  <span className="material-icons-outlined text-base mr-2 text-slate-400">check_circle</span>
+                  Estado
                 </label>
                 <div className="neumorphic-card-inset rounded-lg p-3 max-h-40 overflow-y-auto">
-                  {users.map((user) => {
-                    const isSelected = multifilterSelected.contractUserIds.includes(user.id);
+                  {allStateOptions.map((state) => {
+                    const isSelected = multifilterSelected.contractStateIds.includes(state.id);
                     return (
                       <div
-                        key={user.id}
+                        key={state.id}
                         className={`flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${
                           isSelected
                             ? "bg-primary/10 dark:bg-primary/20"
                             : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
                         }`}
-                        onClick={() => handleMultifilterChange("contractUserIds", user.id)}
+                        onClick={() => handleMultifilterChange("contractStateIds", state.id)}
                       >
                         <input
                           type="checkbox"
-                          id={`contractUser-${user.id}`}
+                          id={`contractState-${state.id}`}
                           className="mr-3 accent-primary"
                           checked={isSelected}
-                          onChange={() => handleMultifilterChange("contractUserIds", user.id)}
+                          onChange={() => handleMultifilterChange("contractStateIds", state.id)}
                         />
                         <label
-                          htmlFor={`contractUser-${user.id}`}
+                          htmlFor={`contractState-${state.id}`}
                           className={`text-sm cursor-pointer ${
                             isSelected
                               ? "font-semibold text-primary"
                               : "text-slate-600 dark:text-slate-400"
                           }`}
                         >
-                          {user.name}
+                          {state.name}
                         </label>
                       </div>
                     );
                   })}
                 </div>
               </div>
-            )}
 
-            {/* Compañía */}
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
-                <span className="material-icons-outlined text-base mr-2 text-slate-400">business</span>
-                Compañía
-              </label>
-              <div className="neumorphic-card-inset rounded-lg p-3 max-h-40 overflow-y-auto">
-                {companies.map((company) => {
-                  const isSelected = multifilterSelected.companyIds.includes(company.id);
-                  return (
-                    <div
-                      key={company.id}
-                      className={`flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                        isSelected
-                          ? "bg-primary/10 dark:bg-primary/20"
-                          : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
-                      }`}
-                      onClick={() => handleMultifilterChange("companyIds", company.id)}
-                    >
-                      <input
-                        type="checkbox"
-                        id={`company-${company.id}`}
-                        className="mr-3 accent-primary"
-                        checked={isSelected}
-                        onChange={() => handleMultifilterChange("companyIds", company.id)}
-                      />
-                      <label
-                        htmlFor={`company-${company.id}`}
-                        className={`text-sm cursor-pointer ${
-                          isSelected
-                            ? "font-semibold text-primary"
-                            : "text-slate-600 dark:text-slate-400"
-                        }`}
-                      >
-                        {company.name}
-                      </label>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+              {/* Agente */}
+              {isManager && (
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
+                    <span className="material-icons-outlined text-base mr-2 text-slate-400">person</span>
+                    Agente
+                  </label>
+                  <div className="neumorphic-card-inset rounded-lg p-3 max-h-40 overflow-y-auto">
+                    {users.map((user) => {
+                      const isSelected = multifilterSelected.contractUserIds.includes(user.id);
+                      return (
+                        <div
+                          key={user.id}
+                          className={`flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                            isSelected
+                              ? "bg-primary/10 dark:bg-primary/20"
+                              : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                          }`}
+                          onClick={() => handleMultifilterChange("contractUserIds", user.id)}
+                        >
+                          <input
+                            type="checkbox"
+                            id={`contractUser-${user.id}`}
+                            className="mr-3 accent-primary"
+                            checked={isSelected}
+                            onChange={() => handleMultifilterChange("contractUserIds", user.id)}
+                          />
+                          <label
+                            htmlFor={`contractUser-${user.id}`}
+                            className={`text-sm cursor-pointer ${
+                              isSelected
+                                ? "font-semibold text-primary"
+                                : "text-slate-600 dark:text-slate-400"
+                            }`}
+                          >
+                            {user.name}
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
-            {/* Origen del Lead */}
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
-                <span className="material-icons-outlined text-base mr-2 text-slate-400">source</span>
-                Origen del Lead
-              </label>
-              <div className="neumorphic-card-inset rounded-lg p-3 max-h-40 overflow-y-auto">
-                {origins.length > 0 ? (
-                  origins.map((origin) => {
-                    const isSelected = multifilterSelected.originIds.includes(origin.id);
+              {/* Compañía */}
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
+                  <span className="material-icons-outlined text-base mr-2 text-slate-400">business</span>
+                  Compañía
+                </label>
+                <div className="neumorphic-card-inset rounded-lg p-3 max-h-40 overflow-y-auto">
+                  {companies.map((company) => {
+                    const isSelected = multifilterSelected.companyIds.includes(company.id);
                     return (
                       <div
-                        key={origin.id}
+                        key={company.id}
                         className={`flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${
                           isSelected
                             ? "bg-primary/10 dark:bg-primary/20"
                             : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
                         }`}
-                        onClick={() => handleMultifilterChange("originIds", origin.id)}
+                        onClick={() => handleMultifilterChange("companyIds", company.id)}
                       >
                         <input
                           type="checkbox"
-                          id={`origin-${origin.id}`}
+                          id={`company-${company.id}`}
                           className="mr-3 accent-primary"
                           checked={isSelected}
-                          onChange={() => handleMultifilterChange("originIds", origin.id)}
+                          onChange={() => handleMultifilterChange("companyIds", company.id)}
                         />
                         <label
-                          htmlFor={`origin-${origin.id}`}
+                          htmlFor={`company-${company.id}`}
                           className={`text-sm cursor-pointer ${
                             isSelected
                               ? "font-semibold text-primary"
                               : "text-slate-600 dark:text-slate-400"
                           }`}
                         >
-                          {origin.name}
+                          {company.name}
                         </label>
                       </div>
                     );
-                  })
-                ) : (
-                  <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-2">
-                    No hay orígenes disponibles
-                  </p>
-                )}
+                  })}
+                </div>
+              </div>
+
+              {/* Origen del Lead */}
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
+                  <span className="material-icons-outlined text-base mr-2 text-slate-400">source</span>
+                  Origen del Lead
+                </label>
+                <div className="neumorphic-card-inset rounded-lg p-3 max-h-40 overflow-y-auto">
+                  {origins.length > 0 ? (
+                    origins.map((origin) => {
+                      const isSelected = multifilterSelected.originIds.includes(origin.id);
+                      return (
+                        <div
+                          key={origin.id}
+                          className={`flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                            isSelected
+                              ? "bg-primary/10 dark:bg-primary/20"
+                              : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                          }`}
+                          onClick={() => handleMultifilterChange("originIds", origin.id)}
+                        >
+                          <input
+                            type="checkbox"
+                            id={`origin-${origin.id}`}
+                            className="mr-3 accent-primary"
+                            checked={isSelected}
+                            onChange={() => handleMultifilterChange("originIds", origin.id)}
+                          />
+                          <label
+                            htmlFor={`origin-${origin.id}`}
+                            className={`text-sm cursor-pointer ${
+                              isSelected
+                                ? "font-semibold text-primary"
+                                : "text-slate-600 dark:text-slate-400"
+                            }`}
+                          >
+                            {origin.name}
+                          </label>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-2">
+                      No hay orígenes disponibles
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
