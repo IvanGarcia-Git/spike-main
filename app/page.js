@@ -1,19 +1,27 @@
-"use client";
+﻿"use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getCookie } from "cookies-next";
 import * as jose from "jose";
 import EmailResetPasswordModal from "@/components/email-reset-password.modal";
 import AnimatedLogo from "@/components/AnimatedLogo";
+import LoginTransition from "@/components/LoginTransition";
+
+const LOGIN_BACKGROUND = "/images/login-background.png";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleTransitionComplete = useCallback(() => {
+    router.push("/dashboard");
+  }, [router]);
 
   useEffect(() => {
     const token = getCookie("factura-token");
@@ -51,7 +59,8 @@ export default function Login() {
         const token = getCookie("factura-token");
 
         if (token) {
-          router.push("/dashboard");
+          // Iniciar la animación de transición en lugar de redirigir directamente
+          setIsTransitioning(true);
         }
       } else {
         const errorData = await response.json();
@@ -69,11 +78,21 @@ export default function Login() {
     setIsModalOpen(true);
   };
 
+  // Mostrar la animación de transición
+  if (isTransitioning) {
+    return (
+      <LoginTransition
+        onComplete={handleTransitionComplete}
+        loginBackground={LOGIN_BACKGROUND}
+      />
+    );
+  }
+
   return (
     <div
       className="min-h-screen flex items-center justify-center p-4 transition-colors duration-300"
       style={{
-        backgroundImage: "url('/images/login-background.png')",
+        backgroundImage: `url('${LOGIN_BACKGROUND}')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
@@ -171,7 +190,7 @@ export default function Login() {
                   <span className="material-icons-outlined animate-spin mr-2">
                     refresh
                   </span>
-                  Iniciando sesión...
+                  Iniciando Sesión...
                 </>
               ) : (
                 <>

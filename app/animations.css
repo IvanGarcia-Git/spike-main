@@ -120,3 +120,95 @@
 .dark .contracts-pastel-bg {
   background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%);
 }
+
+/* ==========================================
+   LOGIN TRANSITION ANIMATIONS
+   ========================================== */
+
+/* Login screen slides up and fades out */
+@keyframes loginSlideUp {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+/* Dashboard slides up from bottom */
+@keyframes dashboardSlideUp {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Success checkmark scale animation */
+@keyframes successPulse {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Transition container */
+.login-transition-container {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+/* Login layer - slides up */
+.login-transition-layer {
+  position: absolute;
+  inset: 0;
+  animation: loginSlideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.4s;
+}
+
+/* Dashboard layer - slides up from bottom */
+.dashboard-transition-layer {
+  position: absolute;
+  inset: 0;
+  animation: dashboardSlideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.4s;
+  transform: translateY(100%);
+}
+
+/* Success indicator */
+.login-success-indicator {
+  animation: successPulse 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Smooth fade for welcome text */
+@keyframes welcomeFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.welcome-text-animate {
+  animation: welcomeFadeIn 0.4s ease-out forwards;
+  animation-delay: 0.1s;
+  opacity: 0;
+}
