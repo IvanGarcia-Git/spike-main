@@ -84,8 +84,10 @@ export default function Users() {
         case "admin":
           return "Admin";
         case "colaborador":
+        case "supervisor": // Legacy: mapear supervisor a Colaborador
           return "Colaborador";
         case "agente":
+        case "agent": // Legacy: mapear agent a Agente
           return "Agente";
         default:
           return user.role.charAt(0).toUpperCase() + user.role.slice(1);
