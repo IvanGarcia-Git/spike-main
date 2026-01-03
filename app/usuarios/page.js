@@ -78,10 +78,24 @@ export default function Users() {
   };
 
   const getRolePill = (user) => {
+    // Usar el campo role si existe
+    if (user.role) {
+      switch (user.role.toLowerCase()) {
+        case "admin":
+          return "Admin";
+        case "colaborador":
+          return "Colaborador";
+        case "agente":
+          return "Agente";
+        default:
+          return user.role.charAt(0).toUpperCase() + user.role.slice(1);
+      }
+    }
+    // Fallback para usuarios antiguos sin campo role
     if (user.isManager && user.groupId === loggedUserData.groupId) {
       return "Admin";
-    } else if (user.isManager && user.groupId !== loggedUserData.groupId) {
-      return "Supervisor";
+    } else if (user.isManager) {
+      return "Colaborador";
     } else {
       return "Agente";
     }
@@ -289,7 +303,7 @@ export default function Users() {
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${
                         getRolePill(user) === "Admin"
                           ? "bg-red-500/20 text-red-600 dark:text-red-400"
-                          : getRolePill(user) === "Supervisor"
+                          : getRolePill(user) === "Colaborador"
                           ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
                           : "bg-blue-500/20 text-blue-600 dark:text-blue-400"
                       }`}
