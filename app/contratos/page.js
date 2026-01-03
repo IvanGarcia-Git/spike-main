@@ -8,6 +8,7 @@ import * as jose from "jose";
 import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
 import ContractStatesDropdown from "@/components/contract-states.dropdown";
 import ChannelsDropdown from "@/components/channels.dropdown";
+import InlineStateSelector from "@/components/inline-state-selector";
 import SearchBox from "@/components/searchbox.form";
 import ContractsDocumentsModal from "@/components/contracts-documents.modal";
 import { formatDayDate } from "@/helpers/dates.helper";
@@ -119,11 +120,23 @@ const COLUMN_CONFIG = {
   },
   contractStateName: {
     label: "Estado",
-    render: (contract) => (
-      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary">
-        {contract.contractState?.name || "Sin estado"}
-      </span>
-    ),
+    render: (contract, formatDayDate, context) => {
+      if (context?.contractStates && context?.onSingleStateChange) {
+        return (
+          <InlineStateSelector
+            contractStates={context.contractStates}
+            currentState={contract.contractState}
+            onStateChange={(newState) => context.onSingleStateChange(contract.uuid, newState)}
+            isLoading={context.updatingContractUuid === contract.uuid}
+          />
+        );
+      }
+      return (
+        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary">
+          {contract.contractState?.name || "Sin estado"}
+        </span>
+      );
+    },
   },
   payed: {
     label: "Pagado",
@@ -652,6 +665,7 @@ export default function Contracts() {
   const [isAddToLiquidationOpen, setIsAddToLiquidationOpen] = useState(false);
   const dropdownDesktopRef = useRef(null);
   const [isReassignModalOpen, setIsReassignModalOpen] = useState(false);
+  const [updatingContractUuid, setUpdatingContractUuid] = useState(null);
 
   useEffect(() => {
     function onClickOutside(e) {
@@ -986,6 +1000,40 @@ export default function Contracts() {
     setSelectedStateForBatch(null);
   };
 
+  const handleSingleStateChange = async (contractUuid, newState) => {
+    const jwtToken = getCookie("factura-token");
+    setUpdatingContractUuid(contractUuid);
+
+    try {
+      const response = await authFetch(
+        "PATCH",
+        "contracts/batch/update",
+        { contractsUuids: [contractUuid], dataToUpdate: { contractStateId: newState.id } },
+        jwtToken
+      );
+
+      if (!response.ok) {
+        toast.error("Error al actualizar el estado del contrato");
+        return;
+      }
+
+      setContracts((prevContracts) =>
+        prevContracts.map((contract) =>
+          contract.uuid === contractUuid
+            ? { ...contract, contractState: newState }
+            : contract
+        )
+      );
+
+      toast.success(`Estado actualizado a "${newState.name}"`);
+    } catch (error) {
+      console.error("Error al actualizar el estado:", error);
+      toast.error("Error al actualizar el estado del contrato");
+    } finally {
+      setUpdatingContractUuid(null);
+    }
+  };
+
   const handleChannelChange = async (newChannelId) => {
     const jwtToken = getCookie("factura-token");
     const newChannel = channels.find((channel) => channel.id === newChannelId);
@@ -1227,9 +1275,12 @@ export default function Contracts() {
                   {(columnsOrder.length > 0 ? columnsOrder : DEFAULT_COLUMNS).map((columnKey) => {
                     const columnConfig = COLUMN_CONFIG[columnKey];
                     if (!columnConfig) return null;
+                    const context = columnKey === "contractStateName"
+                      ? { contractStates, onSingleStateChange: handleSingleStateChange, updatingContractUuid }
+                      : null;
                     return (
                       <td key={columnKey} className="p-3 text-slate-600 dark:text-slate-400">
-                        {columnConfig.render(contract, formatDayDate)}
+                        {columnConfig.render(contract, formatDayDate, context)}
                       </td>
                     );
                   })}
