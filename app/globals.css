@@ -42,16 +42,18 @@ body {
 }
 
 /* Neumorphic Design System */
-.neumorphic-card {
-  @apply bg-background-light dark:bg-background-dark shadow-neumorphic-light dark:shadow-neumorphic-dark rounded-xl transition-all duration-300;
-}
+@layer components {
+  .neumorphic-card {
+    @apply bg-background-light dark:bg-background-dark shadow-neumorphic-light dark:shadow-neumorphic-dark rounded-xl transition-all duration-300;
+  }
 
-.neumorphic-card-inset {
-  @apply bg-background-light dark:bg-background-dark shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark rounded-xl transition-all duration-300;
-}
+  .neumorphic-card-inset {
+    @apply bg-background-light dark:bg-background-dark shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark rounded-xl transition-all duration-300;
+  }
 
-.neumorphic-button {
-  @apply bg-background-light dark:bg-background-dark shadow-neumorphic-light dark:shadow-neumorphic-dark transition-all duration-200;
+  .neumorphic-button {
+    @apply bg-background-light dark:bg-background-dark shadow-neumorphic-light dark:shadow-neumorphic-dark transition-all duration-200;
+  }
 }
 
 .neumorphic-button:hover:not(:disabled) {
