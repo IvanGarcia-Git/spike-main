@@ -29,8 +29,8 @@ const timeOptions = generateTimeOptions();
 
 const roleOptions = [
   { value: "admin", label: "Administrador" },
-  { value: "supervisor", label: "Supervisor" },
-  { value: "agent", label: "Agente" },
+  { value: "colaborador", label: "Colaborador" },
+  { value: "agente", label: "Agente" },
 ];
 
 export default function UserModal({
@@ -47,7 +47,7 @@ export default function UserModal({
     email: "",
     password: "",
     confirmPassword: "",
-    role: "agent",
+    role: "agente",
     userImage: null,
     startDate: "",
     startDay: "",
@@ -108,7 +108,7 @@ export default function UserModal({
         email: "",
         password: "",
         confirmPassword: "",
-        role: "agent",
+        role: "agente",
         userImage: null,
         startDate: "",
         days: "",
