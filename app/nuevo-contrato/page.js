@@ -616,7 +616,7 @@ export default function CreateContractPage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-end">
+        <div className="flex flex-col sm:flex-row gap-4 justify-end mb-20">
           <button
             onClick={() => router.back()}
             className="px-6 py-3 rounded-lg neumorphic-button font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
