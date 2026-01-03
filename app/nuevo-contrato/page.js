@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect, useMemo } from "react";
 import CreateCustomerForm from "@/components/create-customer.form";
 import CreateContractForm from "@/components/create-contract.form";
@@ -518,7 +518,7 @@ export default function CreateContractPage() {
   }, [isConfirmed]);
 
   return (
-    <div className="min-h-screen bg-background-light dark:bg-background-dark p-4 sm:p-8">
+    <div className="min-h-screen bg-background-light dark:bg-background-dark p-4 sm:p-8 pb-24">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
