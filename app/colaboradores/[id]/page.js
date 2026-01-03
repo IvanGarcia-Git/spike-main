@@ -369,7 +369,7 @@ export default function ColaboradorProfile() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background-light">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-slate-600">Cargando perfil del colaborador...</p>
@@ -380,14 +380,14 @@ export default function ColaboradorProfile() {
 
   if (!colaboradorData) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background-light">
+      <div className="flex items-center justify-center min-h-screen">
         <p className="text-slate-600">No se encontró información del colaborador</p>
       </div>
     )
   }
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8 bg-background-light min-h-screen">
+    <div className="px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
       {/* Header con botón de regreso */}
       <div className="neumorphic-card p-6 mb-6">
         <button

@@ -175,7 +175,7 @@ const LeadsPriorityConfigurationPage = () => {
 
   return (
     <DndProvider backend={MultiBackend} options={BACKEND_OPTIONS}>
-      <div className="flex flex-col items-center gap-6 p-4 min-h-screen bg-background">
+      <div className="flex flex-col items-center gap-6 p-4 min-h-screen">
         <div className="flex flex-col lg:flex-row gap-6 w-full max-w-5xl">
           {/* Panel de selección de usuarios */}
           <div className="w-full lg:w-1/2">

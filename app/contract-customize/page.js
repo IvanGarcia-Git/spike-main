@@ -188,7 +188,7 @@ const ConfigureColumnsPage = () => {
 
   return (
     <DndProvider backend={MultiBackend} options={BACKEND_OPTIONS}>
-      <div className="flex flex-col gap-4 p-4 min-h-screen justify-start bg-background">
+      <div className="flex flex-col gap-4 p-4 min-h-screen justify-start">
         <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{config.title}</h2>
 
         <div className="flex text-slate-800 dark:text-slate-100 items-center gap-4 mb-4">

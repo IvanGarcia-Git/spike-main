@@ -178,7 +178,7 @@ export default function UsersVisibility() {
   };
 
   return (
-    <div className="flex flex-col bg-background min-h-screen">
+    <div className="flex flex-col min-h-screen">
       {/* Navbar */}
       <div className="w-auto ml-4">
         <div className="flex gap-2 p-1 neumorphic-card rounded-lg w-min">
