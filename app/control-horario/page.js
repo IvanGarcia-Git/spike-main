@@ -134,7 +134,7 @@ export default function ControlHorario() {
         </div>
         <Link
           href="/control-horario/historial"
-          className="flex items-center gap-2 px-4 py-2 neumorphic-button rounded-lg text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
+          className="flex items-center gap-2 px-4 py-2 neumorphic-button rounded-lg bg-background-light dark:bg-background-dark text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
         >
           <span className="material-icons-outlined">history</span>
           Ver Historial

@@ -115,7 +115,7 @@ export default function RootLayout({ children }) {
                   isManager={isManager}
                   onMenuClick={() => setIsMobileSidebarOpen(true)}
                 />
-                <main className="flex-1 overflow-y-auto">
+                <main className="flex-1 overflow-y-auto contracts-pastel-bg">
                   {children}
                 </main>
               </div>

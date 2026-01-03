@@ -256,7 +256,7 @@ export default function Dashboard() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-5 py-2 rounded-lg shadow-neumorphic-light dark:shadow-neumorphic-dark hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all duration-200 whitespace-nowrap ${
+            className={`px-5 py-2 rounded-lg bg-background-light dark:bg-background-dark shadow-neumorphic-light dark:shadow-neumorphic-dark hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all duration-200 whitespace-nowrap ${
               activeTab === tab.id
                 ? "shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark font-semibold text-primary"
                 : "font-medium text-slate-600 dark:text-slate-400"

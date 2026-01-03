@@ -51,7 +51,7 @@ body {
 }
 
 .neumorphic-button {
-  @apply shadow-neumorphic-light dark:shadow-neumorphic-dark transition-all duration-200;
+  @apply bg-background-light dark:bg-background-dark shadow-neumorphic-light dark:shadow-neumorphic-dark transition-all duration-200;
 }
 
 .neumorphic-button:hover:not(:disabled) {
