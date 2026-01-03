@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useRouter } from "next/navigation";
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -710,7 +710,7 @@ const LiquidacionesPage = () => {
 
   if (isLoading && isLoadingUsers && !error) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-background text-slate-800 dark:text-slate-100">
+      <div className="flex justify-center items-center min-h-screen text-slate-800 dark:text-slate-100">
         <FaSpinner className="animate-spin text-blue-600 text-4xl" />
         <p className="ml-3 text-xl">Cargando datos...</p>
       </div>
@@ -718,7 +718,7 @@ const LiquidacionesPage = () => {
   }
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 bg-background min-h-screen font-sans text-slate-800 dark:text-slate-100">
+    <div className="p-4 md:p-6 lg:p-8 min-h-screen font-sans text-slate-800 dark:text-slate-100">
       <header className="flex flex-col sm:flex-row justify-between items-center mb-6 md:mb-8 pb-4 border-b border-gray-300 dark:border-gray-600">
         <h1 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4 sm:mb-0">
           Historial de liquidaciones

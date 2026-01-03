@@ -1197,7 +1197,7 @@ export default function LiquidacionDetailPage() {
 
   if (loading && !liquidation) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-background text-slate-800 dark:text-slate-100">
+      <div className="flex justify-center items-center min-h-screen text-slate-800 dark:text-slate-100">
         <FaSpinner className="animate-spin text-blue-600 text-4xl" />
         <p className="ml-3 text-xl">Cargando datos de la liquidación...</p>
       </div>
@@ -1206,7 +1206,7 @@ export default function LiquidacionDetailPage() {
 
   if (error && !liquidation) {
     return (
-      <div className="min-h-screen bg-background p-6">
+      <div className="min-h-screen p-6">
         <div className="max-w-4xl mx-auto neumorphic-card p-6 rounded-lg">
           <h2 className="text-2xl font-semibold text-red-600 mb-4">Error</h2>
           <p className="text-red-700">{error.message || "Ocurrió un error al cargar los datos."}</p>
@@ -1223,12 +1223,12 @@ export default function LiquidacionDetailPage() {
 
   if (!liquidation) {
     return (
-      <div className="min-h-screen bg-background p-6 text-center text-slate-800 dark:text-slate-100">No se encontró la liquidación.</div>
+      <div className="min-h-screen p-6 text-center text-slate-800 dark:text-slate-100">No se encontró la liquidación.</div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-slate-800 dark:text-slate-100 p-4 md:p-6">
+    <div className="min-h-screen text-slate-800 dark:text-slate-100 p-4 md:p-6">
       <div className="max-w-7xl mx-auto neumorphic-card p-6 rounded-lg">
         {/* Liquidation Header */}
         <div className="flex flex-col gap-2 pb-4 border-b border-gray-200 dark:border-gray-700 mb-6">
