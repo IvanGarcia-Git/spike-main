@@ -146,6 +146,17 @@ export default function UserModal({
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Validar longitud mínima de contraseña (8 caracteres)
+    if (!userData && user.password.length < 8) {
+      alert("La contraseña debe tener al menos 8 caracteres");
+      return;
+    }
+    if (userData && user.password && user.password.length < 8) {
+      alert("La contraseña debe tener al menos 8 caracteres");
+      return;
+    }
+
     if (!userData && user.password !== user.confirmPassword) {
       alert("Las contraseñas no coinciden");
       return;
@@ -290,14 +301,15 @@ export default function UserModal({
               name="email"
             />
             <ModalInput
-              label={userData ? "Nueva Contraseña (opcional)" : "Contraseña"}
+              label={userData ? "Nueva Contraseña (opcional)" : "Contraseña (mín. 8 caracteres)"}
               type="password"
               id="password"
               value={user.password}
               onChange={handleInputChange}
               required={!userData}
-              placeholder="••••••••"
+              placeholder="Mínimo 8 caracteres"
               name="password"
+              minLength={8}
             />
             <ModalInput
               label={userData ? "Confirmar Nueva Contraseña" : "Repetir Contraseña"}
