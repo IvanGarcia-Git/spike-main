@@ -104,7 +104,11 @@ const COLUMN_CONFIG = {
   },
   ratePowerSlot1: {
     label: "Potencia",
-    render: (contract) => contract.rate?.powerSlot1 || "-",
+    render: (contract) => {
+      const powers = contract.contractedPowers || [];
+      const maxPower = powers.length > 0 ? Math.max(...powers) : null;
+      return maxPower !== null ? maxPower : "-";
+    },
   },
   expiresAt: {
     label: "Retro",
