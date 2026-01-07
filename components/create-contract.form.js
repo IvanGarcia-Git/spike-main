@@ -42,6 +42,9 @@ export default function CreateContractForm({
     isSelected: false,
   });
 
+  // Estado para mantener los valores de texto de las potencias mientras se escribe
+  const [powerInputs, setPowerInputs] = useState(["", "", "", "", "", ""]);
+
   const getRates = useCallback(async () => {
     const jwtToken = getCookie("factura-token");
 
@@ -356,11 +359,7 @@ export default function CreateContractForm({
                       type="text"
                       inputMode="decimal"
                       name={`powerSlot${index + 1}`}
-                      value={
-                        formData.contractedPowers?.[index]
-                          ? String(formData.contractedPowers[index]).replace(".", ",")
-                          : ""
-                      }
+                      value={powerInputs[index]}
                       onChange={(e) => {
                         // Reemplazar punto por coma automáticamente
                         let inputValue = e.target.value.replace(/\./g, ",");
@@ -373,6 +372,11 @@ export default function CreateContractForm({
                         if (parts.length > 2) {
                           inputValue = parts[0] + "," + parts.slice(1).join("");
                         }
+
+                        // Actualizar el estado del input de texto
+                        const updatedInputs = [...powerInputs];
+                        updatedInputs[index] = inputValue;
+                        setPowerInputs(updatedInputs);
 
                         // Convertir coma a punto para el parseFloat interno
                         const numericValue = parseFloat(inputValue.replace(",", ".")) || 0;
