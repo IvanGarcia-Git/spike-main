@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { getCookie } from "cookies-next";
 import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
 import { NeumorphicCard, NeumorphicButton, NeumorphicInput } from "@/components/neumorphic";
+import { toast } from "react-toastify";
 
 export default function EditChannel({ params }) {
   const router = useRouter();
@@ -42,7 +43,7 @@ export default function EditChannel({ params }) {
         setChannel(channelData);
         getRates(jwtToken, channelData.id);
       } else {
-        alert("Error al cargar los detalles del canal");
+        toast.error("Error al cargar los detalles del canal");
       }
     } catch (error) {
       console.error("Error al obtener los detalles del canal:", error);
@@ -61,7 +62,7 @@ export default function EditChannel({ params }) {
           .map((rate) => rate.id);
         setSelectedRates(channelRates);
       } else {
-        alert("Error al cargar las tarifas disponibles");
+        toast.error("Error al cargar las tarifas disponibles");
       }
     } catch (error) {
       console.error("Error al obtener las tarifas:", error);
@@ -138,7 +139,7 @@ export default function EditChannel({ params }) {
         jwtToken
       );
       if (!response.ok) {
-        alert("Error actualizando el Rate");
+        toast.error("Error actualizando el Rate");
       }
     } catch (error) {
       console.error("Error enviando la solicitud:", error);
@@ -173,7 +174,7 @@ export default function EditChannel({ params }) {
         await authFetch("PATCH", `rates/${rateId}`, { paymentDay: Number(paymentDay) }, jwtToken);
       } catch (error) {
         console.error("Error al actualizar paymentDay:", error);
-        alert("No se pudo actualizar el día de pago");
+        toast.error("No se pudo actualizar el día de pago");
       }
     }, 2000);
   };
@@ -257,14 +258,14 @@ export default function EditChannel({ params }) {
       if (response.ok) {
         const savedTiers = await response.json();
         setCommissionTiers((prev) => ({ ...prev, [rateId]: savedTiers }));
-        alert("Tramos guardados correctamente");
+        toast.success("Tramos guardados correctamente");
       } else {
         const error = await response.json();
-        alert(error.message || "Error al guardar los tramos");
+        toast.error(error.message || "Error al guardar los tramos");
       }
     } catch (error) {
       console.error("Error al guardar tramos:", error);
-      alert("Error al guardar los tramos de comisión");
+      toast.error("Error al guardar los tramos de comisión");
     }
   };
 
@@ -278,10 +279,10 @@ export default function EditChannel({ params }) {
 
     try {
       const formData = new FormData();
-      formData.append("name", channel.name);
-      formData.append("representativeName", channel.representativeName);
-      formData.append("representativePhone", channel.representativePhone);
-      formData.append("representativeEmail", channel.representativeEmail);
+      formData.append("name", channel.name || "");
+      formData.append("representativeName", channel.representativeName || "");
+      formData.append("representativePhone", channel.representativePhone || "");
+      formData.append("representativeEmail", channel.representativeEmail || "");
       formData.append("address", channel.address || "");
       formData.append("cif", channel.cif || "");
       formData.append("iban", channel.iban || "");
@@ -295,7 +296,19 @@ export default function EditChannel({ params }) {
         body: formData,
       });
       if (!channelResponse.ok) {
-        alert("Error al actualizar el canal");
+        // Parsear el error del backend para mostrar mensaje específico
+        try {
+          const errorData = await channelResponse.json();
+          if (errorData?.error?.message) {
+            toast.error(errorData.error.message);
+          } else if (channelResponse.status === 403) {
+            toast.error("No tienes permisos para actualizar este canal");
+          } else {
+            toast.error("Error al actualizar el canal");
+          }
+        } catch {
+          toast.error("Error al actualizar el canal");
+        }
         return;
       }
 
@@ -307,7 +320,7 @@ export default function EditChannel({ params }) {
           jwtToken
         );
         if (!rateResponse.ok) {
-          alert("Error al actualizar las tarifas vinculadas");
+          toast.error("Error al actualizar las tarifas vinculadas");
           return;
         }
       }
@@ -328,11 +341,11 @@ export default function EditChannel({ params }) {
         assignments.map((asgmt) => authFetch("PATCH", "commission-assignments", asgmt, jwtToken))
       );
 
-      alert("Canal, tarifas y comisiones guardadas con éxito");
+      toast.success("Canal, tarifas y comisiones guardadas con éxito");
       router.push("/canales");
     } catch (error) {
       console.error("Error en handleSubmit:", error);
-      alert("Hubo un error guardando los cambios");
+      toast.error("Hubo un error guardando los cambios");
     }
   };
 
