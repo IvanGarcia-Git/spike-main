@@ -527,7 +527,7 @@ const LiquidacionesPage = () => {
         );
         if (!response.ok) {
           const errData = await response.json();
-          throw new Error(errData.message || "Error al eliminar la liquidación");
+          throw new Error(errData.error?.message || errData.message || "Error al eliminar la liquidación");
         }
         await fetchLiquidations();
       } catch (err) {
