@@ -1178,8 +1178,8 @@ export default function Contracts() {
         </button>
       </div>
 
-      {/* Batch Actions */}
-      {selectedContracts.length > 0 && (
+      {/* Batch Actions - Solo visible para Supervisores y Admin */}
+      {selectedContracts.length > 0 && (isManager || userGroupId === 1) && (
         <div className="mb-8">
           <div className="relative inline-block" ref={dropdownDesktopRef}>
             <button
@@ -1319,13 +1319,16 @@ export default function Contracts() {
                       >
                         <span className="material-icons-outlined text-lg">folder</span>
                       </button>
-                      <button
-                        onClick={() => handleDeleteSingleContract(contract.uuid)}
-                        className="p-2 rounded-lg neumorphic-button text-red-500 hover:text-red-600"
-                        title="Eliminar contrato"
-                      >
-                        <span className="material-icons-outlined text-lg">delete</span>
-                      </button>
+                      {/* Botón eliminar - Solo visible para Supervisores y Admin */}
+                      {(isManager || userGroupId === 1) && (
+                        <button
+                          onClick={() => handleDeleteSingleContract(contract.uuid)}
+                          className="p-2 rounded-lg neumorphic-button text-red-500 hover:text-red-600"
+                          title="Eliminar contrato"
+                        >
+                          <span className="material-icons-outlined text-lg">delete</span>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
