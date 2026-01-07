@@ -325,8 +325,8 @@ export default function TopBar({ userGroupId, isManager, onMenuClick }) {
             )}
           </div>
 
-          {/* Settings Button */}
-          {isManager && (
+          {/* Settings Button - Solo visible para Supervisores y Admin */}
+          {(isManager || userGroupId === 1) && (
             <div ref={settingsRef} className="relative">
               <button
                 className="w-12 h-12 rounded-full neumorphic-button flex items-center justify-center hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all"
