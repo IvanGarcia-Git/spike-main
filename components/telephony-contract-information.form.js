@@ -15,6 +15,7 @@ export default function TelephonyContractForm({
   const [rates, setRates] = useState({});
   const [filteredRates, setFilteredRates] = useState([]);
   const [isManager, setIsManager] = useState(false);
+  const [userGroupId, setUserGroupId] = useState(null);
   const [hasExtraServices, setHasExtraServices] = useState(true);
 
   const [formData, setFormData] = useState({
@@ -50,6 +51,7 @@ export default function TelephonyContractForm({
       if (jwtToken) {
         const payload = jose.decodeJwt(jwtToken);
         setIsManager(payload.isManager || false);
+        setUserGroupId(payload.groupId || null);
       }
     }
   }, [contract]);
@@ -178,7 +180,8 @@ export default function TelephonyContractForm({
     });
   };
 
-  const fieldDisabled = !formData.isDraft && !isManager;
+  // Solo Supervisores (isManager) o Admin (groupId === 1) pueden editar fichas no borrador
+  const fieldDisabled = !formData.isDraft && !isManager && userGroupId !== 1;
 
   return (
     <div className={`p-6 rounded-xl ${isActive ? "neumorphic-card ring-2 ring-primary" : "neumorphic-card-inset"}`}>

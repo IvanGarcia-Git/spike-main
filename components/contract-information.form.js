@@ -14,6 +14,7 @@ export default function ContractForm({
   const [rates, setRates] = useState({});
   const [filteredRates, setFilteredRates] = useState([]);
   const [isManager, setIsManager] = useState(false);
+  const [userGroupId, setUserGroupId] = useState(null);
 
   const [formData, setFormData] = useState({
     isDraft: contract?.isDraft || false,
@@ -67,6 +68,7 @@ export default function ContractForm({
       if (jwtToken) {
         const payload = jose.decodeJwt(jwtToken);
         setIsManager(payload.isManager || false);
+        setUserGroupId(payload.groupId || null);
       }
     }
     getRates();
@@ -201,7 +203,8 @@ export default function ContractForm({
     onSubmit(draftFormData);
   };
 
-  const fieldDisabled = !formData.isDraft && !isManager;
+  // Solo Supervisores (isManager) o Admin (groupId === 1) pueden editar fichas no borrador
+  const fieldDisabled = !formData.isDraft && !isManager && userGroupId !== 1;
 
   return (
     <div

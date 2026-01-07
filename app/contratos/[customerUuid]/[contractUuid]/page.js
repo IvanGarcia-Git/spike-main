@@ -32,6 +32,7 @@ export default function ContractDetail({ params }) {
   const [isMounted, setIsMounted] = useState(false);
 
   const [isManager, setIsManager] = useState(false);
+  const [userGroupId, setUserGroupId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [customer, setCustomer] = useState(null);
@@ -283,6 +284,7 @@ export default function ContractDetail({ params }) {
       if (jwtToken) {
         const payload = jose.decodeJwt(jwtToken);
         setIsManager(payload.isManager || false);
+        setUserGroupId(payload.groupId || null);
       }
     }
   }, [activeContract]);
@@ -447,8 +449,9 @@ export default function ContractDetail({ params }) {
         {selectedSection === "Detail" && (
           <>
             {/* Información de los detalles del cliente */}
+            {/* Solo Supervisores (isManager) o Admin (groupId === 1) pueden editar fichas no borrador */}
             <CustomerForm
-              fieldsDisabled={!activeContract.isDraft && !isManager}
+              fieldsDisabled={!activeContract.isDraft && !isManager && userGroupId !== 1}
               customerData={customer}
               onCustomerUpdate={handleCustomerUpdate}
               contractIsDraft={activeContract.isDraft}
