@@ -353,14 +353,32 @@ export default function CreateContractForm({
                 }).map((_, index) => (
                   <div key={index}>
                     <input
-                      type="number"
-                      min="0"
-                      step="0.001"
+                      type="text"
+                      inputMode="decimal"
                       name={`powerSlot${index + 1}`}
-                      value={formData.contractedPowers?.[index] || ""}
+                      value={
+                        formData.contractedPowers?.[index]
+                          ? String(formData.contractedPowers[index]).replace(".", ",")
+                          : ""
+                      }
                       onChange={(e) => {
+                        // Reemplazar punto por coma automáticamente
+                        let inputValue = e.target.value.replace(/\./g, ",");
+
+                        // Solo permitir números y una coma
+                        inputValue = inputValue.replace(/[^0-9,]/g, "");
+
+                        // Evitar múltiples comas
+                        const parts = inputValue.split(",");
+                        if (parts.length > 2) {
+                          inputValue = parts[0] + "," + parts.slice(1).join("");
+                        }
+
+                        // Convertir coma a punto para el parseFloat interno
+                        const numericValue = parseFloat(inputValue.replace(",", ".")) || 0;
+
                         const updatedPowers = [...formData.contractedPowers];
-                        updatedPowers[index] = parseFloat(e.target.value) || 0;
+                        updatedPowers[index] = numericValue;
 
                         const updatedFormData = {
                           ...formData,
