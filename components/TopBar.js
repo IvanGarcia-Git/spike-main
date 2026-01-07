@@ -109,7 +109,7 @@ export default function TopBar({ userGroupId, isManager, onMenuClick }) {
   }, []);
 
   return (
-    <div className="sticky top-0 z-50 bg-background-light dark:bg-background-dark border-b border-slate-200 dark:border-slate-700 px-4 md:px-6 py-4 no-print">
+    <div className="z-50 bg-background-light dark:bg-background-dark border-b border-slate-200 dark:border-slate-700 px-4 md:px-6 py-4 no-print flex-shrink-0">
       <div className="flex items-center justify-between md:justify-end">
         {/* Mobile menu button */}
         <button
