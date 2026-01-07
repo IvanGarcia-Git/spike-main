@@ -10,6 +10,7 @@ import { validateIBANMath } from "@/helpers/validation.helper";
 import ConfirmContractModal from "@/components/confirm-create-contract.modal";
 import useAutoSaveDraft from "@/hooks/useAutoSaveDraft";
 import { AutoSaveIndicator, RestoreDraftModal } from "@/components/auto-save-indicator";
+import { toast } from "react-toastify";
 
 export default function CreateContractPage() {
   const router = useRouter();
@@ -51,7 +52,7 @@ export default function CreateContractPage() {
 
         updateCustomerData(customer);
       } else {
-        alert("Error al cargar los detalles del cliente.");
+        toast.error("Error al cargar los detalles del cliente.");
       }
     } catch (error) {
       console.error("Error obteniendo los detalles del cliente:", error);
@@ -82,7 +83,7 @@ export default function CreateContractPage() {
 
         updateCustomerData(customer);
       } else {
-        alert("Error al cargar los detalles del cliente.");
+        toast.error("Error al cargar los detalles del cliente.");
       }
     } catch (error) {
       console.error("Error obteniendo los detalles del cliente:", error);
@@ -123,7 +124,7 @@ export default function CreateContractPage() {
         const companiesResponse = await response.json();
         setCompanies(companiesResponse);
       } else {
-        alert("Error cargando la información de las compañías");
+        toast.error("Error cargando la información de las compañías");
       }
     } catch (error) {
       console.error("Error enviando la solicitud:", error);
@@ -279,30 +280,30 @@ export default function CreateContractPage() {
     if (!isDraft) {
       // Email siempre es opcional
       if (!isCustomerDataValid(customerData, false)) {
-        alert("Por favor, rellena todos los campos del cliente.");
+        toast.error("Por favor, rellena todos los campos del cliente.");
         return;
       }
 
       if (!isContractLuzValid() || !isContractGasValid()) {
-        alert("Por favor, rellena todos los campos de los contratos seleccionados.");
+        toast.error("Por favor, rellena todos los campos de los contratos seleccionados.");
         return;
       }
       if (!validateIBANMath(customerData.iban)) {
-        alert("El IBAN no es válido. Por favor, corrígelo.");
+        toast.error("El IBAN no es válido. Por favor, corrígelo.");
         return;
       } else if (!cpRegex.test(customerData.zipCode)) {
-        alert(
+        toast.error(
           "Por favor, introduce un código postal válido de España (5 dígitos, entre 01000 y 52999)."
         );
         return;
       } else if (!phoneNumberRegex.test(customerData.phoneNumber)) {
-        alert("Por favor, introduce un número de teléfono válido.");
+        toast.error("Por favor, introduce un número de teléfono válido.");
         return;
       } else if (documentType === "NIE" && !nieRegex.test(customerData.nationalId)) {
-        alert("Por favor, introduce un NIE válido.");
+        toast.error("Por favor, introduce un NIE válido.");
         return;
       } else if (documentType === "NIF / DNI" && !dniRegex.test(customerData.nationalId)) {
-        alert("Por favor, introduce un DNI válido.");
+        toast.error("Por favor, introduce un DNI válido.");
         return;
       }
     }
@@ -434,7 +435,7 @@ export default function CreateContractPage() {
               if (response.ok) {
                 setSelectedFile(null);
               } else {
-                alert("Error al agregar el comentario");
+                toast.error("Error al agregar el comentario");
               }
             } catch (error) {
               console.error("Error enviando el comentario:", error);
@@ -482,27 +483,38 @@ export default function CreateContractPage() {
                 if (response.ok) {
                   setSelectedFile(null);
                 } else {
-                  alert("Error al agregar el comentario");
+                  toast.error("Error al agregar el comentario");
                 }
               } catch (error) {
                 console.error("Error enviando el comentario:", error);
               }
             }
           } else {
-            alert("Error al crear el contrato.");
+            toast.error("Error al crear el contrato.");
           }
         }
 
         // Limpiar borrador al crear exitosamente
         clearDraft();
-        alert("Contratos creados con éxito");
+        toast.success("Contratos creados con éxito");
 
         router.push("/contratos");
       } else {
-        alert("Error creando el cliente");
+        // Parsear el error del backend para mostrar campos faltantes
+        try {
+          const errorData = await customerResponse.json();
+          if (errorData?.error?.message) {
+            toast.error(errorData.error.message);
+          } else {
+            toast.error("Error creando el cliente. Verifica que todos los campos estén completos.");
+          }
+        } catch {
+          toast.error("Error creando el cliente. Verifica que todos los campos estén completos.");
+        }
       }
     } catch (error) {
       console.error("Error creando el contrato:", error);
+      toast.error("Error de conexión. Por favor, inténtalo de nuevo.");
     }
   };
 
