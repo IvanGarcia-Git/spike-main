@@ -13,6 +13,7 @@ import {
 } from "react-icons/fa";
 import { getCookie } from "cookies-next";
 import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
+import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
 
 const LIQUIDATION_STATUSES = {
@@ -348,6 +349,7 @@ const LiquidacionesPage = () => {
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef(null);
   const statusButtonRefs = useRef({});
+  const deletingRef = useRef(false);
   const jwtToken = getCookie("factura-token");
   const [isDownloadingExcel, setIsDownloadingExcel] = useState(false);
 
@@ -511,7 +513,11 @@ const LiquidacionesPage = () => {
   };
 
   const handleDeleteLiquidation = async (liquidationUuid) => {
+    // Prevenir doble clic con ref (más fiable que estado)
+    if (deletingRef.current || isSubmitting) return;
+
     if (window.confirm("¿Estás seguro de que quieres eliminar esta liquidación?")) {
+      deletingRef.current = true;
       setIsSubmitting(true);
       setError(null);
       try {
@@ -525,16 +531,26 @@ const LiquidacionesPage = () => {
             },
           }
         );
+
         if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.error?.message || errData.message || "Error al eliminar la liquidación");
+          let errorMessage = "Error al eliminar la liquidación";
+          try {
+            const errData = await response.json();
+            errorMessage = errData.error?.message || errData.message || errorMessage;
+          } catch {
+            // Si no se puede parsear JSON, usar mensaje por defecto
+          }
+          throw new Error(errorMessage);
         }
+
+        toast.success("Liquidación eliminada correctamente");
         await fetchLiquidations();
       } catch (err) {
         console.error("Error deleting liquidation:", err);
         setError(err.message);
-        alert(`Error: ${err.message}`);
+        toast.error(err.message);
       } finally {
+        deletingRef.current = false;
         setIsSubmitting(false);
       }
     }
@@ -915,10 +931,11 @@ const LiquidacionesPage = () => {
                           )}
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleDeleteLiquidation(liq.uuid)}
                           className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                           title="Eliminar"
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || deletingRef.current}
                         >
                           <FaTrashAlt size={18} />
                         </button>
