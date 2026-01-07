@@ -227,15 +227,10 @@ const CreateLiquidationSubModal = ({ isOpen, onClose, onSubmit, users, isLoading
       return;
     }
 
-    if (users.length > 0 && !selectedUserIdForNewLiq) {
-      toast.error("Por favor, seleccione un usuario para la liquidación.");
-      return;
-    }
-
     onSubmit({
       name: nombre,
       date: date,
-      userId: users.length > 0 ? parseInt(selectedUserIdForNewLiq) : null,
+      userId: selectedUserIdForNewLiq ? parseInt(selectedUserIdForNewLiq) : null,
     });
   };
 
@@ -284,16 +279,16 @@ const CreateLiquidationSubModal = ({ isOpen, onClose, onSubmit, users, isLoading
           {users.length > 0 && (
             <div className="mb-6">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Asignar a Usuario
+                Asignar a Usuario <span className="text-slate-400 font-normal">(opcional)</span>
               </label>
               <div className="neumorphic-card-inset rounded-lg">
                 <select
                   value={selectedUserIdForNewLiq}
                   onChange={(e) => setSelectedUserIdForNewLiq(e.target.value)}
                   className="w-full bg-transparent border-none focus:ring-0 p-3 text-slate-800 dark:text-slate-200"
-                  required
                   disabled={isLoading}
                 >
+                  <option value="">-- Sin asignar --</option>
                   {users.map((user) => (
                     <option key={user.id} value={user.id.toString()}>
                       {getFullName(user)}
