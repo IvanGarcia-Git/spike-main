@@ -121,7 +121,10 @@ const COLUMN_CONFIG = {
   contractStateName: {
     label: "Estado",
     render: (contract, formatDayDate, context) => {
-      if (context?.contractStates && context?.onSingleStateChange) {
+      // Solo Supervisores (isManager) o Admin (groupId === 1) pueden cambiar estados
+      const canChangeState = context?.isManager || context?.userGroupId === 1;
+
+      if (canChangeState && context?.contractStates && context?.onSingleStateChange) {
         return (
           <InlineStateSelector
             contractStates={context.contractStates}
@@ -131,8 +134,23 @@ const COLUMN_CONFIG = {
           />
         );
       }
+      // Para agentes normales, mostrar solo el estado sin opción de cambio
       return (
-        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary">
+        <span
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
+          style={{
+            backgroundColor: contract.contractState?.colorHex
+              ? `${contract.contractState.colorHex}20`
+              : "rgb(var(--primary) / 0.2)",
+            color: contract.contractState?.colorHex || "rgb(var(--primary))",
+          }}
+        >
+          {contract.contractState?.colorHex && (
+            <span
+              className="w-2 h-2 rounded-full flex-shrink-0"
+              style={{ backgroundColor: contract.contractState.colorHex }}
+            />
+          )}
           {contract.contractState?.name || "Sin estado"}
         </span>
       );
@@ -1276,7 +1294,7 @@ export default function Contracts() {
                     const columnConfig = COLUMN_CONFIG[columnKey];
                     if (!columnConfig) return null;
                     const context = columnKey === "contractStateName"
-                      ? { contractStates, onSingleStateChange: handleSingleStateChange, updatingContractUuid }
+                      ? { contractStates, onSingleStateChange: handleSingleStateChange, updatingContractUuid, isManager, userGroupId }
                       : null;
                     return (
                       <td key={columnKey} className="p-3 text-slate-600 dark:text-slate-400">
