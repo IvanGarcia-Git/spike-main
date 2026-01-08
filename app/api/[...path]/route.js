@@ -79,6 +79,11 @@ async function handleRequest(req, params, method) {
       requestOptions
     );
 
+    // Handle 204 No Content responses (e.g., successful DELETE)
+    if (apiResponse.status === 204) {
+      return new NextResponse(null, { status: 204 });
+    }
+
     // Get response data
     const contentType = apiResponse.headers.get("content-type");
     let data;
