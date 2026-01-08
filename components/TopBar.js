@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getCookie, deleteCookie } from "cookies-next";
 import { authGetFetch } from "@/helpers/server-fetch.helper";
 import * as jose from "jose";
+import TimeStatusWidget from "@/components/time-tracking/time-status-widget";
 
 export default function TopBar({ userGroupId, isManager, onMenuClick }) {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
@@ -122,6 +123,9 @@ export default function TopBar({ userGroupId, isManager, onMenuClick }) {
         </button>
 
         <div className="flex items-center space-x-2 md:space-x-4">
+          {/* Time Status Widget */}
+          <TimeStatusWidget />
+
           {/* Apps Button */}
           <div ref={appsRef} className="relative">
             <button
