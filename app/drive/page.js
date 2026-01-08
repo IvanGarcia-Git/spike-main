@@ -530,24 +530,6 @@ function DriveFilesContent() {
                 </span>
               </button>
             </nav>
-
-            {/* Storage Info */}
-            <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-slate-500 dark:text-slate-400">
-                  Almacenamiento
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">
-                  0 B de 15 GB
-                </span>
-              </div>
-              <div className="w-full h-2 neumorphic-card-inset rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-primary rounded-full"
-                  style={{ width: "0%" }}
-                />
-              </div>
-            </div>
           </div>
         </div>
 
