@@ -1,5 +1,5 @@
 ﻿"use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import CreateCustomerForm from "@/components/create-customer.form";
 import CreateContractForm from "@/components/create-contract.form";
 import { useRouter } from "next/navigation";
@@ -208,6 +208,9 @@ export default function CreateContractPage() {
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const [isLoadingFromLeadSheet, setIsLoadingFromLeadSheet] = useState(false);
 
+  // Ref to prevent showing draft modal twice
+  const draftModalShownRef = useRef(false);
+
   // Combinar todos los datos para el autoguardado
   const draftData = useMemo(
     () => ({
@@ -234,18 +237,35 @@ export default function CreateContractPage() {
 
   // Mostrar modal de restauración si hay borrador al montar
   useEffect(() => {
+    // Prevent showing modal twice
+    if (draftModalShownRef.current) return;
+
     // Solo mostrar si no viene de leadSheet/customer
     const queryParams = new URLSearchParams(window.location.search);
     const hasExternalData = queryParams.get("customerUuid") || queryParams.get("leadSheetUuid");
 
     if (!hasExternalData && hasDraft && savedDraftData) {
-      // Verificar si el formulario está vacío
+      // Check if saved draft has REAL user data (not just defaults like type: "B2C")
+      const savedCustomer = savedDraftData.customerData;
+      const hasRealUserData = savedCustomer && (
+        savedCustomer.name?.trim() ||
+        savedCustomer.surnames?.trim() ||
+        savedCustomer.nationalId?.trim() ||
+        savedCustomer.phoneNumber?.trim() ||
+        savedCustomer.email?.trim() ||
+        savedCustomer.address?.trim()
+      );
+
+      // Verificar si el formulario actual está vacío
       const isFormEmpty = !customerData.name && !customerData.surnames;
-      if (isFormEmpty) {
+
+      // Only show modal if draft has real data AND current form is empty
+      if (hasRealUserData && isFormEmpty) {
+        draftModalShownRef.current = true;
         setShowRestoreModal(true);
       }
     }
-  }, [hasDraft]);
+  }, [hasDraft, savedDraftData]);
 
   // Restaurar borrador
   const handleRestoreDraft = () => {
