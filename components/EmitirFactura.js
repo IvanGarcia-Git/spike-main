@@ -58,6 +58,10 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
   const [overrideAddress, setOverrideAddress] = useState("");
   const [overrideId, setOverrideId] = useState("");
   const [overridePhone, setOverridePhone] = useState("");
+  const [overrideCity, setOverrideCity] = useState("");
+  const [overridePostalCode, setOverridePostalCode] = useState("");
+  const [overrideEmail, setOverrideEmail] = useState("");
+  const [overrideCountry, setOverrideCountry] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [invoiceSaved, setInvoiceSaved] = useState(false);
   const [isTerceroModalOpen, setIsTerceroModalOpen] = useState(false);
@@ -335,14 +339,24 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
     if (String(selectedChannel).startsWith("prefilled-")) {
       setOverrideAddress("");
       setOverrideId("");
+      setOverridePhone("");
+      setOverrideCity("");
+      setOverridePostalCode("");
+      setOverrideEmail("");
+      setOverrideCountry("");
       return;
     }
 
     const chosenChannel = channels.find((c) => String(c.id) === String(selectedChannel));
 
     if (chosenChannel) {
-      setOverrideAddress(chosenChannel.address || "");
-      setOverrideId(chosenChannel.cif || "");
+      setOverrideAddress(chosenChannel.address || chosenChannel.fiscalAddress || "");
+      setOverrideId(chosenChannel.cif || chosenChannel.nationalId || "");
+      setOverridePhone(chosenChannel.phone || chosenChannel.representativePhone || "");
+      setOverrideCity(chosenChannel.city || chosenChannel.fiscalCity || "");
+      setOverridePostalCode(chosenChannel.postalCode || chosenChannel.fiscalPostalCode || "");
+      setOverrideEmail(chosenChannel.email || chosenChannel.representativeEmail || "");
+      setOverrideCountry(chosenChannel.country || "España");
 
       if (chosenChannel.iban) {
         setIbanNumber(chosenChannel.iban);
@@ -434,6 +448,10 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
         address: overrideAddress || null,
         nationalId: overrideId || null,
         phoneNumber: overridePhone || null,
+        city: overrideCity || null,
+        postalCode: overridePostalCode || null,
+        email: overrideEmail || null,
+        country: overrideCountry || null,
       };
     }
 
@@ -446,12 +464,21 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
           address: overrideAddress || prefilledClient?.address,
           nationalId: overrideId || prefilledClient?.nationalId,
           phoneNumber: overridePhone || prefilledClient?.phoneNumber,
+          city: overrideCity || prefilledClient?.city,
+          postalCode: overridePostalCode || prefilledClient?.postalCode,
+          email: overrideEmail || prefilledClient?.email,
+          country: overrideCountry || prefilledClient?.country,
         };
       }
       return {
         name: chosen?.name,
         address: overrideAddress || chosen?.address,
         nationalId: overrideId || chosen?.cif || chosen?.nationalId,
+        phoneNumber: overridePhone || chosen?.phone || chosen?.representativePhone,
+        city: overrideCity || chosen?.city,
+        postalCode: overridePostalCode || chosen?.postalCode,
+        email: overrideEmail || chosen?.email || chosen?.representativeEmail,
+        country: overrideCountry || chosen?.country,
       };
     }
 
@@ -461,6 +488,10 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
           address: overrideAddress || prefilledClient?.address,
           nationalId: overrideId || prefilledClient?.nationalId,
           phoneNumber: overridePhone || prefilledClient?.phoneNumber,
+          city: overrideCity || prefilledClient?.city,
+          postalCode: overridePostalCode || prefilledClient?.postalCode,
+          email: overrideEmail || prefilledClient?.email,
+          country: overrideCountry || prefilledClient?.country,
         }
       : null;
   })();
@@ -513,9 +544,13 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
     setSelectedChannel(tercero.id);
 
     // Rellenar los campos de override con los datos del tercero
-    setOverrideAddress(tercero.address || "");
-    setOverrideId(tercero.cif || "");
-    setOverridePhone(tercero.phone || "");
+    setOverrideAddress(tercero.address || tercero.fiscalAddress || "");
+    setOverrideId(tercero.cif || tercero.nationalId || "");
+    setOverridePhone(tercero.phone || tercero.representativePhone || "");
+    setOverrideCity(tercero.city || tercero.fiscalCity || "");
+    setOverridePostalCode(tercero.postalCode || tercero.fiscalPostalCode || "");
+    setOverrideEmail(tercero.email || tercero.representativeEmail || "");
+    setOverrideCountry(tercero.country || "España");
 
     // Si tiene IBAN, rellenarlo
     if (tercero.iban) {
@@ -538,8 +573,12 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
       name: tercero.name,
       cif: tercero.cif,
       address: tercero.address,
+      city: tercero.city,
+      postalCode: tercero.postalCode,
+      country: tercero.country,
       representativeEmail: tercero.email,
       representativePhone: tercero.phone,
+      iban: tercero.iban,
     };
 
     setContactOptions((prev) => [newContact, ...prev]);
@@ -551,6 +590,10 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
     setOverrideAddress(tercero.address || "");
     setOverrideId(tercero.cif || "");
     setOverridePhone(tercero.phone || "");
+    setOverrideCity(tercero.city || "");
+    setOverridePostalCode(tercero.postalCode || "");
+    setOverrideEmail(tercero.email || "");
+    setOverrideCountry(tercero.country || "España");
 
     // Desactivar modo custom
     setCustomInputMode(false);
@@ -701,6 +744,41 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
                 />
               </div>
             </div>
+
+            {/* Logo de factura del Emisor (solo para COBRO - el usuario es el emisor) */}
+            {isCobro && (
+              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Logo de factura (opcional)
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept=".png,.jpg,.jpeg"
+                    onChange={handleLogoChange}
+                    className="flex-1 px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-primary/90"
+                  />
+                  {customLogo && (
+                    <button
+                      type="button"
+                      onClick={() => setCustomLogo(null)}
+                      className="p-2 rounded-lg neumorphic-button text-red-500 hover:text-red-600"
+                      title="Eliminar logo"
+                    >
+                      <span className="material-icons-outlined text-sm">delete</span>
+                    </button>
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Formatos aceptados: PNG, JPG. Este logo aparecerá en tus facturas.
+                </p>
+                {customLogo && (
+                  <div className="mt-3 p-3 neumorphic-card-inset rounded-lg inline-block">
+                    <img src={customLogo} alt="Logo preview" className="h-12 max-w-[200px] object-contain" />
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex justify-end mt-4">
               <button
@@ -961,32 +1039,110 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
             </div>
           </div>
 
-          {/* Dirección y CIF opcionales del tercero */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Dirección {isCobro ? "del Cliente" : "del Proveedor"} (opcional)
-              </label>
-              <input
-                type="text"
-                value={overrideAddress}
-                onChange={(e) => setOverrideAddress(e.target.value)}
-                placeholder="Dirección completa"
-                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400"
-              />
-            </div>
+          {/* Datos fiscales del tercero (Cliente/Proveedor) */}
+          <div className="neumorphic-card-inset p-4 rounded-lg">
+            <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4 flex items-center">
+              <span className="material-icons-outlined text-primary mr-2 text-sm">badge</span>
+              Datos Fiscales {isCobro ? "del Cliente" : "del Proveedor"}
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* CIF/DNI */}
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  CIF/DNI
+                </label>
+                <input
+                  type="text"
+                  value={overrideId}
+                  onChange={(e) => setOverrideId(e.target.value)}
+                  placeholder="Ej: B12345678"
+                  className="w-full px-3 py-2 neumorphic-card bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400 text-sm"
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                CIF/DNI {isCobro ? "del Cliente" : "del Proveedor"} (opcional)
-              </label>
-              <input
-                type="text"
-                value={overrideId}
-                onChange={(e) => setOverrideId(e.target.value)}
-                placeholder="CIF o DNI"
-                className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400"
-              />
+              {/* Dirección */}
+              <div className="lg:col-span-2">
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Dirección
+                </label>
+                <input
+                  type="text"
+                  value={overrideAddress}
+                  onChange={(e) => setOverrideAddress(e.target.value)}
+                  placeholder="Calle, número, piso..."
+                  className="w-full px-3 py-2 neumorphic-card bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400 text-sm"
+                />
+              </div>
+
+              {/* Ciudad */}
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Ciudad
+                </label>
+                <input
+                  type="text"
+                  value={overrideCity}
+                  onChange={(e) => setOverrideCity(e.target.value)}
+                  placeholder="Ej: Madrid"
+                  className="w-full px-3 py-2 neumorphic-card bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400 text-sm"
+                />
+              </div>
+
+              {/* Código Postal */}
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Código Postal
+                </label>
+                <input
+                  type="text"
+                  value={overridePostalCode}
+                  onChange={(e) => setOverridePostalCode(e.target.value)}
+                  placeholder="Ej: 28001"
+                  className="w-full px-3 py-2 neumorphic-card bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400 text-sm"
+                />
+              </div>
+
+              {/* País */}
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  País
+                </label>
+                <input
+                  type="text"
+                  value={overrideCountry}
+                  onChange={(e) => setOverrideCountry(e.target.value)}
+                  placeholder="Ej: España"
+                  className="w-full px-3 py-2 neumorphic-card bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400 text-sm"
+                />
+              </div>
+
+              {/* Teléfono */}
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Teléfono
+                </label>
+                <input
+                  type="tel"
+                  value={overridePhone}
+                  onChange={(e) => setOverridePhone(e.target.value)}
+                  placeholder="Ej: 612345678"
+                  className="w-full px-3 py-2 neumorphic-card bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400 text-sm"
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={overrideEmail}
+                  onChange={(e) => setOverrideEmail(e.target.value)}
+                  placeholder="Ej: contacto@empresa.com"
+                  className="w-full px-3 py-2 neumorphic-card bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400 text-sm"
+                />
+              </div>
             </div>
           </div>
 
@@ -1064,35 +1220,6 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
               </div>
             </div>
           </div>
-
-          {/* Logo de factura (solo para COBRO - el usuario es el emisor) */}
-          {isCobro && (
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Logo de factura (opcional)
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="file"
-                  accept=".png,.jpg,.jpeg"
-                  onChange={handleLogoChange}
-                  className="flex-1 px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-primary/90"
-                />
-                {customLogo && (
-                  <button
-                    onClick={() => setCustomLogo(null)}
-                    className="p-2 rounded-lg neumorphic-button text-red-500 hover:text-red-600"
-                    title="Eliminar logo"
-                  >
-                    <span className="material-icons-outlined text-sm">delete</span>
-                  </button>
-                )}
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Formatos aceptados: PNG, JPG
-              </p>
-            </div>
-          )}
 
           {/* Notas */}
           <div>
@@ -1264,6 +1391,22 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
         onSelect={handleTerceroSelect}
         onCreate={handleTerceroCreate}
         onChannelCreated={handleChannelCreated}
+        onChannelDeleted={(deletedChannel) => {
+          // Eliminar el canal de la lista local
+          setChannels((prev) => prev.filter((c) => c.uuid !== deletedChannel.uuid));
+          setContactOptions((prev) => prev.filter((c) => c.uuid !== deletedChannel.uuid));
+          // Si el canal eliminado era el seleccionado, deseleccionarlo
+          if (String(selectedChannel) === String(deletedChannel.id)) {
+            setSelectedChannel("");
+            setOverrideAddress("");
+            setOverrideId("");
+            setOverridePhone("");
+            setOverrideCity("");
+            setOverridePostalCode("");
+            setOverrideEmail("");
+            setOverrideCountry("");
+          }
+        }}
         invoiceType={invoiceType}
       />
     </div>

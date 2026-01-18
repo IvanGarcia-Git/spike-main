@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import EmitirFactura from "@/components/EmitirFactura";
 import InvoicePreview from "@/components/invoice-preview";
-import { authGetFetch } from "@/helpers/server-fetch.helper";
+import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
 import { getCookie } from "cookies-next";
 
 // Importar PDFDownloadLink dinámicamente para evitar errores de SSR
@@ -103,7 +103,7 @@ function prepareInvoiceForPDF(invoice, issuerData = DEFAULT_ISSUER) {
   };
 }
 
-function InvoiceHistoryItem({ invoice, onView, onDownload }) {
+function InvoiceHistoryItem({ invoice, onView, onDownload, onDelete }) {
   const isCobro = invoice.type === "COBRO";
   const formattedDate = new Date(invoice.invoiceDate).toLocaleDateString("es-ES", {
     day: "2-digit",
@@ -119,6 +119,11 @@ function InvoiceHistoryItem({ invoice, onView, onDownload }) {
   const handleDownloadClick = (e) => {
     e.stopPropagation();
     onDownload?.(invoice);
+  };
+
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    onDelete?.(invoice);
   };
 
   return (
@@ -176,6 +181,13 @@ function InvoiceHistoryItem({ invoice, onView, onDownload }) {
             title="Descargar PDF"
           >
             <span className="material-icons-outlined text-xl">download</span>
+          </button>
+          <button
+            onClick={handleDeleteClick}
+            className="neumorphic-button p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-red-500 transition-colors"
+            title="Eliminar factura"
+          >
+            <span className="material-icons-outlined text-xl">delete</span>
           </button>
         </div>
       </div>
@@ -355,7 +367,7 @@ function DirectPDFDownload({ invoice, onComplete, issuerData }) {
   );
 }
 
-function RecentInvoices({ invoices, loading, onView, onDownload }) {
+function RecentInvoices({ invoices, loading, onView, onDownload, onDelete }) {
   if (loading) {
     return (
       <div className="text-center py-12 text-slate-600 dark:text-slate-400">
@@ -391,10 +403,71 @@ function RecentInvoices({ invoices, loading, onView, onDownload }) {
           invoice={invoice}
           onView={onView}
           onDownload={onDownload}
+          onDelete={onDelete}
         />
       ))}
     </div>
   );
+}
+
+// Modal de confirmación de eliminación
+function DeleteConfirmModal({ invoice, isOpen, onClose, onConfirm, isDeleting }) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isOpen || !invoice || !isClient) return null;
+
+  const modalContent = (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+      <div className="neumorphic-card p-6 max-w-md w-full">
+        <div className="text-center mb-6">
+          <div className="neumorphic-card-inset w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
+            <span className="material-icons-outlined text-3xl">warning</span>
+          </div>
+          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+            ¿Eliminar factura?
+          </h3>
+          <p className="text-slate-600 dark:text-slate-400">
+            Estás a punto de eliminar la factura <strong>{invoice.invoiceNumber}</strong> de <strong>{invoice.clientName}</strong>.
+          </p>
+          <p className="text-sm text-red-500 mt-2">
+            Esta acción no se puede deshacer.
+          </p>
+        </div>
+        <div className="flex gap-3 justify-center">
+          <button
+            onClick={onClose}
+            disabled={isDeleting}
+            className="neumorphic-button px-6 py-2 rounded-lg text-slate-600 dark:text-slate-400 font-medium"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isDeleting}
+            className="neumorphic-button px-6 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 disabled:opacity-50 flex items-center"
+          >
+            {isDeleting ? (
+              <>
+                <span className="material-icons-outlined mr-2 text-sm animate-spin">sync</span>
+                Eliminando...
+              </>
+            ) : (
+              <>
+                <span className="material-icons-outlined mr-2 text-sm">delete</span>
+                Eliminar
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return createPortal(modalContent, document.body);
 }
 
 export default function EmitirFacturaPage() {
@@ -403,6 +476,8 @@ export default function EmitirFacturaPage() {
   const [loading, setLoading] = useState(true);
   const [previewInvoice, setPreviewInvoice] = useState(null);
   const [downloadInvoice, setDownloadInvoice] = useState(null);
+  const [deleteInvoice, setDeleteInvoice] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [issuerData, setIssuerData] = useState(DEFAULT_ISSUER);
 
   useEffect(() => {
@@ -468,6 +543,38 @@ export default function EmitirFacturaPage() {
 
   const handleDownloadComplete = () => {
     setDownloadInvoice(null);
+  };
+
+  const handleDeleteInvoice = (invoice) => {
+    setDeleteInvoice(invoice);
+  };
+
+  const handleCloseDelete = () => {
+    setDeleteInvoice(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteInvoice) return;
+
+    setIsDeleting(true);
+    try {
+      const jwtToken = getCookie("factura-token");
+      const response = await authFetch(`invoices/${deleteInvoice.uuid}`, "DELETE", null, jwtToken);
+
+      if (response.ok) {
+        // Eliminar de la lista local
+        setRecentInvoices((prev) => prev.filter((inv) => inv.uuid !== deleteInvoice.uuid));
+        setDeleteInvoice(null);
+      } else {
+        console.error("Error deleting invoice:", response.status);
+        alert("Error al eliminar la factura");
+      }
+    } catch (error) {
+      console.error("Error deleting invoice:", error);
+      alert("Error al eliminar la factura");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Si hay un tipo seleccionado, mostrar el formulario de emisión
@@ -567,6 +674,7 @@ export default function EmitirFacturaPage() {
         loading={loading}
         onView={handleViewInvoice}
         onDownload={handleDownloadInvoice}
+        onDelete={handleDeleteInvoice}
       />
 
       {/* Modal de vista previa */}
@@ -575,6 +683,15 @@ export default function EmitirFacturaPage() {
         isOpen={!!previewInvoice}
         onClose={handleClosePreview}
         issuerData={issuerData}
+      />
+
+      {/* Modal de confirmación de eliminación */}
+      <DeleteConfirmModal
+        invoice={deleteInvoice}
+        isOpen={!!deleteInvoice}
+        onClose={handleCloseDelete}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
       />
 
       {/* Componente oculto para descarga directa */}
