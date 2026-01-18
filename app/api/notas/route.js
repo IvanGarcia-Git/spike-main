@@ -1,6 +1,26 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
+// Transformar datos del frontend (español) a backend (inglés)
+const toBackendFormat = (frontendData) => ({
+  title: frontendData.titulo,
+  content: frontendData.contenido,
+  isFavorite: frontendData.favorito,
+  folderId: frontendData.carpetaId ? String(frontendData.carpetaId) : null,
+  color: frontendData.color || "blue",
+});
+
+// Transformar datos del backend (inglés) a frontend (español)
+const toFrontendFormat = (backendData) => ({
+  id: backendData.id,
+  titulo: backendData.title,
+  contenido: backendData.content,
+  favorito: backendData.isFavorite,
+  carpetaId: backendData.folderId ? parseInt(backendData.folderId) : null,
+  color: backendData.color || "blue",
+  fecha: backendData.createdAt ? new Date(backendData.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+});
+
 // Datos de fallback para cuando el backend falle (vacíos para mostrar estado sin datos)
 const generateFallbackData = () => ({
   notas: [],
@@ -20,7 +40,7 @@ export async function GET(req) {
     }
 
     try {
-      const apiResponse = await fetch(`${process.env.BACKEND_URL}/notas`, {
+      const apiResponse = await fetch(`${process.env.BACKEND_URL}/notes`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -31,7 +51,12 @@ export async function GET(req) {
 
       if (apiResponse.ok) {
         const data = await apiResponse.json();
-        return NextResponse.json(data, { status: 200 });
+        // Transformar array de notas al formato frontend
+        const transformedData = {
+          notas: Array.isArray(data) ? data.map(toFrontendFormat) : (data.notes || []).map(toFrontendFormat),
+          carpetas: data.folders || [],
+        };
+        return NextResponse.json(transformedData, { status: 200 });
       } else {
         console.log("Backend respondió con error, usando datos de fallback");
         return NextResponse.json(generateFallbackData(), { status: 200 });
@@ -59,21 +84,22 @@ export async function POST(req) {
     }
 
     const body = await req.json();
+    const backendData = toBackendFormat(body);
 
     try {
-      const apiResponse = await fetch(`${process.env.BACKEND_URL}/notas`, {
+      const apiResponse = await fetch(`${process.env.BACKEND_URL}/notes`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token.value}`,
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(backendData),
         signal: AbortSignal.timeout(5000),
       });
 
       if (apiResponse.ok) {
         const data = await apiResponse.json();
-        return NextResponse.json(data, { status: 201 });
+        return NextResponse.json(toFrontendFormat(data), { status: 201 });
       } else {
         // Simular creación exitosa con datos de fallback
         const newNota = {
@@ -115,21 +141,22 @@ export async function PUT(req) {
 
     const body = await req.json();
     const { id, ...updateData } = body;
+    const backendData = toBackendFormat(updateData);
 
     try {
-      const apiResponse = await fetch(`${process.env.BACKEND_URL}/notas/${id}`, {
+      const apiResponse = await fetch(`${process.env.BACKEND_URL}/notes/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token.value}`,
         },
-        body: JSON.stringify(updateData),
+        body: JSON.stringify(backendData),
         signal: AbortSignal.timeout(5000),
       });
 
       if (apiResponse.ok) {
         const data = await apiResponse.json();
-        return NextResponse.json(data, { status: 200 });
+        return NextResponse.json(toFrontendFormat(data), { status: 200 });
       } else {
         // Simular actualización exitosa
         return NextResponse.json({ ...updateData, id }, { status: 200 });
@@ -163,7 +190,7 @@ export async function DELETE(req) {
     const id = searchParams.get("id");
 
     try {
-      const apiResponse = await fetch(`${process.env.BACKEND_URL}/notas/${id}`, {
+      const apiResponse = await fetch(`${process.env.BACKEND_URL}/notes/${id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

@@ -162,17 +162,39 @@ const initialBestTariffDetails: EditableCardData = {
 
 
 export default function ComparisonPdfPreview({ pdfData, colors, userData }: ComparisonPdfPreviewProps) {
-    const [logos, setLogos] = useState<string[]>([
+    const defaultLogos = [
         'https://placehold.co/80x35.png',
         'https://placehold.co/80x35.png',
         'https://placehold.co/80x35.png',
         'https://placehold.co/80x35.png',
-    ]);
+    ];
+    const [logos, setLogos] = useState<string[]>(defaultLogos);
     const [headerLine1, setHeaderLine1] = useState('Comparado entre');
     const [headerLine2, setHeaderLine2] = useState('+ 150 compañías');
-    
+
     const [mainLogoSrc, setMainLogoSrc] = useState('/images/logo.svg');
     const [footerLogoSrc, setFooterLogoSrc] = useState('/images/logo.svg');
+
+    // Load saved logos from localStorage on first render
+    useEffect(() => {
+        const savedLogos = localStorage.getItem('comparativaLogos');
+        const savedMainLogo = localStorage.getItem('comparativaMainLogo');
+        const savedFooterLogo = localStorage.getItem('comparativaFooterLogo');
+        const savedHeader1 = localStorage.getItem('comparativaHeader1');
+        const savedHeader2 = localStorage.getItem('comparativaHeader2');
+
+        if (savedLogos) {
+            try {
+                setLogos(JSON.parse(savedLogos));
+            } catch (e) {
+                console.error('Error parsing saved logos:', e);
+            }
+        }
+        if (savedMainLogo) setMainLogoSrc(savedMainLogo);
+        if (savedFooterLogo) setFooterLogoSrc(savedFooterLogo);
+        if (savedHeader1) setHeaderLine1(savedHeader1);
+        if (savedHeader2) setHeaderLine2(savedHeader2);
+    }, []);
 
     const [currentBillDetails, setCurrentBillDetails] = useState<EditableCardData>(initialCurrentBillDetails);
     const [bestTariffDetails, setBestTariffDetails] = useState<EditableCardData>(initialBestTariffDetails);
@@ -388,6 +410,8 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                 const newLogos = [...logos];
                 newLogos[index] = reader.result as string;
                 setLogos(newLogos);
+                // Save to localStorage
+                localStorage.setItem('comparativaLogos', JSON.stringify(newLogos));
             };
             reader.readAsDataURL(file);
         }
@@ -398,7 +422,10 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setMainLogoSrc(reader.result as string);
+                const logoData = reader.result as string;
+                setMainLogoSrc(logoData);
+                // Save to localStorage
+                localStorage.setItem('comparativaMainLogo', logoData);
             };
             reader.readAsDataURL(file);
         }
@@ -409,7 +436,10 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setFooterLogoSrc(reader.result as string);
+                const logoData = reader.result as string;
+                setFooterLogoSrc(logoData);
+                // Save to localStorage
+                localStorage.setItem('comparativaFooterLogo', logoData);
             };
             reader.readAsDataURL(file);
         }
@@ -433,17 +463,23 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                     {/* Top Section */}
                     <header className="flex items-center justify-between">
                         <div>
-                           <input 
+                           <input
                                 type="text"
                                 value={headerLine1}
-                                onChange={(e) => setHeaderLine1(e.target.value)}
+                                onChange={(e) => {
+                                    setHeaderLine1(e.target.value);
+                                    localStorage.setItem('comparativaHeader1', e.target.value);
+                                }}
                                 className="font-bold bg-transparent border-none p-0 m-0 w-full focus:ring-1 focus:ring-primary focus:bg-white/50 rounded-sm"
                                 style={{ color: colors.primaryText }}
                             />
-                            <input 
+                            <input
                                 type="text"
                                 value={headerLine2}
-                                onChange={(e) => setHeaderLine2(e.target.value)}
+                                onChange={(e) => {
+                                    setHeaderLine2(e.target.value);
+                                    localStorage.setItem('comparativaHeader2', e.target.value);
+                                }}
                                 className="text-lg font-bold bg-transparent border-none p-0 m-0 w-full focus:ring-1 focus:ring-primary focus:bg-white/50 rounded-sm"
                                 style={{ color: colors.primaryText }}
                             />

@@ -1,10 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getCookie } from "cookies-next";
 import BaseModal, { ModalButton } from "../base-modal.component";
-import { createComparativa } from "@/helpers/server-fetch.helper";
+
+// Helper function to get the number of periods based on tariff type
+const getPeriodCountByTariff = (tariff) => {
+  switch (tariff) {
+    case "2.0TD":
+      return 2; // P1, P2
+    case "3.0TD":
+    case "6.1TD":
+      return 6; // P1-P6
+    default:
+      return 2;
+  }
+};
+
+// Generate array with empty strings based on count
+const generateEmptyArray = (count) => Array(count).fill("");
+
+// Generate period labels based on count
+const getPeriodLabels = (count) => Array.from({ length: count }, (_, i) => `P${i + 1}`);
 
 export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
   const router = useRouter();
@@ -23,8 +40,8 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
 
     // Paso 3: Datos de luz (si aplica)
     selectedLightTariff: "2.0TD",
-    potencias: ["", "", ""],
-    energias: ["", "", ""],
+    potencias: generateEmptyArray(getPeriodCountByTariff("2.0TD")), // 2 for 2.0TD
+    energias: generateEmptyArray(getPeriodCountByTariff("2.0TD")), // 2 for 2.0TD
     excedentes: "0",
     isSolar: false,
 
@@ -43,6 +60,25 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+
+  // Effect to resize potencias/energias arrays when tariff changes
+  useEffect(() => {
+    const newPeriodCount = getPeriodCountByTariff(formData.selectedLightTariff);
+    const currentPotenciasCount = formData.potencias.length;
+
+    if (newPeriodCount !== currentPotenciasCount) {
+      setFormData((prev) => {
+        // Preserve existing values where possible
+        const newPotencias = Array(newPeriodCount).fill("").map((_, i) => prev.potencias[i] || "");
+        const newEnergias = Array(newPeriodCount).fill("").map((_, i) => prev.energias[i] || "");
+        return {
+          ...prev,
+          potencias: newPotencias,
+          energias: newEnergias,
+        };
+      });
+    }
+  }, [formData.selectedLightTariff]);
 
   const handleArrayInputChange = (field, index, value) => {
     setFormData((prev) => {
@@ -69,95 +105,50 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      const token = getCookie("factura-token");
-      if (!token) {
-        console.error("No token found");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Calculate simple prices (simplified calculation - in real app would use tariff rates)
-      const potenciaTotal = formData.potencias?.reduce((acc, p) => acc + (parseFloat(p) || 0), 0) || 0;
-      const energiaTotal = formData.energias?.reduce((acc, e) => acc + (parseFloat(e) || 0), 0) || 0;
-
-      // Simplified price calculation
-      const calculatedOldPrice = parseFloat(formData.currentBillAmount) || 100;
-      const calculatedNewPrice = calculatedOldPrice * 0.85; // 15% savings example
-      const savings = calculatedOldPrice - calculatedNewPrice;
-
-      // Prepare data for backend
-      const comparativaData = {
+      // Store comparison data for results page (list of all company prices)
+      // The results page will save the comparativa to backend after calculating results
+      sessionStorage.setItem("comparisonData", JSON.stringify({
         clientName: formData.clientName,
         comparisonType: formData.comparisonType,
         customerType: formData.customerType,
+        selectedLightTariff: formData.selectedLightTariff,
+        selectedGasTariff: formData.selectedGasTariff,
         tariffType: formData.comparisonType === "luz" ? formData.selectedLightTariff : formData.selectedGasTariff,
-        solarPanelActive: formData.isSolar || false,
-        excedentes: parseFloat(formData.excedentes) || 0,
         potencias: formData.potencias?.map(p => parseFloat(p) || 0) || [],
         energias: formData.energias?.map(e => parseFloat(e) || 0) || [],
+        energia: formData.consumo ? parseFloat(formData.consumo) || 0 : 0,
         numDias: parseInt(formData.numDias) || 30,
+        showCurrentBill: formData.showCurrentBill,
         currentBillAmount: parseFloat(formData.currentBillAmount) || 0,
-        hasMainServices: false,
-        hasClientServices: false,
-        calculatedOldPrice: calculatedOldPrice,
-        calculatedNewPrice: calculatedNewPrice,
-        savings: savings,
-      };
+        excedentes: parseFloat(formData.excedentes) || 0,
+        solarPanelActive: formData.isSolar || false,
+      }));
 
-      const response = await createComparativa(comparativaData, token);
+      // Reset form
+      setCurrentStep(1);
+      setFormData({
+        comparisonType: "",
+        customerType: "particular",
+        clientName: "",
+        currentBillAmount: "",
+        numDias: "30",
+        showCurrentBill: true,
+        selectedLightTariff: "2.0TD",
+        potencias: generateEmptyArray(getPeriodCountByTariff("2.0TD")),
+        energias: generateEmptyArray(getPeriodCountByTariff("2.0TD")),
+        excedentes: "0",
+        isSolar: false,
+        selectedGasTariff: "RL.1",
+        consumo: "",
+      });
 
-      if (response.ok) {
-        const savedComparativa = await response.json();
-        console.log("Comparativa saved:", savedComparativa);
-
-        // Store data for PDF preview page
-        sessionStorage.setItem("pdfDataForGeneration", JSON.stringify({
-          id: savedComparativa.id,
-          clientName: formData.clientName,
-          comparisonType: formData.comparisonType,
-          customerType: formData.customerType,
-          tariffType: formData.comparisonType === "luz" ? formData.selectedLightTariff : formData.selectedGasTariff,
-          calculatedNewPrice: calculatedNewPrice,
-          calculatedOldPrice: calculatedOldPrice,
-          savings: savings,
-          potencias: formData.potencias?.map(p => parseFloat(p) || 0) || [],
-          energias: formData.energias?.map(e => parseFloat(e) || 0) || [],
-          numDias: parseInt(formData.numDias) || 30,
-          showCurrentBill: formData.showCurrentBill,
-          currentBillAmount: parseFloat(formData.currentBillAmount) || 0,
-          excedentes: parseFloat(formData.excedentes) || 0,
-          isSolar: formData.isSolar || false,
-        }));
-
-        // Reset form
-        setCurrentStep(1);
-        setFormData({
-          comparisonType: "",
-          customerType: "particular",
-          clientName: "",
-          currentBillAmount: "",
-          numDias: "30",
-          showCurrentBill: true,
-          selectedLightTariff: "2.0TD",
-          potencias: ["", "", ""],
-          energias: ["", "", ""],
-          excedentes: "0",
-          isSolar: false,
-          selectedGasTariff: "RL.1",
-          consumo: "",
-        });
-
-        // Call onCreated callback to refresh the list
-        if (onCreated) {
-          onCreated();
-        }
-
-        onClose();
-        router.push("/comparativas/personalizada");
-      } else {
-        const error = await response.json();
-        console.error("Error creating comparativa:", error);
+      // Call onCreated callback to refresh the list
+      if (onCreated) {
+        onCreated();
       }
+
+      onClose();
+      router.push("/comparativas/resultados");
     } catch (error) {
       console.error("Error submitting comparativa:", error);
     } finally {
@@ -409,8 +400,8 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                     Potencias Contratadas (kW) *
                   </label>
-                  <div className="grid grid-cols-3 gap-4">
-                    {["P1", "P2", "P3"].map((label, index) => (
+                  <div className={`grid gap-4 ${formData.potencias.length <= 3 ? "grid-cols-3" : "grid-cols-3 md:grid-cols-6"}`}>
+                    {getPeriodLabels(formData.potencias.length).map((label, index) => (
                       <div key={label}>
                         <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1">
                           {label}
@@ -432,8 +423,8 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                     Consumos de Energía (kWh) *
                   </label>
-                  <div className="grid grid-cols-3 gap-4">
-                    {["P1", "P2", "P3"].map((label, index) => (
+                  <div className={`grid gap-4 ${formData.energias.length <= 3 ? "grid-cols-3" : "grid-cols-3 md:grid-cols-6"}`}>
+                    {getPeriodLabels(formData.energias.length).map((label, index) => (
                       <div key={label}>
                         <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1">
                           {label}

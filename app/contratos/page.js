@@ -58,7 +58,7 @@ const COLUMN_CONFIG = {
             {contract.customer?.name || ""} {contract.customer?.surnames || ""}
           </p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            {contract.customer?.email || ""}
+            {contract.customer?.nationalId || contract.customer?.cif || "-"}
           </p>
         </div>
       </div>
@@ -162,11 +162,32 @@ const COLUMN_CONFIG = {
   },
   payed: {
     label: "Pagado",
-    render: (contract) => (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${contract.payed ? "bg-green-100 text-green-700" : "bg-red-100 text-red-500"}`}>
-        {contract.payed ? "Sí" : "No"}
-      </span>
-    ),
+    render: (contract, formatDayDate, context) => {
+      const canChangePayed = context?.isManager || context?.userGroupId === 1;
+
+      if (canChangePayed && context?.onPayedChange) {
+        return (
+          <select
+            value={contract.payed ? "true" : "false"}
+            onChange={(e) => context.onPayedChange(contract.uuid, e.target.value === "true")}
+            className={`px-2 py-1 rounded-full text-xs font-medium border-none cursor-pointer focus:ring-2 focus:ring-primary ${
+              contract.payed
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-500"
+            }`}
+          >
+            <option value="true">Sí</option>
+            <option value="false">No</option>
+          </select>
+        );
+      }
+
+      return (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${contract.payed ? "bg-green-100 text-green-700" : "bg-red-100 text-red-500"}`}>
+          {contract.payed ? "Sí" : "No"}
+        </span>
+      );
+    },
   },
   channelName: {
     label: "Canal",
@@ -1118,6 +1139,80 @@ export default function Contracts() {
     }
   };
 
+  const handleTogglePayed = async (contractUuid, currentPayedStatus) => {
+    const jwtToken = getCookie("factura-token");
+    const newPayedStatus = !currentPayedStatus;
+
+    try {
+      const response = await authFetch(
+        "PUT",
+        `contracts/${contractUuid}`,
+        { payed: newPayedStatus },
+        jwtToken
+      );
+
+      if (response.ok) {
+        setContracts((prevContracts) =>
+          prevContracts.map((contract) =>
+            contract.uuid === contractUuid
+              ? { ...contract, payed: newPayedStatus }
+              : contract
+          )
+        );
+
+        toast.success(
+          newPayedStatus
+            ? "Contrato marcado como pagado"
+            : "Contrato marcado como no pagado"
+        );
+      } else {
+        toast.error("Error al actualizar el estado de pago");
+      }
+    } catch (error) {
+      console.error("Error al actualizar estado de pago:", error);
+      toast.error("Error al actualizar el estado de pago");
+    }
+  };
+
+  // Función para cambiar payed desde el dropdown (recibe el nuevo valor directamente)
+  const handlePayedChange = async (contractUuid, newPayedStatus) => {
+    // Encontrar el contrato actual para verificar si hay cambio
+    const contract = contracts.find((c) => c.uuid === contractUuid);
+    if (!contract || contract.payed === newPayedStatus) return;
+
+    const jwtToken = getCookie("factura-token");
+
+    try {
+      const response = await authFetch(
+        "PUT",
+        `contracts/${contractUuid}`,
+        { payed: newPayedStatus },
+        jwtToken
+      );
+
+      if (response.ok) {
+        setContracts((prevContracts) =>
+          prevContracts.map((c) =>
+            c.uuid === contractUuid
+              ? { ...c, payed: newPayedStatus }
+              : c
+          )
+        );
+
+        toast.success(
+          newPayedStatus
+            ? "Contrato marcado como pagado"
+            : "Contrato marcado como no pagado"
+        );
+      } else {
+        toast.error("Error al actualizar el estado de pago");
+      }
+    } catch (error) {
+      console.error("Error al actualizar estado de pago:", error);
+      toast.error("Error al actualizar el estado de pago");
+    }
+  };
+
   const handleSelectAll = (e) => {
     if (e.target.checked) {
       setSelectedContracts(contracts.map((c) => c.uuid));
@@ -1158,7 +1253,6 @@ export default function Contracts() {
       <SearchBox
         onSearch={getFilteredContracts}
         onClearFilters={handleClearFilters}
-        setContractsOrder={setColumnsOrder}
         onExportExcel={exportToExcel}
         contractStates={contractStates}
         channels={channels}
@@ -1292,9 +1386,12 @@ export default function Contracts() {
                   {(columnsOrder.length > 0 ? columnsOrder : DEFAULT_COLUMNS).map((columnKey) => {
                     const columnConfig = COLUMN_CONFIG[columnKey];
                     if (!columnConfig) return null;
-                    const context = columnKey === "contractStateName"
-                      ? { contractStates, onSingleStateChange: handleSingleStateChange, updatingContractUuid, isManager, userGroupId }
-                      : null;
+                    let context = null;
+                    if (columnKey === "contractStateName") {
+                      context = { contractStates, onSingleStateChange: handleSingleStateChange, updatingContractUuid, isManager, userGroupId };
+                    } else if (columnKey === "payed") {
+                      context = { onPayedChange: handlePayedChange, isManager, userGroupId };
+                    }
                     return (
                       <td key={columnKey} className="p-3 text-slate-600 dark:text-slate-400">
                         {columnConfig.render(contract, formatDayDate, context)}
@@ -1318,6 +1415,22 @@ export default function Contracts() {
                       >
                         <span className="material-icons-outlined text-lg">folder</span>
                       </button>
+                      {/* Botón marcar como pagado - Solo visible para Supervisores y Admin */}
+                      {(isManager || userGroupId === 1) && (
+                        <button
+                          onClick={() => handleTogglePayed(contract.uuid, contract.payed)}
+                          className={`p-2 rounded-lg neumorphic-button ${
+                            contract.payed
+                              ? "text-green-500 hover:text-green-600"
+                              : "text-slate-400 hover:text-green-500"
+                          }`}
+                          title={contract.payed ? "Marcar como no pagado" : "Marcar como pagado"}
+                        >
+                          <span className="material-icons-outlined text-lg">
+                            {contract.payed ? "paid" : "payments"}
+                          </span>
+                        </button>
+                      )}
                       {/* Botón eliminar - Solo visible para Supervisores y Admin */}
                       {(isManager || userGroupId === 1) && (
                         <button
@@ -1336,44 +1449,53 @@ export default function Contracts() {
           </table>
         </div>
 
-        {/* Pagination */}
-        <div className="flex justify-between items-center mt-6 flex-wrap gap-4">
-          <div className="text-sm text-slate-600 dark:text-slate-400">
-            Mostrando {contracts.length} de {pagination.total} contratos
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => handlePageChange(pagination.page - 1)}
-              disabled={pagination.page === 1}
-              className="px-4 py-2 rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400 disabled:opacity-50"
-            >
-              <span className="material-icons-outlined">chevron_left</span>
-            </button>
-            <span className="px-4 py-2 text-slate-700 dark:text-slate-300 font-medium">
-              {pagination.page} / {pagination.lastPage}
-            </span>
-            <button
-              onClick={() => handlePageChange(pagination.page + 1)}
-              disabled={pagination.page === pagination.lastPage}
-              className="px-4 py-2 rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400 disabled:opacity-50"
-            >
-              <span className="material-icons-outlined">chevron_right</span>
-            </button>
-          </div>
-          <div className="neumorphic-card-inset rounded-lg">
-            <select
-              value={entriesPerPage}
-              onChange={(e) => {
-                setEntriesPerPage(Number(e.target.value));
-                setPagination((prev) => ({ ...prev, page: 1 }));
-              }}
-              className="bg-transparent border-none focus:ring-0 text-sm font-medium py-2 px-3 text-slate-600 dark:text-slate-300"
-            >
-              <option value={10}>10 por página</option>
-              <option value={25}>25 por página</option>
-              <option value={50}>50 por página</option>
-              <option value={100}>100 por página</option>
-            </select>
+        {/* Pagination - Sticky con fondo sólido para visibilidad con zoom */}
+        <div className="sticky bottom-0 left-0 right-0 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 mt-6 -mx-6 -mb-6 px-6 py-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            {/* Info de contratos */}
+            <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap order-2 sm:order-1">
+              Mostrando <span className="font-semibold">{contracts.length}</span> de <span className="font-semibold">{pagination.total}</span> contratos
+            </div>
+
+            {/* Controles de paginación centrados */}
+            <div className="flex items-center space-x-2 order-1 sm:order-2">
+              <button
+                onClick={() => handlePageChange(pagination.page - 1)}
+                disabled={pagination.page === 1}
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Página anterior"
+              >
+                <span className="material-icons-outlined">chevron_left</span>
+              </button>
+              <span className="px-4 py-2 text-slate-700 dark:text-slate-300 font-medium whitespace-nowrap min-w-[80px] text-center">
+                {pagination.page} / {pagination.lastPage}
+              </span>
+              <button
+                onClick={() => handlePageChange(pagination.page + 1)}
+                disabled={pagination.page === pagination.lastPage}
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Página siguiente"
+              >
+                <span className="material-icons-outlined">chevron_right</span>
+              </button>
+            </div>
+
+            {/* Selector de entradas por página */}
+            <div className="neumorphic-card-inset rounded-lg order-3">
+              <select
+                value={entriesPerPage}
+                onChange={(e) => {
+                  setEntriesPerPage(Number(e.target.value));
+                  setPagination((prev) => ({ ...prev, page: 1 }));
+                }}
+                className="bg-transparent border-none focus:ring-0 text-sm font-medium py-2 px-3 text-slate-600 dark:text-slate-300 min-w-[130px]"
+              >
+                <option value={10}>10 por página</option>
+                <option value={25}>25 por página</option>
+                <option value={50}>50 por página</option>
+                <option value={100}>100 por página</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>

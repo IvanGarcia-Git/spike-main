@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { getCookie } from "cookies-next";
 import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
+import { toast } from "react-toastify";
 
 //TODO: REFACTOR THE CODE (UNIFY) CONTRACT.DOCUMENTS.MODAL AND CONTRACT.DOCUMENTS.PAGE
 
@@ -8,9 +9,13 @@ export default function ContractsDocumentsModal({ contractUuid, isOpen, onClose,
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const getContractDocuments = async () => {
+    if (!contractUuid) return;
+
     const jwtToken = getCookie("factura-token");
+    setLoading(true);
     try {
       const response = await authGetFetch(`contract-documents/contract/${contractUuid}`, jwtToken);
 
@@ -18,10 +23,13 @@ export default function ContractsDocumentsModal({ contractUuid, isOpen, onClose,
         const documents = await response.json();
         setFiles(documents);
       } else {
-        alert("Error al obtener los documentos del contrato");
+        toast.error("Error al obtener los documentos del contrato");
       }
     } catch (error) {
       console.error("Error al obtener los documentos:", error);
+      toast.error("Error de conexión al cargar documentos");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -29,7 +37,12 @@ export default function ContractsDocumentsModal({ contractUuid, isOpen, onClose,
     e.preventDefault();
 
     if (!selectedFile) {
-      alert("Por favor selecciona un archivo para subir.");
+      toast.warning("Por favor selecciona un archivo para subir.");
+      return;
+    }
+
+    if (!contractUuid) {
+      toast.error("Error: No se ha identificado el contrato.");
       return;
     }
 
@@ -41,6 +54,10 @@ export default function ContractsDocumentsModal({ contractUuid, isOpen, onClose,
 
     const jwtToken = getCookie("factura-token");
 
+    // Crear un AbortController para timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 segundos timeout
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/contract-documents/`, {
         method: "POST",
@@ -48,25 +65,40 @@ export default function ContractsDocumentsModal({ contractUuid, isOpen, onClose,
           Authorization: `Bearer ${jwtToken}`,
         },
         body: formData,
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
       if (response.ok) {
-        alert("Archivo subido con éxito");
+        toast.success("Archivo subido con éxito");
         setSelectedFile(null);
+        // Reset el input file
+        const fileInput = document.getElementById("file");
+        if (fileInput) fileInput.value = "";
         await getContractDocuments();
       } else {
-        alert("Error al subir el archivo.");
+        const errorData = await response.json().catch(() => null);
+        toast.error(errorData?.message || "Error al subir el archivo.");
       }
     } catch (error) {
-      console.error("Error al subir el archivo:", error);
+      clearTimeout(timeoutId);
+      if (error.name === "AbortError") {
+        toast.error("La subida tardó demasiado. Por favor, inténtalo de nuevo.");
+      } else {
+        console.error("Error al subir el archivo:", error);
+        toast.error("Error de conexión. Por favor, inténtalo de nuevo.");
+      }
     } finally {
       setUploading(false);
     }
   };
 
   useEffect(() => {
-    getContractDocuments();
-  }, [contractUuid]);
+    if (isOpen && contractUuid) {
+      getContractDocuments();
+    }
+  }, [contractUuid, isOpen]);
 
   useEffect(() => {
     const handleEsc = (event) => {
@@ -93,26 +125,29 @@ export default function ContractsDocumentsModal({ contractUuid, isOpen, onClose,
   };
 
   const handleFileDelete = async (documentUuid) => {
+    if (!window.confirm("¿Estás seguro de que deseas eliminar este archivo?")) {
+      return;
+    }
+
     const jwtToken = getCookie("factura-token");
 
-    if (confirm("¿Estás seguro de que deseas eliminar este archivo?")) {
-      try {
-        const response = await authFetch(
-          "DELETE",
-          `contract-documents/`,
-          { contractDocumentUuid: documentUuid },
-          jwtToken
-        );
+    try {
+      const response = await authFetch(
+        "DELETE",
+        `contract-documents/`,
+        { contractDocumentUuid: documentUuid },
+        jwtToken
+      );
 
-        if (response.ok) {
-          alert("Documento eliminado con éxito.");
-          getContractDocuments();
-        } else {
-          alert("Error al eliminar el documento.");
-        }
-      } catch (error) {
-        console.error("Error al eliminar el documento:", error);
+      if (response.ok) {
+        toast.success("Documento eliminado con éxito.");
+        getContractDocuments();
+      } else {
+        toast.error("Error al eliminar el documento.");
       }
+    } catch (error) {
+      console.error("Error al eliminar el documento:", error);
+      toast.error("Error de conexión al eliminar documento.");
     }
   };
 
@@ -209,9 +244,19 @@ export default function ContractsDocumentsModal({ contractUuid, isOpen, onClose,
           <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
             <span className="material-icons-outlined text-primary text-lg">description</span>
             Documentos ({files.length})
+            {loading && (
+              <span className="material-icons-outlined animate-spin text-sm text-slate-400">refresh</span>
+            )}
           </h3>
 
-          {files.length > 0 ? (
+          {loading ? (
+            <div className="neumorphic-card-inset p-8 rounded-lg text-center">
+              <span className="material-icons-outlined text-4xl text-primary animate-spin mb-3">refresh</span>
+              <p className="text-slate-600 dark:text-slate-400 font-medium">
+                Cargando documentos...
+              </p>
+            </div>
+          ) : files.length > 0 ? (
             <div className="space-y-2">
               {files.map((file) => (
                 <div

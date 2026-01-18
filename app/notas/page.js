@@ -575,17 +575,28 @@ export default function Notas() {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                   Color
                 </label>
-                <div className="flex space-x-2">
-                  {colors.map((color) => (
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { name: "blue", hex: "#3b82f6" },
+                    { name: "green", hex: "#22c55e" },
+                    { name: "yellow", hex: "#eab308" },
+                    { name: "red", hex: "#ef4444" },
+                    { name: "purple", hex: "#a855f7" },
+                    { name: "pink", hex: "#ec4899" },
+                    { name: "orange", hex: "#f97316" },
+                    { name: "cyan", hex: "#06b6d4" },
+                  ].map((colorOption) => (
                     <button
-                      key={color}
-                      onClick={() => setNotaForm({ ...notaForm, color })}
-                      className={`w-8 h-8 rounded-full bg-${color}-500 ${
-                        notaForm.color === color
-                          ? "ring-2 ring-offset-2 ring-primary"
-                          : ""
+                      key={colorOption.name}
+                      type="button"
+                      onClick={() => setNotaForm({ ...notaForm, color: colorOption.name })}
+                      className={`w-8 h-8 rounded-full transition-all ${
+                        notaForm.color === colorOption.name
+                          ? "ring-2 ring-offset-2 ring-slate-800 dark:ring-white scale-110"
+                          : "hover:scale-105"
                       }`}
-                      style={{ backgroundColor: `var(--color-${color}, #3b82f6)` }}
+                      style={{ backgroundColor: colorOption.hex }}
+                      title={colorOption.name}
                     />
                   ))}
                 </div>
@@ -739,19 +750,57 @@ export default function Notas() {
   );
 }
 
+// Mapeo de colores a clases de Tailwind
+const colorMap = {
+  blue: { border: "border-blue-500", bg: "bg-blue-500/10", text: "text-blue-600" },
+  green: { border: "border-green-500", bg: "bg-green-500/10", text: "text-green-600" },
+  yellow: { border: "border-yellow-500", bg: "bg-yellow-500/10", text: "text-yellow-600" },
+  red: { border: "border-red-500", bg: "bg-red-500/10", text: "text-red-600" },
+  purple: { border: "border-purple-500", bg: "bg-purple-500/10", text: "text-purple-600" },
+  pink: { border: "border-pink-500", bg: "bg-pink-500/10", text: "text-pink-600" },
+  orange: { border: "border-orange-500", bg: "bg-orange-500/10", text: "text-orange-600" },
+  cyan: { border: "border-cyan-500", bg: "bg-cyan-500/10", text: "text-cyan-600" },
+};
+
 // Nota Card Component
 function NotaCard({ nota, onEdit, onDelete, onToggleFavorito, formatDate }) {
+  const colorClasses = colorMap[nota.color] || colorMap.blue;
+
+  // Copiar contenido al portapapeles
+  const handleCopyToClipboard = async () => {
+    try {
+      const textToCopy = `${nota.titulo}\n\n${nota.contenido}`;
+      await navigator.clipboard.writeText(textToCopy);
+      // Mostrar feedback visual breve
+      const card = document.getElementById(`nota-card-${nota.id}`);
+      if (card) {
+        card.classList.add("ring-2", "ring-green-500");
+        setTimeout(() => {
+          card.classList.remove("ring-2", "ring-green-500");
+        }, 500);
+      }
+    } catch (err) {
+      console.error("Error al copiar al portapapeles:", err);
+    }
+  };
+
   return (
     <div
-      className="neumorphic-card p-4 flex flex-col justify-between h-44 group hover:shadow-lg transition-shadow relative"
+      id={`nota-card-${nota.id}`}
+      onClick={handleCopyToClipboard}
+      className={`neumorphic-card p-4 flex flex-col justify-between h-44 group hover:shadow-lg transition-all relative cursor-pointer border-l-4 ${colorClasses.border} ${colorClasses.bg}`}
+      title="Clic para copiar al portapapeles"
     >
       <div>
         <div className="flex items-start justify-between mb-2">
-          <h4 className="font-semibold text-slate-800 dark:text-slate-200 line-clamp-2 flex-1">
+          <h4 className={`font-semibold line-clamp-2 flex-1 ${colorClasses.text}`}>
             {nota.titulo}
           </h4>
           <button
-            onClick={() => onToggleFavorito(nota)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorito(nota);
+            }}
             className="ml-2 text-slate-400 hover:text-yellow-500 transition-colors"
           >
             <span className="material-icons-outlined text-lg">
@@ -768,13 +817,19 @@ function NotaCard({ nota, onEdit, onDelete, onToggleFavorito, formatDate }) {
         <p className="text-xs text-slate-400">{formatDate(nota.fecha)}</p>
         <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
-            onClick={() => onEdit(nota)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(nota);
+            }}
             className="p-1 text-slate-500 hover:text-primary transition-colors"
           >
             <span className="material-icons-outlined text-lg">edit</span>
           </button>
           <button
-            onClick={() => onDelete(nota.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(nota.id);
+            }}
             className="p-1 text-slate-500 hover:text-red-500 transition-colors"
           >
             <span className="material-icons-outlined text-lg">delete</span>

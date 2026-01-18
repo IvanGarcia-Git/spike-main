@@ -295,12 +295,39 @@ export default function CreateContractPage() {
     setShowRestoreModal(false);
   };
 
+  // Verificar si los datos del cliente están suficientemente completos para crear un cliente
+  const hasMinimumCustomerData = () => {
+    return (
+      customerData?.name?.trim() &&
+      customerData?.surnames?.trim() &&
+      customerData?.nationalId?.trim() &&
+      customerData?.phoneNumber?.trim() &&
+      customerData?.address?.trim() &&
+      customerData?.zipCode?.trim() &&
+      customerData?.province?.trim() &&
+      customerData?.populace?.trim() &&
+      customerData?.iban?.trim()
+    );
+  };
+
   const handleCreateContract = async (isDraft = true) => {
+    // Validación básica: al menos un tipo de contrato debe estar seleccionado
+    if (!contractLuzData.isSelected && !contractGasData.isSelected) {
+      toast.error("Debes seleccionar al menos un tipo de contrato (Luz o Gas).");
+      return;
+    }
+
     //Validaciones
     if (!isDraft) {
       // Email siempre es opcional
       if (!isCustomerDataValid(customerData, false)) {
         toast.error("Por favor, rellena todos los campos del cliente.");
+        return;
+      }
+
+      // Validar que se haya seleccionado un origen
+      if (!customerData.originId) {
+        toast.error("Por favor, selecciona el origen del cliente.");
         return;
       }
 
@@ -327,6 +354,11 @@ export default function CreateContractPage() {
         return;
       }
     }
+
+    // Verificar si debemos crear un cliente o no
+    // Para borradores: solo crear cliente si los datos están completos
+    // Para contratos finales: siempre se requiere cliente (ya validado arriba)
+    const shouldCreateCustomer = isDraft ? hasMinimumCustomerData() : true;
 
     const customerDataToSend = {
       ...customerData,
@@ -382,63 +414,134 @@ export default function CreateContractPage() {
         (contractLuzData?.isSelected && contractLuzData?.electronicBill) ||
         (contractGasData?.isSelected && contractGasData?.electronicBill);
 
-      const customerResponse = await authFetch("POST", `customers/`, { ...customerDataToSend, requireEmail }, jwtToken);
+      let createdCustomer = null;
 
-      if (customerResponse.ok) {
-        const createdCustomer = await customerResponse.json();
+      // Solo crear cliente si tenemos datos suficientes (o si no es borrador)
+      if (shouldCreateCustomer) {
+        const customerResponse = await authFetch("POST", `customers/`, { ...customerDataToSend, requireEmail }, jwtToken);
 
-        //Luz
-        if (contractLuzData.isSelected) {
-          const contractLuzResponse = await authFetch(
-            "POST",
-            `contracts/`,
-            {
-              ...contractLuzData,
-              customerId: createdCustomer.id,
-              isDraft,
-              rateId: contractLuzData.rateId === "" ? null : contractLuzData.rateId,
-              companyId: contractLuzData.companyId === "" ? null : contractLuzData.companyId,
-            },
-            jwtToken
+        if (customerResponse.ok) {
+          createdCustomer = await customerResponse.json();
+        } else {
+          // Si no es borrador, el error es crítico
+          if (!isDraft) {
+            try {
+              const errorData = await customerResponse.json();
+              if (errorData?.error?.message) {
+                toast.error(errorData.error.message);
+              } else {
+                toast.error("Error creando el cliente. Verifica que todos los campos estén completos.");
+              }
+            } catch {
+              toast.error("Error creando el cliente. Verifica que todos los campos estén completos.");
+            }
+            return;
+          }
+          // Si es borrador, continuamos sin cliente
+          console.log("Borrador: continuando sin crear cliente (datos incompletos)");
+        }
+      }
+
+      //Luz
+      if (contractLuzData.isSelected) {
+        const contractLuzResponse = await authFetch(
+          "POST",
+          `contracts/`,
+          {
+            ...contractLuzData,
+            customerId: createdCustomer?.id || null,
+            isDraft,
+            rateId: contractLuzData.rateId === "" ? null : contractLuzData.rateId,
+            companyId: contractLuzData.companyId === "" ? null : contractLuzData.companyId,
+          },
+          jwtToken
+        );
+
+        const createdContract = await contractLuzResponse.json();
+
+        if (contractLuzResponse.ok && contractLuzData.selectedFiles.length > 0) {
+          const formData = new FormData();
+
+          formData.append("contractUuid", createdContract.uuid);
+
+          const normalizedFiles = contractLuzData.selectedFiles.map((item) =>
+            item.file ? item.file : item
           );
 
-          const createdContract = await contractLuzResponse.json();
+          for (const file of normalizedFiles) {
+            formData.append("contractDocuments", file);
+          }
 
-          if (contractLuzResponse.ok && contractLuzData.selectedFiles.length > 0) {
-            const formData = new FormData();
-
-            formData.append("contractUuid", createdContract.uuid);
-
-            const normalizedFiles = contractLuzData.selectedFiles.map((item) =>
-              item.file ? item.file : item
-            );
-
-            for (const file of normalizedFiles) {
-              formData.append("contractDocuments", file);
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/contract-documents/batch`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${jwtToken}`,
+              },
+              body: formData,
             }
+          );
 
+          if (!response.ok) {
+            throw new Error(`Error: ${response.statusText}`);
+          }
+        }
+
+        if (newContractComment.initialComment) {
+          const commentFormData = new FormData();
+          if (selectedFile) {
+            commentFormData.append("contractCommentFile", selectedFile);
+          }
+          commentFormData.append("text", newContractComment.initialComment);
+
+          try {
             const response = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/contract-documents/batch`,
+              `${process.env.NEXT_PUBLIC_API_URL}/contract-comments/${createdContract.uuid}`,
               {
                 method: "POST",
                 headers: {
                   Authorization: `Bearer ${jwtToken}`,
                 },
-                body: formData,
+                body: commentFormData,
               }
             );
 
-            if (!response.ok) {
-              throw new Error(`Error: ${response.statusText}`);
+            if (response.ok) {
+              setSelectedFile(null);
+            } else {
+              toast.error("Error al agregar el comentario");
             }
+          } catch (error) {
+            console.error("Error enviando el comentario:", error);
           }
+        }
+      }
+
+      //Gas
+      if (contractGasData.isSelected) {
+        const contractGasResponse = await authFetch(
+          "POST",
+          `contracts/`,
+          {
+            ...contractGasData,
+            customerId: createdCustomer?.id || null,
+            isDraft,
+            rateId: contractGasData.rateId === "" ? null : contractGasData.rateId,
+            companyId: contractGasData.companyId === "" ? null : contractGasData.companyId,
+          },
+          jwtToken
+        );
+
+        if (contractGasResponse.ok) {
+          const createdContract = await contractGasResponse.json();
 
           if (newContractComment.initialComment) {
-            const commentFormData = new FormData();
+            const formData = new FormData();
             if (selectedFile) {
-              commentFormData.append("contractCommentFile", selectedFile);
+              formData.append("contractCommentFile", selectedFile);
             }
-            commentFormData.append("text", newContractComment.initialComment);
+            formData.append("text", newContractComment.initialComment);
 
             try {
               const response = await fetch(
@@ -448,7 +551,7 @@ export default function CreateContractPage() {
                   headers: {
                     Authorization: `Bearer ${jwtToken}`,
                   },
-                  body: commentFormData,
+                  body: formData,
                 }
               );
 
@@ -461,77 +564,16 @@ export default function CreateContractPage() {
               console.error("Error enviando el comentario:", error);
             }
           }
-        }
-
-        //Gas
-        if (contractGasData.isSelected) {
-          const contractGasResponse = await authFetch(
-            "POST",
-            `contracts/`,
-            {
-              ...contractGasData,
-              customerId: createdCustomer.id,
-              isDraft,
-              rateId: contractGasData.rateId === "" ? null : contractGasData.rateId,
-              companyId: contractGasData.companyId === "" ? null : contractGasData.companyId,
-            },
-            jwtToken
-          );
-
-          if (contractGasResponse.ok) {
-            const createdContract = await contractGasResponse.json();
-
-            if (newContractComment.initialComment) {
-              const formData = new FormData();
-              if (selectedFile) {
-                formData.append("contractCommentFile", selectedFile);
-              }
-              formData.append("text", newContractComment.initialComment);
-
-              try {
-                const response = await fetch(
-                  `${process.env.NEXT_PUBLIC_API_URL}/contract-comments/${createdContract.uuid}`,
-                  {
-                    method: "POST",
-                    headers: {
-                      Authorization: `Bearer ${jwtToken}`,
-                    },
-                    body: formData,
-                  }
-                );
-
-                if (response.ok) {
-                  setSelectedFile(null);
-                } else {
-                  toast.error("Error al agregar el comentario");
-                }
-              } catch (error) {
-                console.error("Error enviando el comentario:", error);
-              }
-            }
-          } else {
-            toast.error("Error al crear el contrato.");
-          }
-        }
-
-        // Limpiar borrador al crear exitosamente
-        clearDraft();
-        toast.success("Contratos creados con éxito");
-
-        router.push("/contratos");
-      } else {
-        // Parsear el error del backend para mostrar campos faltantes
-        try {
-          const errorData = await customerResponse.json();
-          if (errorData?.error?.message) {
-            toast.error(errorData.error.message);
-          } else {
-            toast.error("Error creando el cliente. Verifica que todos los campos estén completos.");
-          }
-        } catch {
-          toast.error("Error creando el cliente. Verifica que todos los campos estén completos.");
+        } else {
+          toast.error("Error al crear el contrato.");
         }
       }
+
+      // Limpiar borrador al crear exitosamente
+      clearDraft();
+      toast.success(isDraft ? "Borrador guardado con éxito" : "Contratos creados con éxito");
+
+      router.push("/contratos");
     } catch (error) {
       console.error("Error creando el contrato:", error);
       toast.error("Error de conexión. Por favor, inténtalo de nuevo.");

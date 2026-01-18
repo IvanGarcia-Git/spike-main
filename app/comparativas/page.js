@@ -165,21 +165,26 @@ export default function ComparativasPage() {
       const response = await getComparativaById(comparativa.id, token);
       if (response.ok) {
         const fullData = await response.json();
-        // Store data for editing
-        sessionStorage.setItem("pdfDataForGeneration", JSON.stringify({
+        // Store data for recalculation in results page
+        sessionStorage.setItem("comparisonData", JSON.stringify({
           id: fullData.id,
           clientName: fullData.clientName,
           comparisonType: fullData.comparisonType,
           customerType: fullData.customerType,
+          selectedLightTariff: fullData.tariffType,
+          selectedGasTariff: fullData.tariffType,
           tariffType: fullData.tariffType,
-          calculatedNewPrice: fullData.calculatedNewPrice,
-          calculatedOldPrice: fullData.calculatedOldPrice,
-          savings: fullData.savings,
-          potencias: fullData.potencias,
-          energias: fullData.energias,
-          numDias: fullData.numDias,
+          potencias: fullData.potencias || [],
+          energias: fullData.energias || [],
+          energia: fullData.energia || 0,
+          numDias: fullData.numDias || 30,
+          showCurrentBill: fullData.showCurrentBill !== false,
+          currentBillAmount: fullData.calculatedOldPrice || fullData.currentBillAmount || 0,
+          excedentes: fullData.excedentes || 0,
+          solarPanelActive: fullData.solarPanelActive || false,
         }));
-        router.push("/comparativas/personalizada");
+        // Navigate to results page to allow recalculation
+        router.push("/comparativas/resultados");
       }
     } catch (error) {
       console.error("Error loading comparativa for edit:", error);
@@ -255,9 +260,6 @@ export default function ComparativasPage() {
         <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
           Últimas Comparativas
         </h3>
-        <button className="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-colors">
-          <span className="material-icons-outlined text-xl">tune</span>
-        </button>
       </div>
 
       {/* Loading state */}

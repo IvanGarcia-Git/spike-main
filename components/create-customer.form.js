@@ -146,7 +146,7 @@ export default function CreateCustomerForm({
         {/* Origen */}
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="origin">
-            Origen
+            Origen *
           </label>
           <div className="neumorphic-card-inset rounded-lg">
             <select

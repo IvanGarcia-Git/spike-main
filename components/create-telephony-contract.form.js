@@ -181,7 +181,7 @@ export default function CreateTelephonyContractForm({ companies, onContractUpdat
             name="isSelected"
             checked={formData.isSelected}
             onChange={handleIsSelectedChange}
-            className="sr-only peer"
+            className="absolute opacity-0 w-0 h-0 peer"
           />
           <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary"></div>
         </label>
@@ -385,7 +385,7 @@ export default function CreateTelephonyContractForm({ companies, onContractUpdat
                   type="checkbox"
                   checked={hasExtraServices}
                   onChange={(e) => handleExtraServicesSelect({ target: { value: e.target.checked ? "yes" : "no" } })}
-                  className="sr-only peer"
+                  className="absolute opacity-0 w-0 h-0 peer"
                 />
                 <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary"></div>
               </label>

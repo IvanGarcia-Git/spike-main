@@ -172,7 +172,7 @@ export default function CreateContractForm({
             name={`selectContract-${contractType}`}
             checked={isSelected}
             onChange={handleIsSelectedChange}
-            className="sr-only peer"
+            className="absolute opacity-0 w-0 h-0 peer"
           />
           <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary"></div>
         </label>
@@ -180,69 +180,99 @@ export default function CreateContractForm({
 
       {isSelected && (
         <div className="space-y-6">
-          {/* Rate Type Selection */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-              Tipo de Tarifa
-            </label>
-            <div className="flex gap-3">
-              {["2.0", "3.0", "6.1"].map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => {
-                    const newSelectedTypeForContracts = {
-                      ...contractState.selectedTypeForContracts,
-                      [contractType]: option,
-                    };
+          {/* Product (Gas only) - Movido arriba */}
+          {contractType === "Gas" && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="product">
+                Producto *
+              </label>
+              <div className="neumorphic-card-inset rounded-lg">
+                <select
+                  id="product"
+                  name="product"
+                  value={formData.product}
+                  onChange={handleChange}
+                  className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200"
+                  required
+                >
+                  <option value="" disabled>
+                    Selecciona un producto
+                  </option>
+                  {["RL1", "RL2", "RL3", "RL4", "RL5", "RL6"].map((product) => (
+                    <option key={product} value={product}>
+                      {product}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
 
-                    setContractState((prev) => ({
-                      ...prev,
-                      selectedTypeForContracts: newSelectedTypeForContracts,
-                    }));
-
-                    const selectedCompany = companies.find(
-                      (company) => company.id == formData.companyId
-                    );
-
-                    if (
-                      selectedCompany &&
-                      contractState.rates[selectedCompany.name]
-                    ) {
-                      const filtered = contractState.rates[
-                        selectedCompany.name
-                      ].filter((rate) => rate.type === option);
+          {/* Rate Type Selection (Solo para Luz) */}
+          {contractType === "Luz" && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                Tipo de Tarifa
+              </label>
+              <div className="flex gap-3">
+                {["2.0", "3.0", "6.1"].map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => {
+                      const newSelectedTypeForContracts = {
+                        ...contractState.selectedTypeForContracts,
+                        [contractType]: option,
+                      };
 
                       setContractState((prev) => ({
                         ...prev,
-                        filteredRates: filtered,
+                        selectedTypeForContracts: newSelectedTypeForContracts,
                       }));
 
-                      setFormData((prevFormData) => {
-                        const updatedPowers =
-                          option === "2.0"
-                            ? prevFormData.contractedPowers.slice(0, 2)
-                            : prevFormData.contractedPowers;
+                      const selectedCompany = companies.find(
+                        (company) => company.id == formData.companyId
+                      );
 
-                        return {
-                          ...prevFormData,
-                          rateId: filtered[0]?.id || "",
-                          contractedPowers: updatedPowers,
-                        };
-                      });
-                    }
-                  }}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    contractState.selectedTypeForContracts[contractType] === option
-                      ? "neumorphic-button active text-primary"
-                      : "neumorphic-button text-slate-600 dark:text-slate-400"
-                  }`}
-                >
-                  {option}
-                </button>
-              ))}
+                      if (
+                        selectedCompany &&
+                        contractState.rates[selectedCompany.name]
+                      ) {
+                        const filtered = contractState.rates[
+                          selectedCompany.name
+                        ].filter((rate) => rate.type === option);
+
+                        setContractState((prev) => ({
+                          ...prev,
+                          filteredRates: filtered,
+                        }));
+
+                        setFormData((prevFormData) => {
+                          const updatedPowers =
+                            option === "2.0"
+                              ? prevFormData.contractedPowers.slice(0, 2)
+                              : prevFormData.contractedPowers;
+
+                          return {
+                            ...prevFormData,
+                            rateId: filtered[0]?.id || "",
+                            contractedPowers: updatedPowers,
+                          };
+                        });
+                      }
+                    }}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      contractState.selectedTypeForContracts[contractType] === option
+                        ? "neumorphic-button active text-primary"
+                        : "neumorphic-button text-slate-600 dark:text-slate-400"
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Company Select */}
           <div>
@@ -286,34 +316,6 @@ export default function CreateContractForm({
               placeholder="ES0000000000000000XX"
             />
           </div>
-
-          {/* Product (Gas only) */}
-          {contractType === "Gas" && (
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="product">
-                Producto *
-              </label>
-              <div className="neumorphic-card-inset rounded-lg">
-                <select
-                  id="product"
-                  name="product"
-                  value={formData.product}
-                  onChange={handleChange}
-                  className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200"
-                  required
-                >
-                  <option value="" disabled>
-                    Selecciona un producto
-                  </option>
-                  {["RL1", "RL2", "RL3", "RL4", "RL5", "RL6"].map((product) => (
-                    <option key={product} value={product}>
-                      {product}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          )}
 
           {/* Rate Select */}
           <div>
@@ -428,7 +430,7 @@ export default function CreateContractForm({
                       setFormData(updatedFormData);
                       onContractUpdate(updatedFormData);
                     }}
-                    className="sr-only peer"
+                    className="absolute opacity-0 w-0 h-0 peer"
                   />
                   <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary"></div>
                 </label>

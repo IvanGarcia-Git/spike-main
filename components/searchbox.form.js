@@ -15,7 +15,6 @@ export default function ContractSearch({
   onExportExcel,
   onSearch,
   onClearFilters,
-  setContractsOrder,
 }) {
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [companies, setCompanies] = useState([]);
@@ -199,11 +198,31 @@ export default function ContractSearch({
   const handleOrderChange = () => {
     const newOrder = contractSearch.order === "createdAt" ? "updatedAt" : "createdAt";
 
-    setContractSearch((prevData) => ({
-      ...prevData,
+    const updatedSearch = {
+      ...contractSearch,
       order: newOrder,
-    }));
-    setContractsOrder(newOrder);
+    };
+
+    setContractSearch(updatedSearch);
+
+    // Ejecutar búsqueda con el nuevo orden
+    const payload = {
+      searchText: searchText,
+      contractSearchParams: updatedSearch,
+    };
+
+    const cleanPayload = (obj) => {
+      return Object.fromEntries(
+        Object.entries(obj).filter(([_, value]) => value !== "" && value !== undefined)
+      );
+    };
+
+    const cleanedPayload = {
+      searchText: payload.searchText,
+      contractSearchParams: cleanPayload(payload.contractSearchParams),
+    };
+
+    onSearch(cleanedPayload);
   };
 
   const handleDateChange = (e) => {
@@ -367,14 +386,21 @@ export default function ContractSearch({
         <div className="neumorphic-card-inset rounded-lg">
           <select
             name="contractStateId"
+            value={
+              multifilterSelected.contractStateIds.length === 1
+                ? multifilterSelected.contractStateIds[0]
+                : ""
+            }
             className="w-full bg-transparent border-none focus:ring-0 text-sm font-medium py-3 px-4 text-slate-600 dark:text-slate-300"
             onChange={(e) => {
               const value = e.target.value;
               if (value === "") {
+                // Limpiar el filtro de estados
                 setMultifilterSelected((prev) => ({ ...prev, contractStateIds: [] }));
               } else {
+                // Reemplazar el estado (no añadir/toggle)
                 const stateId = value === "DRAFT" ? "DRAFT" : parseInt(value);
-                handleMultifilterChange("contractStateIds", stateId);
+                setMultifilterSelected((prev) => ({ ...prev, contractStateIds: [stateId] }));
               }
             }}
           >
@@ -382,6 +408,95 @@ export default function ContractSearch({
             {allStateOptions.map((state) => (
               <option key={state.id} value={state.id}>
                 {state.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Segunda fila de filtros: Agente y Compañía */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Agente dropdown (solo si es manager) */}
+        {isManager && (
+          <div className="neumorphic-card-inset rounded-lg">
+            <select
+              name="contractUserId"
+              value={
+                multifilterSelected.contractUserIds.length === 1
+                  ? multifilterSelected.contractUserIds[0]
+                  : ""
+              }
+              className="w-full bg-transparent border-none focus:ring-0 text-sm font-medium py-3 px-4 text-slate-600 dark:text-slate-300"
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "") {
+                  setMultifilterSelected((prev) => ({ ...prev, contractUserIds: [] }));
+                } else {
+                  setMultifilterSelected((prev) => ({ ...prev, contractUserIds: [parseInt(value)] }));
+                }
+              }}
+            >
+              <option value="">Agente</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Compañía dropdown */}
+        <div className="neumorphic-card-inset rounded-lg">
+          <select
+            name="companyId"
+            value={
+              multifilterSelected.companyIds.length === 1
+                ? multifilterSelected.companyIds[0]
+                : ""
+            }
+            className="w-full bg-transparent border-none focus:ring-0 text-sm font-medium py-3 px-4 text-slate-600 dark:text-slate-300"
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === "") {
+                setMultifilterSelected((prev) => ({ ...prev, companyIds: [] }));
+              } else {
+                setMultifilterSelected((prev) => ({ ...prev, companyIds: [parseInt(value)] }));
+              }
+            }}
+          >
+            <option value="">Compañía</option>
+            {companies.map((company) => (
+              <option key={company.id} value={company.id}>
+                {company.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Origen dropdown */}
+        <div className="neumorphic-card-inset rounded-lg">
+          <select
+            name="originId"
+            value={
+              multifilterSelected.originIds.length === 1
+                ? multifilterSelected.originIds[0]
+                : ""
+            }
+            className="w-full bg-transparent border-none focus:ring-0 text-sm font-medium py-3 px-4 text-slate-600 dark:text-slate-300"
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === "") {
+                setMultifilterSelected((prev) => ({ ...prev, originIds: [] }));
+              } else {
+                setMultifilterSelected((prev) => ({ ...prev, originIds: [parseInt(value)] }));
+              }
+            }}
+          >
+            <option value="">Origen</option>
+            {origins.map((origin) => (
+              <option key={origin.id} value={origin.id}>
+                {origin.name}
               </option>
             ))}
           </select>

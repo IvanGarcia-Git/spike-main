@@ -146,6 +146,23 @@ export default function ComparativasPersonalizadaPage() {
               }
             });
 
+            // Remove dashed borders from image containers (labels with file inputs)
+            const imageLabels = clonedDoc.querySelectorAll('label.border-dashed, label.border-2');
+            imageLabels.forEach((label) => {
+              if (label instanceof HTMLElement) {
+                label.style.setProperty('border', 'none', 'important');
+                label.style.setProperty('border-width', '0', 'important');
+              }
+            });
+
+            // Also hide the "Cambiar" overlay on hover
+            const hoverOverlays = clonedDoc.querySelectorAll('.group-hover\\:opacity-100');
+            hoverOverlays.forEach((overlay) => {
+              if (overlay instanceof HTMLElement) {
+                overlay.style.setProperty('display', 'none', 'important');
+              }
+            });
+
             const allElements = clonedDoc.querySelectorAll('*');
             allElements.forEach((el) => {
               if (el instanceof HTMLElement) {

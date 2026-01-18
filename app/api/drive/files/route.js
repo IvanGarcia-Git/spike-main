@@ -6,6 +6,40 @@ const generateFallbackData = () => ({
   files: [],
 });
 
+// Transform backend format to frontend format
+const toFrontendFormat = (backendFile) => ({
+  id: backendFile.id,
+  uuid: backendFile.uuid,
+  nombre: backendFile.name,
+  tipo: backendFile.mimetype || backendFile.type,
+  tamano: formatFileSize(backendFile.size),
+  fecha: backendFile.createdAt ? new Date(backendFile.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+  carpetaId: backendFile.folderId || null,
+  destacado: backendFile.destacado || false,
+  propietario: backendFile.ownerEmail || "Usuario",
+  icono: getIconFromMimeType(backendFile.mimetype || backendFile.type),
+  uri: backendFile.uri,
+});
+
+function formatFileSize(bytes) {
+  if (!bytes || bytes === 0) return "0 B";
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return `${(bytes / Math.pow(1024, i)).toFixed(0)} ${sizes[i]}`;
+}
+
+function getIconFromMimeType(mimeType) {
+  if (!mimeType) return "insert_drive_file";
+  if (mimeType.includes("pdf")) return "picture_as_pdf";
+  if (mimeType.includes("word") || mimeType.includes("document")) return "description";
+  if (mimeType.includes("sheet") || mimeType.includes("excel")) return "grid_on";
+  if (mimeType.includes("presentation") || mimeType.includes("powerpoint")) return "slideshow";
+  if (mimeType.includes("image")) return "image";
+  if (mimeType.includes("video")) return "videocam";
+  if (mimeType.includes("audio")) return "audiotrack";
+  return "insert_drive_file";
+}
+
 export async function GET(req) {
   try {
     const cookieStore = await cookies();
@@ -19,7 +53,7 @@ export async function GET(req) {
     }
 
     try {
-      const apiResponse = await fetch(`${process.env.BACKEND_URL}/drive/files`, {
+      const apiResponse = await fetch(`${process.env.BACKEND_URL}/files/private`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -30,7 +64,11 @@ export async function GET(req) {
 
       if (apiResponse.ok) {
         const data = await apiResponse.json();
-        return NextResponse.json(data, { status: 200 });
+        // Transform array of files from backend format to frontend format
+        const transformedFiles = Array.isArray(data)
+          ? data.map(toFrontendFormat)
+          : (data.files || []).map(toFrontendFormat);
+        return NextResponse.json({ files: transformedFiles }, { status: 200 });
       } else {
         console.log("Backend respondió con error, usando datos de fallback");
         return NextResponse.json(generateFallbackData(), { status: 200 });
@@ -60,7 +98,7 @@ export async function POST(req) {
     const formData = await req.formData();
 
     try {
-      const apiResponse = await fetch(`${process.env.BACKEND_URL}/drive/files`, {
+      const apiResponse = await fetch(`${process.env.BACKEND_URL}/files`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token.value}`,
@@ -84,7 +122,7 @@ export async function POST(req) {
           carpetaId: formData.get("carpetaId") || null,
           destacado: false,
           propietario: "Usuario Actual",
-          icono: getIconFromType(file.type),
+          icono: getIconFromMimeType(file.type),
         };
         return NextResponse.json(newFile, { status: 201 });
       }
@@ -100,7 +138,7 @@ export async function POST(req) {
         carpetaId: formData.get("carpetaId") || null,
         destacado: false,
         propietario: "Usuario Actual",
-        icono: getIconFromType(file.type),
+        icono: getIconFromMimeType(file.type),
       };
       return NextResponse.json(newFile, { status: 201 });
     }
@@ -129,7 +167,7 @@ export async function DELETE(req) {
     const id = searchParams.get("id");
 
     try {
-      const apiResponse = await fetch(`${process.env.BACKEND_URL}/drive/files/${id}`, {
+      const apiResponse = await fetch(`${process.env.BACKEND_URL}/files/${id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -172,7 +210,7 @@ export async function PUT(req) {
     const { id, ...updateData } = body;
 
     try {
-      const apiResponse = await fetch(`${process.env.BACKEND_URL}/drive/files/${id}`, {
+      const apiResponse = await fetch(`${process.env.BACKEND_URL}/files/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -199,15 +237,4 @@ export async function PUT(req) {
       { status: 500 }
     );
   }
-}
-
-function getIconFromType(mimeType) {
-  if (mimeType.includes("pdf")) return "picture_as_pdf";
-  if (mimeType.includes("word") || mimeType.includes("document")) return "description";
-  if (mimeType.includes("sheet") || mimeType.includes("excel")) return "grid_on";
-  if (mimeType.includes("presentation") || mimeType.includes("powerpoint")) return "slideshow";
-  if (mimeType.includes("image")) return "image";
-  if (mimeType.includes("video")) return "videocam";
-  if (mimeType.includes("audio")) return "audiotrack";
-  return "insert_drive_file";
 }

@@ -6,6 +6,19 @@ const generateFallbackData = () => ({
   folders: [],
 });
 
+// Transform backend format to frontend format
+const toFrontendFormat = (backendFolder) => ({
+  id: backendFolder.id,
+  uuid: backendFolder.uuid,
+  nombre: backendFolder.name,
+  icono: "folder",
+  fecha: backendFolder.createdAt ? new Date(backendFolder.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+  archivosCount: backendFolder.filesCount || 0,
+  propietario: backendFolder.ownerEmail || "Usuario",
+  type: backendFolder.type,
+  locked: backendFolder.locked,
+});
+
 export async function GET(req) {
   try {
     const cookieStore = await cookies();
@@ -19,7 +32,7 @@ export async function GET(req) {
     }
 
     try {
-      const apiResponse = await fetch(`${process.env.BACKEND_URL}/drive/folders`, {
+      const apiResponse = await fetch(`${process.env.BACKEND_URL}/folders/private`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -30,7 +43,11 @@ export async function GET(req) {
 
       if (apiResponse.ok) {
         const data = await apiResponse.json();
-        return NextResponse.json(data, { status: 200 });
+        // Transform array of folders from backend format to frontend format
+        const transformedFolders = Array.isArray(data)
+          ? data.map(toFrontendFormat)
+          : (data.folders || []).map(toFrontendFormat);
+        return NextResponse.json({ folders: transformedFolders }, { status: 200 });
       } else {
         console.log("Backend respondió con error, usando datos de fallback");
         return NextResponse.json(generateFallbackData(), { status: 200 });
@@ -60,7 +77,7 @@ export async function POST(req) {
     const body = await req.json();
 
     try {
-      const apiResponse = await fetch(`${process.env.BACKEND_URL}/drive/folders`, {
+      const apiResponse = await fetch(`${process.env.BACKEND_URL}/folders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -119,7 +136,7 @@ export async function DELETE(req) {
     const id = searchParams.get("id");
 
     try {
-      const apiResponse = await fetch(`${process.env.BACKEND_URL}/drive/folders/${id}`, {
+      const apiResponse = await fetch(`${process.env.BACKEND_URL}/folders/${id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -162,8 +179,8 @@ export async function PUT(req) {
     const { id, ...updateData } = body;
 
     try {
-      const apiResponse = await fetch(`${process.env.BACKEND_URL}/drive/folders/${id}`, {
-        method: "PUT",
+      const apiResponse = await fetch(`${process.env.BACKEND_URL}/folders/${id}`, {
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token.value}`,

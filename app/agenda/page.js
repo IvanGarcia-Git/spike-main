@@ -195,7 +195,7 @@ export default function Agenda() {
   const [contracts, setContracts] = useState([]);
   const calendarRef = useRef(null);
   const [isSendTaskModalOpen, setIsSendTaskModalOpen] = useState(false);
-  const [calendarView, setCalendarView] = useState("semana"); // mes, semana, dia
+  const [calendarView, setCalendarView] = useState("mes"); // mes, semana, dia
   const [holidays, setHolidays] = useState([]);
   const [absences, setAbsences] = useState([]);
   const [userId, setUserId] = useState(null);
