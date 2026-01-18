@@ -12,7 +12,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import React, { useEffect, useState, useCallback } from "react";
 import { format } from "date-fns";
@@ -155,11 +154,11 @@ export function ContractForm({ onDataChange, setFocusedField, onLogoChange }: Co
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="font-headline">Detalles del Contrato</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="neumorphic-card rounded-xl">
+      <div className="p-6 pb-4">
+        <h3 className="font-headline text-xl font-semibold text-slate-800 dark:text-slate-100">Detalles del Contrato</h3>
+      </div>
+      <div className="p-6 pt-0">
         <FormProvider {...form}>
           <form className="space-y-8">
             <div className="space-y-4">
@@ -261,7 +260,7 @@ export function ContractForm({ onDataChange, setFocusedField, onLogoChange }: Co
 
           </form>
         </FormProvider>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

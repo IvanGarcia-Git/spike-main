@@ -6,8 +6,6 @@ import { useFormContext, useWatch } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from '@/lib/utils';
 import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 
@@ -40,21 +38,21 @@ export const PartyFormStepper: React.FC<PartyFormStepperProps> = ({ party, setFo
   const isStepComplete = currentStep === totalSteps;
 
   return (
-    <Card className={cn(
-        "transition-all", 
-        isStepComplete ? 'border-green-500' : ''
+    <div className={cn(
+        "neumorphic-card rounded-xl transition-all",
+        isStepComplete ? 'ring-2 ring-green-500' : ''
     )}>
-      <CardHeader>
-        <CardTitle className="text-center font-normal text-lg">
+      <div className="p-4 pb-2">
+        <h3 className="text-center font-normal text-lg text-slate-800 dark:text-slate-100">
             {currentStep === 1 && "Paso 1: Tipo de parte"}
             {currentStep === 2 && isCompany && "Paso 2: Datos de la Empresa"}
             {currentStep === 2 && !isCompany && "Paso 2: Datos del Particular"}
             {currentStep === 3 && isCompany && "Paso 3: Representante Legal"}
             {currentStep === 3 && !isCompany && "Paso 3: ¡Terminado!"}
             {currentStep === 4 && isCompany && "Paso 4: ¡Terminado!"}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="min-h-[250px] flex items-center justify-center">
+        </h3>
+      </div>
+      <div className="p-4 pt-2 min-h-[250px] flex items-center justify-center">
         <div className="w-full space-y-4 text-center">
           {currentStep === 1 && (
             <FormField
@@ -125,26 +123,52 @@ export const PartyFormStepper: React.FC<PartyFormStepperProps> = ({ party, setFo
             </div>
           )}
         </div>
-      </CardContent>
-      <CardFooter className="flex justify-between items-center">
-         <Button type="button" variant="ghost" size="icon" onClick={prevStep} disabled={currentStep === 1}>
-            <ArrowLeft />
-         </Button>
-        <div className="flex items-center space-x-2">
+      </div>
+      <div className="p-4 pt-0 flex justify-between items-center">
+         <button
+           type="button"
+           onClick={prevStep}
+           disabled={currentStep === 1}
+           className={cn(
+             "w-10 h-10 rounded-full neumorphic-button flex items-center justify-center transition-all",
+             currentStep === 1
+               ? "text-slate-300 dark:text-slate-600 cursor-not-allowed opacity-50"
+               : "text-slate-600 dark:text-slate-400 hover:text-primary"
+           )}
+         >
+            <ArrowLeft className="w-5 h-5" />
+         </button>
+        <div className="flex items-center space-x-3">
           {Array.from({ length: totalSteps }).map((_, i) => (
-            <div
+            <button
               key={i}
+              type="button"
+              onClick={() => setCurrentStep(i + 1)}
               className={cn(
-                "h-2 w-2 rounded-full transition-all",
-                i + 1 === currentStep ? "w-4 bg-primary" : "bg-muted"
+                "rounded-full transition-all duration-300",
+                i + 1 === currentStep
+                  ? "w-3 h-3 bg-primary shadow-[inset_2px_2px_4px_rgba(0,0,0,0.1)]"
+                  : i + 1 < currentStep
+                    ? "w-2.5 h-2.5 bg-primary/60 hover:bg-primary/80"
+                    : "w-2.5 h-2.5 bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500"
               )}
             />
           ))}
         </div>
-         <Button type="button" variant="ghost" size="icon" onClick={nextStep} disabled={currentStep === totalSteps}>
-            <ArrowRight />
-         </Button>
-      </CardFooter>
-    </Card>
+         <button
+           type="button"
+           onClick={nextStep}
+           disabled={currentStep === totalSteps}
+           className={cn(
+             "w-10 h-10 rounded-full neumorphic-button flex items-center justify-center transition-all",
+             currentStep === totalSteps
+               ? "text-slate-300 dark:text-slate-600 cursor-not-allowed opacity-50"
+               : "text-slate-600 dark:text-slate-400 hover:text-primary"
+           )}
+         >
+            <ArrowRight className="w-5 h-5" />
+         </button>
+      </div>
+    </div>
   );
 };

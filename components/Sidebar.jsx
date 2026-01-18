@@ -129,7 +129,7 @@ export default function Sidebar({
       { href: "/emitir-factura", icon: "receipt_long", label: "Emitir Factura" },
     ] : []),
     { href: "/generar-justo-titulo", icon: "receipt_long", label: "Generar Justo Titulo" },
-    { href: "/studio", icon: "edit_note", label: "Studio Contratos" },
+    { href: "/studio", icon: "edit_note", label: "Contratos Colaboración" },
   ];
 
   const bottomItems = [

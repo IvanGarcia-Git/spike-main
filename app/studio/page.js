@@ -98,10 +98,10 @@ export default function Studio() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 flex items-center">
             <span className="material-icons-outlined text-primary mr-3">edit_document</span>
-            Studio de Contratos
+            Contratos Colaboración
           </h1>
           <p className="text-slate-600 dark:text-slate-400 mt-2">
-            Crea y personaliza contratos de forma interactiva
+            Crea y personaliza contratos de colaboración de forma interactiva
           </p>
         </div>
 
