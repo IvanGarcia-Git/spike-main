@@ -10,7 +10,6 @@ export default function CompanyDetail({ params }) {
 
   const [company, setCompany] = useState({
     name: "",
-    type: "",
     imageUri: "",
   });
   const [rates, setRates] = useState([]);
@@ -19,7 +18,6 @@ export default function CompanyDetail({ params }) {
   const [isEditingRate, setIsEditingRate] = useState(false);
   const [showNewRateForm, setShowNewRateForm] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [isTelephony, setIsTelephony] = useState(false);
 
   const getCompanyDetails = async () => {
     const jwtToken = getCookie("factura-token");
@@ -30,9 +28,6 @@ export default function CompanyDetail({ params }) {
       if (response.ok) {
         const companyResponse = await response.json();
         setCompany(companyResponse);
-        if (companyResponse.type === "Telefonía") {
-          setIsTelephony(true);
-        }
         setRates(companyResponse.rates);
       } else {
         alert("Error cargando la información de la compañía");
@@ -84,7 +79,6 @@ export default function CompanyDetail({ params }) {
     try {
       const formData = new FormData();
       formData.append("name", company.name);
-      formData.append("type", company.type);
 
       if (selectedImage) {
         formData.append("imgFile", selectedImage);
@@ -171,24 +165,6 @@ export default function CompanyDetail({ params }) {
               <h2 className="mb-4 text-3xl font-bold text-slate-800 dark:text-slate-100">{company.name}</h2>
             )}
 
-            {isEditing ? (
-              <div className="neumorphic-card-inset rounded-lg">
-                <select
-                  name="type"
-                  value={company.type}
-                  onChange={handleCompanyChange}
-                  className="text-xl p-4 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
-                >
-                  <option value="Luz">Luz</option>
-                  <option value="Gas">Gas</option>
-                  <option value="Telefonía">Telefonía</option>
-                </select>
-              </div>
-            ) : (
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary">
-                {company.type}
-              </span>
-            )}
           </div>
         </div>
 
@@ -199,12 +175,9 @@ export default function CompanyDetail({ params }) {
             <thead className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               <tr>
                 <th className="p-3">Nombre</th>
+                <th className="p-3">Tipo</th>
                 <th className="p-3">Retro</th>
-                {isTelephony && <th className="p-3">Productos</th>}
-                {isTelephony && <th className="p-3">Precio Final</th>}
-                {!isTelephony && <th className="p-3">Potencia(kW)</th>}
-                {!isTelephony && <th className="p-3">Energía(€/kWh)</th>}
-                {!isTelephony && <th className="p-3">Excedente(€/kWh)</th>}
+                <th className="p-3">Detalles</th>
                 <th className="p-3">Acciones</th>
               </tr>
             </thead>
@@ -212,107 +185,30 @@ export default function CompanyDetail({ params }) {
               {rates.map((rate, index) => (
                 <tr key={index} className="table-row-divider">
                   <td className="p-3 font-medium text-slate-800 dark:text-slate-200">{rate.name}</td>
+                  <td className="p-3">
+                    <span
+                      className={`${
+                        rate.serviceType === "Gas"
+                          ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
+                          : rate.serviceType === "Telefonía"
+                          ? "bg-purple-500/20 text-purple-600 dark:text-purple-400"
+                          : "bg-blue-500/20 text-blue-600 dark:text-blue-400"
+                      } px-3 py-1 rounded-full text-xs font-semibold`}
+                    >
+                      {rate.serviceType || "Sin tipo"}
+                    </span>
+                  </td>
                   <td className="p-3 text-slate-600 dark:text-slate-400">{rate.renewDays} días</td>
-                  {isTelephony && (
-                    <>
-                      <td className="p-3 text-slate-600 dark:text-slate-400">{rate.products}</td>
-                      <td className="p-3 text-slate-600 dark:text-slate-400">{rate.finalPrice} €</td>
-                    </>
-                  )}
-                  {!isTelephony && (
-                    <>
-                      {/* Columna de Potencia */}
-                      <td className="p-3">
-                        <div className="flex flex-col">
-                          <div className="flex">
-                            {rate.powerSlot1 && (
-                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 mr-2 mb-1">
-                                {rate.powerSlot1}
-                              </span>
-                            )}
-                            {rate.powerSlot2 && (
-                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 mr-2 mb-1">
-                                {rate.powerSlot2}
-                              </span>
-                            )}
-                            {rate.powerSlot3 && (
-                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 mb-1">
-                                {rate.powerSlot3}
-                              </span>
-                            )}
-                          </div>
-                          {/* Segunda fila de potencia */}
-                          <div className="flex">
-                            {rate.powerSlot4 && (
-                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 mr-2 mb-1">
-                                {rate.powerSlot4}
-                              </span>
-                            )}
-                            {rate.powerSlot5 && (
-                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 mr-2 mb-1">
-                                {rate.powerSlot5}
-                              </span>
-                            )}
-                            {rate.powerSlot6 && (
-                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 mb-1">
-                                {rate.powerSlot6}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Columna de Energía */}
-                      <td className="p-3">
-                        <div className="flex flex-col">
-                          <div className="flex">
-                            {rate.energySlot1 && (
-                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-600 dark:text-blue-400 mr-2 mb-1">
-                                {rate.energySlot1}
-                              </span>
-                            )}
-                            {rate.energySlot2 && (
-                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-600 dark:text-blue-400 mr-2 mb-1">
-                                {rate.energySlot2}
-                              </span>
-                            )}
-                            {rate.energySlot3 && (
-                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-600 dark:text-blue-400 mb-1">
-                                {rate.energySlot3}
-                              </span>
-                            )}
-                          </div>
-                          {/* Segunda fila de energía */}
-                          <div className="flex">
-                            {rate.energySlot4 && (
-                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-600 dark:text-blue-400 mr-2 mb-1">
-                                {rate.energySlot4}
-                              </span>
-                            )}
-                            {rate.energySlot5 && (
-                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-600 dark:text-blue-400 mr-2 mb-1">
-                                {rate.energySlot5}
-                              </span>
-                            )}
-                            {rate.energySlot6 && (
-                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-600 dark:text-blue-400 mb-1">
-                                {rate.energySlot6}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Columna de Excedente */}
-                      <td className="p-3">
-                        {rate.surplusSlot1 && (
-                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-600 dark:text-red-400">
-                            {rate.surplusSlot1}
-                          </span>
-                        )}
-                      </td>
-                    </>
-                  )}
+                  <td className="p-3 text-slate-600 dark:text-slate-400">
+                    {rate.serviceType === "Telefonía" ? (
+                      <span>{rate.products} - {rate.finalPrice}€</span>
+                    ) : (
+                      <span>
+                        {rate.type && <span className="mr-2">Tarifa {rate.type}</span>}
+                        {rate.energySlot1 && <span className="text-xs">E: {rate.energySlot1}€/kWh</span>}
+                      </span>
+                    )}
+                  </td>
                   <td className="p-3">
                     <div className="flex space-x-2">
                       <button
@@ -359,7 +255,6 @@ export default function CompanyDetail({ params }) {
           }}
           onSave={isEditingRate ? handleEditRate : handleAddRate}
           companyId={company.id}
-          companyType={company.type}
           rateToEdit={rateToEdit}
         />
 

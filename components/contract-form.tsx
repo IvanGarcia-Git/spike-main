@@ -247,14 +247,8 @@ export function ContractForm({ onDataChange, setFocusedField, onLogoChange }: Co
             <Separator />
 
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold font-headline">Parte A</h3>
-              <PartyFormStepper party="partyA" setFocusedField={setFocusedField} />
-            </div>
-
-            <Separator />
-
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold font-headline">Parte B</h3>
+              <h3 className="text-lg font-semibold font-headline">Datos del Colaborador</h3>
+              <p className="text-sm text-gray-500">Introduce los datos del colaborador que firmará el contrato con OPTIME.</p>
               <PartyFormStepper party="partyB" setFocusedField={setFocusedField} />
             </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import * as XLSX from "xlsx";
 import { getCookie } from "cookies-next";
 import * as jose from "jose";
@@ -649,8 +649,12 @@ function ReassignContractModal({ onClose, selectedContracts, onSuccess }) {
   );
 }
 
-export default function Contracts() {
+function ContractsContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Filtro por liquidación desde URL
+  const liquidacionUuid = searchParams.get("liquidacion");
 
   const [contractStates, setContractStates] = useState([]);
   const [channels, setChannels] = useState([]);
@@ -731,14 +735,16 @@ export default function Contracts() {
     setUserGroupId(payload.groupId || null);
   };
 
-  const getContracts = async (page, entriesPerPage) => {
+  const getContracts = async (page, entriesPerPage, liquidacion = null) => {
     const jwtToken = getCookie("factura-token");
 
     try {
-      const response = await authGetFetch(
-        `contracts?page=${page}&limit=${entriesPerPage}`,
-        jwtToken
-      );
+      let url = `contracts?page=${page}&limit=${entriesPerPage}`;
+      if (liquidacion) {
+        url += `&liquidacion=${liquidacion}`;
+      }
+
+      const response = await authGetFetch(url, jwtToken);
 
       if (response.ok) {
         const contractsData = await response.json();
@@ -863,6 +869,12 @@ export default function Contracts() {
     setContractFilters({});
     setIsFiltersApplied(false);
 
+    // Si hay filtro de liquidación en la URL, quitarlo
+    if (liquidacionUuid) {
+      router.push("/contratos");
+      return; // El useEffect recargará los contratos cuando cambie liquidacionUuid a null
+    }
+
     setPagination((prevPagination) => ({
       ...prevPagination,
       page: 1,
@@ -945,11 +957,11 @@ export default function Contracts() {
 
   useEffect(() => {
     if (!isFiltersApplied) {
-      getContracts(pagination.page, entriesPerPage);
+      getContracts(pagination.page, entriesPerPage, liquidacionUuid);
     } else {
       getFilteredContracts(contractFilters, pagination.page, entriesPerPage);
     }
-  }, [pagination.page, entriesPerPage]);
+  }, [pagination.page, entriesPerPage, liquidacionUuid]);
 
   useEffect(() => {
     if (communications.length > 0) {
@@ -1259,6 +1271,23 @@ export default function Contracts() {
         isManager={isManager}
         userGroupId={userGroupId}
       />
+
+      {/* Indicador de filtro por liquidación */}
+      {liquidacionUuid && (
+        <div className="mb-4 flex items-center gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+          <span className="material-icons-outlined text-blue-600 dark:text-blue-400">filter_list</span>
+          <span className="text-sm text-blue-700 dark:text-blue-300">
+            Mostrando contratos de una liquidación específica
+          </span>
+          <button
+            onClick={handleClearFilters}
+            className="ml-auto px-3 py-1 text-sm rounded-lg bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors flex items-center gap-1"
+          >
+            <span className="material-icons-outlined text-sm">close</span>
+            Quitar filtro
+          </button>
+        </div>
+      )}
 
       {/* New Contract Button */}
       <div className="mb-6 flex justify-end">
@@ -1572,5 +1601,15 @@ export default function Contracts() {
         />
       )}
     </div>
+  );
+}
+
+export default function Contracts() {
+  return (
+    <Suspense fallback={<div className="p-6 contracts-pastel-bg min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    </div>}>
+      <ContractsContent />
+    </Suspense>
   );
 }

@@ -10,7 +10,6 @@ export default function Companies() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newCompany, setNewCompany] = useState({
     name: "",
-    type: "Luz",
     image: null,
   });
   const router = useRouter();
@@ -67,7 +66,6 @@ export default function Companies() {
     try {
       const formData = new FormData();
       formData.append("name", newCompany.name);
-      formData.append("type", newCompany.type);
 
       if (newCompany.image) {
         formData.append("imgFile", newCompany.image);
@@ -86,7 +84,6 @@ export default function Companies() {
         setIsModalOpen(false);
         setNewCompany({
           name: "",
-          type: "Luz",
           image: null,
         });
       } else {
@@ -102,7 +99,6 @@ export default function Companies() {
     setIsModalOpen(false);
     setNewCompany({
       name: "",
-      type: "Luz",
       image: null,
     });
   };
@@ -125,7 +121,6 @@ export default function Companies() {
             <tr>
               <th className="p-3">Imagen</th>
               <th className="p-3">Nombre</th>
-              <th className="p-3">Tipo</th>
               <th className="p-3">Acciones</th>
             </tr>
           </thead>
@@ -140,20 +135,6 @@ export default function Companies() {
                   />
                 </td>
                 <td className="p-3 font-medium text-slate-800 dark:text-slate-200">{company.name}</td>
-
-                <td className="p-3">
-                <span
-                  className={`${
-                    company.type === "Gas"
-                      ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
-                      : company.type === "Telefonía"
-                      ? "bg-purple-500/20 text-purple-600 dark:text-purple-400"
-                      : "bg-blue-500/20 text-blue-600 dark:text-blue-400"
-                  } px-3 py-1 rounded-full text-xs font-semibold`}
-                >
-                  {company.type}
-                </span>
-              </td>
 
                 <td className="p-3">
                   <div className="flex space-x-2">
@@ -195,23 +176,6 @@ export default function Companies() {
                   onChange={(e) => setNewCompany({ ...newCompany, name: e.target.value })}
                   required
                 />
-              </div>
-              <div className="mb-4">
-                <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="type">
-                  Tipo
-                </label>
-                <div className="neumorphic-card-inset rounded-lg">
-                  <select
-                    id="type"
-                    className="w-full px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
-                    value={newCompany.type}
-                    onChange={(e) => setNewCompany({ ...newCompany, type: e.target.value })}
-                  >
-                    <option value="Luz">Luz</option>
-                    <option value="Gas">Gas</option>
-                    <option value="Telefonía">Telefonía</option>
-                  </select>
-                </div>
               </div>
               <div className="mb-4">
                 <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="image">

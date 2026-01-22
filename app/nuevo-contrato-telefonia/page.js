@@ -487,7 +487,7 @@ export default function CreateTelephonyContractPage() {
         {/* Telephony Contract Form */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <CreateTelephonyContractForm
-            companies={companies.filter((company) => company.type === "Telefonía")}
+            companies={companies}
             onContractUpdate={handleContractTelephonyUpdate}
           />
         </div>

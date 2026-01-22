@@ -35,15 +35,14 @@ export default function CreateTelephonyContractForm({ companies, onContractUpdat
     const jwtToken = getCookie("factura-token");
 
     try {
-      const response = await authGetFetch(`rates/group/company-name`, jwtToken);
+      // Filtrar tarifas por serviceType=Telefonía
+      const response = await authGetFetch(`rates/group/company-name?serviceType=Telefonía`, jwtToken);
       if (response.ok) {
         const ratesData = await response.json();
         const filteredRates = [];
         for (const company in ratesData) {
           if (ratesData.hasOwnProperty(company)) {
-            filteredRates.push(
-              ...ratesData[company].filter((rate) => rate.company?.type === "Telefonía")
-            );
+            filteredRates.push(...ratesData[company]);
           }
         }
 
@@ -206,11 +205,13 @@ export default function CreateTelephonyContractForm({ companies, onContractUpdat
                 <option value="" disabled>
                   Selecciona una compañía
                 </option>
-                {companies.map((company) => (
-                  <option key={company.id} value={company.id}>
-                    {company.name}
-                  </option>
-                ))}
+                {companies
+                  .filter((company) => contractState.some((rate) => rate.company?.name === company.name))
+                  .map((company) => (
+                    <option key={company.id} value={company.id}>
+                      {company.name}
+                    </option>
+                  ))}
               </select>
             </div>
           </div>

@@ -9,16 +9,16 @@ export default function NewRateModal({
   onClose,
   onSave,
   companyId,
-  companyType,
   rateToEdit,
 }) {
   const [activeTab, setActiveTab] = useState("prices");
   const [documentationValues, setDocumentationValues] = useState([]);
-  const [error, setError] = useState({ name: "", type: "", renewDays: "" });
+  const [error, setError] = useState({ name: "", type: "", renewDays: "", serviceType: "" });
 
   const [newRate, setNewRate] = useState({
     name: "",
     type: "",
+    serviceType: "Luz",
     renewDays: 0,
     powerSlot1: "",
     powerSlot2: "",
@@ -40,12 +40,16 @@ export default function NewRateModal({
   useEffect(() => {
     setActiveTab("prices");
     setDocumentationValues([]);
-    setError({ name: "", type: "", renewDays: "" });
+    setError({ name: "", type: "", renewDays: "", serviceType: "" });
     if (rateToEdit) {
       const normalizedRate = Object.keys(newRate).reduce((acc, key) => {
         acc[key] = rateToEdit[key] !== undefined && rateToEdit[key] !== null ? rateToEdit[key] : "";
         return acc;
       }, {});
+      // Asegurar que serviceType tenga un valor por defecto si no viene
+      if (!normalizedRate.serviceType) {
+        normalizedRate.serviceType = "Luz";
+      }
       setNewRate(normalizedRate);
     }
     if (rateToEdit && rateToEdit.documentation) {
@@ -69,7 +73,7 @@ export default function NewRateModal({
 
   const handleAddRate = async (e) => {
     e.preventDefault();
-    setError({ name: "", type: "", renewDays: "" });
+    setError({ name: "", type: "", renewDays: "", serviceType: "" });
 
     if (!newRate.name) {
       setError((prev) => ({
@@ -79,7 +83,15 @@ export default function NewRateModal({
       return;
     }
 
-    if (!newRate.type && companyType !== "Telefonía") {
+    if (!newRate.serviceType) {
+      setError((prev) => ({
+        ...prev,
+        serviceType: "El tipo de servicio es obligatorio.",
+      }));
+      return;
+    }
+
+    if (!newRate.type && newRate.serviceType !== "Telefonía") {
       setError((prev) => ({
         ...prev,
         type: "El tipo de tarifa es obligatorio.",
@@ -176,12 +188,59 @@ export default function NewRateModal({
         <form onSubmit={handleAddRate}>
           {activeTab === "prices" && (
             <>
-              {/* Contenedor para el título y los checkboxes */}
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-xl font-bold">
-                  {rateToEdit ? "Editar tarifa" : "Crear nueva tarifa"}
-                </h3>
-                {companyType !== "Telefonía" && (
+              {/* Título */}
+              <h3 className="text-xl font-bold mb-4">
+                {rateToEdit ? "Editar tarifa" : "Crear nueva tarifa"}
+              </h3>
+
+              {/* Selector de tipo de servicio */}
+              <div className="mb-4">
+                <label className="block text-black mb-2">Tipo de Servicio</label>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="serviceLuz"
+                      name="serviceType"
+                      value="Luz"
+                      className="mr-2"
+                      checked={newRate.serviceType === "Luz"}
+                      onChange={(e) => setNewRate({ ...newRate, serviceType: e.target.value, type: "" })}
+                    />
+                    <label htmlFor="serviceLuz" className="text-black">Luz</label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="serviceGas"
+                      name="serviceType"
+                      value="Gas"
+                      className="mr-2"
+                      checked={newRate.serviceType === "Gas"}
+                      onChange={(e) => setNewRate({ ...newRate, serviceType: e.target.value, type: "" })}
+                    />
+                    <label htmlFor="serviceGas" className="text-black">Gas</label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="serviceTelefonia"
+                      name="serviceType"
+                      value="Telefonía"
+                      className="mr-2"
+                      checked={newRate.serviceType === "Telefonía"}
+                      onChange={(e) => setNewRate({ ...newRate, serviceType: e.target.value, type: "" })}
+                    />
+                    <label htmlFor="serviceTelefonia" className="text-black">Telefonía</label>
+                  </div>
+                </div>
+              </div>
+              {error.serviceType && <div className="text-red-600 text-sm mt-2">{error.serviceType}</div>}
+
+              {/* Tipo de tarifa (solo para Luz) */}
+              {newRate.serviceType === "Luz" && (
+                <div className="mb-4">
+                  <label className="block text-black mb-2">Tipo de Tarifa</label>
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center">
                       <input
@@ -193,9 +252,7 @@ export default function NewRateModal({
                         checked={newRate.type === "2.0"}
                         onChange={(e) => setNewRate({ ...newRate, type: e.target.value })}
                       />
-                      <label htmlFor="rate2_0" className="text-black">
-                        2.0
-                      </label>
+                      <label htmlFor="rate2_0" className="text-black">2.0</label>
                     </div>
                     <div className="flex items-center">
                       <input
@@ -207,9 +264,7 @@ export default function NewRateModal({
                         checked={newRate.type === "3.0"}
                         onChange={(e) => setNewRate({ ...newRate, type: e.target.value })}
                       />
-                      <label htmlFor="rate3_0" className="text-black">
-                        3.0
-                      </label>
+                      <label htmlFor="rate3_0" className="text-black">3.0</label>
                     </div>
                     <div className="flex items-center">
                       <input
@@ -221,13 +276,11 @@ export default function NewRateModal({
                         checked={newRate.type === "6.1"}
                         onChange={(e) => setNewRate({ ...newRate, type: e.target.value })}
                       />
-                      <label htmlFor="rate6_1" className="text-black">
-                        6.1
-                      </label>
+                      <label htmlFor="rate6_1" className="text-black">6.1</label>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
               {error.type && <div className="text-red-600 text-sm mt-2">{error.type}</div>}
 
               {/* Nombre de la tarifa */}
@@ -270,7 +323,7 @@ export default function NewRateModal({
               )}
 
               {/* Luz */}
-              {companyType === "Luz" && (
+              {newRate.serviceType === "Luz" && (
                 <>
                   {/* Potencia - 2 tramos para 2.0, 6 tramos para 3.0/6.1 */}
                   {(newRate.type === "2.0" ? [1, 2] : [1, 2, 3, 4, 5, 6]).map((slot) => (
@@ -329,7 +382,7 @@ export default function NewRateModal({
               )}
 
               {/* Telefonía */}
-              {companyType === "Telefonía" && (
+              {newRate.serviceType === "Telefonía" && (
                 <>
                   <div className="mb-4">
                     <label className="block text-black mb-2" htmlFor="products">
@@ -363,7 +416,7 @@ export default function NewRateModal({
               )}
 
               {/* Gas */}
-              {companyType === "Gas" && (
+              {newRate.serviceType === "Gas" && (
                 <>
                   <div className="mb-4">
                     <label className="block text-black mb-2" htmlFor="energySlot1">

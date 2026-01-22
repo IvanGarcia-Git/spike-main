@@ -1390,7 +1390,7 @@ export default function LiquidacionDetailPage() {
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 neumorphic-card rounded-lg z-10">
+                <div className="absolute right-0 mt-2 w-56 neumorphic-card rounded-lg z-10">
                   <button
                     onClick={handleBulkEditCommission}
                     className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-t-lg"
@@ -1399,9 +1399,20 @@ export default function LiquidacionDetailPage() {
                   </button>
                   <button
                     onClick={handleBulkDelete}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-b-lg"
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-800"
                   >
                     Desvincular contratos
+                  </button>
+                  <hr className="border-gray-200 dark:border-gray-700" />
+                  <button
+                    onClick={() => {
+                      router.push(`/contratos?liquidacion=${uuid}`);
+                      setIsDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-b-lg flex items-center gap-2"
+                  >
+                    <span className="material-icons text-base">list_alt</span>
+                    Ver en listado de contratos
                   </button>
                 </div>
               )}

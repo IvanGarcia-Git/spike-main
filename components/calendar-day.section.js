@@ -131,25 +131,8 @@ export default function CalendarByDay({
           )}
         </div>
 
-        <div className="flex items-center space-x-1 p-1 neumorphic-card-inset rounded-lg">
-          <button
-            onClick={() => onChangeView("month")}
-            className="px-3 py-1 text-xs rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-primary"
-          >
-            Mes
-          </button>
-          <button
-            onClick={() => onChangeView("week")}
-            className="px-3 py-1 text-xs rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-primary"
-          >
-            Semana
-          </button>
-          <button
-            className="px-3 py-1 text-xs rounded-md transition-colors text-white bg-primary"
-          >
-            Día
-          </button>
-        </div>
+        {/* Selector de vista eliminado - se usa el del componente padre */}
+        <div className="w-[180px]"></div>
       </div>
 
       {/* Calendario diario */}

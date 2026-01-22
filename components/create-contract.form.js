@@ -49,7 +49,8 @@ export default function CreateContractForm({
     const jwtToken = getCookie("factura-token");
 
     try {
-      const response = await authGetFetch(`rates/group/company-name`, jwtToken);
+      // Filtrar tarifas por serviceType (Luz o Gas) según el tipo de contrato
+      const response = await authGetFetch(`rates/group/company-name?serviceType=${contractType}`, jwtToken);
       if (response.ok) {
         const ratesData = await response.json();
         setContractState((prev) => ({ ...prev, rates: ratesData }));
@@ -59,7 +60,7 @@ export default function CreateContractForm({
     } catch (error) {
       console.error("Error al obtener las tarifas:", error);
     }
-  }, []);
+  }, [contractType]);
 
   useEffect(() => {
     getRates();
@@ -144,9 +145,10 @@ export default function CreateContractForm({
 
   return (
     <div
-      className={`neumorphic-card p-6 transition-all ${
+      className={`neumorphic-card p-6 transition-all cursor-pointer ${
         isSelected ? "ring-2 ring-primary" : ""
       }`}
+      onClick={() => handleIsSelectedChange({ target: { checked: !isSelected } })}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
@@ -164,22 +166,10 @@ export default function CreateContractForm({
           </div>
         </div>
 
-        {/* Toggle Switch */}
-        <label className="relative inline-flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            id={`selectContract-${contractType}`}
-            name={`selectContract-${contractType}`}
-            checked={isSelected}
-            onChange={handleIsSelectedChange}
-            className="absolute opacity-0 w-0 h-0 peer"
-          />
-          <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary"></div>
-        </label>
       </div>
 
       {isSelected && (
-        <div className="space-y-6">
+        <div className="space-y-6" onClick={(e) => e.stopPropagation()}>
           {/* Product (Gas only) - Movido arriba */}
           {contractType === "Gas" && (
             <div>
@@ -291,11 +281,13 @@ export default function CreateContractForm({
                 <option value="" disabled>
                   Selecciona una compañía
                 </option>
-                {companies.map((company) => (
-                  <option key={company.id} value={company.id}>
-                    {company.name}
-                  </option>
-                ))}
+                {companies
+                  .filter((company) => contractState.rates[company.name])
+                  .map((company) => (
+                    <option key={company.id} value={company.id}>
+                      {company.name}
+                    </option>
+                  ))}
               </select>
             </div>
           </div>

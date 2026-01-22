@@ -82,15 +82,25 @@ function DriveFilesContent() {
   const [activeSection, setActiveSection] = useState("mi-unidad");
   const [carpetas, setCarpetas] = useState([]);
   const [archivos, setArchivos] = useState([]);
+  const [archivosPapelera, setArchivosPapelera] = useState([]);
+  const [archivosCompartidosConmigo, setArchivosCompartidosConmigo] = useState([]);
+  const [archivosCompartidosPorMi, setArchivosCompartidosPorMi] = useState([]);
+  const [usuariosDisponibles, setUsuariosDisponibles] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState("grid"); // grid | list
+  const [compartidoSubsection, setCompartidoSubsection] = useState("conmigo"); // conmigo | pormi
 
   // Modals state
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
+  const [showEmptyTrashModal, setShowEmptyTrashModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareTarget, setShareTarget] = useState(null); // archivo a compartir
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [sharePermission, setSharePermission] = useState("read");
   const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'file' | 'folder', id, nombre }
   const [renameTarget, setRenameTarget] = useState(null);
 
@@ -113,13 +123,21 @@ function DriveFilesContent() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [filesResponse, foldersResponse] = await Promise.all([
+      const [filesResponse, foldersResponse, trashResponse, sharedWithMeResponse, sharedByMeResponse, usersResponse] = await Promise.all([
         fetch("/api/drive/files"),
         fetch("/api/drive/folders"),
+        fetch("/api/drive/trash"),
+        fetch("/api/drive/shares/with-me"),
+        fetch("/api/drive/shares/by-me"),
+        fetch("/api/drive/shares/users"),
       ]);
 
       const filesData = await filesResponse.json();
       const foldersData = await foldersResponse.json();
+      const trashData = await trashResponse.json();
+      const sharedWithMeData = await sharedWithMeResponse.json();
+      const sharedByMeData = await sharedByMeResponse.json();
+      const usersData = await usersResponse.json();
 
       if (filesResponse.ok) {
         setArchivos(filesData.files || []);
@@ -127,10 +145,34 @@ function DriveFilesContent() {
       if (foldersResponse.ok) {
         setCarpetas(foldersData.folders || []);
       }
+      if (trashResponse.ok) {
+        setArchivosPapelera(trashData.files || []);
+      }
+      if (sharedWithMeResponse.ok) {
+        setArchivosCompartidosConmigo(sharedWithMeData.files || []);
+      }
+      if (sharedByMeResponse.ok) {
+        setArchivosCompartidosPorMi(sharedByMeData.files || []);
+      }
+      if (usersResponse.ok) {
+        setUsuariosDisponibles(usersData.users || []);
+      }
     } catch (error) {
       console.error("Error fetching drive data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTrash = async () => {
+    try {
+      const response = await fetch("/api/drive/trash");
+      const data = await response.json();
+      if (response.ok) {
+        setArchivosPapelera(data.files || []);
+      }
+    } catch (error) {
+      console.error("Error fetching trash:", error);
     }
   };
 
@@ -238,7 +280,7 @@ function DriveFilesContent() {
   };
 
   const handleDeleteFile = (file) => {
-    setDeleteTarget({ type: 'file', id: file.id, nombre: file.nombre });
+    setDeleteTarget({ type: 'file', id: file.id, uuid: file.uuid, nombre: file.nombre });
     setShowDeleteModal(true);
   };
 
@@ -250,12 +292,17 @@ function DriveFilesContent() {
   const confirmDelete = async () => {
     try {
       if (deleteTarget.type === 'file') {
-        const response = await fetch(`/api/drive/files?id=${deleteTarget.id}`, {
+        const response = await fetch(`/api/drive/files?uuid=${deleteTarget.uuid}`, {
           method: "DELETE",
         });
 
         if (response.ok) {
+          // Mover archivo a papelera (soft delete)
+          const deletedFile = archivos.find(a => a.id === deleteTarget.id);
           setArchivos(archivos.filter(a => a.id !== deleteTarget.id));
+          if (deletedFile) {
+            setArchivosPapelera([...archivosPapelera, { ...deletedFile, deletedAt: new Date().toISOString() }]);
+          }
         }
       } else if (deleteTarget.type === 'folder') {
         const response = await fetch(`/api/drive/folders?id=${deleteTarget.id}`, {
@@ -294,6 +341,127 @@ function DriveFilesContent() {
     } catch (error) {
       console.error("Error toggling destacado:", error);
     }
+  };
+
+  // Restaurar archivo de la papelera
+  const handleRestoreFile = async (archivo) => {
+    try {
+      const response = await fetch(`/api/drive/restore?uuid=${archivo.uuid}`, {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        // Mover de papelera a archivos
+        setArchivosPapelera(archivosPapelera.filter(a => a.uuid !== archivo.uuid));
+        // Recargar archivos para incluir el restaurado
+        const filesResponse = await fetch("/api/drive/files");
+        const filesData = await filesResponse.json();
+        if (filesResponse.ok) {
+          setArchivos(filesData.files || []);
+        }
+      }
+    } catch (error) {
+      console.error("Error restoring file:", error);
+      alert("Error al restaurar el archivo");
+    }
+  };
+
+  // Vaciar papelera
+  const handleEmptyTrash = async () => {
+    try {
+      const response = await fetch("/api/drive/trash", {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setArchivosPapelera([]);
+        setShowEmptyTrashModal(false);
+      }
+    } catch (error) {
+      console.error("Error emptying trash:", error);
+      alert("Error al vaciar la papelera");
+    }
+  };
+
+  // Abrir modal de compartir
+  const handleShareFile = (archivo) => {
+    setShareTarget(archivo);
+    setSelectedUsers([]);
+    setSharePermission("read");
+    setShowShareModal(true);
+  };
+
+  // Confirmar compartir archivo
+  const handleConfirmShare = async () => {
+    if (!shareTarget || selectedUsers.length === 0) {
+      alert("Selecciona al menos un usuario");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/drive/shares", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileId: shareTarget.id,
+          userIds: selectedUsers,
+          permission: sharePermission,
+        }),
+      });
+
+      if (response.ok) {
+        setShowShareModal(false);
+        setShareTarget(null);
+        setSelectedUsers([]);
+        // Refrescar datos de compartidos
+        const sharedByMeResponse = await fetch("/api/drive/shares/by-me");
+        const sharedByMeData = await sharedByMeResponse.json();
+        if (sharedByMeResponse.ok) {
+          setArchivosCompartidosPorMi(sharedByMeData.files || []);
+        }
+        alert("Archivo compartido correctamente");
+      } else {
+        const error = await response.json();
+        alert(error.error || "Error al compartir el archivo");
+      }
+    } catch (error) {
+      console.error("Error sharing file:", error);
+      alert("Error al compartir el archivo");
+    }
+  };
+
+  // Quitar compartición
+  const handleUnshare = async (fileId, userId) => {
+    try {
+      const response = await fetch("/api/drive/shares", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileId,
+          sharedWithUserId: userId,
+        }),
+      });
+
+      if (response.ok) {
+        // Refrescar datos de compartidos
+        const sharedByMeResponse = await fetch("/api/drive/shares/by-me");
+        const sharedByMeData = await sharedByMeResponse.json();
+        if (sharedByMeResponse.ok) {
+          setArchivosCompartidosPorMi(sharedByMeData.files || []);
+        }
+      }
+    } catch (error) {
+      console.error("Error unsharing file:", error);
+    }
+  };
+
+  // Toggle selección de usuario para compartir
+  const toggleUserSelection = (userId) => {
+    setSelectedUsers(prev =>
+      prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
   };
 
   const handleRenameFile = (archivo) => {
@@ -429,31 +597,74 @@ function DriveFilesContent() {
                   Mi Unidad
                 </span>
               </button>
-              <button
-                className={`w-full flex items-center p-3 rounded-lg transition-colors ${
-                  activeSection === "compartido"
-                    ? "bg-primary/10"
-                    : "hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
-                onClick={() => setActiveSection("compartido")}
-              >
-                <span
-                  className={`material-icons-outlined mr-3 ${
-                    activeSection === "compartido" ? "text-primary" : "text-slate-500"
-                  }`}
-                >
-                  group
-                </span>
-                <span
-                  className={`font-medium ${
+              <div>
+                <button
+                  className={`w-full flex items-center p-3 rounded-lg transition-colors ${
                     activeSection === "compartido"
-                      ? "text-primary"
-                      : "text-slate-600 dark:text-slate-400"
+                      ? "bg-primary/10"
+                      : "hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
+                  onClick={() => setActiveSection("compartido")}
                 >
-                  Compartido
-                </span>
-              </button>
+                  <span
+                    className={`material-icons-outlined mr-3 ${
+                      activeSection === "compartido" ? "text-primary" : "text-slate-500"
+                    }`}
+                  >
+                    group
+                  </span>
+                  <span
+                    className={`font-medium ${
+                      activeSection === "compartido"
+                        ? "text-primary"
+                        : "text-slate-600 dark:text-slate-400"
+                    }`}
+                  >
+                    Compartido
+                  </span>
+                  {(archivosCompartidosConmigo.length > 0 || archivosCompartidosPorMi.length > 0) && (
+                    <span className="ml-auto bg-primary/20 text-primary text-xs px-2 py-0.5 rounded-full">
+                      {archivosCompartidosConmigo.length + archivosCompartidosPorMi.length}
+                    </span>
+                  )}
+                </button>
+                {activeSection === "compartido" && (
+                  <div className="ml-6 mt-1 space-y-1">
+                    <button
+                      className={`w-full flex items-center p-2 rounded-lg text-sm transition-colors ${
+                        compartidoSubsection === "conmigo"
+                          ? "bg-primary/5 text-primary"
+                          : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      }`}
+                      onClick={() => setCompartidoSubsection("conmigo")}
+                    >
+                      <span className="material-icons-outlined text-sm mr-2">person_add</span>
+                      Conmigo
+                      {archivosCompartidosConmigo.length > 0 && (
+                        <span className="ml-auto text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">
+                          {archivosCompartidosConmigo.length}
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      className={`w-full flex items-center p-2 rounded-lg text-sm transition-colors ${
+                        compartidoSubsection === "pormi"
+                          ? "bg-primary/5 text-primary"
+                          : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      }`}
+                      onClick={() => setCompartidoSubsection("pormi")}
+                    >
+                      <span className="material-icons-outlined text-sm mr-2">share</span>
+                      Por mí
+                      {archivosCompartidosPorMi.length > 0 && (
+                        <span className="ml-auto text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">
+                          {archivosCompartidosPorMi.length}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
               <button
                 className={`w-full flex items-center p-3 rounded-lg transition-colors ${
                   activeSection === "recientes"
@@ -528,8 +739,24 @@ function DriveFilesContent() {
                 >
                   Papelera
                 </span>
+                {archivosPapelera.length > 0 && (
+                  <span className="ml-auto bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-xs px-2 py-0.5 rounded-full">
+                    {archivosPapelera.length}
+                  </span>
+                )}
               </button>
             </nav>
+
+            {/* Botón Vaciar Papelera - solo visible cuando papelera está activa */}
+            {activeSection === "papelera" && archivosPapelera.length > 0 && (
+              <button
+                onClick={() => setShowEmptyTrashModal(true)}
+                className="w-full mt-4 flex items-center justify-center p-3 rounded-lg bg-red-500/10 text-red-500 font-semibold hover:bg-red-500/20 transition-colors"
+              >
+                <span className="material-icons-outlined mr-2 text-lg">delete_forever</span>
+                Vaciar Papelera
+              </button>
+            )}
           </div>
         </div>
 
@@ -639,11 +866,119 @@ function DriveFilesContent() {
                   : activeSection === "destacados"
                   ? "Archivos Destacados"
                   : activeSection === "compartido"
-                  ? "Archivos Compartidos"
+                  ? (compartidoSubsection === "conmigo" ? "Compartidos Conmigo" : "Compartidos Por Mí")
+                  : activeSection === "papelera"
+                  ? "Papelera"
                   : "Archivos"}
               </h3>
 
-              {filteredArchivos.length === 0 ? (
+              {/* Contenido de Compartido */}
+              {activeSection === "compartido" ? (
+                compartidoSubsection === "conmigo" ? (
+                  // Archivos compartidos conmigo
+                  archivosCompartidosConmigo.length === 0 ? (
+                    <div className="neumorphic-card p-8 text-center">
+                      <span className="material-icons-outlined text-6xl text-slate-300 dark:text-slate-600 mb-4">
+                        person_add
+                      </span>
+                      <p className="text-slate-500 dark:text-slate-400">
+                        No hay archivos compartidos contigo
+                      </p>
+                    </div>
+                  ) : viewMode === "grid" ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                      {archivosCompartidosConmigo.map((archivo) => (
+                        <SharedWithMeFileCard
+                          key={archivo.id}
+                          archivo={archivo}
+                          formatDate={formatDate}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {archivosCompartidosConmigo.map((archivo) => (
+                        <SharedWithMeFileListItem
+                          key={archivo.id}
+                          archivo={archivo}
+                          formatDate={formatDate}
+                        />
+                      ))}
+                    </div>
+                  )
+                ) : (
+                  // Archivos compartidos por mí
+                  archivosCompartidosPorMi.length === 0 ? (
+                    <div className="neumorphic-card p-8 text-center">
+                      <span className="material-icons-outlined text-6xl text-slate-300 dark:text-slate-600 mb-4">
+                        share
+                      </span>
+                      <p className="text-slate-500 dark:text-slate-400">
+                        No has compartido ningún archivo
+                      </p>
+                      <p className="text-sm text-slate-400 dark:text-slate-500 mt-2">
+                        Usa el botón de compartir en tus archivos para comenzar
+                      </p>
+                    </div>
+                  ) : viewMode === "grid" ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                      {archivosCompartidosPorMi.map((archivo) => (
+                        <SharedByMeFileCard
+                          key={archivo.id}
+                          archivo={archivo}
+                          onUnshare={handleUnshare}
+                          formatDate={formatDate}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {archivosCompartidosPorMi.map((archivo) => (
+                        <SharedByMeFileListItem
+                          key={archivo.id}
+                          archivo={archivo}
+                          onUnshare={handleUnshare}
+                          formatDate={formatDate}
+                        />
+                      ))}
+                    </div>
+                  )
+                )
+              ) : /* Contenido de Papelera */
+              activeSection === "papelera" ? (
+                archivosPapelera.length === 0 ? (
+                  <div className="neumorphic-card p-8 text-center">
+                    <span className="material-icons-outlined text-6xl text-slate-300 dark:text-slate-600 mb-4">
+                      delete_outline
+                    </span>
+                    <p className="text-slate-500 dark:text-slate-400">
+                      La papelera está vacía
+                    </p>
+                  </div>
+                ) : viewMode === "grid" ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {archivosPapelera.map((archivo) => (
+                      <TrashFileCard
+                        key={archivo.id}
+                        archivo={archivo}
+                        onRestore={handleRestoreFile}
+                        formatDate={formatDate}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {archivosPapelera.map((archivo) => (
+                      <TrashFileListItem
+                        key={archivo.id}
+                        archivo={archivo}
+                        onRestore={handleRestoreFile}
+                        formatDate={formatDate}
+                      />
+                    ))}
+                  </div>
+                )
+              ) : filteredArchivos.length === 0 ? (
                 <div className="neumorphic-card p-8 text-center">
                   <span className="material-icons-outlined text-6xl text-slate-300 dark:text-slate-600 mb-4">
                     {activeSection === "destacados" ? "star_outline" : "folder_open"}
@@ -669,6 +1004,7 @@ function DriveFilesContent() {
                       onDelete={handleDeleteFile}
                       onToggleDestacado={handleToggleDestacado}
                       onRename={handleRenameFile}
+                      onShare={handleShareFile}
                       formatDate={formatDate}
                     />
                   ))}
@@ -682,6 +1018,7 @@ function DriveFilesContent() {
                       onDelete={handleDeleteFile}
                       onToggleDestacado={handleToggleDestacado}
                       onRename={handleRenameFile}
+                      onShare={handleShareFile}
                       formatDate={formatDate}
                     />
                   ))}
@@ -831,6 +1168,185 @@ function DriveFilesContent() {
           </div>
         </div>
       )}
+
+      {/* Empty Trash Confirmation Modal */}
+      {showEmptyTrashModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="neumorphic-card p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                Vaciar Papelera
+              </h2>
+              <button
+                onClick={() => setShowEmptyTrashModal(false)}
+                className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              >
+                <span className="material-icons-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="flex items-center space-x-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg mb-6">
+              <span className="material-icons-outlined text-red-500 text-3xl">warning</span>
+              <div>
+                <p className="text-slate-700 dark:text-slate-300 font-medium">
+                  Esta acción no se puede deshacer
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Se eliminarán permanentemente {archivosPapelera.length} archivo{archivosPapelera.length !== 1 ? 's' : ''}.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={handleEmptyTrash}
+                className="flex-1 neumorphic-button px-6 py-3 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600"
+              >
+                <span className="material-icons-outlined mr-2 text-lg align-middle">delete_forever</span>
+                Vaciar Papelera
+              </button>
+              <button
+                onClick={() => setShowEmptyTrashModal(false)}
+                className="flex-1 neumorphic-button px-6 py-3 rounded-lg text-slate-600 dark:text-slate-400 font-semibold"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && shareTarget && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="neumorphic-card p-6 w-full max-w-lg">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                Compartir Archivo
+              </h2>
+              <button
+                onClick={() => {
+                  setShowShareModal(false);
+                  setShareTarget(null);
+                  setSelectedUsers([]);
+                }}
+                className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              >
+                <span className="material-icons-outlined">close</span>
+              </button>
+            </div>
+
+            {/* Archivo a compartir */}
+            <div className="flex items-center space-x-3 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg mb-4">
+              <span className="material-icons-outlined text-primary text-2xl">
+                {shareTarget.icono || "insert_drive_file"}
+              </span>
+              <div>
+                <p className="font-medium text-slate-800 dark:text-slate-200">
+                  {shareTarget.nombre}
+                </p>
+                <p className="text-xs text-slate-500">{shareTarget.tamano}</p>
+              </div>
+            </div>
+
+            {/* Seleccionar permisos */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Permisos
+              </label>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setSharePermission("read")}
+                  className={`flex-1 p-2 rounded-lg border-2 transition-colors ${
+                    sharePermission === "read"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
+                  }`}
+                >
+                  <span className="material-icons-outlined text-sm mr-1">visibility</span>
+                  Solo lectura
+                </button>
+                <button
+                  onClick={() => setSharePermission("write")}
+                  className={`flex-1 p-2 rounded-lg border-2 transition-colors ${
+                    sharePermission === "write"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
+                  }`}
+                >
+                  <span className="material-icons-outlined text-sm mr-1">edit</span>
+                  Lectura y escritura
+                </button>
+              </div>
+            </div>
+
+            {/* Lista de usuarios */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Seleccionar usuarios ({selectedUsers.length} seleccionados)
+              </label>
+              <div className="max-h-48 overflow-y-auto border border-slate-200 dark:border-slate-700 rounded-lg">
+                {usuariosDisponibles.length === 0 ? (
+                  <p className="p-4 text-center text-slate-500">No hay usuarios disponibles</p>
+                ) : (
+                  usuariosDisponibles.map((user) => (
+                    <div
+                      key={user.id}
+                      onClick={() => toggleUserSelection(user.id)}
+                      className={`flex items-center p-3 cursor-pointer transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0 ${
+                        selectedUsers.includes(user.id)
+                          ? "bg-primary/10"
+                          : "hover:bg-slate-50 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded border-2 mr-3 flex items-center justify-center ${
+                        selectedUsers.includes(user.id)
+                          ? "border-primary bg-primary"
+                          : "border-slate-300 dark:border-slate-600"
+                      }`}>
+                        {selectedUsers.includes(user.id) && (
+                          <span className="material-icons-outlined text-white text-sm">check</span>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-slate-800 dark:text-slate-200 text-sm">
+                          {user.name}
+                        </p>
+                        <p className="text-xs text-slate-500">{user.email}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={handleConfirmShare}
+                disabled={selectedUsers.length === 0}
+                className={`flex-1 neumorphic-button px-6 py-3 rounded-lg font-semibold ${
+                  selectedUsers.length === 0
+                    ? "bg-slate-300 text-slate-500 cursor-not-allowed"
+                    : "bg-primary text-white hover:bg-primary/90"
+                }`}
+              >
+                <span className="material-icons-outlined mr-2 text-lg align-middle">share</span>
+                Compartir
+              </button>
+              <button
+                onClick={() => {
+                  setShowShareModal(false);
+                  setShareTarget(null);
+                  setSelectedUsers([]);
+                }}
+                className="flex-1 neumorphic-button px-6 py-3 rounded-lg text-slate-600 dark:text-slate-400 font-semibold"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -911,7 +1427,7 @@ function FolderListItem({ carpeta, onDelete, onRename, formatDate }) {
 }
 
 // File Card Component (Grid View)
-function FileCard({ archivo, onDelete, onToggleDestacado, onRename, formatDate }) {
+function FileCard({ archivo, onDelete, onToggleDestacado, onRename, onShare, formatDate }) {
   return (
     <div className="neumorphic-card p-4 flex flex-col space-y-2 group hover:shadow-lg transition-shadow cursor-pointer">
       <div className="flex items-start justify-between">
@@ -939,6 +1455,16 @@ function FileCard({ archivo, onDelete, onToggleDestacado, onRename, formatDate }
           <button
             onClick={(e) => {
               e.stopPropagation();
+              onShare(archivo);
+            }}
+            className="p-1 text-slate-500 hover:text-primary transition-colors"
+            title="Compartir"
+          >
+            <span className="material-icons-outlined text-sm">share</span>
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
               onRename(archivo);
             }}
             className="p-1 text-slate-500 hover:text-primary transition-colors"
@@ -961,7 +1487,7 @@ function FileCard({ archivo, onDelete, onToggleDestacado, onRename, formatDate }
 }
 
 // File List Item Component (List View)
-function FileListItem({ archivo, onDelete, onToggleDestacado, onRename, formatDate }) {
+function FileListItem({ archivo, onDelete, onToggleDestacado, onRename, onShare, formatDate }) {
   return (
     <div className="neumorphic-card p-3 flex items-center space-x-4 group hover:shadow-lg transition-shadow cursor-pointer">
       <span className="material-icons-outlined text-primary text-2xl">
@@ -987,6 +1513,16 @@ function FileListItem({ archivo, onDelete, onToggleDestacado, onRename, formatDa
         <button
           onClick={(e) => {
             e.stopPropagation();
+            onShare(archivo);
+          }}
+          className="p-1 text-slate-500 hover:text-primary transition-colors"
+          title="Compartir"
+        >
+          <span className="material-icons-outlined text-lg">share</span>
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
             onRename(archivo);
           }}
           className="p-1 text-slate-500 hover:text-primary transition-colors"
@@ -1003,6 +1539,230 @@ function FileListItem({ archivo, onDelete, onToggleDestacado, onRename, formatDa
           <span className="material-icons-outlined text-lg">delete</span>
         </button>
       </div>
+    </div>
+  );
+}
+
+// Trash File Card Component (Grid View)
+function TrashFileCard({ archivo, onRestore, formatDate }) {
+  // Determinar icono basado en mimetype
+  const getFileIcon = (mimetype) => {
+    if (!mimetype) return "insert_drive_file";
+    if (mimetype.startsWith("image/")) return "image";
+    if (mimetype.includes("pdf")) return "picture_as_pdf";
+    if (mimetype.includes("spreadsheet") || mimetype.includes("excel")) return "table_chart";
+    if (mimetype.includes("audio")) return "audio_file";
+    return "insert_drive_file";
+  };
+
+  return (
+    <div className="neumorphic-card p-4 flex flex-col space-y-2 group hover:shadow-lg transition-shadow opacity-75">
+      <div className="flex items-start justify-between">
+        <span className="material-icons-outlined text-slate-400 text-4xl">
+          {archivo.icono || getFileIcon(archivo.mimetype)}
+        </span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRestore(archivo);
+          }}
+          className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-green-500 transition-all"
+          title="Restaurar"
+        >
+          <span className="material-icons-outlined text-lg">restore</span>
+        </button>
+      </div>
+      <span className="text-sm font-medium text-slate-500 dark:text-slate-400 break-words line-clamp-2">
+        {archivo.nombre || archivo.name}
+      </span>
+      <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-700">
+        <span className="text-xs text-slate-400">{archivo.tamano || formatFileSize(archivo.size)}</span>
+        <span className="text-xs text-red-400">
+          {archivo.deletedAt ? formatDate(archivo.deletedAt) : "Eliminado"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// Trash File List Item Component (List View)
+function TrashFileListItem({ archivo, onRestore, formatDate }) {
+  // Determinar icono basado en mimetype
+  const getFileIcon = (mimetype) => {
+    if (!mimetype) return "insert_drive_file";
+    if (mimetype.startsWith("image/")) return "image";
+    if (mimetype.includes("pdf")) return "picture_as_pdf";
+    if (mimetype.includes("spreadsheet") || mimetype.includes("excel")) return "table_chart";
+    if (mimetype.includes("audio")) return "audio_file";
+    return "insert_drive_file";
+  };
+
+  return (
+    <div className="neumorphic-card p-3 flex items-center space-x-4 group hover:shadow-lg transition-shadow opacity-75">
+      <span className="material-icons-outlined text-slate-400 text-2xl">
+        {archivo.icono || getFileIcon(archivo.mimetype)}
+      </span>
+      <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex-1 truncate">
+        {archivo.nombre || archivo.name}
+      </span>
+      <span className="text-xs text-red-400">
+        Eliminado: {archivo.deletedAt ? formatDate(archivo.deletedAt) : "-"}
+      </span>
+      <span className="text-xs text-slate-400 w-20 text-right">
+        {archivo.tamano || formatFileSize(archivo.size)}
+      </span>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onRestore(archivo);
+        }}
+        className="opacity-0 group-hover:opacity-100 p-2 text-slate-500 hover:text-green-500 transition-all flex items-center space-x-1"
+        title="Restaurar"
+      >
+        <span className="material-icons-outlined text-lg">restore</span>
+        <span className="text-sm">Restaurar</span>
+      </button>
+    </div>
+  );
+}
+
+// Helper function for file size
+function formatFileSize(bytes) {
+  if (!bytes) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+}
+
+// Shared With Me File Card Component (Grid View)
+function SharedWithMeFileCard({ archivo, formatDate }) {
+  return (
+    <div className="neumorphic-card p-4 flex flex-col space-y-2 group hover:shadow-lg transition-shadow cursor-pointer">
+      <div className="flex items-start justify-between">
+        <span className="material-icons-outlined text-primary text-4xl">
+          {archivo.icono || "insert_drive_file"}
+        </span>
+        <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded">
+          {archivo.permiso === "write" ? "Editar" : "Solo ver"}
+        </span>
+      </div>
+      <span className="text-sm font-medium text-slate-700 dark:text-slate-200 break-words line-clamp-2">
+        {archivo.nombre}
+      </span>
+      <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
+        <p className="text-xs text-slate-400">
+          Compartido por: <span className="text-slate-600 dark:text-slate-300">{archivo.compartidoPor || archivo.propietario}</span>
+        </p>
+        <p className="text-xs text-slate-400">{archivo.tamano}</p>
+      </div>
+    </div>
+  );
+}
+
+// Shared With Me File List Item Component (List View)
+function SharedWithMeFileListItem({ archivo, formatDate }) {
+  return (
+    <div className="neumorphic-card p-3 flex items-center space-x-4 group hover:shadow-lg transition-shadow cursor-pointer">
+      <span className="material-icons-outlined text-primary text-2xl">
+        {archivo.icono || "insert_drive_file"}
+      </span>
+      <span className="text-sm font-medium text-slate-700 dark:text-slate-200 flex-1 truncate">
+        {archivo.nombre}
+      </span>
+      <span className="text-xs text-slate-500">
+        de {archivo.compartidoPor || archivo.propietario}
+      </span>
+      <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded">
+        {archivo.permiso === "write" ? "Editar" : "Solo ver"}
+      </span>
+      <span className="text-xs text-slate-400 w-20 text-right">{archivo.tamano}</span>
+    </div>
+  );
+}
+
+// Shared By Me File Card Component (Grid View)
+function SharedByMeFileCard({ archivo, onUnshare, formatDate }) {
+  return (
+    <div className="neumorphic-card p-4 flex flex-col space-y-2 group hover:shadow-lg transition-shadow">
+      <div className="flex items-start justify-between">
+        <span className="material-icons-outlined text-primary text-4xl">
+          {archivo.icono || "insert_drive_file"}
+        </span>
+        <span className="material-icons-outlined text-green-500 text-lg" title="Compartido">
+          share
+        </span>
+      </div>
+      <span className="text-sm font-medium text-slate-700 dark:text-slate-200 break-words line-clamp-2">
+        {archivo.nombre}
+      </span>
+      <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
+        <p className="text-xs text-slate-400 mb-1">Compartido con:</p>
+        <div className="flex flex-wrap gap-1">
+          {archivo.compartidoCon?.slice(0, 3).map((user, idx) => (
+            <span
+              key={idx}
+              className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full flex items-center"
+            >
+              {user.name || user.email}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUnshare(archivo.id, user.userId);
+                }}
+                className="ml-1 text-slate-400 hover:text-red-500"
+                title="Quitar acceso"
+              >
+                <span className="material-icons-outlined text-xs">close</span>
+              </button>
+            </span>
+          ))}
+          {archivo.compartidoCon?.length > 3 && (
+            <span className="text-xs text-slate-500">+{archivo.compartidoCon.length - 3} más</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Shared By Me File List Item Component (List View)
+function SharedByMeFileListItem({ archivo, onUnshare, formatDate }) {
+  return (
+    <div className="neumorphic-card p-3 flex items-center space-x-4 group hover:shadow-lg transition-shadow">
+      <span className="material-icons-outlined text-primary text-2xl">
+        {archivo.icono || "insert_drive_file"}
+      </span>
+      <span className="text-sm font-medium text-slate-700 dark:text-slate-200 flex-1 truncate">
+        {archivo.nombre}
+      </span>
+      <div className="flex items-center space-x-2">
+        <span className="text-xs text-slate-500">Compartido con:</span>
+        <div className="flex items-center space-x-1">
+          {archivo.compartidoCon?.slice(0, 2).map((user, idx) => (
+            <span
+              key={idx}
+              className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full flex items-center"
+            >
+              {user.name || user.email}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUnshare(archivo.id, user.userId);
+                }}
+                className="ml-1 text-slate-400 hover:text-red-500"
+                title="Quitar acceso"
+              >
+                <span className="material-icons-outlined text-xs">close</span>
+              </button>
+            </span>
+          ))}
+          {archivo.compartidoCon?.length > 2 && (
+            <span className="text-xs text-slate-500">+{archivo.compartidoCon.length - 2}</span>
+          )}
+        </div>
+      </div>
+      <span className="text-xs text-slate-400 w-20 text-right">{archivo.tamano}</span>
     </div>
   );
 }

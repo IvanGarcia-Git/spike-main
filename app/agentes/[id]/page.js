@@ -124,16 +124,14 @@ export default function AgentProfile() {
       total: 0
     }
 
-    // Mapear tiempos de activación por compañía
-    const tiemposActivacion = data.clientesPorTipo?.porCompania?.slice(0, 4).map(c => ({
-      tiempo: `${Math.floor(Math.random() * 10) + 2} días`, // Simulado por ahora
+    // Mapear tiempos de activación por compañía (datos reales del backend)
+    const tiemposActivacion = data.tiemposActivacion?.slice(0, 4).map(t => ({
+      tiempo: `${t.promedioDias} días`,
+      tipo: t.compania
+    })) || data.clientesPorTipo?.porCompania?.slice(0, 4).map(c => ({
+      tiempo: 'N/A',
       tipo: c.compania
-    })) || [
-      { tiempo: '4 días', tipo: 'Naturgy' },
-      { tiempo: '8 días', tipo: 'Endesa' },
-      { tiempo: '2 días', tipo: 'Iberdrola' },
-      { tiempo: '5 días', tipo: 'Repsol' }
-    ]
+    })) || []
 
     // Mapear estados (tipos de contrato)
     const estados = data.clientesPorTipo?.porTipo?.slice(0, 6).map(t => ({

@@ -633,13 +633,13 @@ export default function CreateContractPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <CreateContractForm
             contractType="Luz"
-            companies={companies.filter((company) => company.type == "Luz")}
+            companies={companies}
             onContractUpdate={handleContractLuzUpdate}
           />
 
           <CreateContractForm
             contractType="Gas"
-            companies={companies.filter((company) => company.type == "Gas")}
+            companies={companies}
             onContractUpdate={handleContractGasUpdate}
           />
         </div>

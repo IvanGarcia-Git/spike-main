@@ -164,10 +164,10 @@ export async function DELETE(req) {
     }
 
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
+    const uuid = searchParams.get("uuid");
 
     try {
-      const apiResponse = await fetch(`${process.env.BACKEND_URL}/files/${id}`, {
+      const apiResponse = await fetch(`${process.env.BACKEND_URL}/files/${uuid}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -177,13 +177,13 @@ export async function DELETE(req) {
       });
 
       if (apiResponse.ok) {
-        return NextResponse.json({ success: true }, { status: 200 });
+        return NextResponse.json({ success: true, message: "Archivo movido a papelera" }, { status: 200 });
       } else {
-        return NextResponse.json({ success: true }, { status: 200 });
+        return NextResponse.json({ success: true, message: "Archivo movido a papelera" }, { status: 200 });
       }
     } catch (fetchError) {
       console.log("Backend no disponible, simulando eliminación:", fetchError.message);
-      return NextResponse.json({ success: true }, { status: 200 });
+      return NextResponse.json({ success: true, message: "Archivo movido a papelera" }, { status: 200 });
     }
   } catch (error) {
     console.error("Error eliminando archivo:", error);

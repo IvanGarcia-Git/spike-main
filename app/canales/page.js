@@ -16,6 +16,9 @@ export default function Canales() {
     representativeName: "",
     representativePhone: "",
     representativeEmail: "",
+    address: "",
+    cif: "",
+    iban: "",
   });
   const router = useRouter();
 
@@ -55,6 +58,9 @@ export default function Canales() {
       formData.append("representativeName", newChannel.representativeName);
       formData.append("representativePhone", newChannel.representativePhone);
       formData.append("representativeEmail", newChannel.representativeEmail);
+      formData.append("address", newChannel.address || "");
+      formData.append("cif", newChannel.cif || "");
+      formData.append("iban", newChannel.iban || "");
 
       if (imageFile) {
         formData.append("imgFile", imageFile);
@@ -215,6 +221,59 @@ export default function Canales() {
                     }
                     required
                   />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="address">
+                    Dirección Fiscal
+                  </label>
+                  <input
+                    type="text"
+                    id="address"
+                    className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+                    value={newChannel.address}
+                    onChange={(e) =>
+                      setNewChannel({
+                        ...newChannel,
+                        address: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="cif">
+                      CIF
+                    </label>
+                    <input
+                      type="text"
+                      id="cif"
+                      className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+                      value={newChannel.cif}
+                      onChange={(e) =>
+                        setNewChannel({
+                          ...newChannel,
+                          cif: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="iban">
+                      IBAN
+                    </label>
+                    <input
+                      type="text"
+                      id="iban"
+                      className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+                      value={newChannel.iban}
+                      onChange={(e) =>
+                        setNewChannel({
+                          ...newChannel,
+                          iban: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
                 </div>
                 <div className="mb-4">
                   <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="image">

@@ -206,95 +206,43 @@ export default function ContractForm({
   // Solo Supervisores (isManager) o Admin (groupId === 1) pueden editar fichas no borrador
   const fieldDisabled = !formData.isDraft && !isManager && userGroupId !== 1;
 
+  const contractIcon = contract.type === "Luz" ? "bolt" : "local_fire_department";
+  const contractColor = contract.type === "Luz" ? "yellow" : "orange";
+
   return (
     <div
       className={`p-6 rounded-xl ${
         isActive ? "neumorphic-card ring-2 ring-primary" : "neumorphic-card-inset"
       }`}
     >
-      {/* Formulario de contrato */}
-      <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">
-        {contract.type === "Luz" ? "Contrato Luz" : "Contrato Gas"}
-      </h3>
-
-      {/* Selección de tipo de tarifa */}
-      <div className="mb-4">
-        <div className="flex gap-4">
-          {["2.0", "3.0", "6.1"].map((option) => (
-            <label key={option} className="flex text-slate-700 dark:text-slate-300 items-center cursor-pointer">
-              <input
-                type="radio"
-                name="rateType"
-                value={option}
-                checked={selectedRateType === option}
-                onChange={() => handleRateTypeChange(option)}
-                className="mr-2 accent-primary"
-                disabled={fieldDisabled || !isActive}
-              />
-              {option}
-            </label>
-          ))}
+      {/* Header con icono - igual que en creación */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-neumorphic-light-lg dark:shadow-neumorphic-dark-lg bg-${contractColor}-500 bg-opacity-10`}>
+          <span className={`material-icons-outlined text-2xl text-${contractColor}-500`}>{contractIcon}</span>
+        </div>
+        <div>
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+            {contract.type === "Luz" ? "Contrato Luz" : "Contrato Gas"}
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {contract.type === "Luz" ? "Electricidad" : "Gas natural"}
+          </p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        {/* Compañía */}
+      {/* Selector Producto (Solo para Gas) - Movido arriba igual que en creación */}
+      {contract.type === "Gas" && (
         <div className="mb-4">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="companyId">
-            Compañía
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="product">
+            Producto *
           </label>
-          <select
-            id="companyId"
-            name="companyId"
-            value={formData.companyId}
-            onChange={handleChange}
-            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
-            disabled={fieldDisabled || !isActive}
-            required
-          >
-            <option value="" disabled>
-              Selecciona una compañía
-            </option>
-            {companies.map((company) => (
-              <option key={company.id} value={company.id}>
-                {company.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* CUPS */}
-        <div className="mb-4">
-          <label
-            className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
-            htmlFor={`cups-${contract.uuid}`}
-          >
-            CUPS
-          </label>
-          <input
-            type="text"
-            id={`cups-${contract.uuid}`}
-            name="cups"
-            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
-            value={formData.cups}
-            onChange={handleChange}
-            disabled={fieldDisabled || !isActive}
-            required={!contract.isDraft}
-          />
-        </div>
-
-        {/* Selector Producto (Solo para Gas) */}
-        {contract.type === "Gas" && (
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="product">
-              Producto
-            </label>
+          <div className="neumorphic-card-inset rounded-lg">
             <select
               id="product"
               name="product"
               value={formData.product}
               onChange={handleChange}
-              className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
+              className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200"
               disabled={fieldDisabled || !isActive}
               required
             >
@@ -308,65 +256,142 @@ export default function ContractForm({
               ))}
             </select>
           </div>
-        )}
+        </div>
+      )}
+
+      {/* Selección de tipo de tarifa - Solo para Luz igual que en creación */}
+      {contract.type === "Luz" && (
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Tipo de Tarifa
+          </label>
+          <div className="flex gap-2">
+            {["2.0", "3.0", "6.1"].map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => !fieldDisabled && isActive && handleRateTypeChange(option)}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  selectedRateType === option
+                    ? "neumorphic-button active bg-primary text-white"
+                    : "neumorphic-button text-slate-600 dark:text-slate-400"
+                } ${fieldDisabled || !isActive ? "opacity-50 cursor-not-allowed" : ""}`}
+                disabled={fieldDisabled || !isActive}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Compañía */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="companyId">
+            Compañía *
+          </label>
+          <div className="neumorphic-card-inset rounded-lg">
+            <select
+              id="companyId"
+              name="companyId"
+              value={formData.companyId}
+              onChange={handleChange}
+              className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200"
+              disabled={fieldDisabled || !isActive}
+              required
+            >
+              <option value="" disabled>
+                Selecciona una compañía
+              </option>
+              {companies.map((company) => (
+                <option key={company.id} value={company.id}>
+                  {company.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* CUPS */}
+        <div>
+          <label
+            className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+            htmlFor={`cups-${contract.uuid}`}
+          >
+            CUPS *
+          </label>
+          <input
+            type="text"
+            id={`cups-${contract.uuid}`}
+            name="cups"
+            className="w-full px-4 py-3 rounded-lg neumorphic-card-inset text-slate-800 dark:text-slate-200 focus:outline-none bg-transparent"
+            placeholder="ES0000000000000000XX"
+            value={formData.cups}
+            onChange={handleChange}
+            disabled={fieldDisabled || !isActive}
+            required={!contract.isDraft}
+          />
+        </div>
 
         {/* Tarifa */}
-        <div className="mb-4">
+        <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="rateId">
-            Tarifa
+            Tarifa *
           </label>
-          <select
-            id="rateId"
-            name="rateId"
-            value={formData.rateId || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
-            disabled={fieldDisabled || !isActive}
-            required
-          >
-            <option value="" disabled>
-              Elige una tarifa
-            </option>
-            {filteredSelectRates.length > 0 ? (
-              filteredSelectRates.map((rate) => (
-                <option key={rate.id} value={rate.id}>
-                  {rate.name}
-                </option>
-              ))
-            ) : (
+          <div className="neumorphic-card-inset rounded-lg">
+            <select
+              id="rateId"
+              name="rateId"
+              value={formData.rateId || ""}
+              onChange={handleChange}
+              className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200"
+              disabled={fieldDisabled || !isActive}
+              required
+            >
               <option value="" disabled>
-                No hay tarifas disponibles
+                Elige la tarifa
               </option>
-            )}
-          </select>
+              {filteredSelectRates.length > 0 ? (
+                filteredSelectRates.map((rate) => (
+                  <option key={rate.id} value={rate.id}>
+                    {rate.name}
+                  </option>
+                ))
+              ) : (
+                <option value="" disabled>
+                  No hay tarifas disponibles
+                </option>
+              )}
+            </select>
+          </div>
         </div>
 
         {/* Potencias - Solo para contratos de luz */}
         {contract.type === "Luz" && (
-          <div className="mb-4">
+          <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Potencias Contratadas (kW)
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
               {Array.from({
                 length: selectedRateType === "2.0" ? 2 : 6,
               }).map((_, index) => (
                 <input
                   key={index}
-                  type="number"
-                  min="0"
-                  step="0.001"
+                  type="text"
                   name={`powerSlot${index + 1}`}
                   value={formData.contractedPowers?.[index] || ""}
                   onChange={(e) => {
+                    const value = e.target.value.replace(",", ".");
                     const updatedPowers = [...formData.contractedPowers];
-                    updatedPowers[index] = parseFloat(e.target.value) || 0;
+                    updatedPowers[index] = value;
                     setFormData((prevData) => ({
                       ...prevData,
                       contractedPowers: updatedPowers,
                     }));
                   }}
-                  className="w-28 px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
+                  className="w-full px-3 py-3 rounded-lg neumorphic-card-inset text-slate-800 dark:text-slate-200 focus:outline-none bg-transparent text-center"
                   placeholder={`P${index + 1}`}
                   disabled={
                     (selectedRateType === "2.0" && index > 1) ||
@@ -380,109 +405,123 @@ export default function ContractForm({
           </div>
         )}
 
+        {/* Placas Solares - Solo para Luz, igual que en creación */}
         {contract.type === "Luz" && (
-          <>
-            {/* Checkbox Placas */}
-            <div className="mb-4 flex items-center">
-              <input
-                type="checkbox"
-                id="solarPlates"
-                name="solarPlates"
-                checked={formData.solarPlates}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    solarPlates: e.target.checked,
-                    virtualBat: !e.target.checked ? false : formData.virtualBat,
-                  })
-                }
-                className="mr-2 w-4 h-4 accent-primary"
-                disabled={fieldDisabled || !isActive}
-              />
-              <label htmlFor="solarPlates" className="text-slate-700 dark:text-slate-300 cursor-pointer">
-                Placas
+          <div className="neumorphic-card-inset rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="material-icons-outlined text-yellow-500">solar_power</span>
+                <span className="text-slate-700 dark:text-slate-300 font-medium">Placas Solares</span>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  id="solarPlates"
+                  name="solarPlates"
+                  checked={formData.solarPlates}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      solarPlates: e.target.checked,
+                      virtualBat: !e.target.checked ? false : formData.virtualBat,
+                    })
+                  }
+                  className="sr-only peer"
+                  disabled={fieldDisabled || !isActive}
+                />
+                <div className={`w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary ${fieldDisabled || !isActive ? 'opacity-50' : ''}`}></div>
               </label>
             </div>
 
-            {/* Selector BAT Virtual */}
+            {/* BAT Virtual - solo visible si hay placas */}
             {formData.solarPlates && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="virtualBat">
-                  BAT Virtual
-                </label>
-                <select
-                  id="virtualBat"
-                  name="virtualBat"
-                  value={formData.virtualBat ? "true" : "false"}
-                  onChange={(e) => {
-                    const newVirtualBatValue = e.target.value === "true";
-                    setFormData({
-                      ...formData,
-                      virtualBat: newVirtualBatValue,
-                    });
-                  }}
-                  className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
-                  disabled={!formData.solarPlates || !isActive}
-                  required
-                >
-                  <option value="true">Sí</option>
-                  <option value="false">No</option>
-                </select>
+              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    BAT Virtual
+                  </label>
+                  <div className="neumorphic-card-inset rounded-lg">
+                    <select
+                      id="virtualBat"
+                      name="virtualBat"
+                      value={formData.virtualBat ? "true" : "false"}
+                      onChange={(e) => {
+                        const newVirtualBatValue = e.target.value === "true";
+                        setFormData({
+                          ...formData,
+                          virtualBat: newVirtualBatValue,
+                        });
+                      }}
+                      className="bg-transparent border-none focus:ring-0 px-4 py-2 text-slate-800 dark:text-slate-200"
+                      disabled={!formData.solarPlates || !isActive || fieldDisabled}
+                    >
+                      <option value="true">Sí</option>
+                      <option value="false">No</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             )}
-          </>
+          </div>
         )}
 
-        {/* Selector de Mantenimiento */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="maintenance">
-            Mantenimiento
-          </label>
-          <select
-            id="maintenance"
-            name="maintenance"
-            value={formData.maintenance}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                maintenance: e.target.value === "true",
-              })
-            }
-            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
-            disabled={fieldDisabled || !isActive}
-            required
-          >
-            <option value="true">Sí</option>
-            <option value="false">No</option>
-          </select>
-        </div>
+        {/* Mantenimiento y Factura Electrónica en grid 2 columnas - igual que en creación */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Selector de Mantenimiento */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="maintenance">
+              Mantenimiento
+            </label>
+            <div className="neumorphic-card-inset rounded-lg">
+              <select
+                id="maintenance"
+                name="maintenance"
+                value={formData.maintenance}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    maintenance: e.target.value === "true",
+                  })
+                }
+                className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200"
+                disabled={fieldDisabled || !isActive}
+                required
+              >
+                <option value="true">Sí</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+          </div>
 
-        {/* Selector de Factura Electrónica */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="electronicBill">
-            Factura Electrónica
-          </label>
-          <select
-            id="electronicBill"
-            name="electronicBill"
-            value={formData.electronicBill}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                electronicBill: e.target.value === "true",
-              })
-            }
-            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
-            disabled={fieldDisabled || !isActive}
-            required
-          >
-            <option value="true">Sí</option>
-            <option value="false">No</option>
-          </select>
+          {/* Selector de Factura Electrónica */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="electronicBill">
+              Factura Electrónica
+            </label>
+            <div className="neumorphic-card-inset rounded-lg">
+              <select
+                id="electronicBill"
+                name="electronicBill"
+                value={formData.electronicBill}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    electronicBill: e.target.value === "true",
+                  })
+                }
+                className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200"
+                disabled={fieldDisabled || !isActive}
+                required
+              >
+                <option value="true">Sí</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         {/* Observaciones */}
-        <div className="mb-4">
+        <div>
           <label
             className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
             htmlFor={`extraInfo-${contract.uuid}`}
@@ -492,7 +531,8 @@ export default function ContractForm({
           <textarea
             id={`extraInfo-${contract.uuid}`}
             name="extraInfo"
-            className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent resize-none"
+            className="w-full px-4 py-3 rounded-lg neumorphic-card-inset text-slate-800 dark:text-slate-200 focus:outline-none bg-transparent resize-none"
+            placeholder="Notas adicionales..."
             value={formData.extraInfo}
             onChange={handleChange}
             disabled={fieldDisabled || !isActive}
