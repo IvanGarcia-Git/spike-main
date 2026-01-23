@@ -134,7 +134,8 @@ export default function Sidebar({
 
   const bottomItems = [
     { href: "/drive", icon: "folder", label: "Drive" },
-    { href: "/liquidaciones", icon: "payments", label: "Liquidaciones" },
+    // Liquidaciones solo visible para managers
+    ...(isManager ? [{ href: "/liquidaciones", icon: "payments", label: "Liquidaciones" }] : []),
   ];
 
   // Check if a path is active

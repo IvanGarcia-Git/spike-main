@@ -12,7 +12,9 @@ export async function middleware(req) {
     const jwtKey = new TextEncoder().encode(process.env.JWT_SECRET);
     const { payload } = await jose.jwtVerify(token, jwtKey);
 
-    if (req.nextUrl.pathname == "/usuarios" && !payload.isManager) {
+    // Rutas que requieren ser Manager (no accesibles para Agentes)
+    const managerOnlyRoutes = ["/usuarios", "/liquidaciones"];
+    if (managerOnlyRoutes.some(route => req.nextUrl.pathname.startsWith(route)) && !payload.isManager) {
       return NextResponse.redirect(new URL("/contratos", req.url));
     }
 
