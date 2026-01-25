@@ -18,6 +18,7 @@ import AnimatedLogo from "@/components/AnimatedLogo";
  * @param {Object} props
  * @param {number} props.userGroupId - User group ID for permission checks
  * @param {boolean} props.isManager - Manager permission flag
+ * @param {string} props.userRole - User role for access control (e.g., "agente", "colaborador", "admin")
  * @param {boolean} props.isMobileOpen - Whether sidebar is open on mobile
  * @param {function} props.onClose - Callback to close sidebar on mobile
  * @param {boolean} props.isCollapsed - Whether sidebar is in collapsed mode
@@ -26,6 +27,7 @@ import AnimatedLogo from "@/components/AnimatedLogo";
 export default function Sidebar({
   userGroupId,
   isManager,
+  userRole,
   isMobileOpen = false,
   onClose,
   isCollapsed = false,
@@ -132,10 +134,15 @@ export default function Sidebar({
     { href: "/studio", icon: "edit_note", label: "Contratos Colaboración" },
   ];
 
+  // Verificar si el usuario tiene acceso a Liquidaciones
+  // Solo pueden acceder: super admins (groupId === 1) o usuarios con rol diferente a "agente"
+  const isAgente = userRole?.toLowerCase() === "agente" || userRole?.toLowerCase() === "agent";
+  const canAccessLiquidaciones = userGroupId === 1 || !isAgente;
+
   const bottomItems = [
     { href: "/drive", icon: "folder", label: "Drive" },
-    // Liquidaciones solo visible para managers
-    ...(isManager ? [{ href: "/liquidaciones", icon: "payments", label: "Liquidaciones" }] : []),
+    // Liquidaciones solo visible para managers y admins (groupId === 1)
+    ...(canAccessLiquidaciones ? [{ href: "/liquidaciones", icon: "payments", label: "Liquidaciones" }] : []),
   ];
 
   // Check if a path is active

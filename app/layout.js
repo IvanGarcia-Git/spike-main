@@ -32,6 +32,7 @@ export default function RootLayout({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userGroupId, setUserGroupId] = useState(null);
   const [isManager, setIsManager] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   const [sideBarHidden, setSideBarHidden] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
@@ -48,7 +49,10 @@ export default function RootLayout({ children }) {
       try {
         const payload = jose.decodeJwt(token);
         setUserGroupId(payload.groupId);
-        setIsManager(payload.isManager);
+        // Asegurar que isManager sea estrictamente booleano
+        setIsManager(payload.isManager === true);
+        // Guardar el rol del usuario para control de acceso
+        setUserRole(payload.role || null);
         return true;
       } catch (error) {
         console.error("Error al decodificar el token:", error);
@@ -103,6 +107,7 @@ export default function RootLayout({ children }) {
                 <Sidebar
                   userGroupId={userGroupId}
                   isManager={isManager}
+                  userRole={userRole}
                   isMobileOpen={isMobileSidebarOpen}
                   onClose={() => setIsMobileSidebarOpen(false)}
                   isCollapsed={isSidebarCollapsed}

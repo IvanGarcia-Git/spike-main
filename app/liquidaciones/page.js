@@ -10,8 +10,10 @@ import {
   FaTimes,
   FaSpinner,
   FaChevronDown,
+  FaLock,
 } from "react-icons/fa";
 import { getCookie } from "cookies-next";
+import * as jose from "jose";
 import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
 import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
@@ -352,6 +354,28 @@ const LiquidacionesPage = () => {
   const deletingRef = useRef(false);
   const jwtToken = getCookie("factura-token");
   const [isDownloadingExcel, setIsDownloadingExcel] = useState(false);
+
+  // Control de acceso - Agentes NO pueden ver liquidaciones
+  const [hasAccess, setHasAccess] = useState(null); // null = checking, true = allowed, false = denied
+
+  useEffect(() => {
+    if (jwtToken) {
+      try {
+        const payload = jose.decodeJwt(jwtToken);
+        const userRole = payload.role;
+        const isAdmin = payload.groupId === 1;
+        // Agentes no tienen acceso (role === "agente" o "agent")
+        const isAgente = userRole?.toLowerCase() === "agente" || userRole?.toLowerCase() === "agent";
+        // Super admins siempre tienen acceso, agentes nunca
+        setHasAccess(isAdmin || !isAgente);
+      } catch (error) {
+        console.error("Error al verificar permisos:", error);
+        setHasAccess(false);
+      }
+    } else {
+      setHasAccess(false);
+    }
+  }, [jwtToken]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -723,6 +747,42 @@ const LiquidacionesPage = () => {
     selectedUserId !== "all" && users.length > 0
       ? users.find((u) => u.id === parseInt(selectedUserId))
       : null;
+
+  // Verificando permisos
+  if (hasAccess === null) {
+    return (
+      <div className="flex justify-center items-center min-h-screen text-slate-800 dark:text-slate-100">
+        <FaSpinner className="animate-spin text-blue-600 text-4xl" />
+        <p className="ml-3 text-xl">Verificando permisos...</p>
+      </div>
+    );
+  }
+
+  // Acceso denegado para agentes
+  if (hasAccess === false) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-screen text-slate-800 dark:text-slate-100 p-4">
+        <div className="neumorphic-card rounded-xl p-8 md:p-12 max-w-md text-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+            <FaLock className="text-red-500 text-3xl" />
+          </div>
+          <h1 className="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-100">
+            Acceso Restringido
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400 mb-6">
+            No tienes permisos para acceder a esta sección.
+            Las liquidaciones solo están disponibles para administradores y colaboradores.
+          </p>
+          <button
+            onClick={() => router.push("/contratos")}
+            className="bg-primary text-white px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
+          >
+            Volver a Contratos
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading && isLoadingUsers && !error) {
     return (
