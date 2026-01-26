@@ -209,6 +209,17 @@ export async function PUT(req) {
     const body = await req.json();
     const { id, ...updateData } = body;
 
+    // Transform frontend (Spanish) property names to backend (English) property names
+    const backendData = {};
+    if (updateData.nombre !== undefined) backendData.name = updateData.nombre;
+    if (updateData.destacado !== undefined) backendData.destacado = updateData.destacado;
+    // Pass through any other properties that might already be in English
+    Object.keys(updateData).forEach(key => {
+      if (!['nombre'].includes(key)) {
+        backendData[key] = updateData[key];
+      }
+    });
+
     try {
       const apiResponse = await fetch(`${process.env.BACKEND_URL}/files/${id}`, {
         method: "PUT",
@@ -216,7 +227,7 @@ export async function PUT(req) {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token.value}`,
         },
-        body: JSON.stringify(updateData),
+        body: JSON.stringify(backendData),
         signal: AbortSignal.timeout(5000),
       });
 
