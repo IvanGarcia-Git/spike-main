@@ -3,6 +3,7 @@
 import { authFetch } from "@/helpers/server-fetch.helper";
 import { useState, useEffect } from "react";
 import { getCookie } from "cookies-next";
+import BaseModal, { ModalActions, ModalButton, ModalInput } from "./base-modal.component";
 
 export default function NewRateModal({
   isOpen,
@@ -145,10 +146,6 @@ export default function NewRateModal({
     }
   };
 
-  const handleTabClick = (tab) => {
-    setActiveTab(tab);
-  };
-
   const handleCheckboxChange = (e) => {
     const { value, checked } = e.target;
 
@@ -157,392 +154,347 @@ export default function NewRateModal({
     );
   };
 
-  if (!isOpen) return null;
+  const serviceTypes = [
+    { id: "Luz", label: "Luz", icon: "bolt", color: "blue" },
+    { id: "Gas", label: "Gas", icon: "local_fire_department", color: "yellow" },
+    { id: "Telefonía", label: "Telefonía", icon: "phone_android", color: "purple" },
+  ];
+
+  const rateTypes = [
+    { id: "2.0", label: "2.0" },
+    { id: "3.0", label: "3.0" },
+    { id: "6.1", label: "6.1" },
+  ];
+
+  const documentationOptions = [
+    { value: "DNI", label: "DNI" },
+    { value: "CIF", label: "CIF" },
+    { value: "FACTURA", label: "FACTURA" },
+    { value: "ESCRITURAS", label: "ESCRITURAS" },
+    { value: "GRABACION", label: "GRABACION" },
+    { value: "CIE", label: "CIE" },
+    { value: "OTRO", label: "OTRO" },
+  ];
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 lg:ml-72">
-      <div className="bg-foreground text-black p-6 rounded-lg shadow-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex mb-4 border-b">
-          <button
-            type="button"
-            onClick={() => handleTabClick("prices")}
-            className={`px-4 py-2 text-black ${
-              activeTab === "prices" ? "border-b-2 border-blue-500" : "border-b-2 border-gray-300"
-            }`}
-          >
-            Precios
-          </button>
-          <button
-            type="button"
-            onClick={() => handleTabClick("documentation")}
-            className={`px-4 py-2 text-black ${
-              activeTab === "documentation"
-                ? "border-b-2 border-blue-500"
-                : "border-b-2 border-gray-300"
-            }`}
-          >
-            Documentación
-          </button>
-        </div>
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={rateToEdit ? "Editar tarifa" : "Crear nueva tarifa"}
+      maxWidth="max-w-lg"
+    >
+      {/* Tabs */}
+      <div className="flex mb-6 border-b border-slate-200 dark:border-slate-700">
+        <button
+          type="button"
+          onClick={() => setActiveTab("prices")}
+          className={`px-6 py-3 font-medium transition-all ${
+            activeTab === "prices"
+              ? "border-b-2 border-primary text-primary"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+          }`}
+        >
+          Precios
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("documentation")}
+          className={`px-6 py-3 font-medium transition-all ${
+            activeTab === "documentation"
+              ? "border-b-2 border-primary text-primary"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+          }`}
+        >
+          Documentación
+        </button>
+      </div>
 
-        <form onSubmit={handleAddRate}>
-          {activeTab === "prices" && (
-            <>
-              {/* Título */}
-              <h3 className="text-xl font-bold mb-4">
-                {rateToEdit ? "Editar tarifa" : "Crear nueva tarifa"}
-              </h3>
-
-              {/* Selector de tipo de servicio */}
-              <div className="mb-4">
-                <label className="block text-black mb-2">Tipo de Servicio</label>
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center">
-                    <input
-                      type="radio"
-                      id="serviceLuz"
-                      name="serviceType"
-                      value="Luz"
-                      className="mr-2"
-                      checked={newRate.serviceType === "Luz"}
-                      onChange={(e) => setNewRate({ ...newRate, serviceType: e.target.value, type: "" })}
-                    />
-                    <label htmlFor="serviceLuz" className="text-black">Luz</label>
-                  </div>
-                  <div className="flex items-center">
-                    <input
-                      type="radio"
-                      id="serviceGas"
-                      name="serviceType"
-                      value="Gas"
-                      className="mr-2"
-                      checked={newRate.serviceType === "Gas"}
-                      onChange={(e) => setNewRate({ ...newRate, serviceType: e.target.value, type: "" })}
-                    />
-                    <label htmlFor="serviceGas" className="text-black">Gas</label>
-                  </div>
-                  <div className="flex items-center">
-                    <input
-                      type="radio"
-                      id="serviceTelefonia"
-                      name="serviceType"
-                      value="Telefonía"
-                      className="mr-2"
-                      checked={newRate.serviceType === "Telefonía"}
-                      onChange={(e) => setNewRate({ ...newRate, serviceType: e.target.value, type: "" })}
-                    />
-                    <label htmlFor="serviceTelefonia" className="text-black">Telefonía</label>
-                  </div>
-                </div>
+      <form onSubmit={handleAddRate}>
+        {activeTab === "prices" && (
+          <div className="space-y-4">
+            {/* Tipo de Servicio */}
+            <div className="mb-4">
+              <label className="block text-slate-700 dark:text-slate-300 font-medium mb-3">
+                Tipo de Servicio
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                {serviceTypes.map((service) => (
+                  <button
+                    key={service.id}
+                    type="button"
+                    onClick={() => setNewRate({ ...newRate, serviceType: service.id, type: "" })}
+                    className={`flex flex-col items-center justify-center p-4 rounded-lg transition-all ${
+                      newRate.serviceType === service.id
+                        ? `neumorphic-card ring-2 ring-primary bg-primary bg-opacity-5`
+                        : "neumorphic-card-inset hover:shadow-md"
+                    }`}
+                  >
+                    <span
+                      className={`material-icons-outlined text-2xl mb-2 ${
+                        newRate.serviceType === service.id
+                          ? "text-primary"
+                          : "text-slate-400"
+                      }`}
+                    >
+                      {service.icon}
+                    </span>
+                    <span
+                      className={`text-sm font-medium ${
+                        newRate.serviceType === service.id
+                          ? "text-primary"
+                          : "text-slate-600 dark:text-slate-400"
+                      }`}
+                    >
+                      {service.label}
+                    </span>
+                  </button>
+                ))}
               </div>
-              {error.serviceType && <div className="text-red-600 text-sm mt-2">{error.serviceType}</div>}
+              {error.serviceType && (
+                <p className="text-danger text-sm mt-2">{error.serviceType}</p>
+              )}
+            </div>
 
-              {/* Tipo de tarifa (solo para Luz) */}
-              {newRate.serviceType === "Luz" && (
-                <div className="mb-4">
-                  <label className="block text-black mb-2">Tipo de Tarifa</label>
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="rate2_0"
-                        name="type"
-                        value="2.0"
-                        className="mr-2"
-                        checked={newRate.type === "2.0"}
-                        onChange={(e) => setNewRate({ ...newRate, type: e.target.value })}
-                      />
-                      <label htmlFor="rate2_0" className="text-black">2.0</label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="rate3_0"
-                        name="type"
-                        value="3.0"
-                        className="mr-2"
-                        checked={newRate.type === "3.0"}
-                        onChange={(e) => setNewRate({ ...newRate, type: e.target.value })}
-                      />
-                      <label htmlFor="rate3_0" className="text-black">3.0</label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="rate6_1"
-                        name="type"
-                        value="6.1"
-                        className="mr-2"
-                        checked={newRate.type === "6.1"}
-                        onChange={(e) => setNewRate({ ...newRate, type: e.target.value })}
-                      />
-                      <label htmlFor="rate6_1" className="text-black">6.1</label>
-                    </div>
+            {/* Tipo de Tarifa (solo para Luz) */}
+            {newRate.serviceType === "Luz" && (
+              <div className="mb-4">
+                <label className="block text-slate-700 dark:text-slate-300 font-medium mb-3">
+                  Tipo de Tarifa
+                </label>
+                <div className="flex gap-3">
+                  {rateTypes.map((rate) => (
+                    <button
+                      key={rate.id}
+                      type="button"
+                      onClick={() => setNewRate({ ...newRate, type: rate.id })}
+                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
+                        newRate.type === rate.id
+                          ? "neumorphic-card ring-2 ring-primary text-primary"
+                          : "neumorphic-card-inset text-slate-600 dark:text-slate-400 hover:shadow-md"
+                      }`}
+                    >
+                      {rate.label}
+                    </button>
+                  ))}
+                </div>
+                {error.type && (
+                  <p className="text-danger text-sm mt-2">{error.type}</p>
+                )}
+              </div>
+            )}
+
+            {/* Nombre de la Tarifa */}
+            <ModalInput
+              label="Nombre de la Tarifa"
+              type="text"
+              id="name"
+              value={newRate.name}
+              onChange={(e) => setNewRate({ ...newRate, name: e.target.value })}
+              required
+            />
+            {error.name && (
+              <p className="text-danger text-sm -mt-3 mb-4">{error.name}</p>
+            )}
+
+            {/* Retro */}
+            <ModalInput
+              label="Retro (días)"
+              type="number"
+              id="renewDays"
+              value={newRate.renewDays}
+              onChange={(e) =>
+                setNewRate({
+                  ...newRate,
+                  renewDays: parseFloat(e.target.value) || 0,
+                })
+              }
+              required
+            />
+            {error.renewDays && (
+              <p className="text-danger text-sm -mt-3 mb-4">{error.renewDays}</p>
+            )}
+
+            {/* Campos de Luz */}
+            {newRate.serviceType === "Luz" && (
+              <div className="neumorphic-card-inset p-4 rounded-lg space-y-4">
+                <h4 className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <span className="material-icons-outlined text-blue-500">bolt</span>
+                  Configuración de Luz
+                </h4>
+
+                {/* Potencia */}
+                <div>
+                  <label className="block text-sm text-slate-600 dark:text-slate-400 mb-2">
+                    Potencia (kW)
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {(newRate.type === "2.0" ? [1, 2] : [1, 2, 3, 4, 5, 6]).map((slot) => (
+                      <div key={`power-${slot}`}>
+                        <input
+                          type="number"
+                          id={`powerSlot${slot}`}
+                          placeholder={`Slot ${slot}`}
+                          className="w-full px-3 py-2 rounded-lg bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                          value={newRate[`powerSlot${slot}`] || ""}
+                          onChange={(e) =>
+                            setNewRate({
+                              ...newRate,
+                              [`powerSlot${slot}`]: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
                   </div>
                 </div>
-              )}
-              {error.type && <div className="text-red-600 text-sm mt-2">{error.type}</div>}
 
-              {/* Nombre de la tarifa */}
-              <div className="mb-4">
-                <label className="block text-black mb-2" htmlFor="name">
-                  Nombre de la Tarifa
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                  value={newRate.name}
-                  onChange={(e) => setNewRate({ ...newRate, name: e.target.value })}
-                  required
+                {/* Energía */}
+                <div>
+                  <label className="block text-sm text-slate-600 dark:text-slate-400 mb-2">
+                    Energía (€/kWh)
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {(newRate.type === "2.0" ? [1, 2, 3] : [1, 2, 3, 4, 5, 6]).map((slot) => (
+                      <div key={`energy-${slot}`}>
+                        <input
+                          type="number"
+                          id={`energySlot${slot}`}
+                          placeholder={`Slot ${slot}`}
+                          className="w-full px-3 py-2 rounded-lg bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                          value={newRate[`energySlot${slot}`] || ""}
+                          onChange={(e) =>
+                            setNewRate({
+                              ...newRate,
+                              [`energySlot${slot}`]: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Excedente */}
+                <ModalInput
+                  label="Excedente (€/kWh)"
+                  type="number"
+                  id="surplusSlot1"
+                  value={newRate.surplusSlot1}
+                  onChange={(e) => setNewRate({ ...newRate, surplusSlot1: e.target.value })}
                 />
               </div>
-              {error.name && <div className="text-red-600 text-sm mt-2">{error.name}</div>}
+            )}
 
-              {/* Retro */}
-              <div className="mb-4">
-                <label className="block text-black mb-2" htmlFor="renewDays">
-                  Retro
-                </label>
-                <input
+            {/* Campos de Telefonía */}
+            {newRate.serviceType === "Telefonía" && (
+              <div className="neumorphic-card-inset p-4 rounded-lg space-y-4">
+                <h4 className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <span className="material-icons-outlined text-purple-500">phone_android</span>
+                  Configuración de Telefonía
+                </h4>
+
+                <ModalInput
+                  label="Producto"
+                  type="text"
+                  id="products"
+                  value={newRate.products}
+                  onChange={(e) => setNewRate({ ...newRate, products: e.target.value })}
+                  required
+                />
+
+                <ModalInput
+                  label="Precio final (€/mes)"
                   type="number"
-                  id="renewDays"
-                  className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                  value={newRate.renewDays}
+                  id="finalPrice"
+                  value={newRate.finalPrice}
                   onChange={(e) =>
-                    setNewRate({
-                      ...newRate,
-                      renewDays: parseFloat(e.target.value) || 0,
-                    })
+                    setNewRate({ ...newRate, finalPrice: parseFloat(e.target.value) || 0 })
                   }
                   required
                 />
               </div>
-              {error.renewDays && (
-                <div className="text-red-600 text-sm mt-2">{error.renewDays}</div>
-              )}
+            )}
 
-              {/* Luz */}
-              {newRate.serviceType === "Luz" && (
-                <>
-                  {/* Potencia - 2 tramos para 2.0, 6 tramos para 3.0/6.1 */}
-                  {(newRate.type === "2.0" ? [1, 2] : [1, 2, 3, 4, 5, 6]).map((slot) => (
-                    <div key={`power-${slot}`} className="mb-4">
-                      <label className="block text-black mb-2" htmlFor={`powerSlot${slot}`}>
-                        Potencia Slot {slot} (kW)
-                      </label>
-                      <input
-                        type="number"
-                        id={`powerSlot${slot}`}
-                        className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                        value={newRate[`powerSlot${slot}`] || ""}
-                        onChange={(e) =>
-                          setNewRate({
-                            ...newRate,
-                            [`powerSlot${slot}`]: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  ))}
-                  {/* Energía - 3 tramos para 2.0, 6 tramos para 3.0/6.1 */}
-                  {(newRate.type === "2.0" ? [1, 2, 3] : [1, 2, 3, 4, 5, 6]).map((slot) => (
-                    <div key={`energy-${slot}`} className="mb-4">
-                      <label className="block text-black mb-2" htmlFor={`energySlot${slot}`}>
-                        Energía Slot {slot} (€/kWh)
-                      </label>
-                      <input
-                        type="number"
-                        id={`energySlot${slot}`}
-                        className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                        value={newRate[`energySlot${slot}`] || ""}
-                        onChange={(e) =>
-                          setNewRate({
-                            ...newRate,
-                            [`energySlot${slot}`]: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  ))}
-                  {/* Excedente */}
-                  <div className="mb-4">
-                    <label className="block text-black mb-2" htmlFor="surplusSlot1">
-                      Excedente (€/kWh)
-                    </label>
-                    <input
-                      type="number"
-                      id="surplusSlot1"
-                      className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                      value={newRate.surplusSlot1}
-                      onChange={(e) => setNewRate({ ...newRate, surplusSlot1: e.target.value })}
-                    />
-                  </div>
-                </>
-              )}
+            {/* Campos de Gas */}
+            {newRate.serviceType === "Gas" && (
+              <div className="neumorphic-card-inset p-4 rounded-lg space-y-4">
+                <h4 className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <span className="material-icons-outlined text-yellow-500">local_fire_department</span>
+                  Configuración de Gas
+                </h4>
 
-              {/* Telefonía */}
-              {newRate.serviceType === "Telefonía" && (
-                <>
-                  <div className="mb-4">
-                    <label className="block text-black mb-2" htmlFor="products">
-                      Producto
-                    </label>
-                    <input
-                      type="text"
-                      id="products"
-                      className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                      value={newRate.products}
-                      onChange={(e) => setNewRate({ ...newRate, products: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-black mb-2" htmlFor="finalPrice">
-                      Precio final (€/mes)
-                    </label>
-                    <input
-                      type="number"
-                      id="finalPrice"
-                      className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                      value={newRate.finalPrice}
-                      onChange={(e) =>
-                        setNewRate({ ...newRate, finalPrice: parseFloat(e.target.value) || 0 })
-                      }
-                      required
-                    />
-                  </div>
-                </>
-              )}
+                <ModalInput
+                  label="Energía Slot 1 (€/kWh)"
+                  type="number"
+                  id="energySlot1"
+                  value={newRate.energySlot1}
+                  onChange={(e) => setNewRate({ ...newRate, energySlot1: e.target.value })}
+                />
 
-              {/* Gas */}
-              {newRate.serviceType === "Gas" && (
-                <>
-                  <div className="mb-4">
-                    <label className="block text-black mb-2" htmlFor="energySlot1">
-                      Energía Slot 1 (€/kWh)
-                    </label>
-                    <input
-                      type="number"
-                      id="energySlot1"
-                      className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                      value={newRate.energySlot1}
-                      onChange={(e) => setNewRate({ ...newRate, energySlot1: e.target.value })}
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-black mb-2" htmlFor="surplusSlot1">
-                      Excedente (€/kWh)
-                    </label>
-                    <input
-                      type="number"
-                      id="surplusSlot1"
-                      className="w-full px-4 py-2 rounded bg-background text-black focus:outline-none"
-                      value={newRate.surplusSlot1}
-                      onChange={(e) => setNewRate({ ...newRate, surplusSlot1: e.target.value })}
-                    />
-                  </div>
-                </>
-              )}
-            </>
-          )}
-
-          {activeTab === "documentation" && (
-            <>
-              {/* Opciones con checkbox */}
-              <div className="grid grid-cols-2 gap-4">
-                <label>
-                  <input
-                    type="checkbox"
-                    name="dni"
-                    value="DNI"
-                    checked={documentationValues.includes("DNI")}
-                    onChange={handleCheckboxChange}
-                  />{" "}
-                  DNI
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    name="cif"
-                    value="CIF"
-                    checked={documentationValues.includes("CIF")}
-                    onChange={handleCheckboxChange}
-                  />{" "}
-                  CIF
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    name="factura"
-                    value="FACTURA"
-                    checked={documentationValues.includes("FACTURA")}
-                    onChange={handleCheckboxChange}
-                  />{" "}
-                  FACTURA
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    name="escrituras"
-                    value="ESCRITURAS"
-                    checked={documentationValues.includes("ESCRITURAS")}
-                    onChange={handleCheckboxChange}
-                  />{" "}
-                  ESCRITURAS
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    name="grabacion"
-                    value="GRABACION"
-                    checked={documentationValues.includes("GRABACION")}
-                    onChange={handleCheckboxChange}
-                  />{" "}
-                  GRABACION
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    name="cie"
-                    value="CIE"
-                    checked={documentationValues.includes("CIE")}
-                    onChange={handleCheckboxChange}
-                  />{" "}
-                  CIE
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    name="otro"
-                    value="OTRO"
-                    checked={documentationValues.includes("OTRO")}
-                    onChange={handleCheckboxChange}
-                  />{" "}
-                  OTRO
-                </label>
+                <ModalInput
+                  label="Excedente (€/kWh)"
+                  type="number"
+                  id="surplusSlot1"
+                  value={newRate.surplusSlot1}
+                  onChange={(e) => setNewRate({ ...newRate, surplusSlot1: e.target.value })}
+                />
               </div>
-            </>
-          )}
-
-          {/* Botones */}
-          <div className="flex justify-end">
-            <button
-              type="button"
-              className="bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700"
-              onClick={onClose}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="bg-secondary text-black px-4 py-2 rounded hover:bg-yellow-500"
-            >
-              Guardar
-            </button>
+            )}
           </div>
-        </form>
-      </div>
-    </div>
+        )}
+
+        {activeTab === "documentation" && (
+          <div className="space-y-4">
+            <p className="text-slate-600 dark:text-slate-400 mb-4">
+              Selecciona la documentación requerida para esta tarifa:
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {documentationOptions.map((doc) => (
+                <label
+                  key={doc.value}
+                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                    documentationValues.includes(doc.value)
+                      ? "neumorphic-card ring-2 ring-primary bg-primary bg-opacity-5"
+                      : "neumorphic-card-inset hover:shadow-md"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    name={doc.value.toLowerCase()}
+                    value={doc.value}
+                    checked={documentationValues.includes(doc.value)}
+                    onChange={handleCheckboxChange}
+                    className="w-5 h-5 rounded text-primary focus:ring-primary"
+                  />
+                  <span
+                    className={`font-medium ${
+                      documentationValues.includes(doc.value)
+                        ? "text-primary"
+                        : "text-slate-600 dark:text-slate-400"
+                    }`}
+                  >
+                    {doc.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Botones de Acción */}
+        <ModalActions>
+          <ModalButton variant="ghost" onClick={onClose}>
+            Cancelar
+          </ModalButton>
+          <ModalButton
+            variant="primary"
+            type="submit"
+            icon={rateToEdit ? "save" : "add"}
+          >
+            {rateToEdit ? "Guardar cambios" : "Crear tarifa"}
+          </ModalButton>
+        </ModalActions>
+      </form>
+    </BaseModal>
   );
 }
