@@ -55,19 +55,34 @@ export default function ComparativasResultadosPage() {
 
         const { comparisonType, selectedLightTariff, selectedGasTariff, customerType } = formData;
 
+        // Normalizar customerType: "particular" es equivalente a "residencial"
+        const normalizeCustomerType = (type) => {
+            if (type === 'particular') return 'residencial';
+            return type;
+        };
+
+        // Normalizar tariffType: "2.0TD" -> "2.0", "3.0TD" -> "3.0", "6.1TD" -> "6.1"
+        const normalizeTariffType = (type) => {
+            if (!type) return type;
+            return type.replace('TD', '');
+        };
+
+        const normalizedCustomerType = normalizeCustomerType(customerType);
+
         if (comparisonType === 'luz') {
+            const normalizedLightTariff = normalizeTariffType(selectedLightTariff);
             return allTariffs.filter(
                 (t) =>
                     t.type === 'luz' &&
-                    t.tariffType === selectedLightTariff &&
-                    t.customerType === customerType
+                    (t.tariffType === selectedLightTariff || t.tariffType === normalizedLightTariff) &&
+                    (t.customerType === customerType || t.customerType === normalizedCustomerType)
             );
         } else {
             return allTariffs.filter(
                 (t) =>
                     t.type === 'gas' &&
-                    t.tariffType === selectedGasTariff &&
-                    t.customerType === customerType
+                    (t.tariffType === selectedGasTariff) &&
+                    (t.customerType === customerType || t.customerType === normalizedCustomerType)
             );
         }
     }, [formData, allTariffs]);

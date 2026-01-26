@@ -23,7 +23,9 @@ const formSchema = z.object({
   partyA: z.object({
     type: z.enum(["empresa", "particular"]),
     razonSocial: z.string().optional(),
+    razonSocialSecundaria: z.string().optional(),
     cif: z.string().optional(),
+    cifSecundaria: z.string().optional(),
     domicilioSocial: z.string().optional(),
     representanteLegal: z.string().optional(),
     dniRepresentante: z.string().optional(),
@@ -65,7 +67,9 @@ export function ContractForm({ onDataChange, setFocusedField, onLogoChange }: Co
       partyA: {
         type: 'empresa',
         razonSocial: '',
+        razonSocialSecundaria: '',
         cif: '',
+        cifSecundaria: '',
         domicilioSocial: '',
         representanteLegal: '',
         dniRepresentante: '',
@@ -247,8 +251,99 @@ export function ContractForm({ onDataChange, setFocusedField, onLogoChange }: Co
             <Separator />
 
             <div className="space-y-4">
+              <h3 className="text-lg font-semibold font-headline">Datos del Distribuidor</h3>
+              <p className="text-sm text-gray-500">Introduce los datos de la empresa distribuidora.</p>
+
+              <FormField
+                control={form.control}
+                name="partyA.representanteLegal"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Representante Legal</FormLabel>
+                    <FormControl>
+                      <Input placeholder="ej. Don Juan García López" {...field} {...commonProps('partyA_representanteLegal')} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="partyA.razonSocial"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Razón Social (Principal)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="ej. MI EMPRESA 2024, S.L." {...field} {...commonProps('partyA_razonSocial')} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="partyA.cif"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CIF (Principal)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="ej. B12345678" {...field} {...commonProps('partyA_cif')} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="partyA.razonSocialSecundaria"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Razón Social (Secundaria)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="ej. ESPECIALISTA MI EMPRESA 2024 S.L." {...field} {...commonProps('partyA_razonSocialSecundaria')} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="partyA.cifSecundaria"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CIF (Secundaria)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="ej. B87654321" {...field} {...commonProps('partyA_cifSecundaria')} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="partyA.domicilioSocial"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Domicilio Social</FormLabel>
+                    <FormControl>
+                      <Input placeholder="ej. Sevilla, Avda. de la Constitución 1, 41001" {...field} {...commonProps('partyA_domicilioSocial')} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <Separator />
+
+            <div className="space-y-4">
               <h3 className="text-lg font-semibold font-headline">Datos del Colaborador</h3>
-              <p className="text-sm text-gray-500">Introduce los datos del colaborador que firmará el contrato con OPTIME.</p>
+              <p className="text-sm text-gray-500">Introduce los datos del colaborador que firmará el contrato.</p>
               <PartyFormStepper party="partyB" setFocusedField={setFocusedField} />
             </div>
 

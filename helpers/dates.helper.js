@@ -1,5 +1,8 @@
 export function formatDayDate(dateToConvert) {
-  return new Date(dateToConvert).toLocaleString("es-ES", {
+  if (!dateToConvert) return "-";
+  const date = new Date(dateToConvert);
+  if (isNaN(date.getTime())) return "-";
+  return date.toLocaleString("es-ES", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -9,7 +12,10 @@ export function formatDayDate(dateToConvert) {
 }
 
 export function getCalendarDate(dateToConvert) {
-  return new Date(dateToConvert).toLocaleString("es-ES", {
+  if (!dateToConvert) return "-";
+  const date = new Date(dateToConvert);
+  if (isNaN(date.getTime())) return "-";
+  return date.toLocaleString("es-ES", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",

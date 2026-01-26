@@ -4,7 +4,7 @@ En {{general_ciudad}}, a {{general_fechaInicio_formatted}}
 
 REUNIDOS:
 
-De una parte, Don Luis Garzón Mergelina, en nombre y representación de las mercantiles OPTIME 2016, S.L. y ESPECIALISTA OPTIME 2016 S.L., ambas con domicilio social en Sevilla, Avda. de la Astronomía núm. 1, Torre 3, 2ª planta módulo 5, 41015. con CIF B90280546 la primera y B90466350 la segunda.
+De una parte, {{partyA_representanteLegal}}, en nombre y representación de las mercantiles {{partyA_razonSocial}} y {{partyA_razonSocialSecundaria}}, ambas con domicilio social en {{partyA_domicilioSocial}}. con CIF {{partyA_cif}} la primera y {{partyA_cifSecundaria}} la segunda.
 
 De otra parte, {{#if partyB_type_is_empresa}}D. {{partyB_representanteLegal}}, con D.N.I. {{partyB_dniRepresentante}}, como representante legal de la entidad {{partyB_razonSocial}}, de aquí en adelante denominada el AGENTE, con CIF {{partyB_cif}}, y con domicilio social en {{partyB_domicilioSocial}}.{{else}}D. {{partyB_nombreCompleto}}, con D.N.I. {{partyB_dni}}, de aquí en adelante denominado el AGENTE, con domicilio en {{partyB_domicilio}}.{{/if}}
 
@@ -12,7 +12,7 @@ Ambas partes, reconociéndose mutuamente y teniendo la capacidad legal y legitim
 
 EXPONEN:
 
-I.- Que OPTIME 2016, S.L. y ESPECIALISTA OPTIME 2016 S.L. (en adelante el DISTRIBUIDOR) son distribuidores autorizado de varias marcas comerciales de Telecomunicaciones, energía, seguridad y otros servicios (en adelante las OPERADORAS)
+I.- Que {{partyA_razonSocial}} y {{partyA_razonSocialSecundaria}} (en adelante el DISTRIBUIDOR) son distribuidores autorizado de varias marcas comerciales de Telecomunicaciones, energía, seguridad y otros servicios (en adelante las OPERADORAS)
 
 II.- Que {{#if partyB_type_is_empresa}}D. {{partyB_representanteLegal}}{{else}}D. {{partyB_nombreCompleto}}{{/if}} (en adelante el COLABORADOR) cuenta con los conocimientos, experiencia y capacidad necesarias para desarrollar eficazmente la comercialización de dichos servicios.
 
@@ -142,7 +142,7 @@ Y para que así conste y en prueba de conformidad con lo anteriormente pactado, 
 Fdo.: EL DISTRIBUIDOR                                    Fdo.: EL COLABORADOR
 
 _________________________                                _________________________
-Luis Garzón Mergelina                                    {{#if partyB_type_is_empresa}}{{partyB_representanteLegal}}{{else}}{{partyB_nombreCompleto}}{{/if}}
+{{partyA_representanteLegal}}                                    {{#if partyB_type_is_empresa}}{{partyB_representanteLegal}}{{else}}{{partyB_nombreCompleto}}{{/if}}
 
 
 
@@ -326,5 +326,5 @@ Y en prueba de conformidad, después de leer detenidamente el documento, las par
 EL DISTRIBUIDOR                                          EL COLABORADOR
 
 _________________________                                _________________________
-Luis Garzón Mergelina                                    {{#if partyB_type_is_empresa}}{{partyB_representanteLegal}}{{else}}{{partyB_nombreCompleto}}{{/if}}
+{{partyA_representanteLegal}}                                    {{#if partyB_type_is_empresa}}{{partyB_representanteLegal}}{{else}}{{partyB_nombreCompleto}}{{/if}}
 `;

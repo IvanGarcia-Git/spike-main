@@ -146,12 +146,20 @@ export default function ComparativasPersonalizadaPage() {
               }
             });
 
-            // Remove dashed borders from image containers (labels with file inputs)
-            const imageLabels = clonedDoc.querySelectorAll('label.border-dashed, label.border-2');
+            // Remove dashed borders from image containers (labels with logo-container class)
+            const imageLabels = clonedDoc.querySelectorAll('.logo-container, label.border-dashed, label.border-2');
             imageLabels.forEach((label) => {
               if (label instanceof HTMLElement) {
+                // Remove all border properties completely
                 label.style.setProperty('border', 'none', 'important');
                 label.style.setProperty('border-width', '0', 'important');
+                label.style.setProperty('border-style', 'none', 'important');
+                label.style.setProperty('border-color', 'transparent', 'important');
+                label.style.setProperty('outline', 'none', 'important');
+                // Also remove Tailwind border classes inline
+                label.classList.remove('border-2', 'border-dashed', 'rounded-md');
+                // Set border properties directly on element to override Tailwind
+                label.style.cssText += '; border: none !important; border-width: 0 !important; border-style: none !important;';
               }
             });
 

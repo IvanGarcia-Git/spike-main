@@ -1101,6 +1101,44 @@ function ContractsContent() {
     setSelectedChannelForBatch(null);
   };
 
+  // Handler para marcar como pagado en lote
+  const handleBatchMarkAsPaid = async (payedValue) => {
+    if (selectedContracts.length === 0) {
+      toast.warn("No hay contratos seleccionados");
+      return;
+    }
+
+    const jwtToken = getCookie("factura-token");
+
+    try {
+      const response = await authFetch(
+        "PATCH",
+        "contracts/batch/update",
+        { contractsUuids: selectedContracts, dataToUpdate: { payed: payedValue } },
+        jwtToken
+      );
+
+      if (!response.ok) {
+        toast.error("Error al actualizar los contratos.");
+        return;
+      }
+
+      setContracts((prevContracts) =>
+        prevContracts.map((contract) =>
+          selectedContracts.includes(contract.uuid)
+            ? { ...contract, payed: payedValue }
+            : contract
+        )
+      );
+
+      toast.success(payedValue ? "Contratos marcados como pagados" : "Contratos marcados como no pagados");
+      setSelectedContracts([]);
+    } catch (error) {
+      console.error("Error al actualizar los contratos:", error);
+      toast.error("Error al actualizar los contratos");
+    }
+  };
+
   const handleDeleteContracts = async () => {
     if (selectedContracts.length === 0) {
       toast.warn("No hay contratos seleccionados");
@@ -1353,6 +1391,26 @@ function ContractsContent() {
                 >
                   <span className="material-icons-outlined mr-2 text-primary">person_add</span>
                   Reasignar
+                </button>
+                <button
+                  onClick={() => {
+                    handleBatchMarkAsPaid(true);
+                    setIsDesktopDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800/50 flex items-center"
+                >
+                  <span className="material-icons-outlined mr-2 text-green-500">paid</span>
+                  Marcar como pagado
+                </button>
+                <button
+                  onClick={() => {
+                    handleBatchMarkAsPaid(false);
+                    setIsDesktopDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800/50 flex items-center"
+                >
+                  <span className="material-icons-outlined mr-2 text-orange-500">money_off</span>
+                  Marcar como no pagado
                 </button>
                 <button
                   onClick={() => {

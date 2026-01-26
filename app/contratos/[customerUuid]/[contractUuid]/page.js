@@ -38,6 +38,7 @@ export default function ContractDetail({ params }) {
   const [customer, setCustomer] = useState(null);
   const [contracts, setContracts] = useState([]);
   const [companies, setCompanies] = useState([]);
+  const [rates, setRates] = useState([]);
 
   const [activeCompany, setActiveCompany] = useState(null);
   const [activeContract, setActiveContract] = useState(null);
@@ -159,6 +160,32 @@ export default function ContractDetail({ params }) {
     }
   };
 
+  const getRates = async () => {
+    const jwtToken = getCookie("factura-token");
+    try {
+      const response = await authGetFetch("rates/", jwtToken);
+      if (response.ok) {
+        const ratesResponse = await response.json();
+        setRates(ratesResponse);
+      } else {
+        console.error("Error cargando las tarifas");
+      }
+    } catch (error) {
+      console.error("Error enviando la solicitud:", error);
+    }
+  };
+
+  // Filtrar compañías que tienen tarifas con el serviceType especificado
+  // Si rate.serviceType está definido, lo usa; si no, usa company.type como fallback
+  const getCompaniesWithServiceType = (serviceType) => {
+    return companies.filter((company) =>
+      rates.some((rate) => {
+        const rateServiceType = rate.serviceType || rate.company?.type;
+        return rate.company?.id === company.id && rateServiceType === serviceType;
+      })
+    );
+  };
+
   const handleDuplicateContract = (contractType) => {
     contractType === "telefonia"
       ? router.push(`/nuevo-contrato-telefonia?customerUuid=${customerUuid}`)
@@ -258,6 +285,7 @@ export default function ContractDetail({ params }) {
 
     getCustomerDetails(customerUuid);
     getCompanies();
+    getRates();
   }, [contractUuid]);
 
   useEffect(() => {
@@ -468,7 +496,7 @@ export default function ContractDetail({ params }) {
                     key={contract.uuid}
                     contract={contract}
                     isActive={contract.uuid === activeContract?.uuid}
-                    companies={companies.filter((company) => company.type == contract.type)}
+                    companies={getCompaniesWithServiceType(contract.type)}
                     onSubmit={handleContractUpdate}
                     childCustomerFormRef={customerInformationFormRef}
                   />
@@ -483,7 +511,7 @@ export default function ContractDetail({ params }) {
                     key={contract.uuid}
                     contract={contract}
                     isActive={contract.uuid === activeContract?.uuid}
-                    companies={companies.filter((company) => company.type == contract.type)}
+                    companies={getCompaniesWithServiceType(contract.type)}
                     onSubmit={handleContractUpdate}
                     childCustomerFormRef={customerInformationFormRef}
                   />

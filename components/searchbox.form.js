@@ -345,43 +345,55 @@ export default function ContractSearch({
 
   return (
     <div className="neumorphic-card p-6 mb-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {/* Buscador */}
+      {/* Fila 1: Buscador de texto (full width) */}
+      <div className="mb-4">
         <div className="relative">
           <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
           <input
             type="text"
-            placeholder="Buscar por Nombre, Cliente..."
+            placeholder="Buscar por Nombre, Cliente, CUPS, DNI/CIF..."
             value={searchText}
             onChange={handleTextBoxChange}
             className="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm bg-transparent"
           />
         </div>
+      </div>
 
+      {/* Fila 2: Desde | Hasta (2 columnas) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         {/* Filtros: Desde */}
         <div className="relative">
-          <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">calendar_today</span>
-          <input
-            type="date"
-            name="from"
-            value={contractSearch.from || ""}
-            onChange={handleDateChange}
-            className="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm bg-transparent"
-          />
+          <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block ml-1">Desde</label>
+          <div className="relative">
+            <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">calendar_today</span>
+            <input
+              type="date"
+              name="from"
+              value={contractSearch.from || ""}
+              onChange={handleDateChange}
+              className="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm bg-transparent"
+            />
+          </div>
         </div>
 
         {/* Filtros: Hasta */}
         <div className="relative">
-          <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">calendar_today</span>
-          <input
-            type="date"
-            name="to"
-            value={contractSearch.to || ""}
-            onChange={handleDateChange}
-            className="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm bg-transparent"
-          />
+          <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block ml-1">Hasta</label>
+          <div className="relative">
+            <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">calendar_today</span>
+            <input
+              type="date"
+              name="to"
+              value={contractSearch.to || ""}
+              onChange={handleDateChange}
+              className="w-full neumorphic-card-inset pl-12 pr-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm bg-transparent"
+            />
+          </div>
         </div>
+      </div>
 
+      {/* Fila 3: Estado | Agente | Compañía (3 columnas, o 2 si no es manager) */}
+      <div className={`grid grid-cols-1 gap-4 mb-4 ${isManager ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
         {/* Estado dropdown */}
         <div className="neumorphic-card-inset rounded-lg">
           <select
@@ -395,10 +407,8 @@ export default function ContractSearch({
             onChange={(e) => {
               const value = e.target.value;
               if (value === "") {
-                // Limpiar el filtro de estados
                 setMultifilterSelected((prev) => ({ ...prev, contractStateIds: [] }));
               } else {
-                // Reemplazar el estado (no añadir/toggle)
                 const stateId = value === "DRAFT" ? "DRAFT" : parseInt(value);
                 setMultifilterSelected((prev) => ({ ...prev, contractStateIds: [stateId] }));
               }
@@ -412,10 +422,7 @@ export default function ContractSearch({
             ))}
           </select>
         </div>
-      </div>
 
-      {/* Segunda fila de filtros: Agente y Compañía */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Agente dropdown (solo si es manager) */}
         {isManager && (
           <div className="neumorphic-card-inset rounded-lg">
@@ -473,7 +480,10 @@ export default function ContractSearch({
             ))}
           </select>
         </div>
+      </div>
 
+      {/* Fila 4: Origen (movido de los filtros principales, ahora junto a los botones) */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         {/* Origen dropdown */}
         <div className="neumorphic-card-inset rounded-lg">
           <select

@@ -76,14 +76,26 @@ function TabPrice() {
     fetchData();
   }, []);
 
+  // Filtrar compañías que tienen tarifas con el serviceType activo
+  // Si rate.serviceType está definido, lo usa; si no, usa company.type como fallback
+  const getCompaniesWithServiceType = (serviceType) => {
+    return companies.filter((company) =>
+      rates.some((rate) => {
+        const rateServiceType = rate.serviceType || rate.company?.type;
+        return rate.company?.id === company.id && rateServiceType === serviceType;
+      })
+    );
+  };
+
   useEffect(() => {
-    const firstMatching = companies.find((c) => c.type === activeTab);
+    const companiesWithServiceType = getCompaniesWithServiceType(activeTab);
+    const firstMatching = companiesWithServiceType[0];
     if (firstMatching) {
       setOpenCompanyIds(new Set([firstMatching.id]));
     } else {
       setOpenCompanyIds(new Set());
     }
-  }, [activeTab, companies]);
+  }, [activeTab, companies, rates]);
 
   const tabs = [
     { id: "Luz", label: "LUZ", icon: "bolt" },
@@ -170,8 +182,7 @@ function TabPrice() {
       {/* Contenido principal */}
       <div className="flex-1">
         <div className="space-y-4">
-          {companies
-            .filter((company) => company.type === activeTab)
+          {getCompaniesWithServiceType(activeTab)
             .map((company) => {
               const isThisCompanyOpen = openCompanyIds.has(company.id);
 
@@ -439,14 +450,13 @@ function TabPrice() {
             })}
 
           {/* Mensaje si no hay compañías */}
-          {companies.filter((company) => company.type === activeTab).length ===
-            0 && (
+          {getCompaniesWithServiceType(activeTab).length === 0 && (
             <div className="neumorphic-card p-8 text-center">
               <span className="material-icons-outlined text-6xl text-slate-300 dark:text-slate-600 mb-4">
                 business
               </span>
               <p className="text-slate-500 dark:text-slate-400">
-                No hay compañías disponibles para "{activeTab}".
+                No hay compañías con tarifas de "{activeTab}" disponibles.
               </p>
             </div>
           )}

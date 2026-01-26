@@ -486,7 +486,7 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                         </div>
                         <div className="flex items-center gap-2">
                            {logos.map((logoSrc, index) => (
-                                <label key={index} className="cursor-pointer group relative border-2 border-dashed rounded-md p-1 hover:border-primary transition-colors duration-200">
+                                <label key={index} className="logo-container cursor-pointer group relative border-2 border-dashed rounded-md p-1 hover:border-primary transition-colors duration-200">
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -511,7 +511,7 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
 
                     {/* Middle Section */}
                     <div className="flex-grow flex flex-col items-center justify-center text-center">
-                        <label className="cursor-pointer group relative border-2 border-dashed rounded-md p-1 hover:border-primary transition-colors duration-200 block w-64 h-32 mx-auto my-12">
+                        <label className="logo-container cursor-pointer group relative border-2 border-dashed rounded-md p-1 hover:border-primary transition-colors duration-200 block w-64 h-32 mx-auto my-12">
                             <input
                                 type="file"
                                 accept="image/*"
@@ -529,8 +529,8 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                                 <p className="text-white text-xs font-bold">Cambiar Logo Principal</p>
                             </div>
                         </label>
-                        
-                        <label className="cursor-pointer group relative border-2 border-dashed rounded-md p-1 hover:border-primary transition-colors duration-200 block w-80 h-16 mx-auto">
+
+                        <label className="logo-container cursor-pointer group relative border-2 border-dashed rounded-md p-1 hover:border-primary transition-colors duration-200 block w-80 h-16 mx-auto">
                             <input
                                 type="file"
                                 accept="image/*"
