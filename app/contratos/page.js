@@ -1546,9 +1546,12 @@ function ContractsContent() {
         </div>
       </div>
 
-      {/* Pagination - Siempre visible fuera del contenedor de la tabla */}
-      <div className="neumorphic-card mt-4 px-6 py-4">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+      {/* Espaciador para que el contenido no quede oculto detrás de la paginación fija */}
+      <div className="h-20"></div>
+
+      {/* Pagination - FIJO en la parte inferior, siempre visible */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 shadow-lg px-6 py-3">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
           {/* Info de contratos */}
           <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap order-2 sm:order-1">
             Mostrando <span className="font-semibold">{contracts.length}</span> de <span className="font-semibold">{pagination.total}</span> contratos
@@ -1559,18 +1562,18 @@ function ContractsContent() {
             <button
               onClick={() => handlePageChange(pagination.page - 1)}
               disabled={pagination.page === 1}
-              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Página anterior"
             >
               <span className="material-icons-outlined">chevron_left</span>
             </button>
-            <span className="px-4 py-2 text-slate-700 dark:text-slate-300 font-medium whitespace-nowrap min-w-[80px] text-center">
+            <span className="px-3 py-1.5 text-slate-700 dark:text-slate-300 font-medium whitespace-nowrap min-w-[70px] text-center">
               {pagination.page} / {pagination.lastPage}
             </span>
             <button
               onClick={() => handlePageChange(pagination.page + 1)}
               disabled={pagination.page === pagination.lastPage}
-              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Página siguiente"
             >
               <span className="material-icons-outlined">chevron_right</span>
@@ -1585,7 +1588,7 @@ function ContractsContent() {
                 setEntriesPerPage(Number(e.target.value));
                 setPagination((prev) => ({ ...prev, page: 1 }));
               }}
-              className="bg-transparent border-none focus:ring-0 text-sm font-medium py-2 px-3 text-slate-600 dark:text-slate-300 min-w-[130px]"
+              className="bg-transparent border-none focus:ring-0 text-sm font-medium py-1.5 px-3 text-slate-600 dark:text-slate-300 min-w-[120px]"
             >
               <option value={10}>10 por página</option>
               <option value={25}>25 por página</option>
