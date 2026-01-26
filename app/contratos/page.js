@@ -1550,7 +1550,7 @@ function ContractsContent() {
       <div className="h-20"></div>
 
       {/* Pagination - FIJO en la parte inferior, siempre visible */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 shadow-lg px-6 py-3">
+      <div className="fixed bottom-4 left-4 right-4 z-40 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg px-6 py-3 rounded-xl">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
           {/* Info de contratos */}
           <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap order-2 sm:order-1">
