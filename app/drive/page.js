@@ -1428,12 +1428,53 @@ function FolderListItem({ carpeta, onDelete, onRename, formatDate }) {
 
 // File Card Component (Grid View)
 function FileCard({ archivo, onDelete, onToggleDestacado, onRename, onShare, formatDate }) {
+  const isImage = archivo.tipo?.startsWith('image/');
+
+  const handleDownload = (e) => {
+    e.stopPropagation();
+    if (archivo.uri) {
+      const link = document.createElement('a');
+      link.href = archivo.uri;
+      link.download = archivo.nombre;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const handlePreview = () => {
+    if (archivo.uri) {
+      window.open(archivo.uri, '_blank');
+    }
+  };
+
   return (
-    <div className="neumorphic-card p-4 flex flex-col space-y-2 group hover:shadow-lg transition-shadow cursor-pointer">
+    <div
+      className="neumorphic-card p-4 flex flex-col space-y-2 group hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={handlePreview}
+    >
       <div className="flex items-start justify-between">
-        <span className="material-icons-outlined text-primary text-4xl">
-          {archivo.icono}
-        </span>
+        {isImage && archivo.uri ? (
+          <div className="w-full h-24 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 mb-2">
+            <img
+              src={archivo.uri}
+              alt={archivo.nombre}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+            <div className="hidden w-full h-full items-center justify-center">
+              <span className="material-icons-outlined text-primary text-4xl">image</span>
+            </div>
+          </div>
+        ) : (
+          <span className="material-icons-outlined text-primary text-4xl">
+            {archivo.icono}
+          </span>
+        )}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -1453,6 +1494,13 @@ function FileCard({ archivo, onDelete, onToggleDestacado, onRename, onShare, for
         <span className="text-xs text-slate-400">{archivo.tamano}</span>
         <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
           <button
+            onClick={handleDownload}
+            className="p-1 text-slate-500 hover:text-green-500 transition-colors"
+            title="Descargar"
+          >
+            <span className="material-icons-outlined text-sm">download</span>
+          </button>
+          <button
             onClick={(e) => {
               e.stopPropagation();
               onShare(archivo);
@@ -1468,6 +1516,7 @@ function FileCard({ archivo, onDelete, onToggleDestacado, onRename, onShare, for
               onRename(archivo);
             }}
             className="p-1 text-slate-500 hover:text-primary transition-colors"
+            title="Renombrar"
           >
             <span className="material-icons-outlined text-sm">edit</span>
           </button>
@@ -1477,6 +1526,7 @@ function FileCard({ archivo, onDelete, onToggleDestacado, onRename, onShare, for
               onDelete(archivo);
             }}
             className="p-1 text-slate-500 hover:text-red-500 transition-colors"
+            title="Eliminar"
           >
             <span className="material-icons-outlined text-sm">delete</span>
           </button>
@@ -1488,8 +1538,30 @@ function FileCard({ archivo, onDelete, onToggleDestacado, onRename, onShare, for
 
 // File List Item Component (List View)
 function FileListItem({ archivo, onDelete, onToggleDestacado, onRename, onShare, formatDate }) {
+  const handleDownload = (e) => {
+    e.stopPropagation();
+    if (archivo.uri) {
+      const link = document.createElement('a');
+      link.href = archivo.uri;
+      link.download = archivo.nombre;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const handlePreview = () => {
+    if (archivo.uri) {
+      window.open(archivo.uri, '_blank');
+    }
+  };
+
   return (
-    <div className="neumorphic-card p-3 flex items-center space-x-4 group hover:shadow-lg transition-shadow cursor-pointer">
+    <div
+      className="neumorphic-card p-3 flex items-center space-x-4 group hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={handlePreview}
+    >
       <span className="material-icons-outlined text-primary text-2xl">
         {archivo.icono}
       </span>
@@ -1511,6 +1583,13 @@ function FileListItem({ archivo, onDelete, onToggleDestacado, onRename, onShare,
       </button>
       <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
         <button
+          onClick={handleDownload}
+          className="p-1 text-slate-500 hover:text-green-500 transition-colors"
+          title="Descargar"
+        >
+          <span className="material-icons-outlined text-lg">download</span>
+        </button>
+        <button
           onClick={(e) => {
             e.stopPropagation();
             onShare(archivo);
@@ -1526,6 +1605,7 @@ function FileListItem({ archivo, onDelete, onToggleDestacado, onRename, onShare,
             onRename(archivo);
           }}
           className="p-1 text-slate-500 hover:text-primary transition-colors"
+          title="Renombrar"
         >
           <span className="material-icons-outlined text-lg">edit</span>
         </button>
@@ -1535,6 +1615,7 @@ function FileListItem({ archivo, onDelete, onToggleDestacado, onRename, onShare,
             onDelete(archivo);
           }}
           className="p-1 text-slate-500 hover:text-red-500 transition-colors"
+          title="Eliminar"
         >
           <span className="material-icons-outlined text-lg">delete</span>
         </button>
@@ -1637,8 +1718,30 @@ function formatFileSize(bytes) {
 
 // Shared With Me File Card Component (Grid View)
 function SharedWithMeFileCard({ archivo, formatDate }) {
+  const handleDownload = (e) => {
+    e.stopPropagation();
+    if (archivo.uri) {
+      const link = document.createElement('a');
+      link.href = archivo.uri;
+      link.download = archivo.nombre;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const handlePreview = () => {
+    if (archivo.uri) {
+      window.open(archivo.uri, '_blank');
+    }
+  };
+
   return (
-    <div className="neumorphic-card p-4 flex flex-col space-y-2 group hover:shadow-lg transition-shadow cursor-pointer">
+    <div
+      className="neumorphic-card p-4 flex flex-col space-y-2 group hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={handlePreview}
+    >
       <div className="flex items-start justify-between">
         <span className="material-icons-outlined text-primary text-4xl">
           {archivo.icono || "insert_drive_file"}
@@ -1654,7 +1757,16 @@ function SharedWithMeFileCard({ archivo, formatDate }) {
         <p className="text-xs text-slate-400">
           Compartido por: <span className="text-slate-600 dark:text-slate-300">{archivo.compartidoPor || archivo.propietario}</span>
         </p>
-        <p className="text-xs text-slate-400">{archivo.tamano}</p>
+        <div className="flex items-center justify-between mt-1">
+          <p className="text-xs text-slate-400">{archivo.tamano}</p>
+          <button
+            onClick={handleDownload}
+            className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-green-500 transition-all"
+            title="Descargar"
+          >
+            <span className="material-icons-outlined text-sm">download</span>
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -1662,8 +1774,30 @@ function SharedWithMeFileCard({ archivo, formatDate }) {
 
 // Shared With Me File List Item Component (List View)
 function SharedWithMeFileListItem({ archivo, formatDate }) {
+  const handleDownload = (e) => {
+    e.stopPropagation();
+    if (archivo.uri) {
+      const link = document.createElement('a');
+      link.href = archivo.uri;
+      link.download = archivo.nombre;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const handlePreview = () => {
+    if (archivo.uri) {
+      window.open(archivo.uri, '_blank');
+    }
+  };
+
   return (
-    <div className="neumorphic-card p-3 flex items-center space-x-4 group hover:shadow-lg transition-shadow cursor-pointer">
+    <div
+      className="neumorphic-card p-3 flex items-center space-x-4 group hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={handlePreview}
+    >
       <span className="material-icons-outlined text-primary text-2xl">
         {archivo.icono || "insert_drive_file"}
       </span>
@@ -1677,21 +1811,59 @@ function SharedWithMeFileListItem({ archivo, formatDate }) {
         {archivo.permiso === "write" ? "Editar" : "Solo ver"}
       </span>
       <span className="text-xs text-slate-400 w-20 text-right">{archivo.tamano}</span>
+      <button
+        onClick={handleDownload}
+        className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-green-500 transition-all"
+        title="Descargar"
+      >
+        <span className="material-icons-outlined text-lg">download</span>
+      </button>
     </div>
   );
 }
 
 // Shared By Me File Card Component (Grid View)
 function SharedByMeFileCard({ archivo, onUnshare, formatDate }) {
+  const handleDownload = (e) => {
+    e.stopPropagation();
+    if (archivo.uri) {
+      const link = document.createElement('a');
+      link.href = archivo.uri;
+      link.download = archivo.nombre;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const handlePreview = () => {
+    if (archivo.uri) {
+      window.open(archivo.uri, '_blank');
+    }
+  };
+
   return (
-    <div className="neumorphic-card p-4 flex flex-col space-y-2 group hover:shadow-lg transition-shadow">
+    <div
+      className="neumorphic-card p-4 flex flex-col space-y-2 group hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={handlePreview}
+    >
       <div className="flex items-start justify-between">
         <span className="material-icons-outlined text-primary text-4xl">
           {archivo.icono || "insert_drive_file"}
         </span>
-        <span className="material-icons-outlined text-green-500 text-lg" title="Compartido">
-          share
-        </span>
+        <div className="flex items-center space-x-1">
+          <button
+            onClick={handleDownload}
+            className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-green-500 transition-all"
+            title="Descargar"
+          >
+            <span className="material-icons-outlined text-sm">download</span>
+          </button>
+          <span className="material-icons-outlined text-green-500 text-lg" title="Compartido">
+            share
+          </span>
+        </div>
       </div>
       <span className="text-sm font-medium text-slate-700 dark:text-slate-200 break-words line-clamp-2">
         {archivo.nombre}
@@ -1728,8 +1900,30 @@ function SharedByMeFileCard({ archivo, onUnshare, formatDate }) {
 
 // Shared By Me File List Item Component (List View)
 function SharedByMeFileListItem({ archivo, onUnshare, formatDate }) {
+  const handleDownload = (e) => {
+    e.stopPropagation();
+    if (archivo.uri) {
+      const link = document.createElement('a');
+      link.href = archivo.uri;
+      link.download = archivo.nombre;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const handlePreview = () => {
+    if (archivo.uri) {
+      window.open(archivo.uri, '_blank');
+    }
+  };
+
   return (
-    <div className="neumorphic-card p-3 flex items-center space-x-4 group hover:shadow-lg transition-shadow">
+    <div
+      className="neumorphic-card p-3 flex items-center space-x-4 group hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={handlePreview}
+    >
       <span className="material-icons-outlined text-primary text-2xl">
         {archivo.icono || "insert_drive_file"}
       </span>
@@ -1763,6 +1957,13 @@ function SharedByMeFileListItem({ archivo, onUnshare, formatDate }) {
         </div>
       </div>
       <span className="text-xs text-slate-400 w-20 text-right">{archivo.tamano}</span>
+      <button
+        onClick={handleDownload}
+        className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-green-500 transition-all"
+        title="Descargar"
+      >
+        <span className="material-icons-outlined text-lg">download</span>
+      </button>
     </div>
   );
 }
