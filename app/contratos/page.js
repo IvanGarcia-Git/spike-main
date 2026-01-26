@@ -765,13 +765,19 @@ function ContractsContent() {
     }
   };
 
-  const getFilteredContracts = async (searchFilters, page = 1, entriesPerPage = 10) => {
+  const getFilteredContracts = async (searchFilters, page = 1, entriesPerPage = 10, liquidacion = null) => {
     const jwtToken = getCookie("factura-token");
 
     try {
+      // Incluir el filtro de liquidación si existe
+      let url = `search?page=${page}&limit=${entriesPerPage}`;
+      if (liquidacion) {
+        url += `&liquidacion=${liquidacion}`;
+      }
+
       const response = await authFetch(
         "POST",
-        `search?page=${page}&limit=${entriesPerPage}`,
+        url,
         searchFilters,
         jwtToken
       );
@@ -959,7 +965,8 @@ function ContractsContent() {
     if (!isFiltersApplied) {
       getContracts(pagination.page, entriesPerPage, liquidacionUuid);
     } else {
-      getFilteredContracts(contractFilters, pagination.page, entriesPerPage);
+      // Pasar también el filtro de liquidación al buscar con filtros aplicados
+      getFilteredContracts(contractFilters, pagination.page, entriesPerPage, liquidacionUuid);
     }
   }, [pagination.page, entriesPerPage, liquidacionUuid]);
 
@@ -1301,7 +1308,9 @@ function ContractsContent() {
     <div className="p-6 contracts-pastel-bg min-h-screen">
       {/* Search and Filters */}
       <SearchBox
-        onSearch={getFilteredContracts}
+        onSearch={(searchFilters, page = 1, entriesPerPage = 10) =>
+          getFilteredContracts(searchFilters, page, entriesPerPage, liquidacionUuid)
+        }
         onClearFilters={handleClearFilters}
         onExportExcel={exportToExcel}
         contractStates={contractStates}
@@ -1429,8 +1438,8 @@ function ContractsContent() {
       )}
 
       {/* Contracts Table */}
-      <div className="neumorphic-card p-6">
-        <div className="overflow-x-auto">
+      <div className="neumorphic-card p-6 flex flex-col">
+        <div className="overflow-x-auto flex-1 min-h-0">
           <table className="w-full text-left">
             <thead className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               <tr>
@@ -1535,54 +1544,54 @@ function ContractsContent() {
             </tbody>
           </table>
         </div>
+      </div>
 
-        {/* Pagination - Sticky con fondo sólido para visibilidad con zoom */}
-        <div className="sticky bottom-0 left-0 right-0 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 mt-6 -mx-6 -mb-6 px-6 py-4">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            {/* Info de contratos */}
-            <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap order-2 sm:order-1">
-              Mostrando <span className="font-semibold">{contracts.length}</span> de <span className="font-semibold">{pagination.total}</span> contratos
-            </div>
+      {/* Pagination - Siempre visible fuera del contenedor de la tabla */}
+      <div className="neumorphic-card mt-4 px-6 py-4">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+          {/* Info de contratos */}
+          <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap order-2 sm:order-1">
+            Mostrando <span className="font-semibold">{contracts.length}</span> de <span className="font-semibold">{pagination.total}</span> contratos
+          </div>
 
-            {/* Controles de paginación centrados */}
-            <div className="flex items-center space-x-2 order-1 sm:order-2">
-              <button
-                onClick={() => handlePageChange(pagination.page - 1)}
-                disabled={pagination.page === 1}
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Página anterior"
-              >
-                <span className="material-icons-outlined">chevron_left</span>
-              </button>
-              <span className="px-4 py-2 text-slate-700 dark:text-slate-300 font-medium whitespace-nowrap min-w-[80px] text-center">
-                {pagination.page} / {pagination.lastPage}
-              </span>
-              <button
-                onClick={() => handlePageChange(pagination.page + 1)}
-                disabled={pagination.page === pagination.lastPage}
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Página siguiente"
-              >
-                <span className="material-icons-outlined">chevron_right</span>
-              </button>
-            </div>
+          {/* Controles de paginación centrados */}
+          <div className="flex items-center space-x-2 order-1 sm:order-2">
+            <button
+              onClick={() => handlePageChange(pagination.page - 1)}
+              disabled={pagination.page === 1}
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Página anterior"
+            >
+              <span className="material-icons-outlined">chevron_left</span>
+            </button>
+            <span className="px-4 py-2 text-slate-700 dark:text-slate-300 font-medium whitespace-nowrap min-w-[80px] text-center">
+              {pagination.page} / {pagination.lastPage}
+            </span>
+            <button
+              onClick={() => handlePageChange(pagination.page + 1)}
+              disabled={pagination.page === pagination.lastPage}
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Página siguiente"
+            >
+              <span className="material-icons-outlined">chevron_right</span>
+            </button>
+          </div>
 
-            {/* Selector de entradas por página */}
-            <div className="neumorphic-card-inset rounded-lg order-3">
-              <select
-                value={entriesPerPage}
-                onChange={(e) => {
-                  setEntriesPerPage(Number(e.target.value));
-                  setPagination((prev) => ({ ...prev, page: 1 }));
-                }}
-                className="bg-transparent border-none focus:ring-0 text-sm font-medium py-2 px-3 text-slate-600 dark:text-slate-300 min-w-[130px]"
-              >
-                <option value={10}>10 por página</option>
-                <option value={25}>25 por página</option>
-                <option value={50}>50 por página</option>
-                <option value={100}>100 por página</option>
-              </select>
-            </div>
+          {/* Selector de entradas por página */}
+          <div className="neumorphic-card-inset rounded-lg order-3">
+            <select
+              value={entriesPerPage}
+              onChange={(e) => {
+                setEntriesPerPage(Number(e.target.value));
+                setPagination((prev) => ({ ...prev, page: 1 }));
+              }}
+              className="bg-transparent border-none focus:ring-0 text-sm font-medium py-2 px-3 text-slate-600 dark:text-slate-300 min-w-[130px]"
+            >
+              <option value={10}>10 por página</option>
+              <option value={25}>25 por página</option>
+              <option value={50}>50 por página</option>
+              <option value={100}>100 por página</option>
+            </select>
           </div>
         </div>
       </div>
