@@ -48,21 +48,31 @@ const COLUMN_CONFIG = {
   },
   customerFullName: {
     label: "Cliente",
-    render: (contract) => (
-      <div className="flex items-center">
-        <div className="w-8 h-8 rounded-full neumorphic-card p-0.5 flex items-center justify-center mr-3">
-          <span className="material-icons-outlined text-xl text-slate-500">person</span>
+    render: (contract) => {
+      const customer = contract.customer;
+      const isB2B = customer?.type === "B2B" || customer?.cif;
+      const displayName = isB2B && customer?.tradeName
+        ? customer.tradeName
+        : `${customer?.name || ""} ${customer?.surnames || ""}`.trim();
+      const displayId = customer?.cif || customer?.nationalId || "-";
+      return (
+        <div className="flex items-center">
+          <div className="w-8 h-8 rounded-full neumorphic-card p-0.5 flex items-center justify-center mr-3">
+            <span className="material-icons-outlined text-xl text-slate-500">
+              {isB2B ? "business" : "person"}
+            </span>
+          </div>
+          <div>
+            <p className="font-medium text-slate-800 dark:text-slate-200">
+              {displayName || "-"}
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {displayId}
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="font-medium text-slate-800 dark:text-slate-200">
-            {contract.customer?.name || ""} {contract.customer?.surnames || ""}
-          </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            {contract.customer?.nationalId || contract.customer?.cif || "-"}
-          </p>
-        </div>
-      </div>
-    ),
+      );
+    },
   },
   cups: {
     label: "CUPS",
