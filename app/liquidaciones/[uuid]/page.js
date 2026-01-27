@@ -21,6 +21,7 @@ import {
 import * as jose from "jose";
 import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
+import ChannelsDropdown from "@/components/channels.dropdown";
 
 // Componente de búsqueda de CUPS para agregar contratos
 const AddContractByCupsModal = ({ liquidationUuid, onClose, onContractsAdded }) => {
@@ -486,6 +487,24 @@ export default function LiquidacionDetailPage() {
   const dropdownRef = useRef(null);
   const [isDownloadingExcel, setIsDownloadingExcel] = useState(false);
   const [isAddContractModalOpen, setIsAddContractModalOpen] = useState(false);
+  const [channels, setChannels] = useState([]);
+
+  // Fetch channels for dropdown
+  useEffect(() => {
+    const fetchChannels = async () => {
+      try {
+        const jwtToken = getCookie("factura-token");
+        const response = await authGetFetch("channels", jwtToken);
+        if (response.ok) {
+          const data = await response.json();
+          setChannels(data);
+        }
+      } catch (error) {
+        console.error("Error fetching channels:", error);
+      }
+    };
+    fetchChannels();
+  }, []);
 
   const fetchLiquidacion = useCallback(async () => {
     if (!uuid) return;
@@ -902,6 +921,35 @@ export default function LiquidacionDetailPage() {
       setSelectedContracts([]);
     } else {
       setSelectedContracts(filteredContracts.map((lc) => lc.uuid));
+    }
+  };
+
+  // Handler para cambiar el canal de un contrato
+  const handleContractChannelChange = async (contractUuid, newChannel) => {
+    const jwtToken = getCookie("factura-token");
+    try {
+      const response = await authFetch(
+        "PATCH",
+        `contracts/${contractUuid}`,
+        { channelId: newChannel.id },
+        jwtToken
+      );
+      if (!response.ok) {
+        throw new Error("Error al actualizar el canal");
+      }
+      // Actualizar el estado local
+      setLiquidation((prev) => ({
+        ...prev,
+        liquidationContracts: prev.liquidationContracts.map((lc) =>
+          lc.contract?.uuid === contractUuid
+            ? { ...lc, contract: { ...lc.contract, channel: newChannel, channelId: newChannel.id } }
+            : lc
+        ),
+      }));
+      toast.success("Canal actualizado correctamente");
+    } catch (error) {
+      console.error("Error updating channel:", error);
+      toast.error("Error al actualizar el canal");
     }
   };
 
@@ -1553,7 +1601,15 @@ export default function LiquidacionDetailPage() {
                               key={columnKey}
                               className="px-4 py-3 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300"
                             >
-                              {liquidationColumnsConfig[columnKey]?.render(lc) ?? "—"}
+                              {columnKey === "channelName" ? (
+                                <ChannelsDropdown
+                                  channels={channels}
+                                  channelId={lc.contract?.channel?.id || lc.contract?.channelId}
+                                  onChannelChange={(newChannel) => handleContractChannelChange(lc.contract?.uuid, newChannel)}
+                                />
+                              ) : (
+                                liquidationColumnsConfig[columnKey]?.render(lc) ?? "—"
+                              )}
                             </td>
                           ))}
                           {/* Celdas fijas para Importe y Acciones */}
