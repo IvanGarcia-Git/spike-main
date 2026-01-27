@@ -74,10 +74,13 @@ export default function CreateContractForm({
     );
 
     if (selectedCompany && contractState.rates[selectedCompany.name]) {
-      const filtered = contractState.rates[selectedCompany.name].filter(
-        (rate) =>
-          rate.type === contractState.selectedTypeForContracts[contractType]
-      );
+      // Para Gas no filtramos por tipo de tarifa, para Luz sí
+      const companyRates = contractState.rates[selectedCompany.name];
+      const filtered = contractType === "Gas"
+        ? companyRates
+        : companyRates.filter(
+            (rate) => rate.type === contractState.selectedTypeForContracts[contractType]
+          );
       setContractState((prev) => ({ ...prev, filteredRates: filtered }));
     } else {
       setContractState((prev) => ({ ...prev, filteredRates: [] }));

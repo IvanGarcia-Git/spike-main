@@ -80,7 +80,12 @@ export default function ContractForm({
   const [filteredSelectRates, setFilteredSelectRates] = useState([]);
 
   const filterRatesByType = (rateType) => {
-    if (!filteredRates || !rateType) return [];
+    if (!filteredRates) return [];
+    // Para Gas no filtramos por tipo de tarifa
+    if (contract.type === "Gas") {
+      return filteredRates;
+    }
+    if (!rateType) return [];
     const filteredRatesByType = filteredRates.filter(
       (rate) => rate.type === rateType
     );
@@ -88,25 +93,40 @@ export default function ContractForm({
   };
 
   useEffect(() => {
-    if (selectedRateType) {
-      const filteredRates = filterRatesByType(selectedRateType);
+    // Para Gas mostramos todas las tarifas, para Luz filtramos por tipo
+    if (contract.type === "Gas") {
       setFilteredSelectRates(filteredRates);
+    } else if (selectedRateType) {
+      const rates = filterRatesByType(selectedRateType);
+      setFilteredSelectRates(rates);
     }
-  }, [selectedRateType, filteredRates]);
+  }, [selectedRateType, filteredRates, contract.type]);
 
   useEffect(() => {
-    if (contract.rate && contract.rate?.type) {
-      setSelectedRateType(contract.rate.type);
-      const filteredRates = filterRatesByType(contract.rate.type);
+    if (contract.type === "Gas") {
+      // Para Gas, mostrar todas las tarifas de la compañía
       setFilteredSelectRates(filteredRates);
-
-      if (filteredRates.length > 0) {
+      if (filteredRates.length > 0 && contract.rate) {
         const matchingRate = filteredRates.find(
           (rate) => rate.id === contract.rate.id
         );
         setFormData((prevFormData) => ({
           ...prevFormData,
-          rateId: matchingRate ? matchingRate.id : filteredRates[0].id,
+          rateId: matchingRate ? matchingRate.id : contract.rate?.id || "",
+        }));
+      }
+    } else if (contract.rate && contract.rate?.type) {
+      setSelectedRateType(contract.rate.type);
+      const rates = filterRatesByType(contract.rate.type);
+      setFilteredSelectRates(rates);
+
+      if (rates.length > 0) {
+        const matchingRate = rates.find(
+          (rate) => rate.id === contract.rate.id
+        );
+        setFormData((prevFormData) => ({
+          ...prevFormData,
+          rateId: matchingRate ? matchingRate.id : rates[0].id,
         }));
       }
     }
