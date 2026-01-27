@@ -1471,7 +1471,7 @@ export default function LiquidacionDetailPage() {
                     }}
                     className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-b-lg flex items-center gap-2"
                   >
-                    <span className="material-icons text-base">list_alt</span>
+                    <span className="material-icons-outlined text-base">list_alt</span>
                     Ver en listado de contratos
                   </button>
                 </div>
