@@ -1423,15 +1423,22 @@ export default function LiquidacionDetailPage() {
 
         {/* Bulk Actions */}
         <div className="mb-4 flex items-center justify-between">
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={selectedContracts.length === filteredContracts.length}
-              onChange={handleSelectAllContracts}
-              className="rounded border-gray-300 text-primary focus:ring-primary"
-            />
-            <span className="text-sm text-slate-700 dark:text-slate-300">Seleccionar todos</span>
-          </label>
+          <div className="flex items-center space-x-4">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={selectedContracts.length === filteredContracts.length && filteredContracts.length > 0}
+                onChange={handleSelectAllContracts}
+                className="rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <span className="text-sm text-slate-700 dark:text-slate-300">Seleccionar todos</span>
+            </label>
+            {selectedContracts.length > 0 && (
+              <span className="text-sm text-slate-500 dark:text-slate-400">
+                ({selectedContracts.length} de {filteredContracts.length} seleccionados)
+              </span>
+            )}
+          </div>
 
           {selectedContracts.length > 0 && (
             <div ref={dropdownRef} className="relative">
@@ -1490,6 +1497,15 @@ export default function LiquidacionDetailPage() {
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                   <thead className="bg-background">
                     <tr>
+                      {/* Checkbox header */}
+                      <th scope="col" className="px-4 py-3 text-center w-12">
+                        <input
+                          type="checkbox"
+                          checked={selectedContracts.length === filteredContracts.length && filteredContracts.length > 0}
+                          onChange={handleSelectAllContracts}
+                          className="rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                      </th>
                       {/* Cabeceras dinámicas basadas en las preferencias */}
                       {columnsOrder.map((columnKey) => (
                         <th
@@ -1517,6 +1533,15 @@ export default function LiquidacionDetailPage() {
                       const effectiveComm = getEffectiveCommission(lc);
                       return (
                         <tr key={lc.uuid} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30">
+                          {/* Checkbox cell */}
+                          <td className="px-4 py-3 text-center w-12">
+                            <input
+                              type="checkbox"
+                              checked={selectedContracts.includes(lc.uuid)}
+                              onChange={() => handleSelectContract(lc.uuid)}
+                              className="rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                          </td>
                           {/* Celdas dinámicas basadas en las preferencias */}
                           {columnsOrder.map((columnKey) => (
                             <td
