@@ -683,6 +683,7 @@ export default function LiquidacionDetailPage() {
           customer?.surnames?.toLowerCase().includes(lowerSearchTerm) ||
           customer?.nationalId?.toLowerCase().includes(lowerSearchTerm) ||
           customer?.cif?.toLowerCase().includes(lowerSearchTerm) ||
+          customer?.iban?.toLowerCase().includes(lowerSearchTerm) ||
           agent?.name?.toLowerCase().includes(lowerSearchTerm) ||
           agent?.firstSurname?.toLowerCase().includes(lowerSearchTerm) ||
           rate?.name?.toLowerCase().includes(lowerSearchTerm) ||
@@ -1407,7 +1408,7 @@ export default function LiquidacionDetailPage() {
             </div>
             <input
               type="text"
-              placeholder="Buscar por CUPS, cliente, agente, tarifa, fecha, importe..."
+              placeholder="Buscar por CUPS, cliente, IBAN, agente, tarifa, fecha, importe..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="neumorphic-card-inset px-4 py-3 pl-10 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent w-full text-slate-800 dark:text-slate-100"
