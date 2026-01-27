@@ -323,10 +323,15 @@ const liquidationColumnsConfig = {
   },
   customerFullName: {
     header: "Cliente",
-    render: (lc) =>
-      lc.contract?.customer
-        ? `${lc.contract.customer.name} ${lc.contract.customer.surnames || ""}`.trim()
-        : "—",
+    render: (lc) => {
+      const customer = lc.contract?.customer;
+      if (!customer) return "—";
+      // Para empresas (B2B), mostrar nombre comercial; para particulares (B2C), nombre y apellidos
+      if (customer.type === "B2B" || customer.cif) {
+        return customer.tradeName || `${customer.name} ${customer.surnames || ""}`.trim();
+      }
+      return `${customer.name} ${customer.surnames || ""}`.trim();
+    },
   },
   cups: {
     header: "Cups",
