@@ -176,7 +176,7 @@ export default function Companies() {
 
       {/* Modal para crear nueva compañía */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center lg:ml-72">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="modal-card p-6 w-full max-w-lg">
             <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6">Crear nueva compañía</h3>
             <form onSubmit={handleAddCompany}>
