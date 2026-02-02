@@ -184,6 +184,14 @@ export default function ContractForm({
       }
     }
 
+    // Preparar datos para enviar, convirtiendo strings vacíos a null
+    const submitFormData = {
+      ...formData,
+      isDraft: false,
+      rateId: formData.rateId === "" ? null : formData.rateId,
+      companyId: formData.companyId === "" ? null : formData.companyId,
+    };
+
     if (contract.type === "Luz") {
       if (
         isActive &&
@@ -191,14 +199,14 @@ export default function ContractForm({
         formData.contractedPowers.length > 0 &&
         contract.type === "Luz"
       ) {
-        onSubmit({ ...formData, isDraft: false });
+        onSubmit(submitFormData);
       } else {
         alert("El CUPS y al menos una potencia son requeridos");
       }
     }
     if (contract.type === "Gas") {
       if (isActive && formData.cups && contract.type === "Gas") {
-        onSubmit({ ...formData, isDraft: false });
+        onSubmit(submitFormData);
       } else {
         alert("El CUPS es requerido");
       }

@@ -270,12 +270,19 @@ export default function ContractDetail({ params }) {
       );
 
       if (!response.ok) {
-        alert("Error actualizando el Contrato");
+        try {
+          const errorData = await response.json();
+          const errorMessage = errorData?.error?.message || errorData?.message || "Error actualizando el Contrato";
+          alert(errorMessage);
+        } catch {
+          alert("Error actualizando el Contrato");
+        }
       } else {
         alert("Cliente y contrato actualizados correctamente");
       }
     } catch (error) {
       console.error("Error enviando la solicitud:", error);
+      alert("Error de conexión al actualizar el contrato");
     }
   };
 
