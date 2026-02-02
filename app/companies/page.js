@@ -10,6 +10,7 @@ export default function Companies() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newCompany, setNewCompany] = useState({
     name: "",
+    type: "",
     image: null,
   });
   const router = useRouter();
@@ -63,9 +64,15 @@ export default function Companies() {
     e.preventDefault();
     const jwtToken = getCookie("factura-token");
 
+    if (!newCompany.type) {
+      alert("Por favor, selecciona el tipo de compañía");
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append("name", newCompany.name);
+      formData.append("type", newCompany.type);
 
       if (newCompany.image) {
         formData.append("imgFile", newCompany.image);
@@ -84,13 +91,21 @@ export default function Companies() {
         setIsModalOpen(false);
         setNewCompany({
           name: "",
+          type: "",
           image: null,
         });
       } else {
-        alert("Error agregando la compañía");
+        try {
+          const errorData = await response.json();
+          const errorMessage = errorData?.error?.message || errorData?.message || "Error agregando la compañía";
+          alert(errorMessage);
+        } catch {
+          alert("Error agregando la compañía");
+        }
       }
     } catch (error) {
       console.error("Error enviando la solicitud:", error);
+      alert("Error de conexión al crear la compañía");
     }
   };
 
@@ -99,6 +114,7 @@ export default function Companies() {
     setIsModalOpen(false);
     setNewCompany({
       name: "",
+      type: "",
       image: null,
     });
   };
@@ -176,6 +192,23 @@ export default function Companies() {
                   onChange={(e) => setNewCompany({ ...newCompany, name: e.target.value })}
                   required
                 />
+              </div>
+              <div className="mb-4">
+                <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="type">
+                  Tipo de Compañía *
+                </label>
+                <select
+                  id="type"
+                  className="w-full neumorphic-card-inset px-4 py-3 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 bg-transparent text-slate-800 dark:text-slate-200"
+                  value={newCompany.type}
+                  onChange={(e) => setNewCompany({ ...newCompany, type: e.target.value })}
+                  required
+                >
+                  <option value="">Seleccionar tipo</option>
+                  <option value="Luz">Luz</option>
+                  <option value="Gas">Gas</option>
+                  <option value="Telefonía">Telefonía</option>
+                </select>
               </div>
               <div className="mb-4">
                 <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="image">
