@@ -286,10 +286,10 @@ export default function CreateContractForm({
                 </option>
                 {companies
                   .filter((company) => {
-                    // Para Gas, mostrar compañías de tipo Gas
+                    // Para Gas, mostrar compañías de tipo Gas que tengan tarifas de Gas disponibles
                     // Para Luz, mostrar compañías que tienen tarifas de Luz
                     if (contractType === "Gas") {
-                      return company.type === "Gas";
+                      return company.type === "Gas" && contractState.rates[company.name];
                     }
                     return contractState.rates[company.name];
                   })

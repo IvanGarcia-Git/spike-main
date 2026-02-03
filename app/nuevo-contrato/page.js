@@ -457,9 +457,23 @@ export default function CreateContractPage() {
           jwtToken
         );
 
+        if (!contractLuzResponse.ok) {
+          try {
+            const errorData = await contractLuzResponse.json();
+            if (errorData?.error?.message) {
+              toast.error(errorData.error.message);
+            } else {
+              toast.error("Error al crear el contrato de Luz.");
+            }
+          } catch {
+            toast.error("Error al crear el contrato de Luz.");
+          }
+          return;
+        }
+
         const createdContract = await contractLuzResponse.json();
 
-        if (contractLuzResponse.ok && contractLuzData.selectedFiles.length > 0) {
+        if (contractLuzData.selectedFiles.length > 0) {
           const formData = new FormData();
 
           formData.append("contractUuid", createdContract.uuid);
@@ -565,7 +579,17 @@ export default function CreateContractPage() {
             }
           }
         } else {
-          toast.error("Error al crear el contrato.");
+          try {
+            const errorData = await contractGasResponse.json();
+            if (errorData?.error?.message) {
+              toast.error(errorData.error.message);
+            } else {
+              toast.error("Error al crear el contrato de Gas.");
+            }
+          } catch {
+            toast.error("Error al crear el contrato de Gas.");
+          }
+          return;
         }
       }
 
