@@ -253,11 +253,27 @@ export default function ContractDetail({ params }) {
       };
       requestBody = {
         companyId: updatedContractData.companyId || null,
-        electronicBill: updatedContractData.electronicBill,
+        electronicBill: updatedContractData.electronicBill === true || updatedContractData.electronicBill === "true",
         isDraft: updatedContractData.isDraft || false,
         extraInfo: updatedContractData.extraInfo || "",
         type: "Telefonía",
         telephonyData,
+      };
+    } else if (updatedContractData.type === "Luz" || updatedContractData.type === "Gas") {
+      // Construir requestBody para contratos de Luz y Gas
+      requestBody = {
+        companyId: updatedContractData.companyId || null,
+        rateId: updatedContractData.rateId || null,
+        cups: updatedContractData.cups || "",
+        contractedPowers: updatedContractData.contractedPowers || [],
+        maintenance: updatedContractData.maintenance === true || updatedContractData.maintenance === "true",
+        electronicBill: updatedContractData.electronicBill === true || updatedContractData.electronicBill === "true",
+        virtualBat: updatedContractData.virtualBat === true || updatedContractData.virtualBat === "true",
+        solarPlates: updatedContractData.solarPlates === true || updatedContractData.solarPlates === "true",
+        product: updatedContractData.product || null,
+        isDraft: updatedContractData.isDraft || false,
+        extraInfo: updatedContractData.extraInfo || "",
+        type: updatedContractData.type,
       };
     }
 
@@ -265,7 +281,7 @@ export default function ContractDetail({ params }) {
       const response = await authFetch(
         "PATCH",
         `contracts/${contractUuid}`,
-        updatedContractData.type !== "Telefonía" ? updatedContractData : requestBody,
+        requestBody,
         jwtToken
       );
 

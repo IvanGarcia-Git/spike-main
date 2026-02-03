@@ -184,12 +184,18 @@ export default function ContractForm({
       }
     }
 
-    // Preparar datos para enviar, convirtiendo strings vacíos a null
+    // Preparar datos para enviar, convirtiendo strings vacíos a null y booleanos correctamente
     const submitFormData = {
       ...formData,
+      type: contract.type,
       isDraft: false,
       rateId: formData.rateId === "" ? null : formData.rateId,
       companyId: formData.companyId === "" ? null : formData.companyId,
+      // Asegurar que los booleanos se envíen como booleanos, no strings
+      maintenance: formData.maintenance === true || formData.maintenance === "true",
+      electronicBill: formData.electronicBill === true || formData.electronicBill === "true",
+      virtualBat: formData.virtualBat === true || formData.virtualBat === "true",
+      solarPlates: formData.solarPlates === true || formData.solarPlates === "true",
     };
 
     if (contract.type === "Luz") {
@@ -224,9 +230,15 @@ export default function ContractForm({
 
     const draftFormData = {
       ...formData,
+      type: contract.type,
       isDraft: true,
       rateId: formData.rateId === "" ? null : formData.rateId,
       companyId: formData.companyId === "" ? null : formData.companyId,
+      // Asegurar que los booleanos se envíen como booleanos, no strings
+      maintenance: formData.maintenance === true || formData.maintenance === "true",
+      electronicBill: formData.electronicBill === true || formData.electronicBill === "true",
+      virtualBat: formData.virtualBat === true || formData.virtualBat === "true",
+      solarPlates: formData.solarPlates === true || formData.solarPlates === "true",
     };
     onSubmit(draftFormData);
   };
