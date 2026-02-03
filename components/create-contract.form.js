@@ -287,12 +287,16 @@ export default function CreateContractForm({
                 </option>
                 {companies
                   .filter((company) => {
+                    // Verificar que la compañía tiene tarifas disponibles (array con al menos un elemento)
+                    const companyRates = contractState.rates[company.name];
+                    const hasRates = Array.isArray(companyRates) && companyRates.length > 0;
+
                     // Para Gas, mostrar compañías de tipo Gas que tengan tarifas de Gas disponibles
                     // Para Luz, mostrar compañías que tienen tarifas de Luz
                     if (contractType === "Gas") {
-                      return company.type === "Gas" && contractState.rates[company.name];
+                      return company.type === "Gas" && hasRates;
                     }
-                    return contractState.rates[company.name];
+                    return hasRates;
                   })
                   .map((company) => (
                     <option key={company.id} value={company.id}>
