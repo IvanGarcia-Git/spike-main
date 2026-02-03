@@ -95,6 +95,7 @@ export default function CreateContractForm({
     contractState.rates,
     contractState.selectedTypeForContracts,
     contractType,
+    companies,
   ]);
 
   const handleChange = (e) => {
