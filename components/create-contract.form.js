@@ -287,15 +287,13 @@ export default function CreateContractForm({
                 </option>
                 {companies
                   .filter((company) => {
-                    // Verificar que la compañía tiene tarifas disponibles (array con al menos un elemento)
+                    // Verificar que la compañía tiene tarifas disponibles para este tipo de servicio
+                    // Las tarifas ya vienen filtradas por serviceType (Luz o Gas) desde el endpoint
                     const companyRates = contractState.rates[company.name];
                     const hasRates = Array.isArray(companyRates) && companyRates.length > 0;
 
-                    // Para Gas, mostrar compañías de tipo Gas que tengan tarifas de Gas disponibles
-                    // Para Luz, mostrar compañías que tienen tarifas de Luz
-                    if (contractType === "Gas") {
-                      return company.type === "Gas" && hasRates;
-                    }
+                    // Mostrar compañías que tienen tarifas disponibles para este tipo de contrato
+                    // No filtramos por company.type porque una misma compañía puede ofrecer Luz y Gas
                     return hasRates;
                   })
                   .map((company) => (
