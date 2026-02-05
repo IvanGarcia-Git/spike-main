@@ -275,6 +275,10 @@ export default function ContractDetail({ params }) {
         extraInfo: updatedContractData.extraInfo || "",
         type: updatedContractData.type,
       };
+    } else {
+      // Tipo de contrato no reconocido
+      alert(`Tipo de contrato no reconocido: ${updatedContractData.type}`);
+      return;
     }
 
     try {

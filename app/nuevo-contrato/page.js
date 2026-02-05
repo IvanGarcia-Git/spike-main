@@ -445,11 +445,14 @@ export default function CreateContractPage() {
 
       //Luz
       if (contractLuzData.isSelected) {
+        // Extraer solo los campos necesarios para el backend (excluir isSelected, selectedFiles)
+        const { isSelected: _isSelected, selectedFiles: _selectedFiles, ...contractLuzPayload } = contractLuzData;
+
         const contractLuzResponse = await authFetch(
           "POST",
           `contracts/`,
           {
-            ...contractLuzData,
+            ...contractLuzPayload,
             customerId: createdCustomer?.id || null,
             isDraft,
             rateId: contractLuzData.rateId === "" ? null : contractLuzData.rateId,
@@ -535,11 +538,14 @@ export default function CreateContractPage() {
 
       //Gas
       if (contractGasData.isSelected) {
+        // Extraer solo los campos necesarios para el backend (excluir isSelected, selectedFiles)
+        const { isSelected: _isSelected, selectedFiles: _selectedFiles, ...contractGasPayload } = contractGasData;
+
         const contractGasResponse = await authFetch(
           "POST",
           `contracts/`,
           {
-            ...contractGasData,
+            ...contractGasPayload,
             customerId: createdCustomer?.id || null,
             isDraft,
             rateId: contractGasData.rateId === "" ? null : contractGasData.rateId,
