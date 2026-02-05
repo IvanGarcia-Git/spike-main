@@ -53,11 +53,8 @@ export default function CreateContractForm({
       const response = await authGetFetch(`rates/group/company-name?serviceType=${contractType}`, jwtToken);
       if (response.ok) {
         const ratesData = await response.json();
-        console.log(`[DEBUG] Tarifas cargadas para ${contractType}:`, ratesData);
-        console.log(`[DEBUG] Compañías con tarifas de ${contractType}:`, Object.keys(ratesData));
         setContractState((prev) => ({ ...prev, rates: ratesData }));
       } else {
-        console.error(`[DEBUG] Error al cargar tarifas de ${contractType}:`, response.status);
         alert("Error al cargar las tarifas disponibles");
       }
     } catch (error) {
@@ -288,18 +285,12 @@ export default function CreateContractForm({
                 <option value="" disabled>
                   Selecciona una compañía
                 </option>
-                {(() => {
-                  console.log(`[DEBUG] Compañías recibidas para ${contractType}:`, companies.map(c => ({ id: c.id, name: c.name, type: c.type })));
-                  console.log(`[DEBUG] Tarifas disponibles en state para ${contractType}:`, contractState.rates);
-                  return companies;
-                })()
+                {companies
                   .filter((company) => {
                     // Verificar que la compañía tiene tarifas disponibles para este tipo de servicio
                     // Las tarifas ya vienen filtradas por serviceType (Luz o Gas) desde el endpoint
                     const companyRates = contractState.rates[company.name];
                     const hasRates = Array.isArray(companyRates) && companyRates.length > 0;
-
-                    console.log(`[DEBUG] Compañía ${company.name}: hasRates=${hasRates}, rates=`, companyRates);
 
                     // Mostrar compañías que tienen tarifas disponibles para este tipo de contrato
                     // No filtramos por company.type porque una misma compañía puede ofrecer Luz y Gas
