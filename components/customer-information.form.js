@@ -405,7 +405,7 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
         </label>
         <input
           type="text"
-          pattern="^\d{9,}$"
+          pattern="^(\+34)?[6789]\d{8}$"
           id="phoneNumber"
           name="phoneNumber"
           className="w-full px-4 py-2.5 rounded-lg neumorphic-card-inset text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent"
@@ -413,7 +413,7 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
           disabled={fieldsDisabled}
           onChange={handleChange}
           required={!contractIsDraft}
-          title="Por favor, introduce un número de teléfono válido."
+          title="Por favor, introduce un número de teléfono válido (9 dígitos, empezando por 6, 7, 8 o 9)."
         />
       </div>
 

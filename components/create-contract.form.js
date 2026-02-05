@@ -19,7 +19,7 @@ export default function CreateContractForm({
     rates: {},
     filteredRates: [],
     selectedTypeForContracts: {
-      Luz: "",
+      Luz: "2.0",
       Gas: "",
     },
   });

@@ -38,7 +38,8 @@ export default function CreateContractPage() {
   const [selectedFile, setSelectedFile] = useState(null);
 
   const cpRegex = /^(0[1-9]|[1-4][0-9]|5[0-2])\d{3}$/;
-  const phoneNumberRegex = /^\d{9,}$/;
+  // Validación de teléfono español: 9 dígitos empezando por 6, 7, 8 o 9 (con o sin prefijo +34)
+  const phoneNumberRegex = /^(\+34)?[6789]\d{8}$/;
   const dniRegex = /^[0-9]{8}[A-Z]$/;
   const nieRegex = /^[X|Y|Z]\d{7}[A-Z]$/;
 
@@ -344,7 +345,7 @@ export default function CreateContractPage() {
         );
         return;
       } else if (!phoneNumberRegex.test(customerData.phoneNumber)) {
-        toast.error("Por favor, introduce un número de teléfono válido.");
+        toast.error("Por favor, introduce un número de teléfono válido (9 dígitos, empezando por 6, 7, 8 o 9).");
         return;
       } else if (documentType === "NIE" && !nieRegex.test(customerData.nationalId)) {
         toast.error("Por favor, introduce un NIE válido.");
