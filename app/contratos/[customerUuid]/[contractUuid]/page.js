@@ -65,12 +65,14 @@ export default function ContractDetail({ params }) {
       if (response.ok) {
         const contractResponse = await response.json();
         setContract(contractResponse);
+        return contractResponse;
       } else {
         alert("Error cargando los detalles del contrato");
       }
     } catch (error) {
       console.error("Error enviando la solicitud:", error);
     }
+    return null;
   };
 
   useEffect(() => {
@@ -310,7 +312,23 @@ export default function ContractDetail({ params }) {
     const section = searchParams.get("section") || "Detail";
     setSelectedSection(section);
 
-    getCustomerDetails(customerUuid);
+    const loadData = async () => {
+      // If customerUuid is invalid (e.g. '_' or 'undefined'), load contract first to get customer
+      if (!customerUuid || customerUuid === '_' || customerUuid === 'undefined') {
+        const contractData = await getContractDetails();
+        if (contractData?.customer?.uuid) {
+          // Redirect to proper URL with real customer UUID
+          router.replace(`/contratos/${contractData.customer.uuid}/${contractUuid}`);
+          return;
+        }
+        // Contract exists but has no customer (draft) - still mount the page
+        setIsMounted(true);
+      } else {
+        getCustomerDetails(customerUuid);
+      }
+    };
+
+    loadData();
     getCompanies();
     getRates();
   }, [contractUuid]);

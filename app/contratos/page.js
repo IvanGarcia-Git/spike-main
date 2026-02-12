@@ -50,11 +50,28 @@ const COLUMN_CONFIG = {
     label: "Cliente",
     render: (contract) => {
       const customer = contract.customer;
-      const isB2B = customer?.type === "B2B" || customer?.cif;
-      const displayName = isB2B && customer?.tradeName
+      if (!customer) {
+        return (
+          <div className="flex items-center">
+            <div className="w-8 h-8 rounded-full neumorphic-card p-0.5 flex items-center justify-center mr-3">
+              <span className="material-icons-outlined text-xl text-slate-400">
+                person_off
+              </span>
+            </div>
+            <div>
+              <p className="font-medium text-slate-400 dark:text-slate-500 italic">
+                {contract.isDraft ? "Borrador sin cliente" : "Sin cliente"}
+              </p>
+              <p className="text-xs text-slate-400 dark:text-slate-500">-</p>
+            </div>
+          </div>
+        );
+      }
+      const isB2B = customer.type === "B2B" || customer.cif;
+      const displayName = isB2B && customer.tradeName
         ? customer.tradeName
-        : `${customer?.name || ""} ${customer?.surnames || ""}`.trim();
-      const displayId = customer?.cif || customer?.nationalId || "-";
+        : `${customer.name || ""} ${customer.surnames || ""}`.trim();
+      const displayId = customer.cif || customer.nationalId || "-";
       return (
         <div className="flex items-center">
           <div className="w-8 h-8 rounded-full neumorphic-card p-0.5 flex items-center justify-center mr-3">
@@ -98,7 +115,10 @@ const COLUMN_CONFIG = {
   },
   customerNationalId: {
     label: "DNI/CIF",
-    render: (contract) => contract.customer?.nationalId || contract.customer?.cif || "-",
+    render: (contract) => {
+      if (!contract.customer) return "-";
+      return contract.customer.nationalId || contract.customer.cif || "-";
+    },
   },
   electronicBill: {
     label: "E-FACT",
@@ -1507,7 +1527,10 @@ function ContractsContent() {
                   <td className="p-3">
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => router.push(`/contratos/${contract.customer?.uuid}/${contract.uuid}`)}
+                        onClick={() => {
+                          const custUuid = contract.customer?.uuid || '_';
+                          router.push(`/contratos/${custUuid}/${contract.uuid}`);
+                        }}
                         className="p-2 rounded-lg neumorphic-button text-slate-600 dark:text-slate-400"
                       >
                         <span className="material-icons-outlined text-lg">visibility</span>
