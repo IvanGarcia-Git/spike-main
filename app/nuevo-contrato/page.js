@@ -455,8 +455,8 @@ export default function CreateContractPage() {
             ...contractLuzPayload,
             customerId: createdCustomer?.id || null,
             isDraft,
-            rateId: contractLuzData.rateId === "" ? null : contractLuzData.rateId,
-            companyId: contractLuzData.companyId === "" ? null : contractLuzData.companyId,
+            rateId: contractLuzData.rateId === "" ? null : Number(contractLuzData.rateId),
+            companyId: contractLuzData.companyId === "" ? null : Number(contractLuzData.companyId),
           },
           jwtToken
         );
@@ -548,8 +548,8 @@ export default function CreateContractPage() {
             ...contractGasPayload,
             customerId: createdCustomer?.id || null,
             isDraft,
-            rateId: contractGasData.rateId === "" ? null : contractGasData.rateId,
-            companyId: contractGasData.companyId === "" ? null : contractGasData.companyId,
+            rateId: contractGasData.rateId === "" ? null : Number(contractGasData.rateId),
+            companyId: contractGasData.companyId === "" ? null : Number(contractGasData.companyId),
           },
           jwtToken
         );
