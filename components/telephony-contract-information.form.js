@@ -130,7 +130,7 @@ export default function TelephonyContractForm({
     const draftFormData = {
       ...formData,
       isDraft: true,
-      companyId: formData.companyId === "" ? null : formData.companyId,
+      companyId: formData.companyId === "" ? null : Number(formData.companyId),
     };
     onSubmit(draftFormData);
   };

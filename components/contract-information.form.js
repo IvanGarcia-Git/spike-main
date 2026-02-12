@@ -194,8 +194,8 @@ export default function ContractForm({
       ...formData,
       type: contract.type,
       isDraft: false,
-      rateId: formData.rateId === "" ? null : formData.rateId,
-      companyId: formData.companyId === "" ? null : formData.companyId,
+      rateId: formData.rateId === "" ? null : Number(formData.rateId),
+      companyId: formData.companyId === "" ? null : Number(formData.companyId),
       // Asegurar que los booleanos se envíen como booleanos, no strings
       maintenance: formData.maintenance === true || formData.maintenance === "true",
       electronicBill: formData.electronicBill === true || formData.electronicBill === "true",
@@ -237,8 +237,8 @@ export default function ContractForm({
       ...formData,
       type: contract.type,
       isDraft: true,
-      rateId: formData.rateId === "" ? null : formData.rateId,
-      companyId: formData.companyId === "" ? null : formData.companyId,
+      rateId: formData.rateId === "" ? null : Number(formData.rateId),
+      companyId: formData.companyId === "" ? null : Number(formData.companyId),
       // Asegurar que los booleanos se envíen como booleanos, no strings
       maintenance: formData.maintenance === true || formData.maintenance === "true",
       electronicBill: formData.electronicBill === true || formData.electronicBill === "true",
