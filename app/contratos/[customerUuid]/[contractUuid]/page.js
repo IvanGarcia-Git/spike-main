@@ -265,7 +265,7 @@ export default function ContractDetail({ params }) {
         rates: updatedContractData.rates || [],
       };
       requestBody = {
-        companyId: updatedContractData.companyId || null,
+        companyId: updatedContractData.companyId ? Number(updatedContractData.companyId) : null,
         electronicBill: updatedContractData.electronicBill === true || updatedContractData.electronicBill === "true",
         isDraft: updatedContractData.isDraft || false,
         extraInfo: updatedContractData.extraInfo || "",
@@ -275,8 +275,8 @@ export default function ContractDetail({ params }) {
     } else if (updatedContractData.type === "Luz" || updatedContractData.type === "Gas") {
       // Construir requestBody para contratos de Luz y Gas
       requestBody = {
-        companyId: updatedContractData.companyId || null,
-        rateId: updatedContractData.rateId || null,
+        companyId: updatedContractData.companyId ? Number(updatedContractData.companyId) : null,
+        rateId: updatedContractData.rateId ? Number(updatedContractData.rateId) : null,
         cups: updatedContractData.cups || "",
         contractedPowers: updatedContractData.contractedPowers || [],
         maintenance: updatedContractData.maintenance === true || updatedContractData.maintenance === "true",
