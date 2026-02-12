@@ -60,7 +60,7 @@ export default function TelephonyContractForm({
     const fetchRates = async () => {
       const jwtToken = getCookie("factura-token");
       try {
-        const response = await authGetFetch(`rates/group/company-name`, jwtToken);
+        const response = await authGetFetch(`rates/group/company-name?serviceType=Telefonía`, jwtToken);
         if (response.ok) {
           const ratesData = await response.json();
           setRates(ratesData);
