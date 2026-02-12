@@ -110,10 +110,10 @@ export default function ContractDetail({ params }) {
     setIsModalOpen((prev) => !prev);
   };
 
-  const getCustomerDetails = async (customerUuid) => {
+  const getCustomerDetails = async (custUuid) => {
     const jwtToken = getCookie("factura-token");
     try {
-      const response = await authGetFetch(`customers/${customerUuid}`, jwtToken);
+      const response = await authGetFetch(`customers/${custUuid}`, jwtToken);
       if (response.ok) {
         const customer = await response.json();
         setCustomer(customer); // Información del cliente
@@ -123,10 +123,21 @@ export default function ContractDetail({ params }) {
         setActiveContract(active || customer.contracts[0]);
         setIsMounted(true);
       } else {
-        alert("Error al cargar los detalles del cliente y contratos");
+        // Customer not found — fallback: load contract directly
+        console.warn(`Customer ${custUuid} not found, loading contract directly`);
+        const contractData = await getContractDetails();
+        if (contractData?.customer?.uuid && contractData.customer.uuid !== custUuid) {
+          // Contract has a different customer UUID, redirect
+          router.replace(`/contratos/${contractData.customer.uuid}/${contractUuid}`);
+          return;
+        }
+        // Still mount the page even without customer data
+        setIsMounted(true);
       }
     } catch (error) {
       console.error("Error obteniendo los detalles del cliente:", error);
+      // Fallback: mount anyway so the page doesn't stay blank
+      setIsMounted(true);
     }
   };
 
@@ -321,7 +332,14 @@ export default function ContractDetail({ params }) {
           router.replace(`/contratos/${contractData.customer.uuid}/${contractUuid}`);
           return;
         }
-        // Contract exists but has no customer (draft) - still mount the page
+        // Contract exists but has no customer (draft) - set activeContract and mount
+        if (contractData) {
+          setActiveContract(contractData);
+          setContracts([contractData]);
+          if (contractData.customer) {
+            setCustomer(contractData.customer);
+          }
+        }
         setIsMounted(true);
       } else {
         getCustomerDetails(customerUuid);
@@ -447,7 +465,7 @@ export default function ContractDetail({ params }) {
             )}
 
             {/* Información del contrato */}
-            {customer && activeContract && (
+            {activeContract && (
               <div className="flex flex-col space-y-2">
                 <div className="text-xl font-semibold text-slate-800 dark:text-slate-100">
                   {contracts[0]?.type === "Telefonía" ? (
