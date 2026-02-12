@@ -18,22 +18,25 @@ export default function ContractForm({
 
   const [formData, setFormData] = useState({
     isDraft: contract?.isDraft || false,
-    contractedPowers: contract?.contractedPowers || [],
+    contractedPowers: (contract?.contractedPowers || []).map(v => typeof v === 'string' ? parseFloat(v) || 0 : (v || 0)),
     companyId: contract.company?.id || "",
-    rateId: contract.rateId,
+    rateId: contract.rateId || "",
     cups: contract?.cups || "",
     extraInfo: contract?.extraInfo || "",
-    maintenance: contract?.maintenance === true ? "true" : "false",
-    electronicBill: contract?.electronicBill === true ? "true" : "false",
-    virtualBat: contract?.virtualBat === true ? "true" : "false",
+    maintenance: contract?.maintenance === true,
+    electronicBill: contract?.electronicBill === true,
+    virtualBat: contract?.virtualBat || false,
     solarPlates: contract?.solarPlates || false,
+    product: contract?.product || "",
   });
 
   const getRates = async () => {
     const jwtToken = getCookie("factura-token");
 
     try {
-      const response = await authGetFetch(`rates/group/company-name`, jwtToken);
+      // Filtrar tarifas por serviceType (Luz o Gas) según el tipo de contrato
+      const serviceType = contract?.type || "";
+      const response = await authGetFetch(`rates/group/company-name?serviceType=${serviceType}`, jwtToken);
       if (response.ok) {
         const ratesData = await response.json();
         setRates(ratesData);
@@ -52,12 +55,14 @@ export default function ContractForm({
     if (contract) {
       setFormData({
         isDraft: contract?.isDraft || false,
-        contractedPowers: contract?.contractedPowers || [],
+        contractedPowers: (contract?.contractedPowers || []).map(v => typeof v === 'string' ? parseFloat(v) || 0 : (v || 0)),
         companyName: contract?.company?.name || "",
         companyId: contract.company?.id || "",
         cups: contract?.cups || "",
         rateId: contract?.rate?.id || "",
         extraInfo: contract?.extraInfo || "",
+        maintenance: contract?.maintenance === true,
+        electronicBill: contract?.electronicBill === true,
         virtualBat: contract?.virtualBat || false,
         solarPlates: contract?.solarPlates || false,
         product: contract?.product || "",
@@ -424,8 +429,9 @@ export default function ContractForm({
                   value={formData.contractedPowers?.[index] || ""}
                   onChange={(e) => {
                     const value = e.target.value.replace(",", ".");
+                    const numericValue = parseFloat(value) || 0;
                     const updatedPowers = [...formData.contractedPowers];
-                    updatedPowers[index] = value;
+                    updatedPowers[index] = numericValue;
                     setFormData((prevData) => ({
                       ...prevData,
                       contractedPowers: updatedPowers,
@@ -516,7 +522,7 @@ export default function ContractForm({
               <select
                 id="maintenance"
                 name="maintenance"
-                value={formData.maintenance}
+                value={formData.maintenance ? "true" : "false"}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
@@ -542,7 +548,7 @@ export default function ContractForm({
               <select
                 id="electronicBill"
                 name="electronicBill"
-                value={formData.electronicBill}
+                value={formData.electronicBill ? "true" : "false"}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
