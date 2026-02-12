@@ -346,7 +346,7 @@ export default function CreateTelephonyContractPage() {
         };
 
         const requestBody = {
-          companyId: contractTelephonyData.companyId || null,
+          companyId: contractTelephonyData.companyId ? Number(contractTelephonyData.companyId) : null,
           customerId: createdCustomer.id,
           electronicBill: contractTelephonyData.electronicBill,
           extraInfo: contractTelephonyData.extraInfo || "",
