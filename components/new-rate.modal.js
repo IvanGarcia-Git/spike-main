@@ -5,58 +5,79 @@ import { useState, useEffect } from "react";
 import { getCookie } from "cookies-next";
 import BaseModal, { ModalActions, ModalButton, ModalInput } from "./base-modal.component";
 
+const getDefaultServiceType = (companyType) => {
+  if (companyType === "Telefonía") {
+    return "Telefonía";
+  }
+
+  if (companyType === "Gas") {
+    return "Gas";
+  }
+
+  return "Luz";
+};
+
+const getInitialRateState = (companyType) => ({
+  name: "",
+  type: "",
+  serviceType: getDefaultServiceType(companyType),
+  renewDays: 0,
+  powerSlot1: "",
+  powerSlot2: "",
+  powerSlot3: "",
+  powerSlot4: "",
+  powerSlot5: "",
+  powerSlot6: "",
+  energySlot1: "",
+  energySlot2: "",
+  energySlot3: "",
+  energySlot4: "",
+  energySlot5: "",
+  energySlot6: "",
+  surplusSlot1: "",
+  products: "",
+  finalPrice: 0,
+});
+
 export default function NewRateModal({
   isOpen,
   onClose,
   onSave,
   companyId,
+  companyType,
   rateToEdit,
 }) {
   const [activeTab, setActiveTab] = useState("prices");
   const [documentationValues, setDocumentationValues] = useState([]);
   const [error, setError] = useState({ name: "", type: "", renewDays: "", serviceType: "" });
 
-  const [newRate, setNewRate] = useState({
-    name: "",
-    type: "",
-    serviceType: "Luz",
-    renewDays: 0,
-    powerSlot1: "",
-    powerSlot2: "",
-    powerSlot3: "",
-    powerSlot4: "",
-    powerSlot5: "",
-    powerSlot6: "",
-    energySlot1: "",
-    energySlot2: "",
-    energySlot3: "",
-    energySlot4: "",
-    energySlot5: "",
-    energySlot6: "",
-    surplusSlot1: "",
-    products: "",
-    finalPrice: 0,
-  });
+  const [newRate, setNewRate] = useState(() => getInitialRateState(companyType));
 
   useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
     setActiveTab("prices");
-    setDocumentationValues([]);
+    setDocumentationValues(rateToEdit?.documentation || []);
     setError({ name: "", type: "", renewDays: "", serviceType: "" });
+
     if (rateToEdit) {
-      const normalizedRate = Object.keys(newRate).reduce((acc, key) => {
+      const normalizedRate = Object.keys(getInitialRateState(companyType)).reduce((acc, key) => {
         acc[key] = rateToEdit[key] !== undefined && rateToEdit[key] !== null ? rateToEdit[key] : "";
         return acc;
       }, {});
-      // Asegurar que serviceType tenga un valor por defecto si no viene
+
       if (!normalizedRate.serviceType) {
-        normalizedRate.serviceType = "Luz";
+        normalizedRate.serviceType = getDefaultServiceType(companyType);
       }
+
       setNewRate(normalizedRate);
+      return;
     }
-    if (rateToEdit && rateToEdit.documentation) {
-      setDocumentationValues(rateToEdit.documentation);
-    }
-  }, [rateToEdit]);
+
+    setNewRate(getInitialRateState(companyType));
+  }, [companyType, isOpen, rateToEdit]);
 
   const cleanData = (data) => {
     const cleanedData = { ...data };
@@ -92,10 +113,10 @@ export default function NewRateModal({
       return;
     }
 
-    if (!newRate.type && newRate.serviceType !== "Telefonía") {
+    if (newRate.serviceType === "Luz" && !newRate.type) {
       setError((prev) => ({
         ...prev,
-        type: "El tipo de tarifa es obligatorio.",
+        type: "El tipo de tarifa es obligatorio para tarifas de luz.",
       }));
       return;
     }
@@ -132,10 +153,7 @@ export default function NewRateModal({
         const addedRate = await response.json();
         onSave(addedRate);
 
-        setNewRate({
-          ...newRate,
-          documentation: [],
-        });
+        setNewRate(getInitialRateState(companyType));
         setDocumentationValues([]);
         onClose();
       } else {
@@ -154,11 +172,23 @@ export default function NewRateModal({
     );
   };
 
-  const serviceTypes = [
+  const allServiceTypes = [
     { id: "Luz", label: "Luz", icon: "bolt", color: "blue" },
     { id: "Gas", label: "Gas", icon: "local_fire_department", color: "yellow" },
     { id: "Telefonía", label: "Telefonía", icon: "phone_android", color: "purple" },
   ];
+
+  const serviceTypes = allServiceTypes.filter((service) => {
+    if (companyType === "Telefonía") {
+      return service.id === "Telefonía";
+    }
+
+    if (["Energía", "Luz", "Gas", undefined, null, ""].includes(companyType)) {
+      return service.id !== "Telefonía";
+    }
+
+    return true;
+  });
 
   const rateTypes = [
     { id: "2.0", label: "2.0" },
@@ -175,6 +205,55 @@ export default function NewRateModal({
     { value: "CIE", label: "CIE" },
     { value: "OTRO", label: "OTRO" },
   ];
+
+  const handleServiceTypeChange = (serviceType) => {
+    setNewRate((prev) => {
+      const nextRate = {
+        ...prev,
+        serviceType,
+        type: serviceType === "Luz" ? prev.type : "",
+      };
+
+      if (serviceType === "Luz") {
+        nextRate.products = "";
+        nextRate.finalPrice = 0;
+        return nextRate;
+      }
+
+      if (serviceType === "Gas") {
+        nextRate.powerSlot2 = "";
+        nextRate.powerSlot3 = "";
+        nextRate.powerSlot4 = "";
+        nextRate.powerSlot5 = "";
+        nextRate.powerSlot6 = "";
+        nextRate.energySlot2 = "";
+        nextRate.energySlot3 = "";
+        nextRate.energySlot4 = "";
+        nextRate.energySlot5 = "";
+        nextRate.energySlot6 = "";
+        nextRate.surplusSlot1 = "";
+        nextRate.products = "";
+        nextRate.finalPrice = 0;
+        return nextRate;
+      }
+
+      nextRate.powerSlot1 = "";
+      nextRate.powerSlot2 = "";
+      nextRate.powerSlot3 = "";
+      nextRate.powerSlot4 = "";
+      nextRate.powerSlot5 = "";
+      nextRate.powerSlot6 = "";
+      nextRate.energySlot1 = "";
+      nextRate.energySlot2 = "";
+      nextRate.energySlot3 = "";
+      nextRate.energySlot4 = "";
+      nextRate.energySlot5 = "";
+      nextRate.energySlot6 = "";
+      nextRate.surplusSlot1 = "";
+
+      return nextRate;
+    });
+  };
 
   return (
     <BaseModal
@@ -217,12 +296,12 @@ export default function NewRateModal({
               <label className="block text-slate-700 dark:text-slate-300 font-medium mb-3">
                 Tipo de Servicio
               </label>
-              <div className="grid grid-cols-3 gap-3">
+              <div className={`grid gap-3 ${serviceTypes.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
                 {serviceTypes.map((service) => (
                   <button
                     key={service.id}
                     type="button"
-                    onClick={() => setNewRate({ ...newRate, serviceType: service.id, type: "" })}
+                    onClick={() => handleServiceTypeChange(service.id)}
                     className={`flex flex-col items-center justify-center p-4 rounded-lg transition-all ${
                       newRate.serviceType === service.id
                         ? `neumorphic-card ring-2 ring-primary bg-primary bg-opacity-5`
@@ -424,19 +503,19 @@ export default function NewRateModal({
                 </h4>
 
                 <ModalInput
-                  label="Energía Slot 1 (€/kWh)"
+                  label="Término fijo (€/día)"
+                  type="number"
+                  id="powerSlot1"
+                  value={newRate.powerSlot1}
+                  onChange={(e) => setNewRate({ ...newRate, powerSlot1: e.target.value })}
+                />
+
+                <ModalInput
+                  label="Término variable (€/kWh)"
                   type="number"
                   id="energySlot1"
                   value={newRate.energySlot1}
                   onChange={(e) => setNewRate({ ...newRate, energySlot1: e.target.value })}
-                />
-
-                <ModalInput
-                  label="Excedente (€/kWh)"
-                  type="number"
-                  id="surplusSlot1"
-                  value={newRate.surplusSlot1}
-                  onChange={(e) => setNewRate({ ...newRate, surplusSlot1: e.target.value })}
                 />
               </div>
             )}

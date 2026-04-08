@@ -5,6 +5,11 @@ import { FiEdit, FiTrash } from "react-icons/fi";
 import { authFetch, authGetFetch } from "@/helpers/server-fetch.helper";
 import { getCookie } from "cookies-next";
 
+const companyTypes = [
+  { value: "Energía", label: "Energía" },
+  { value: "Telefonía", label: "Telefonía" },
+];
+
 export default function Companies() {
   const [companies, setCompanies] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -205,10 +210,15 @@ export default function Companies() {
                   required
                 >
                   <option value="">Seleccionar tipo</option>
-                  <option value="Luz">Luz</option>
-                  <option value="Gas">Gas</option>
-                  <option value="Telefonía">Telefonía</option>
+                  {companyTypes.map((companyType) => (
+                    <option key={companyType.value} value={companyType.value}>
+                      {companyType.label}
+                    </option>
+                  ))}
                 </select>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  Energía agrupa las tarifas de luz y gas. La selección se hace al crear cada tarifa.
+                </p>
               </div>
               <div className="mb-4">
                 <label className="block text-slate-700 dark:text-slate-300 mb-2" htmlFor="image">

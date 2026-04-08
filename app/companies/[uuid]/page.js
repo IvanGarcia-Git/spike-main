@@ -202,6 +202,11 @@ export default function CompanyDetail({ params }) {
                   <td className="p-3 text-slate-600 dark:text-slate-400">
                     {rate.serviceType === "Telefonía" ? (
                       <span>{rate.products} - {rate.finalPrice}€</span>
+                    ) : rate.serviceType === "Gas" ? (
+                      <span>
+                        {rate.powerSlot1 && <span className="mr-2">T. fijo: {rate.powerSlot1}€/día</span>}
+                        {rate.energySlot1 && <span className="text-xs">T. variable: {rate.energySlot1}€/kWh</span>}
+                      </span>
                     ) : (
                       <span>
                         {rate.type && <span className="mr-2">Tarifa {rate.type}</span>}
@@ -239,6 +244,7 @@ export default function CompanyDetail({ params }) {
         <button
           onClick={() => {
             setRateToEdit(null);
+            setIsEditingRate(false);
             setShowNewRateForm(true);
           }}
           className="px-5 py-3 rounded-lg neumorphic-button text-white bg-primary hover:bg-primary/90 font-medium mt-4"
@@ -250,11 +256,13 @@ export default function CompanyDetail({ params }) {
         <NewRateModal
           isOpen={showNewRateForm}
           onClose={() => {
-            setRateToEdit({});
+            setRateToEdit(null);
+            setIsEditingRate(false);
             setShowNewRateForm(false);
           }}
           onSave={isEditingRate ? handleEditRate : handleAddRate}
           companyId={company.id}
+          companyType={company.type}
           rateToEdit={rateToEdit}
         />
 

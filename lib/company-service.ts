@@ -38,11 +38,13 @@ export async function getCompanyTariffs(): Promise<CompanyTariff[]> {
     
     companies.forEach((company: any) => {
       const companyRates = companyRatesMap.get(company.id) || [];
-      
-      if (company.type === 'Luz') {
-        // If company has specific rates, use them
-        if (companyRates.length > 0) {
-          companyRates.forEach((rate: any) => {
+      const lightRates = companyRates.filter((rate: any) => (rate.serviceType || company.type) === 'Luz');
+      const gasRates = companyRates.filter((rate: any) => (rate.serviceType || company.type) === 'Gas');
+      const isEnergyCompany = ['Energía', 'Luz', 'Gas'].includes(company.type);
+
+      if (isEnergyCompany) {
+        if (lightRates.length > 0) {
+          lightRates.forEach((rate: any) => {
             if (rate.type) {
               const powerPrices = [
                 rate.powerSlot1 || 0.10,
@@ -52,7 +54,7 @@ export async function getCompanyTariffs(): Promise<CompanyTariff[]> {
                 rate.powerSlot5 || 0.02,
                 rate.powerSlot6 || 0.01
               ];
-              
+
               const energyPrices = [
                 rate.energySlot1 || 0.15,
                 rate.energySlot2 || 0.08,
@@ -61,16 +63,13 @@ export async function getCompanyTariffs(): Promise<CompanyTariff[]> {
                 rate.energySlot5 || 0.02,
                 rate.energySlot6 || 0.01
               ];
-              
+
               const surplusPrice = rate.surplusSlot1 || 0.05;
-              
-              // Determine customer type based on rate type
               const customerType = rate.type === '2.0' ? 'residencial' : 'empresa';
-              
-              // Adjust array sizes based on tariff type
+
               let finalPowerPrices = powerPrices;
               let finalEnergyPrices = energyPrices;
-              
+
               if (rate.type === '2.0') {
                 finalPowerPrices = powerPrices.slice(0, 2);
                 finalEnergyPrices = energyPrices.slice(0, 3);
@@ -78,7 +77,7 @@ export async function getCompanyTariffs(): Promise<CompanyTariff[]> {
                 finalPowerPrices = powerPrices.slice(0, 6);
                 finalEnergyPrices = energyPrices.slice(0, 6);
               }
-              
+
               tariffs.push({
                 id: `${company.id}-rate-${rate.id}`,
                 type: 'luz',
@@ -92,11 +91,9 @@ export async function getCompanyTariffs(): Promise<CompanyTariff[]> {
               });
             }
           });
-        } else {
-          // No rates defined, generate default tariffs with varied prices
-          const priceVariation = (company.id % 10) * 0.01; // Use company ID for price variation
-          
-          // Generate residential 2.0 tariff
+        } else if (companyRates.length === 0 || company.type === 'Luz') {
+          const priceVariation = (company.id % 10) * 0.01;
+
           tariffs.push({
             id: `${company.id}-residential-20`,
             type: 'luz',
@@ -108,8 +105,7 @@ export async function getCompanyTariffs(): Promise<CompanyTariff[]> {
             energyPrices: [0.15 + priceVariation, 0.08 + priceVariation, 0.04 + priceVariation],
             surplusPrice: 0.05 + priceVariation,
           });
-          
-          // Generate business 3.0 tariff
+
           tariffs.push({
             id: `${company.id}-business-30`,
             type: 'luz',
@@ -118,25 +114,24 @@ export async function getCompanyTariffs(): Promise<CompanyTariff[]> {
             tariffName: `${company.name} Empresa 3.0`,
             tariffType: '3.0',
             powerPrices: [
-              0.12 + priceVariation, 
-              0.08 + priceVariation, 
-              0.06 + priceVariation, 
-              0.05 + priceVariation, 
-              0.04 + priceVariation, 
+              0.12 + priceVariation,
+              0.08 + priceVariation,
+              0.06 + priceVariation,
+              0.05 + priceVariation,
+              0.04 + priceVariation,
               0.03 + priceVariation
             ],
             energyPrices: [
-              0.16 + priceVariation, 
-              0.12 + priceVariation, 
-              0.08 + priceVariation, 
-              0.06 + priceVariation, 
-              0.05 + priceVariation, 
+              0.16 + priceVariation,
+              0.12 + priceVariation,
+              0.08 + priceVariation,
+              0.06 + priceVariation,
+              0.05 + priceVariation,
               0.04 + priceVariation
             ],
             surplusPrice: 0.06 + priceVariation,
           });
-          
-          // Generate business 6.1 tariff
+
           tariffs.push({
             id: `${company.id}-business-61`,
             type: 'luz',
@@ -145,32 +140,30 @@ export async function getCompanyTariffs(): Promise<CompanyTariff[]> {
             tariffName: `${company.name} Empresa 6.1`,
             tariffType: '6.1',
             powerPrices: [
-              0.13 + priceVariation, 
-              0.07 + priceVariation, 
-              0.07 + priceVariation, 
-              0.07 + priceVariation, 
-              0.07 + priceVariation, 
+              0.13 + priceVariation,
+              0.07 + priceVariation,
+              0.07 + priceVariation,
+              0.07 + priceVariation,
+              0.07 + priceVariation,
               0.07 + priceVariation
             ],
             energyPrices: [
-              0.17 + priceVariation, 
-              0.11 + priceVariation, 
-              0.06 + priceVariation, 
-              0.00, 
-              0.00, 
+              0.17 + priceVariation,
+              0.11 + priceVariation,
+              0.06 + priceVariation,
+              0.00,
+              0.00,
               0.00
             ],
             surplusPrice: 0.07 + priceVariation,
           });
         }
-      } else if (company.type === 'Gas') {
-        // For gas companies, check if there are specific rates
-        if (companyRates.length > 0) {
-          companyRates.forEach((rate: any) => {
-            // Use finalPrice as fixedPrice for gas rates
+
+        if (gasRates.length > 0) {
+          gasRates.forEach((rate: any) => {
             const fixedPrice = rate.finalPrice || rate.powerSlot1 || 0.20;
             const energyPrice = rate.energySlot1 || 0.08;
-            
+
             tariffs.push({
               id: `${company.id}-rate-${rate.id}`,
               type: 'gas',
@@ -182,11 +175,9 @@ export async function getCompanyTariffs(): Promise<CompanyTariff[]> {
               energyPrice: energyPrice,
             });
           });
-        } else {
-          // No rates defined, generate default with variation
+        } else if (companyRates.length === 0 || company.type === 'Gas') {
           const priceVariation = (company.id % 10) * 0.01;
-          
-          // Generate residential RL.1 tariff
+
           tariffs.push({
             id: `${company.id}-residential-rl1`,
             type: 'gas',
@@ -197,8 +188,7 @@ export async function getCompanyTariffs(): Promise<CompanyTariff[]> {
             fixedPrice: 0.20 + priceVariation,
             energyPrice: 0.08 + priceVariation,
           });
-          
-          // Generate business RL.2 tariff
+
           tariffs.push({
             id: `${company.id}-business-rl2`,
             type: 'gas',
@@ -209,8 +199,7 @@ export async function getCompanyTariffs(): Promise<CompanyTariff[]> {
             fixedPrice: 0.25 + priceVariation,
             energyPrice: 0.07 - priceVariation * 0.5,
           });
-          
-          // Generate business RL.3 tariff
+
           tariffs.push({
             id: `${company.id}-business-rl3`,
             type: 'gas',
