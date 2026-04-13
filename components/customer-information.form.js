@@ -82,7 +82,7 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
   };
 
   const handleSubmit = (validateField = false) => {
-    if (formRef.current && !formRef.current.reportValidity()) {
+    if (validateField && formRef.current && !formRef.current.reportValidity()) {
       return false;
     }
 
@@ -298,7 +298,7 @@ function CustomerForm({ fieldsDisabled, customerData, onCustomerUpdate, contract
                 value={formData.nationality}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                required
+                required={!contractIsDraft}
                 placeholder="Seleccione un país"
               />
               <datalist

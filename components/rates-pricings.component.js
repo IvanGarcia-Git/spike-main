@@ -6,6 +6,11 @@ export default function RatesPricing({ contract }) {
     return <p className="text-black font-bold">Cargando precios...</p>;
   }
 
+  // Determine if it's Gas or Luz from rate.serviceType (primary) or contract.type (fallback)
+  const serviceType = contract.rate?.serviceType || contract.type;
+  const isGas = serviceType === "Gas";
+  const isLuz = serviceType === "Luz" || serviceType === "Energía";
+
   if (contract.isDraft) {
     if (!contract.rate && !contract.telephonyData) {
       return <p className="text-black font-bold">No hay tarifas disponibles</p>;
@@ -19,42 +24,54 @@ export default function RatesPricing({ contract }) {
           {contract.rate ? (
             <>
               <h3 className="text-lg font-bold text-black text-center mb-2">
-                {contract.type === "Luz" ? "Precios Luz" : "Precios Gas"}
+                {isGas ? "Precios Gas" : "Precios Luz"}
               </h3>
 
               {/* Tabla de Precios */}
-              <div className="grid grid-cols-3 gap-1 text-center text-sm">
-                {/* Encabezados */}
-                <div className="text-black font-semibold">Pot</div>
-                <div className="text-black font-semibold">Energ</div>
-                <div className="text-black font-semibold">Exc</div>
+              {isGas ? (
+                <div className="grid grid-cols-2 gap-1 text-center text-sm">
+                  {/* Encabezados Gas */}
+                  <div className="text-black font-semibold">T. fijo</div>
+                  <div className="text-black font-semibold">T. variable</div>
 
-                {/* Filas de valores */}
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <React.Fragment key={i}>
-                    {/* Potencia */}
-                    {contract?.rate[`powerSlot${i}`] ? (
-                      <div className="text-black">{contract.rate[`powerSlot${i}`]}</div>
-                    ) : (
-                      <div></div>
-                    )}
+                  {/* Valores Gas */}
+                  <div className="text-black">{contract.rate.powerSlot1 ?? "-"} €/día</div>
+                  <div className="text-black">{contract.rate.energySlot1 ?? "-"} €/kWh</div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-1 text-center text-sm">
+                  {/* Encabezados Luz */}
+                  <div className="text-black font-semibold">Pot</div>
+                  <div className="text-black font-semibold">Energ</div>
+                  <div className="text-black font-semibold">Exc</div>
 
-                    {/* Energía */}
-                    {contract?.rate[`energySlot${i}`] ? (
-                      <div className="text-black">{contract.rate[`energySlot${i}`]}</div>
-                    ) : (
-                      <div></div>
-                    )}
+                  {/* Filas de valores Luz */}
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <React.Fragment key={i}>
+                      {/* Potencia */}
+                      {contract?.rate[`powerSlot${i}`] ? (
+                        <div className="text-black">{contract.rate[`powerSlot${i}`]}</div>
+                      ) : (
+                        <div></div>
+                      )}
 
-                    {/* Excedente */}
-                    {contract?.rate?.surplusSlot1 && i === 1 ? (
-                      <div className="text-black">{contract?.rate?.surplusSlot1}</div>
-                    ) : (
-                      <div></div>
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
+                      {/* Energía */}
+                      {contract?.rate[`energySlot${i}`] ? (
+                        <div className="text-black">{contract.rate[`energySlot${i}`]}</div>
+                      ) : (
+                        <div></div>
+                      )}
+
+                      {/* Excedente */}
+                      {contract?.rate?.surplusSlot1 && i === 1 ? (
+                        <div className="text-black">{contract?.rate?.surplusSlot1}</div>
+                      ) : (
+                        <div></div>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+              )}
             </>
           ) : (
             <>

@@ -123,7 +123,7 @@ export default function ContractDetail({ params }) {
         setActiveContract(active || customer.contracts[0]);
         setIsMounted(true);
       } else {
-        // Customer not found — fallback: load contract directly
+        // Customer not found — fallback: load contract directly (e.g. draft without customer)
         console.warn(`Customer ${custUuid} not found, loading contract directly`);
         const contractData = await getContractDetails();
         if (contractData?.customer?.uuid && contractData.customer.uuid !== custUuid) {
@@ -131,7 +131,14 @@ export default function ContractDetail({ params }) {
           router.replace(`/contratos/${contractData.customer.uuid}/${contractUuid}`);
           return;
         }
-        // Still mount the page even without customer data
+        // Set contracts and activeContract from the loaded contract data
+        if (contractData) {
+          setContracts([contractData]);
+          setActiveContract(contractData);
+          if (contractData.customer) {
+            setCustomer(contractData.customer);
+          }
+        }
         setIsMounted(true);
       }
     } catch (error) {
@@ -235,6 +242,53 @@ export default function ContractDetail({ params }) {
 
   const handleCustomerUpdate = async (updatedCustomerData) => {
     const jwtToken = getCookie("factura-token");
+
+    // Si no hay cliente asociado (borrador sin cliente), crear el cliente y vincularlo al contrato
+    if (!customerUuid || customerUuid === '_' || customerUuid === 'undefined') {
+      // Verificar si hay datos mínimos para crear cliente
+      const hasData = updatedCustomerData?.name?.trim() || updatedCustomerData?.nationalId?.trim() || updatedCustomerData?.phoneNumber?.trim();
+      if (!hasData) {
+        setCustomer(updatedCustomerData);
+        return;
+      }
+
+      try {
+        // Crear el cliente en el backend
+        const createResponse = await authFetch(
+          "POST",
+          `customers/`,
+          updatedCustomerData,
+          jwtToken
+        );
+
+        if (createResponse.ok) {
+          const createdCustomer = await createResponse.json();
+          setCustomer(createdCustomer);
+
+          // Vincular el cliente al contrato
+          const linkResponse = await authFetch(
+            "PATCH",
+            `contracts/${contractUuid}`,
+            { customerId: createdCustomer.id },
+            jwtToken
+          );
+
+          if (linkResponse.ok) {
+            // Redirigir a la URL correcta con el UUID del cliente real
+            router.replace(`/contratos/${createdCustomer.uuid}/${contractUuid}`);
+          }
+        } else {
+          // Si falla la creación, al menos guardar en estado local para no perder datos en el form
+          setCustomer(updatedCustomerData);
+          console.warn("No se pudo crear el cliente, datos guardados localmente");
+        }
+      } catch (error) {
+        console.error("Error creando cliente para borrador:", error);
+        setCustomer(updatedCustomerData);
+      }
+      return;
+    }
+
     try {
       const response = await authFetch(
         "PATCH",
@@ -311,6 +365,13 @@ export default function ContractDetail({ params }) {
           alert("Error actualizando el Contrato");
         }
       } else {
+        // Recargar datos del contrato para reflejar cambios
+        const updatedContract = await getContractDetails();
+        if (updatedContract) {
+          setActiveContract(updatedContract);
+          // Actualizar el contrato en el array de contracts
+          setContracts(prev => prev.map(c => c.uuid === updatedContract.uuid ? updatedContract : c));
+        }
         alert("Cliente y contrato actualizados correctamente");
       }
     } catch (error) {
@@ -542,11 +603,11 @@ export default function ContractDetail({ params }) {
             {/* Información de los detalles del cliente */}
             {/* Solo Supervisores (isManager) o Admin (groupId === 1) pueden editar fichas no borrador */}
             <CustomerForm
-              fieldsDisabled={!activeContract.isDraft && !isManager && userGroupId !== 1}
+              fieldsDisabled={!activeContract?.isDraft && !isManager && userGroupId !== 1}
               customerData={customer}
               onCustomerUpdate={handleCustomerUpdate}
-              contractIsDraft={activeContract.isDraft}
-              electronicBill={activeContract.electronicBill}
+              contractIsDraft={activeContract?.isDraft}
+              electronicBill={activeContract?.electronicBill}
               ref={customerInformationFormRef}
             />
 

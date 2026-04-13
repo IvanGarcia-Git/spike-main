@@ -54,10 +54,11 @@ async function handleRequest(req, params, method) {
     // Add body for POST, PUT, PATCH requests
     if (method !== "GET" && method !== "DELETE") {
       if (isMultipart) {
-        // For multipart/form-data, pass through the FormData as-is
-        const formData = await req.formData();
-        requestOptions.body = formData;
-        // Don't set Content-Type - fetch will set it automatically with boundary
+        // For multipart/form-data, pass through the raw body as-is
+        // Don't parse and re-serialize — that loses the boundary and corrupts the upload
+        const arrayBuffer = await req.arrayBuffer();
+        requestOptions.body = arrayBuffer;
+        headers["Content-Type"] = incomingContentType;
       } else {
         // For JSON requests
         headers["Content-Type"] = "application/json";

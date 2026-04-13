@@ -27,7 +27,7 @@ export default function CreateContractForm({
   const [formData, setFormData] = useState({
     type: contractType,
     isDraft: true,
-    contractedPowers: [],
+    contractedPowers: Array(6).fill(0),
     companyId: "",
     rateId: "",
     cups: "",

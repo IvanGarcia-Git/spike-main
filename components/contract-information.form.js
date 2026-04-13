@@ -19,8 +19,8 @@ export default function ContractForm({
   const [formData, setFormData] = useState({
     isDraft: contract?.isDraft || false,
     contractedPowers: (contract?.contractedPowers || []).map(v => typeof v === 'string' ? parseFloat(v) || 0 : (v || 0)),
-    companyId: contract.company?.id || "",
-    rateId: contract.rateId || "",
+    companyId: contract?.companyId || contract?.company?.id || "",
+    rateId: contract?.rateId || contract?.rate?.id || "",
     cups: contract?.cups || "",
     extraInfo: contract?.extraInfo || "",
     maintenance: contract?.maintenance === true,
@@ -57,9 +57,9 @@ export default function ContractForm({
         isDraft: contract?.isDraft || false,
         contractedPowers: (contract?.contractedPowers || []).map(v => typeof v === 'string' ? parseFloat(v) || 0 : (v || 0)),
         companyName: contract?.company?.name || "",
-        companyId: contract.company?.id || "",
+        companyId: contract?.companyId || contract?.company?.id || "",
         cups: contract?.cups || "",
-        rateId: contract?.rate?.id || "",
+        rateId: contract?.rateId || contract?.rate?.id || "",
         extraInfo: contract?.extraInfo || "",
         maintenance: contract?.maintenance === true,
         electronicBill: contract?.electronicBill === true,
@@ -226,11 +226,10 @@ export default function ContractForm({
 
   const handleSaveAsDraft = (e) => {
     e.preventDefault();
+    // Draft save should not validate — drafts are meant to be saved with incomplete fields
+    // Only collect whatever data is available from the customer form
     if (childCustomerFormRef && childCustomerFormRef.current) {
-      const isValid = childCustomerFormRef.current.handleSubmit();
-      if (!isValid) {
-        return;
-      }
+      childCustomerFormRef.current.handleSubmit(false); // false = no validation
     }
 
     const draftFormData = {

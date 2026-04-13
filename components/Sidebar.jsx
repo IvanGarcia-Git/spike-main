@@ -114,6 +114,7 @@ export default function Sidebar({
     { href: "/dashboard", icon: "dashboard", label: "Dashboard" },
     { href: "/control-horario", icon: "schedule", label: "Control Horario", matchStart: true },
     { href: "/contratos", icon: "receipt_long", label: "Contratos" },
+    { href: "/clientes", icon: "groups", label: "Clientes" },
     { href: "/comparativas", icon: "compare_arrows", label: "Comparativas" },
     { href: "/notas", icon: "note_alt", label: "Notas Rápidas" },
   ];
