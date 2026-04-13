@@ -1017,7 +1017,7 @@ export default function EmitirFactura({ invoiceType = "COBRO", onBack, onInvoice
                 className="w-full px-4 py-3 neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-200 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 placeholder:text-slate-400"
                 min="0"
                 step="1"
-                placeholder="21"
+                placeholder="10"
               />
             </div>
 

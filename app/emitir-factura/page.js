@@ -93,7 +93,7 @@ function prepareInvoiceForPDF(invoice, issuerData = DEFAULT_ISSUER) {
     invoiceDueDate: invoice.dueDate || "",
     paymentMethod: invoice.paymentMethod || "",
     items: items,
-    ivaPercentage: Number(invoice.ivaPercentage) || 21,
+    ivaPercentage: Number(invoice.ivaPercentage) || 10,
     irpfPercentage: Number(invoice.irpfPercentage) || 0,
     subtotal: Number(invoice.subtotal) || 0,
     totalIVA: Number(invoice.ivaAmount) || 0,

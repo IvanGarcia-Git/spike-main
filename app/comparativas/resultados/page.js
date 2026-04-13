@@ -96,7 +96,7 @@ export default function ComparativasResultadosPage() {
         alquiler: 0.026712,
         social: 0.038466,
         hydrocarbon: 0.00234,
-        iva: 21
+        iva: 10
     };
 
     return (
