@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, useEffect, createContext, useContext } from "react";
+import { useRef, useState, useEffect, createContext, useContext, useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import * as jose from "jose";
@@ -28,8 +28,34 @@ const LayoutContext = createContext(null);
 
 export const useLayout = () => useContext(LayoutContext);
 
+/**
+ * Check if a valid auth token exists.
+ * Returns { authenticated: boolean, payload: object|null }
+ */
+function checkAuthToken() {
+  const token = getCookie("factura-token");
+  if (!token) return { authenticated: false, payload: null };
+  try {
+    const payload = jose.decodeJwt(token);
+    // Check if token is expired
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      return { authenticated: false, payload: null };
+    }
+    return { authenticated: true, payload };
+  } catch (error) {
+    console.error("Error al decodificar el token:", error);
+    return { authenticated: false, payload: null };
+  }
+}
+
 export default function RootLayout({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Initialize isAuthenticated with lazy state — check token immediately
+  // This prevents the flash where the app shows the login view before
+  // the useEffect runs on navigation
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    const { authenticated } = checkAuthToken();
+    return authenticated;
+  });
   const [userGroupId, setUserGroupId] = useState(null);
   const [isManager, setIsManager] = useState(false);
   const [userRole, setUserRole] = useState(null);
@@ -39,32 +65,34 @@ export default function RootLayout({ children }) {
 
   const pathname = usePathname();
 
+  // Update auth state on route change
+  // This ensures user data (groupId, isManager, role) is refreshed
+  // and handles token expiration during navigation
+  useEffect(() => {
+    const { authenticated, payload } = checkAuthToken();
+
+    if (authenticated && payload) {
+      setUserGroupId(payload.groupId);
+      setIsManager(payload.isManager === true);
+      setUserRole(payload.role || null);
+    }
+
+    // Only update isAuthenticated if it changed
+    // This prevents unnecessary re-renders
+    setIsAuthenticated((prev) => {
+      if (prev === authenticated) return prev;
+      return authenticated;
+    });
+  }, [pathname]);
+
+  // Close mobile sidebar on route change
   useEffect(() => {
     setIsMobileSidebarOpen(false);
   }, [pathname]);
 
-  const checkAuthentication = () => {
-    const token = getCookie("factura-token");
-    if (token) {
-      try {
-        const payload = jose.decodeJwt(token);
-        setUserGroupId(payload.groupId);
-        // Asegurar que isManager sea estrictamente booleano
-        setIsManager(payload.isManager === true);
-        // Guardar el rol del usuario para control de acceso
-        setUserRole(payload.role || null);
-        return true;
-      } catch (error) {
-        console.error("Error al decodificar el token:", error);
-        return false;
-      }
-    }
-    return false;
-  };
-
+  // Reset sideBarHidden on route change (pages might set it and forget to reset)
   useEffect(() => {
-    const authenticated = checkAuthentication();
-    setIsAuthenticated(authenticated);
+    setSideBarHidden(false);
   }, [pathname]);
 
   return (
