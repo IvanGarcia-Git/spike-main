@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { getCookie } from "cookies-next";
 import * as jose from "jose";
 import { authGetFetch } from "@/helpers/server-fetch.helper";
@@ -13,8 +13,12 @@ export default function ContractForm({
 }) {
   const [rates, setRates] = useState({});
   const [filteredRates, setFilteredRates] = useState([]);
+  const [isRatesLoaded, setIsRatesLoaded] = useState(false);
   const [isManager, setIsManager] = useState(false);
   const [userGroupId, setUserGroupId] = useState(null);
+
+  // Track the contract rate so we can match it once rates are loaded
+  const contractRateRef = useRef(contract?.rate || null);
 
   const [formData, setFormData] = useState({
     isDraft: contract?.isDraft || false,
@@ -30,6 +34,11 @@ export default function ContractForm({
     product: contract?.product || "",
   });
 
+  const [selectedRateType, setSelectedRateType] = useState(
+    contract.rate?.type || ""
+  );
+  const [filteredSelectRates, setFilteredSelectRates] = useState([]);
+
   const getRates = async () => {
     const jwtToken = getCookie("factura-token");
 
@@ -40,6 +49,7 @@ export default function ContractForm({
       if (response.ok) {
         const ratesData = await response.json();
         setRates(ratesData);
+        setIsRatesLoaded(true);
 
         const currentCompanyRates = ratesData[contract.company?.name];
         setFilteredRates(currentCompanyRates || []);
@@ -51,8 +61,11 @@ export default function ContractForm({
     }
   };
 
+  // Initialize form data when contract changes
   useEffect(() => {
     if (contract) {
+      contractRateRef.current = contract.rate || null;
+
       setFormData({
         isDraft: contract?.isDraft || false,
         contractedPowers: (contract?.contractedPowers || []).map(v => typeof v === 'string' ? parseFloat(v) || 0 : (v || 0)),
@@ -68,6 +81,11 @@ export default function ContractForm({
         product: contract?.product || "",
       });
 
+      // Set initial rate type from contract data
+      if (contract.rate?.type) {
+        setSelectedRateType(contract.rate.type);
+      }
+
       const jwtToken = getCookie("factura-token");
 
       if (jwtToken) {
@@ -79,63 +97,78 @@ export default function ContractForm({
     getRates();
   }, [contract]);
 
-  const [selectedRateType, setSelectedRateType] = useState(
-    contract.rate?.type || ""
-  );
-  const [filteredSelectRates, setFilteredSelectRates] = useState([]);
-
-  const filterRatesByType = (rateType) => {
-    if (!filteredRates) return [];
+  const filterRatesByType = (rateType, ratesList) => {
+    if (!ratesList || ratesList.length === 0) return [];
     // Para Gas no filtramos por tipo de tarifa
     if (contract.type === "Gas") {
-      return filteredRates;
+      return ratesList;
     }
     if (!rateType) return [];
-    const filteredRatesByType = filteredRates.filter(
-      (rate) => rate.type === rateType
-    );
-    return filteredRatesByType;
+    return ratesList.filter((rate) => rate.type === rateType);
   };
 
+  // Core effect: when rates are loaded or filteredRates changes, match the contract's rate
   useEffect(() => {
-    // Para Gas mostramos todas las tarifas, para Luz filtramos por tipo
-    if (contract.type === "Gas") {
-      setFilteredSelectRates(filteredRates);
-    } else if (selectedRateType) {
-      const rates = filterRatesByType(selectedRateType);
-      setFilteredSelectRates(rates);
+    if (!isRatesLoaded || filteredRates.length === 0) {
+      // Rates not loaded yet or no rates for this company — can't match
+      if (contract.type === "Gas") {
+        setFilteredSelectRates(filteredRates);
+      } else if (selectedRateType) {
+        setFilteredSelectRates(filterRatesByType(selectedRateType, filteredRates));
+      }
+      return;
     }
-  }, [selectedRateType, filteredRates, contract.type]);
 
-  useEffect(() => {
+    const contractRate = contractRateRef.current;
+
     if (contract.type === "Gas") {
-      // Para Gas, mostrar todas las tarifas de la compañía
       setFilteredSelectRates(filteredRates);
-      if (filteredRates.length > 0 && contract.rate) {
+      if (contractRate) {
         const matchingRate = filteredRates.find(
-          (rate) => rate.id === contract.rate.id
+          (rate) => rate.id === contractRate.id
         );
-        setFormData((prevFormData) => ({
-          ...prevFormData,
-          rateId: matchingRate ? matchingRate.id : contract.rate?.id || "",
-        }));
+        if (matchingRate) {
+          setFormData((prev) => ({
+            ...prev,
+            rateId: matchingRate.id,
+          }));
+        }
       }
-    } else if (contract.rate && contract.rate?.type) {
-      setSelectedRateType(contract.rate.type);
-      const rates = filterRatesByType(contract.rate.type);
-      setFilteredSelectRates(rates);
+    } else {
+      // Luz: filter by selected rate type
+      const rateType = selectedRateType || contractRate?.type || "";
+      const ratesForType = filterRatesByType(rateType, filteredRates);
+      setFilteredSelectRates(ratesForType);
 
-      if (rates.length > 0) {
-        const matchingRate = rates.find(
-          (rate) => rate.id === contract.rate.id
+      if (contractRate) {
+        // Try to find the contract's rate in the filtered list
+        const matchingRate = ratesForType.find(
+          (rate) => rate.id === contractRate.id
         );
-        setFormData((prevFormData) => ({
-          ...prevFormData,
-          rateId: matchingRate ? matchingRate.id : rates[0].id,
-        }));
+        if (matchingRate) {
+          setFormData((prev) => ({
+            ...prev,
+            rateId: matchingRate.id,
+          }));
+        } else {
+          // Rate not found in filtered list — try all filteredRates (cross-type match)
+          const crossTypeMatch = filteredRates.find(
+            (rate) => rate.id === contractRate.id
+          );
+          if (crossTypeMatch) {
+            // The rate exists but under a different type — update selectedRateType
+            setSelectedRateType(crossTypeMatch.type);
+            setFormData((prev) => ({
+              ...prev,
+              rateId: crossTypeMatch.id,
+            }));
+          }
+          // If not found at all, keep the rateId from contract data
+          // (it will show as empty in the dropdown but the data is preserved)
+        }
       }
     }
-  }, [contract.rate, filteredRates]);
+  }, [isRatesLoaded, filteredRates, selectedRateType, contract.type]);
 
   const handleRateTypeChange = (newRateType) => {
     setSelectedRateType(newRateType);
@@ -154,15 +187,15 @@ export default function ContractForm({
     });
   };
 
+  // Update filteredRates when company changes
   useEffect(() => {
-    if (formData.companyId && rates) {
+    if (formData.companyId && rates && Object.keys(rates).length > 0) {
       const selectedCompany = companies.find(
         (company) => company.id == formData.companyId
       );
 
       if (selectedCompany && rates[selectedCompany.name]) {
         const companyRates = rates[selectedCompany.name];
-
         setFilteredRates(companyRates);
       } else {
         setFilteredRates([]);
@@ -172,6 +205,16 @@ export default function ContractForm({
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    // When company changes, clear the rate selection so it re-matches
+    if (name === "companyId") {
+      setFormData((prevData) => ({
+        ...prevData,
+        companyId: value,
+        rateId: "",
+      }));
+      return;
+    }
 
     setFormData((prevData) => ({
       ...prevData,
@@ -252,6 +295,25 @@ export default function ContractForm({
 
   const contractIcon = contract.type === "Luz" ? "bolt" : "local_fire_department";
   const contractColor = contract.type === "Luz" ? "yellow" : "orange";
+
+  // Build options list for the rate dropdown, including a fallback for the current contract rate
+  const rateDropdownOptions = (() => {
+    if (filteredSelectRates.length > 0) {
+      // Check if contract.rate is already in the options
+      const contractRate = contractRateRef.current;
+      if (contractRate && !filteredSelectRates.some(r => r.id === contractRate.id)) {
+        // Add the contract's rate as a fallback option so it displays correctly
+        return [...filteredSelectRates, { id: contractRate.id, name: contractRate.name || `Tarifa #${contractRate.id}`, type: contractRate.type }];
+      }
+      return filteredSelectRates;
+    }
+    // If no rates loaded but contract has a rate, show it as fallback
+    const contractRate = contractRateRef.current;
+    if (contractRate) {
+      return [{ id: contractRate.id, name: contractRate.name || `Tarifa #${contractRate.id}`, type: contractRate.type }];
+    }
+    return [];
+  })();
 
   return (
     <div
@@ -396,8 +458,8 @@ export default function ContractForm({
               <option value="" disabled>
                 Elige la tarifa
               </option>
-              {filteredSelectRates.length > 0 ? (
-                filteredSelectRates.map((rate) => (
+              {rateDropdownOptions.length > 0 ? (
+                rateDropdownOptions.map((rate) => (
                   <option key={rate.id} value={rate.id}>
                     {rate.name}
                   </option>
