@@ -727,6 +727,8 @@ function ContractsContent() {
   });
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [selectedContracts, setSelectedContracts] = useState([]);
+  const [selectAllMode, setSelectAllMode] = useState(null); // null | 'page' | 'all'
+  const [isLoadingAllContracts, setIsLoadingAllContracts] = useState(false);
 
   const [filteredNotifications, setFilteredNotifications] = useState([]);
   const [communications, setCommunications] = useState([]);
@@ -736,6 +738,7 @@ function ContractsContent() {
   const [isDesktopDropdownOpen, setIsDesktopDropdownOpen] = useState(false);
   const [isAddToLiquidationOpen, setIsAddToLiquidationOpen] = useState(false);
   const dropdownDesktopRef = useRef(null);
+  const selectAllCheckboxRef = useRef(null);
   const [isReassignModalOpen, setIsReassignModalOpen] = useState(false);
   const [updatingContractUuid, setUpdatingContractUuid] = useState(null);
 
@@ -748,6 +751,16 @@ function ContractsContent() {
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
+
+  // Handle indeterminate state for select-all checkbox
+  useEffect(() => {
+    const checkbox = selectAllCheckboxRef.current;
+    if (!checkbox) return;
+    const pageSelected = contracts.filter(c => selectedContracts.includes(c.uuid)).length;
+    const allPageSelected = pageSelected === contracts.length && contracts.length > 0;
+    const somePageSelected = pageSelected > 0 && !allPageSelected;
+    checkbox.indeterminate = somePageSelected;
+  }, [selectedContracts, contracts]);
 
   const toggleDesktop = () => setIsDesktopDropdownOpen((o) => !o);
 
@@ -796,6 +809,9 @@ function ContractsContent() {
   };
 
   const getFilteredContracts = async (searchFilters, page = 1, entriesPerPage = 10, liquidacion = null) => {
+    // Clear selection when filters change
+    setSelectedContracts([]);
+    setSelectAllMode(null);
     const jwtToken = getCookie("factura-token");
 
     try {
@@ -904,6 +920,9 @@ function ContractsContent() {
   const handleClearFilters = () => {
     setContractFilters({});
     setIsFiltersApplied(false);
+    // Clear selection when filters are cleared
+    setSelectedContracts([]);
+    setSelectAllMode(null);
 
     // Si hay filtro de liquidación en la URL, quitarlo
     if (liquidacionUuid) {
@@ -1303,19 +1322,57 @@ function ContractsContent() {
   const handleSelectAll = (e) => {
     if (e.target.checked) {
       setSelectedContracts(contracts.map((c) => c.uuid));
+      setSelectAllMode(pagination.total > contracts.length ? 'page' : 'all');
     } else {
       setSelectedContracts([]);
+      setSelectAllMode(null);
     }
   };
 
+  const handleSelectAllContracts = async () => {
+    setIsLoadingAllContracts(true);
+    try {
+      let allContracts;
+      if (!isFiltersApplied) {
+        allContracts = await fetchContracts("contracts?page=1&limit=2000");
+      } else {
+        allContracts = await fetchContracts("search?page=1&limit=2000", "POST", contractFilters);
+      }
+      const allUuids = allContracts.map((c) => c.uuid);
+      setSelectedContracts(allUuids);
+      setSelectAllMode('all');
+    } catch (error) {
+      console.error("Error fetching all contracts:", error);
+      toast.error("Error al obtener todos los contratos");
+    } finally {
+      setIsLoadingAllContracts(false);
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedContracts([]);
+    setSelectAllMode(null);
+  };
+
   const handleSelectContract = (uuid) => {
-    setSelectedContracts((prev) =>
-      prev.includes(uuid) ? prev.filter((id) => id !== uuid) : [...prev, uuid]
-    );
+    setSelectedContracts((prev) => {
+      const isSelected = prev.includes(uuid);
+      const next = isSelected ? prev.filter((id) => id !== uuid) : [...prev, uuid];
+      // If deselecting, exit 'all' or 'page' mode
+      if (isSelected) {
+        setSelectAllMode(null);
+      }
+      return next;
+    });
   };
 
   const handlePageChange = (newPage) => {
     if (newPage < 1 || newPage > pagination.lastPage) return;
+    // Clear selection when changing pages to avoid confusion
+    if (selectAllMode === 'page') {
+      setSelectedContracts([]);
+      setSelectAllMode(null);
+    }
     setPagination((prev) => ({ ...prev, page: newPage }));
   };
 
@@ -1378,6 +1435,40 @@ function ContractsContent() {
       </div>
 
       {/* Batch Actions - Solo visible para Supervisores y Admin */}
+      {/* Select All Banner */}
+      {selectedContracts.length > 0 && selectAllMode && pagination.total > contracts.length && (
+        <div className="mb-4 px-4 py-3 bg-primary/10 dark:bg-primary/20 border border-primary/30 rounded-lg flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+            {selectAllMode === 'page' ? (
+              <>
+                <span className="material-icons-outlined text-primary text-lg">info</span>
+                <span>
+                  {contracts.length} contratos de esta página seleccionados.
+                  <button
+                    onClick={handleSelectAllContracts}
+                    disabled={isLoadingAllContracts}
+                    className="ml-1 text-primary font-semibold hover:underline disabled:opacity-50"
+                  >
+                    {isLoadingAllContracts ? 'Cargando...' : `Seleccionar todos los ${pagination.total} contratos`}
+                  </button>
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="material-icons-outlined text-primary text-lg">check_circle</span>
+                <span>Todos los <strong>{pagination.total}</strong> contratos seleccionados.</span>
+              </>
+            )}
+          </div>
+          <button
+            onClick={clearSelection}
+            className="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+          >
+            Borrar selección
+          </button>
+        </div>
+      )}
+
       {selectedContracts.length > 0 && (isManager || userGroupId === 1) && (
         <div className="mb-8">
           <div className="relative inline-block" ref={dropdownDesktopRef}>
@@ -1475,9 +1566,10 @@ function ContractsContent() {
               <tr>
                 <th className="p-3">
                   <input
+                    ref={selectAllCheckboxRef}
                     type="checkbox"
                     onChange={handleSelectAll}
-                    checked={selectedContracts.length === contracts.length && contracts.length > 0}
+                    checked={selectedContracts.length > 0 && (selectAllMode === 'all' || contracts.every(c => selectedContracts.includes(c.uuid)))}
                     className="accent-primary"
                   />
                 </th>
