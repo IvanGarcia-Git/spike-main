@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { getCookie } from "cookies-next";
 import { authGetFetch } from "@/helpers/server-fetch.helper";
 
@@ -45,11 +45,23 @@ export default function CreateContractForm({
   // Estado para mantener los valores de texto de las potencias mientras se escribe
   const [powerInputs, setPowerInputs] = useState(["", "", "", "", "", ""]);
 
+  // Ref para rastrear el valor más reciente de isSelected sin causar re-renders
+  const isSelectedRef = useRef(false);
+
+  // Actualizar ref cuando cambia isSelected
+  useEffect(() => {
+    isSelectedRef.current = isSelected;
+  }, [isSelected]);
+
+  // Función para notificar al padre del formData actual
+  const notifyParent = useCallback((data) => {
+    onContractUpdate({ ...data, isSelected: isSelectedRef.current });
+  }, [onContractUpdate]);
+
   const getRates = useCallback(async () => {
     const jwtToken = getCookie("factura-token");
 
     try {
-      // Filtrar tarifas por serviceType (Luz o Gas) según el tipo de contrato
       const response = await authGetFetch(`rates/group/company-name?serviceType=${contractType}`, jwtToken);
       if (response.ok) {
         const ratesData = await response.json();
@@ -74,7 +86,6 @@ export default function CreateContractForm({
     );
 
     if (selectedCompany && contractState.rates[selectedCompany.name]) {
-      // Para Gas no filtramos por tipo de tarifa, para Luz sí
       const companyRates = contractState.rates[selectedCompany.name];
       const filtered = contractType === "Gas"
         ? companyRates
@@ -98,39 +109,66 @@ export default function CreateContractForm({
     companies,
   ]);
 
+  // Sincronizar powerInputs cuando cambian contractedPowers
+  useEffect(() => {
+    const newPowerInputs = formData.contractedPowers.map((p) =>
+      p === 0 ? "" : String(p).replace(".", ",")
+    );
+    setPowerInputs(newPowerInputs);
+  }, [formData.contractedPowers]);
+
+  // Propagar formData al padre cuando isSelected cambia a true
+  useEffect(() => {
+    if (isSelected) {
+      onContractUpdate({ ...formData, isSelected: true });
+    }
+    // Solo cuando isSelected cambia
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSelected]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    const updatedFormData = {
-      ...formData,
-      [name]: type === "checkbox" ? checked : value,
-      selectedFiles: selectedFiles[contractType],
-    };
 
-    if (name === "rateId") {
-      const selectedRate = contractState.filteredRates.find(
-        (rate) => rate.id === (isNaN(value) ? value : Number(value))
-      );
-      setSelectedDocumentation(selectedRate?.documentation || []);
-    }
+    setFormData((prevFormData) => {
+      const updatedFormData = {
+        ...prevFormData,
+        [name]: type === "checkbox" ? checked : value,
+        selectedFiles: selectedFiles[contractType],
+      };
 
-    setFormData(updatedFormData);
-    if (isSelected) {
-      onContractUpdate(updatedFormData);
-    }
+      // Notificar al padre inmediatamente con el nuevo valor
+      if (isSelectedRef.current) {
+        notifyParent(updatedFormData);
+      }
+
+      if (name === "rateId") {
+        const selectedRate = contractState.filteredRates.find(
+          (rate) => rate.id === (isNaN(value) ? value : Number(value))
+        );
+        setSelectedDocumentation(selectedRate?.documentation || []);
+      }
+
+      return updatedFormData;
+    });
   };
 
-  const handleIsSelectedChange = () => {
-    const newIsSelected = !isSelected;
+  const handleIsSelectedChange = (e) => {
+    // Solo toggle si el click fue directamente en este div, no en un hijo
+    // Esto previene que clicks en selects/inputs/botones dentro del formulario
+    // activen/desactiven la selección del contrato
+    if (e.target !== e.currentTarget) return;
+
+    const newIsSelected = !isSelectedRef.current;
     setIsSelected(newIsSelected);
 
-    const updatedFormData = {
-      ...formData,
-      isSelected: newIsSelected,
-    };
-
-    setFormData(updatedFormData);
-
-    onContractUpdate(updatedFormData);
+    setFormData((prevFormData) => {
+      const updatedFormData = {
+        ...prevFormData,
+        isSelected: newIsSelected,
+      };
+      onContractUpdate(updatedFormData);
+      return updatedFormData;
+    });
   };
 
   const handleDeleteFile = (contractType, fileName) => {
@@ -152,7 +190,7 @@ export default function CreateContractForm({
       className={`neumorphic-card p-6 transition-all cursor-pointer ${
         isSelected ? "ring-2 ring-primary" : ""
       }`}
-      onClick={() => handleIsSelectedChange({ target: { checked: !isSelected } })}
+      onClick={handleIsSelectedChange}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
@@ -173,8 +211,8 @@ export default function CreateContractForm({
       </div>
 
       {isSelected && (
-        <div className="space-y-6" onClick={(e) => e.stopPropagation()}>
-          {/* Product (Gas only) - Movido arriba */}
+        <div className="space-y-6">
+          {/* Product (Gas only) */}
           {contractType === "Gas" && (
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="product">
@@ -213,7 +251,9 @@ export default function CreateContractForm({
                   <button
                     key={option}
                     type="button"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
+
                       const newSelectedTypeForContracts = {
                         ...contractState.selectedTypeForContracts,
                         [contractType]: option,
@@ -224,36 +264,49 @@ export default function CreateContractForm({
                         selectedTypeForContracts: newSelectedTypeForContracts,
                       }));
 
-                      const selectedCompany = companies.find(
-                        (company) => company.id == formData.companyId
-                      );
+                      setFormData((prevFormData) => {
+                        const selectedCompany = companies.find(
+                          (company) => company.id == prevFormData.companyId
+                        );
 
-                      if (
-                        selectedCompany &&
-                        contractState.rates[selectedCompany.name]
-                      ) {
-                        const filtered = contractState.rates[
-                          selectedCompany.name
-                        ].filter((rate) => rate.type === option);
+                        let updatedFormData = { ...prevFormData };
 
-                        setContractState((prev) => ({
-                          ...prev,
-                          filteredRates: filtered,
-                        }));
+                        if (
+                          selectedCompany &&
+                          contractState.rates[selectedCompany.name]
+                        ) {
+                          const filtered = contractState.rates[
+                            selectedCompany.name
+                          ].filter((rate) => rate.type === option);
 
-                        setFormData((prevFormData) => {
-                          const updatedPowers =
-                            option === "2.0"
-                              ? prevFormData.contractedPowers.slice(0, 2)
-                              : prevFormData.contractedPowers;
+                          setContractState((prev) => ({
+                            ...prev,
+                            filteredRates: filtered,
+                          }));
 
-                          return {
-                            ...prevFormData,
+                          updatedFormData = {
+                            ...updatedFormData,
                             rateId: filtered[0]?.id || "",
-                            contractedPowers: updatedPowers,
                           };
-                        });
-                      }
+                        }
+
+                        const updatedPowers =
+                          option === "2.0"
+                            ? updatedFormData.contractedPowers.slice(0, 2)
+                            : updatedFormData.contractedPowers;
+
+                        updatedFormData = {
+                          ...updatedFormData,
+                          contractedPowers: updatedPowers,
+                        };
+
+                        // Notificar al padre
+                        if (isSelectedRef.current) {
+                          notifyParent(updatedFormData);
+                        }
+
+                        return updatedFormData;
+                      });
                     }}
                     className={`px-4 py-2 rounded-lg font-medium transition-all ${
                       contractState.selectedTypeForContracts[contractType] === option
@@ -287,13 +340,8 @@ export default function CreateContractForm({
                 </option>
                 {companies
                   .filter((company) => {
-                    // Verificar que la compañía tiene tarifas disponibles para este tipo de servicio
-                    // Las tarifas ya vienen filtradas por serviceType (Luz o Gas) desde el endpoint
                     const companyRates = contractState.rates[company.name];
                     const hasRates = Array.isArray(companyRates) && companyRates.length > 0;
-
-                    // Mostrar compañías que tienen tarifas disponibles para este tipo de contrato
-                    // No filtramos por company.type porque una misma compañía puede ofrecer Luz y Gas
                     return hasRates;
                   })
                   .map((company) => (
@@ -368,6 +416,8 @@ export default function CreateContractForm({
                       name={`powerSlot${index + 1}`}
                       value={powerInputs[index]}
                       onChange={(e) => {
+                        e.stopPropagation();
+
                         // Reemplazar punto por coma automáticamente
                         let inputValue = e.target.value.replace(/\./g, ",");
 
@@ -388,16 +438,22 @@ export default function CreateContractForm({
                         // Convertir coma a punto para el parseFloat interno
                         const numericValue = parseFloat(inputValue.replace(",", ".")) || 0;
 
-                        const updatedPowers = [...formData.contractedPowers];
-                        updatedPowers[index] = numericValue;
+                        setFormData((prevFormData) => {
+                          const updatedPowers = [...prevFormData.contractedPowers];
+                          updatedPowers[index] = numericValue;
 
-                        const updatedFormData = {
-                          ...formData,
-                          contractedPowers: updatedPowers,
-                        };
+                          const updatedFormData = {
+                            ...prevFormData,
+                            contractedPowers: updatedPowers,
+                          };
 
-                        setFormData(updatedFormData);
-                        onContractUpdate(updatedFormData);
+                          // Notificar al padre
+                          if (isSelectedRef.current) {
+                            notifyParent(updatedFormData);
+                          }
+
+                          return updatedFormData;
+                        });
                       }}
                       className="w-full neumorphic-card-inset px-3 py-2 rounded-lg text-center border-none focus:outline-none bg-transparent text-slate-800 dark:text-slate-200"
                       placeholder={`P${index + 1}`}
@@ -427,13 +483,19 @@ export default function CreateContractForm({
                     name="solarPlates"
                     checked={formData.solarPlates}
                     onChange={(e) => {
-                      const updatedFormData = {
-                        ...formData,
-                        solarPlates: e.target.checked,
-                        virtualBat: !e.target.checked ? false : formData.virtualBat,
-                      };
-                      setFormData(updatedFormData);
-                      onContractUpdate(updatedFormData);
+                      setFormData((prevFormData) => {
+                        const updatedFormData = {
+                          ...prevFormData,
+                          solarPlates: e.target.checked,
+                          virtualBat: !e.target.checked ? false : prevFormData.virtualBat,
+                        };
+
+                        if (isSelectedRef.current) {
+                          notifyParent(updatedFormData);
+                        }
+
+                        return updatedFormData;
+                      });
                     }}
                     className="absolute opacity-0 w-0 h-0 peer"
                   />
@@ -449,10 +511,15 @@ export default function CreateContractForm({
                   <div className="flex gap-3">
                     <button
                       type="button"
-                      onClick={() => {
-                        const updatedFormData = { ...formData, virtualBat: true };
-                        setFormData(updatedFormData);
-                        onContractUpdate(updatedFormData);
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFormData((prevFormData) => {
+                          const updatedFormData = { ...prevFormData, virtualBat: true };
+                          if (isSelectedRef.current) {
+                            notifyParent(updatedFormData);
+                          }
+                          return updatedFormData;
+                        });
                       }}
                       className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
                         formData.virtualBat
@@ -464,10 +531,15 @@ export default function CreateContractForm({
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        const updatedFormData = { ...formData, virtualBat: false };
-                        setFormData(updatedFormData);
-                        onContractUpdate(updatedFormData);
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFormData((prevFormData) => {
+                          const updatedFormData = { ...prevFormData, virtualBat: false };
+                          if (isSelectedRef.current) {
+                            notifyParent(updatedFormData);
+                          }
+                          return updatedFormData;
+                        });
                       }}
                       className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
                         !formData.virtualBat
@@ -495,12 +567,18 @@ export default function CreateContractForm({
                   name="maintenance"
                   value={formData.maintenance}
                   onChange={(e) => {
-                    const updatedFormData = {
-                      ...formData,
-                      maintenance: e.target.value === "true",
-                    };
-                    setFormData(updatedFormData);
-                    onContractUpdate(updatedFormData);
+                    setFormData((prevFormData) => {
+                      const updatedFormData = {
+                        ...prevFormData,
+                        maintenance: e.target.value === "true",
+                      };
+
+                      if (isSelectedRef.current) {
+                        notifyParent(updatedFormData);
+                      }
+
+                      return updatedFormData;
+                    });
                   }}
                   className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200"
                   required
@@ -521,12 +599,18 @@ export default function CreateContractForm({
                   name="electronicBill"
                   value={formData.electronicBill}
                   onChange={(e) => {
-                    const updatedFormData = {
-                      ...formData,
-                      electronicBill: e.target.value === "true",
-                    };
-                    setFormData(updatedFormData);
-                    onContractUpdate(updatedFormData);
+                    setFormData((prevFormData) => {
+                      const updatedFormData = {
+                        ...prevFormData,
+                        electronicBill: e.target.value === "true",
+                      };
+
+                      if (isSelectedRef.current) {
+                        notifyParent(updatedFormData);
+                      }
+
+                      return updatedFormData;
+                    });
                   }}
                   className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-slate-800 dark:text-slate-200"
                   required
@@ -574,6 +658,7 @@ export default function CreateContractForm({
                         type="file"
                         id={`file-${contractType}-${index}`}
                         onChange={(e) => {
+                          e.stopPropagation();
                           const file = e.target.files[0];
                           if (!file) return;
 
@@ -587,17 +672,18 @@ export default function CreateContractForm({
 
                           setSelectedFiles(updatedFiles);
 
-                          setFormData((prevFormData) => ({
-                            ...prevFormData,
-                            selectedFiles: updatedFiles[contractType],
-                          }));
-
-                          if (isSelected) {
-                            onContractUpdate({
-                              ...formData,
+                          setFormData((prevFormData) => {
+                            const updatedFormData = {
+                              ...prevFormData,
                               selectedFiles: updatedFiles[contractType],
-                            });
-                          }
+                            };
+
+                            if (isSelectedRef.current) {
+                              notifyParent(updatedFormData);
+                            }
+
+                            return updatedFormData;
+                          });
                         }}
                         className="hidden"
                       />
@@ -625,7 +711,10 @@ export default function CreateContractForm({
                         </div>
                         <button
                           type="button"
-                          onClick={() => handleDeleteFile(contractType, fileObj.name)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteFile(contractType, fileObj.name);
+                          }}
                           className="w-8 h-8 rounded-full neumorphic-button flex items-center justify-center text-red-500 hover:text-red-600 transition-colors"
                           aria-label="Eliminar archivo"
                         >
