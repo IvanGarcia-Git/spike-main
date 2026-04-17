@@ -19,6 +19,16 @@ export default function Perfil() {
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 
+  // Absence request modal state
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestForm, setRequestForm] = useState({
+    type: "vacaciones",
+    startDate: "",
+    endDate: "",
+    description: "",
+  });
+  const [submittingAbsence, setSubmittingAbsence] = useState(false);
+
   useEffect(() => {
     fetchPerfilData();
   }, []);
@@ -156,6 +166,81 @@ export default function Perfil() {
     }
   };
 
+  const handleRequestAbsence = async (e) => {
+    e.preventDefault();
+
+    if (!requestForm.type || !requestForm.startDate || !requestForm.endDate) {
+      alert("Por favor, completa todos los campos obligatorios.");
+      return;
+    }
+
+    if (new Date(requestForm.endDate) < new Date(requestForm.startDate)) {
+      alert("La fecha de fin no puede ser anterior a la fecha de inicio.");
+      return;
+    }
+
+    setSubmittingAbsence(true);
+
+    try {
+      // Calculate days
+      const start = new Date(requestForm.startDate);
+      const end = new Date(requestForm.endDate);
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+      const payload = {
+        type: requestForm.type,
+        startDate: requestForm.startDate,
+        endDate: requestForm.endDate,
+        description: requestForm.description,
+      };
+
+      const response = await fetch("/api/perfil/ausencias", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const createdAbsence = await response.json();
+
+        // Map backend response to local format and add to list
+        const newAusencia = {
+          id: createdAbsence.id || createdAbsence.uuid || Date.now(),
+          tipo: requestForm.type === "vacaciones" ? "Vacaciones"
+            : requestForm.type === "asuntos_propios" ? "Asuntos propios"
+            : requestForm.type === "baja_medica" ? "Baja médica"
+            : "Otro",
+          fechaInicio: requestForm.startDate,
+          fechaFin: requestForm.endDate,
+          dias: diffDays,
+          estado: "Pendiente",
+          motivo: requestForm.description || requestForm.type,
+        };
+
+        setAusencias((prev) => [newAusencia, ...prev]);
+        setShowRequestModal(false);
+        setRequestForm({
+          type: "vacaciones",
+          startDate: "",
+          endDate: "",
+          description: "",
+        });
+        alert("Solicitud de ausencia enviada con éxito.");
+      } else {
+        const errorData = await response.json().catch(() => ({
+          error: "Error desconocido al enviar la solicitud.",
+        }));
+        alert(`Error: ${errorData.error || "No se pudo enviar la solicitud."}`);
+      }
+    } catch (error) {
+      console.error("Error enviando solicitud de ausencia:", error);
+      alert("Error de conexión al enviar la solicitud.");
+    } finally {
+      setSubmittingAbsence(false);
+    }
+  };
+
   const getEstadoColor = (estado) => {
     switch (estado.toLowerCase()) {
       case "aprobada":
@@ -177,6 +262,13 @@ export default function Perfil() {
 
   const formatCurrency = (amount) => {
     return `€${parseFloat(amount).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  const toInputDate = (date) => {
+    if (!date) return "";
+    const d = date instanceof Date ? date : new Date(date);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toISOString().slice(0, 10);
   };
 
   if (loading) {
@@ -418,7 +510,10 @@ export default function Perfil() {
                 <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
                   Mis Ausencias
                 </h3>
-                <button className="neumorphic-button px-4 py-2 rounded-lg text-primary font-semibold hover:bg-primary/10">
+                <button
+                  onClick={() => setShowRequestModal(true)}
+                  className="neumorphic-button px-4 py-2 rounded-lg text-primary font-semibold hover:bg-primary/10"
+                >
                   <span className="material-icons-outlined text-sm mr-2 align-middle">add</span>
                   Solicitar Ausencia
                 </button>
@@ -739,6 +834,102 @@ export default function Perfil() {
                 Cancelar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Request Absence Modal */}
+      {showRequestModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="neumorphic-card p-6 w-full max-w-lg">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                Solicitar Ausencia
+              </h2>
+              <button
+                onClick={() => setShowRequestModal(false)}
+                className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              >
+                <span className="material-icons-outlined">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleRequestAbsence} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Tipo de solicitud
+                </label>
+                <select
+                  value={requestForm.type}
+                  onChange={(e) => setRequestForm({ ...requestForm, type: e.target.value })}
+                  className="neumorphic-card-inset w-full px-4 py-2 rounded-lg border-none focus:ring-2 focus:ring-primary bg-transparent text-slate-800 dark:text-slate-200"
+                >
+                  <option value="vacaciones">Vacaciones</option>
+                  <option value="asuntos_propios">Asuntos propios</option>
+                  <option value="baja_medica">Baja médica</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Fecha de inicio <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={requestForm.startDate}
+                  min={toInputDate(new Date())}
+                  onChange={(e) => setRequestForm({ ...requestForm, startDate: e.target.value })}
+                  className="neumorphic-card-inset w-full px-4 py-2 rounded-lg border-none focus:ring-2 focus:ring-primary bg-transparent text-slate-800 dark:text-slate-200"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Fecha de fin <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={requestForm.endDate}
+                  min={requestForm.startDate || toInputDate(new Date())}
+                  onChange={(e) => setRequestForm({ ...requestForm, endDate: e.target.value })}
+                  className="neumorphic-card-inset w-full px-4 py-2 rounded-lg border-none focus:ring-2 focus:ring-primary bg-transparent text-slate-800 dark:text-slate-200"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Descripción / Motivo <span className="text-xs text-slate-400">(breve)</span>
+                </label>
+                <textarea
+                  value={requestForm.description}
+                  onChange={(e) => setRequestForm({ ...requestForm, description: e.target.value })}
+                  rows="2"
+                  className="neumorphic-card-inset w-full px-4 py-2 rounded-lg border-none focus:ring-2 focus:ring-primary bg-transparent text-slate-800 dark:text-slate-200 resize-none"
+                  placeholder="Ej: Vacaciones de verano"
+                />
+              </div>
+
+              <div className="flex space-x-3 mt-6">
+                <button
+                  type="submit"
+                  disabled={submittingAbsence}
+                  className="flex-1 neumorphic-button px-6 py-3 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submittingAbsence ? "Enviando..." : "Enviar Solicitud"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowRequestModal(false)}
+                  disabled={submittingAbsence}
+                  className="flex-1 neumorphic-button px-6 py-3 rounded-lg text-slate-600 dark:text-slate-400 font-semibold disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
