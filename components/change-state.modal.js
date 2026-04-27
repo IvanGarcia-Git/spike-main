@@ -1,26 +1,28 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import BaseModal, { ModalActions, ModalButton, ModalSelect } from "./base-modal.component";
 
 export default function ChangeStateModal({
-  setIsStateChangeModalOpen,
-  selectedStateForBatch,
-  setSelectedStateForBatch,
+  onClose,
+  onSubmit,
   contractStates,
-  handleBatchStateChange,
 }) {
+  const [selectedStateId, setSelectedStateId] = useState("");
+
   const stateOptions = contractStates.map((state) => ({
     value: state.id.toString(),
     label: state.name,
   }));
 
+  const handleSave = () => {
+    if (!selectedStateId) return;
+    onSubmit(parseInt(selectedStateId));
+  };
+
   return (
     <BaseModal
       isOpen={true}
-      onClose={() => {
-        setIsStateChangeModalOpen(false);
-        setSelectedStateForBatch(null);
-      }}
+      onClose={onClose}
       title="Cambiar estado"
       subtitle="Selecciona el nuevo estado para los contratos seleccionados"
       maxWidth="max-w-md"
@@ -28,13 +30,8 @@ export default function ChangeStateModal({
       <ModalSelect
         label="Seleccionar nuevo estado"
         id="stateSelect"
-        value={selectedStateForBatch?.id?.toString() || ""}
-        onChange={(e) => {
-          const selectedState = contractStates.find(
-            (state) => state.id === parseInt(e.target.value)
-          );
-          setSelectedStateForBatch(selectedState);
-        }}
+        value={selectedStateId}
+        onChange={(e) => setSelectedStateId(e.target.value)}
         options={stateOptions}
         placeholder="Selecciona un estado"
         required
@@ -43,16 +40,14 @@ export default function ChangeStateModal({
       <ModalActions>
         <ModalButton
           variant="ghost"
-          onClick={() => {
-            setIsStateChangeModalOpen(false);
-            setSelectedStateForBatch(null);
-          }}
+          onClick={onClose}
         >
           Cancelar
         </ModalButton>
         <ModalButton
           variant="primary"
-          onClick={handleBatchStateChange}
+          onClick={handleSave}
+          disabled={!selectedStateId}
           icon="save"
         >
           Guardar
