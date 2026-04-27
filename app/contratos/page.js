@@ -1251,7 +1251,7 @@ function ContractsContent() {
 
     try {
       const response = await authFetch(
-        "PUT",
+        "PATCH",
         `contracts/${contractUuid}`,
         { payed: newPayedStatus },
         jwtToken
@@ -1290,7 +1290,7 @@ function ContractsContent() {
 
     try {
       const response = await authFetch(
-        "PUT",
+        "PATCH",
         `contracts/${contractUuid}`,
         { payed: newPayedStatus },
         jwtToken
