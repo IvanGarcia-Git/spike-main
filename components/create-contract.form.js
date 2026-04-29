@@ -110,11 +110,18 @@ export default function CreateContractForm({
   ]);
 
   // Sincronizar powerInputs cuando cambian contractedPowers
+  // Preserva el texto que está escribiendo el usuario (p.ej. "3,") si ya
+  // representa el mismo número, evitando que la coma final se borre.
   useEffect(() => {
-    const newPowerInputs = formData.contractedPowers.map((p) =>
-      p === 0 ? "" : String(p).replace(".", ",")
+    setPowerInputs((prev) =>
+      formData.contractedPowers.map((p, i) => {
+        const current = prev[i] ?? "";
+        const parsed = parseFloat(current.replace(",", "."));
+        if (!Number.isNaN(parsed) && parsed === p) return current;
+        if (current === "" && p === 0) return "";
+        return p === 0 ? "" : String(p).replace(".", ",");
+      })
     );
-    setPowerInputs(newPowerInputs);
   }, [formData.contractedPowers]);
 
   // Propagar formData al padre cuando isSelected cambia a true
