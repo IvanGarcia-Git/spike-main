@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { AiFillFile } from "react-icons/ai";
 import { getCookie } from "cookies-next";
 import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
+import { toast } from "react-toastify";
 
 export default function ContractDocuments({ contractUuid, documentation }) {
   const [files, setFiles] = useState([]);
@@ -10,6 +11,8 @@ export default function ContractDocuments({ contractUuid, documentation }) {
   const [uploading, setUploading] = useState(false);
 
   const getContractDocuments = async () => {
+    if (!contractUuid) return;
+
     const jwtToken = getCookie("factura-token");
     try {
       const response = await authGetFetch(
@@ -21,10 +24,11 @@ export default function ContractDocuments({ contractUuid, documentation }) {
         const documents = await response.json();
         setFiles(documents);
       } else {
-        alert("Error al obtener los documentos del contrato");
+        toast.error("Error al obtener los documentos del contrato");
       }
     } catch (error) {
       console.error("Error al obtener los documentos:", error);
+      toast.error("Error de conexión al cargar documentos");
     }
   };
 
@@ -32,7 +36,12 @@ export default function ContractDocuments({ contractUuid, documentation }) {
     e.preventDefault();
 
     if (!selectedFile) {
-      alert("Por favor selecciona un archivo para subir.");
+      toast.warning("Por favor selecciona un archivo para subir.");
+      return;
+    }
+
+    if (!contractUuid) {
+      toast.error("Error: No se ha identificado el contrato.");
       return;
     }
 
@@ -44,6 +53,10 @@ export default function ContractDocuments({ contractUuid, documentation }) {
 
     const jwtToken = getCookie("factura-token");
 
+    // AbortController evita que el botón quede en "Subiendo..." indefinidamente si el backend cuelga
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/contract-documents/`,
@@ -53,18 +66,30 @@ export default function ContractDocuments({ contractUuid, documentation }) {
             Authorization: `Bearer ${jwtToken}`,
           },
           body: formData,
+          signal: controller.signal,
         }
       );
 
+      clearTimeout(timeoutId);
+
       if (response.ok) {
-        alert("Archivo subido con éxito");
+        toast.success("Archivo subido con éxito");
         setSelectedFile(null);
+        const fileInput = document.getElementById("file-upload");
+        if (fileInput) fileInput.value = "";
         await getContractDocuments();
       } else {
-        alert("Error al subir el archivo.");
+        const errorData = await response.json().catch(() => null);
+        toast.error(errorData?.error?.message || errorData?.message || "Error al subir el archivo.");
       }
     } catch (error) {
-      console.error("Error al subir el archivo:", error);
+      clearTimeout(timeoutId);
+      if (error.name === "AbortError") {
+        toast.error("La subida tardó demasiado. Por favor, inténtalo de nuevo.");
+      } else {
+        console.error("Error al subir el archivo:", error);
+        toast.error("Error de conexión. Por favor, inténtalo de nuevo.");
+      }
     } finally {
       setUploading(false);
     }
@@ -91,13 +116,14 @@ export default function ContractDocuments({ contractUuid, documentation }) {
         );
 
         if (response.ok) {
-          alert("Documento eliminado con éxito.");
+          toast.success("Documento eliminado con éxito.");
           getContractDocuments();
         } else {
-          alert("Error al eliminar el documento.");
+          toast.error("Error al eliminar el documento.");
         }
       } catch (error) {
         console.error("Error al eliminar el documento:", error);
+        toast.error("Error de conexión al eliminar documento.");
       }
     }
   };
