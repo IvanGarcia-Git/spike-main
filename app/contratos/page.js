@@ -809,8 +809,8 @@ function ContractsContent() {
   };
 
   const getFilteredContracts = async (searchFilters, page = 1, entriesPerPage = 10, liquidacion = null) => {
-    // Clear selection when filters change
-    setSelectedContracts([]);
+    // Mantener selecciones individuales al cambiar filtros; solo salir del modo "todos"
+    // porque 'all' aplicaba al filtro anterior.
     setSelectAllMode(null);
     const jwtToken = getCookie("factura-token");
 
@@ -920,8 +920,7 @@ function ContractsContent() {
   const handleClearFilters = () => {
     setContractFilters({});
     setIsFiltersApplied(false);
-    // Clear selection when filters are cleared
-    setSelectedContracts([]);
+    // Mantener selecciones individuales; solo salir del modo "todos".
     setSelectAllMode(null);
 
     // Si hay filtro de liquidación en la URL, quitarlo
