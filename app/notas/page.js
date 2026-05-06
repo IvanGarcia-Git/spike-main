@@ -808,7 +808,7 @@ function NotaCard({ nota, onEdit, onDelete, onToggleFavorito, formatDate }) {
             </span>
           </button>
         </div>
-        <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-3">
+        <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-3 whitespace-pre-wrap break-words">
           {nota.contenido}
         </p>
       </div>
