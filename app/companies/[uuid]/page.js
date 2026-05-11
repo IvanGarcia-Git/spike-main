@@ -93,6 +93,13 @@ export default function CompanyDetail({ params }) {
       });
 
       if (response.ok) {
+        // Usamos la compañía devuelta para mostrar el logo persistido (URL servible),
+        // en lugar del blob de preview que se invalida al recargar.
+        const updated = await response.json().catch(() => null);
+        if (updated) {
+          setCompany((prev) => ({ ...prev, ...updated }));
+        }
+        setSelectedImage(null);
         alert("Compañía actualizada con éxito");
         setIsEditing(false);
       } else {
