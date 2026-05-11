@@ -1,165 +1,283 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import * as jose from "jose";
 
-// Datos de fallback para cuando el backend falle
-const generateFallbackData = () => ({
-  usuario: {
-    nombre: "Admin 2 Prueba",
-    usuario: "admin",
-    telefono: "+34 612 345 678",
-    correo: "test@test.com",
-    numeroCuenta: "ES12 3456 7890 1234 5678 9012",
-    antiguedad: "245 días",
-    fechaIngreso: "01/03/2025",
-    turno: "dark_mode",
-    horario: "9:00 - 18:00",
-    horasSemana: "40h/sem",
-    rol: "Agente",
-    avatar: null,
-  },
-  ausencias: [
-    {
-      id: 1,
-      tipo: "Vacaciones",
-      fechaInicio: "2025-12-01",
-      fechaFin: "2025-12-15",
-      dias: 15,
-      estado: "Aprobada",
-      motivo: "Vacaciones de Navidad",
-    },
-    {
-      id: 2,
-      tipo: "Enfermedad",
-      fechaInicio: "2025-11-10",
-      fechaFin: "2025-11-12",
-      dias: 3,
-      estado: "Aprobada",
-      motivo: "Gripe",
-    },
-    {
-      id: 3,
-      tipo: "Personal",
-      fechaInicio: "2025-11-25",
-      fechaFin: "2025-11-25",
-      dias: 1,
-      estado: "Pendiente",
-      motivo: "Asunto personal",
-    },
-  ],
-  nominas: [
-    {
-      id: 1,
-      mes: "Noviembre 2025",
-      periodo: "01/11/2025 - 30/11/2025",
-      salarioBruto: "2500.00",
-      deducciones: "625.00",
-      salarioNeto: "1875.00",
-      fecha: "2025-11-30",
-      estado: "Pagada",
-    },
-    {
-      id: 2,
-      mes: "Octubre 2025",
-      periodo: "01/10/2025 - 31/10/2025",
-      salarioBruto: "2500.00",
-      deducciones: "625.00",
-      salarioNeto: "1875.00",
-      fecha: "2025-10-31",
-      estado: "Pagada",
-    },
-    {
-      id: 3,
-      mes: "Septiembre 2025",
-      periodo: "01/09/2025 - 30/09/2025",
-      salarioBruto: "2500.00",
-      deducciones: "625.00",
-      salarioNeto: "1875.00",
-      fecha: "2025-09-30",
-      estado: "Pagada",
-    },
-  ],
-});
+// URL del backend Express. Se aceptan varias env vars por compatibilidad.
+const getApiUrl = () =>
+  process.env.API_URL || process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
-export async function GET(req) {
-  try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("factura-token");
+const MESES = [
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+];
 
-    if (!token) {
-      return NextResponse.json(
-        { error: "No autenticado" },
-        { status: 401 }
-      );
-    }
+// Mapea el valor del enum UserShift del backend a un nombre de icono Material.
+const SHIFT_ICON = {
+  "mañana": "wb_sunny",
+  "tarde": "wb_twilight",
+};
 
-    try {
-      const apiResponse = await fetch(`${process.env.BACKEND_URL}/perfil`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token.value}`,
-        },
-        signal: AbortSignal.timeout(5000),
-      });
+// Etiquetas legibles para los tipos/estados de ausencia del backend.
+const ABSENCE_TYPE_LABEL = {
+  vacaciones: "Vacaciones",
+  asuntos_propios: "Asuntos propios",
+  baja_medica: "Baja médica",
+  otro: "Otro",
+};
+const ABSENCE_STATUS_LABEL = {
+  pendiente: "Pendiente",
+  aprobada: "Aprobada",
+  rechazada: "Rechazada",
+};
+const PAYROLL_STATE_LABEL = {
+  pendiente: "Pendiente",
+  pagada: "Pagada",
+};
 
-      if (apiResponse.ok) {
-        const data = await apiResponse.json();
-        return NextResponse.json(data, { status: 200 });
-      } else {
-        console.log("Backend respondió con error, usando datos de fallback");
-        return NextResponse.json(generateFallbackData(), { status: 200 });
-      }
-    } catch (fetchError) {
-      console.log("Backend no disponible, usando datos de fallback:", fetchError.message);
-      return NextResponse.json(generateFallbackData(), { status: 200 });
-    }
-  } catch (error) {
-    console.error("Error en perfil API route:", error);
-    return NextResponse.json(generateFallbackData(), { status: 200 });
+function formatDateEs(value) {
+  if (!value) return "-";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "-";
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  return `${dd}/${mm}/${d.getFullYear()}`;
+}
+
+function daysSince(value) {
+  if (!value) return null;
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return null;
+  const diff = Date.now() - d.getTime();
+  return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+}
+
+function inclusiveDaysBetween(startValue, endValue) {
+  const a = new Date(startValue);
+  const b = new Date(endValue);
+  if (isNaN(a.getTime()) || isNaN(b.getTime())) return 0;
+  const diff = Math.floor((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.max(0, diff) + 1;
+}
+
+// Construye el objeto `usuario` que espera el frontend a partir de la entidad User del backend.
+function mapUser(user, avatarUrl) {
+  const fullName = [user?.name, user?.firstSurname, user?.secondSurname]
+    .filter((p) => p && String(p).trim())
+    .join(" ")
+    .trim();
+  const dias = daysSince(user?.startDate);
+  return {
+    nombre: fullName || "-",
+    usuario: user?.username || "-",
+    telefono: user?.phone || "-",
+    correo: user?.email || "-",
+    numeroCuenta: user?.iban || "-",
+    antiguedad: dias != null ? `${dias} días` : "-",
+    fechaIngreso: formatDateEs(user?.startDate),
+    turno: SHIFT_ICON[user?.shift] || "wb_sunny",
+    horario: user?.time || "-",
+    horasSemana: user?.days || "-",
+    rol: user?.role || "-",
+    avatar: avatarUrl || (user?.imageUri && user.imageUri.startsWith("data:") ? user.imageUri : null),
+  };
+}
+
+function mapAbsences(absences) {
+  if (!Array.isArray(absences)) return [];
+  return absences.map((a) => ({
+    id: a.id,
+    uuid: a.uuid,
+    tipo: ABSENCE_TYPE_LABEL[a.type] || a.type || "Otro",
+    fechaInicio: a.startDate,
+    fechaFin: a.endDate,
+    dias: inclusiveDaysBetween(a.startDate, a.endDate),
+    estado: ABSENCE_STATUS_LABEL[a.status] || a.status || "Pendiente",
+    motivo: a.description || "",
+  }));
+}
+
+function mapPayrolls(payrolls) {
+  if (!Array.isArray(payrolls)) return [];
+  return payrolls.map((p) => {
+    const d = new Date(p.date);
+    const valid = !isNaN(d.getTime());
+    const importe = Number(p.qty);
+    const qtyStr = isNaN(importe) ? "0.00" : importe.toFixed(2);
+    return {
+      id: p.id,
+      uuid: p.uuid,
+      mes: valid ? `${MESES[d.getMonth()]} ${d.getFullYear()}` : "-",
+      periodo: formatDateEs(p.date),
+      salarioBruto: qtyStr,
+      deducciones: "0.00",
+      salarioNeto: qtyStr,
+      fecha: p.date,
+      estado: PAYROLL_STATE_LABEL[p.state] || p.state || "Pendiente",
+    };
+  });
+}
+
+async function authedJson(url, token, init = {}) {
+  const res = await fetch(url, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      ...(init.headers || {}),
+    },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) {
+    const err = new Error(`Backend respondió ${res.status} en ${url}`);
+    err.status = res.status;
+    throw err;
   }
+  return res.json();
+}
+
+export async function GET() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("factura-token");
+  if (!token) {
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  }
+
+  const apiUrl = getApiUrl();
+
+  // Datos del usuario autenticado (el backend resuelve el usuario por el JWT).
+  let user;
+  try {
+    user = await authedJson(`${apiUrl}/users/`, token.value);
+  } catch (e) {
+    console.error("Error obteniendo perfil del backend:", e.message);
+    // No devolvemos datos de otro usuario: respondemos error real.
+    return NextResponse.json(
+      { error: "No se pudieron cargar los datos del perfil" },
+      { status: 502 }
+    );
+  }
+
+  // userId para consultar ausencias/nóminas (del propio usuario).
+  let userId = user?.id;
+  if (userId == null) {
+    try {
+      userId = jose.decodeJwt(token.value)?.userId;
+    } catch {
+      userId = undefined;
+    }
+  }
+
+  // Avatar: si hay imageUri (clave de S3), pedimos la URL firmada.
+  let avatarUrl = null;
+  if (user?.imageUri && !String(user.imageUri).startsWith("data:") && userId != null) {
+    try {
+      const pic = await authedJson(`${apiUrl}/users/profile-picture/${userId}`, token.value);
+      avatarUrl = pic?.profileImageUri || null;
+    } catch {
+      avatarUrl = null;
+    }
+  }
+
+  // Ausencias y nóminas son best-effort: si fallan, listas vacías (nunca datos falsos).
+  let ausencias = [];
+  let nominas = [];
+  if (userId != null) {
+    try {
+      ausencias = mapAbsences(await authedJson(`${apiUrl}/absences/user/${userId}`, token.value));
+    } catch (e) {
+      console.warn("No se pudieron cargar las ausencias:", e.message);
+    }
+    try {
+      nominas = mapPayrolls(await authedJson(`${apiUrl}/payrolls/${userId}`, token.value));
+    } catch (e) {
+      console.warn("No se pudieron cargar las nóminas:", e.message);
+    }
+  }
+
+  return NextResponse.json(
+    { usuario: mapUser(user, avatarUrl), ausencias, nominas },
+    { status: 200 }
+  );
 }
 
 export async function PUT(req) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("factura-token");
+  if (!token) {
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  }
+
+  let body;
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("factura-token");
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Cuerpo de la petición inválido" }, { status: 400 });
+  }
 
-    if (!token) {
-      return NextResponse.json(
-        { error: "No autenticado" },
-        { status: 401 }
-      );
-    }
+  const apiUrl = getApiUrl();
 
-    const body = await req.json();
+  // Necesitamos el uuid del usuario autenticado para el PATCH /users/.
+  let userUuid;
+  try {
+    userUuid = jose.decodeJwt(token.value)?.userUuid;
+  } catch {
+    userUuid = undefined;
+  }
 
-    try {
-      const apiResponse = await fetch(`${process.env.BACKEND_URL}/perfil`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token.value}`,
-        },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(5000),
-      });
-
-      if (apiResponse.ok) {
-        const data = await apiResponse.json();
-        return NextResponse.json(data, { status: 200 });
-      } else {
-        // Simular actualización exitosa
-        return NextResponse.json({ ...body }, { status: 200 });
-      }
-    } catch (fetchError) {
-      console.log("Backend no disponible, simulando actualización:", fetchError.message);
-      return NextResponse.json({ ...body }, { status: 200 });
-    }
-  } catch (error) {
-    console.error("Error actualizando perfil:", error);
+  // Cargamos el usuario actual para descomponer el nombre completo manteniendo apellidos.
+  let current;
+  try {
+    current = await authedJson(`${apiUrl}/users/`, token.value);
+    if (!userUuid) userUuid = current?.uuid;
+  } catch (e) {
+    console.error("Error obteniendo usuario para actualizar perfil:", e.message);
     return NextResponse.json(
-      { error: "Error al actualizar perfil" },
-      { status: 500 }
+      { error: "No se pudieron cargar los datos del perfil" },
+      { status: 502 }
     );
   }
+
+  if (!userUuid) {
+    return NextResponse.json({ error: "No se pudo identificar al usuario" }, { status: 400 });
+  }
+
+  const userData = {};
+  if (typeof body.telefono === "string") userData.phone = body.telefono.trim();
+  if (typeof body.numeroCuenta === "string") userData.iban = body.numeroCuenta.trim();
+  if (typeof body.correo === "string" && body.correo.trim()) userData.email = body.correo.trim();
+  if (typeof body.nombre === "string" && body.nombre.trim()) {
+    const parts = body.nombre.trim().split(/\s+/);
+    userData.name = parts[0] || current?.name || "";
+    userData.firstSurname = parts[1] || "";
+    userData.secondSurname = parts.slice(2).join(" ") || "";
+  }
+
+  let updated;
+  try {
+    const res = await fetch(`${apiUrl}/users/`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token.value}`,
+      },
+      body: JSON.stringify({ userUuid, userData }),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      return NextResponse.json(
+        { error: errData.message || "No se pudo actualizar el perfil" },
+        { status: res.status }
+      );
+    }
+    updated = await res.json();
+  } catch (e) {
+    console.error("Error actualizando perfil en el backend:", e.message);
+    return NextResponse.json(
+      { error: "Servidor no disponible. Inténtalo más tarde." },
+      { status: 503 }
+    );
+  }
+
+  return NextResponse.json({ usuario: mapUser(updated, null) }, { status: 200 });
 }

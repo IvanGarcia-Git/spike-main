@@ -71,7 +71,7 @@ export default function Perfil() {
 
       if (response.ok) {
         const updatedData = await response.json();
-        setUserData({ ...userData, ...updatedData });
+        setUserData({ ...userData, ...(updatedData.usuario || updatedData) });
         setShowEditModal(false);
       }
     } catch (error) {
