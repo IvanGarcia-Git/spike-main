@@ -769,7 +769,7 @@ function NotaCard({ nota, onEdit, onDelete, onToggleFavorito, formatDate }) {
   // Copiar contenido al portapapeles
   const handleCopyToClipboard = async () => {
     try {
-      const textToCopy = `${nota.titulo}\n\n${nota.contenido}`;
+      const textToCopy = nota.contenido;
       await navigator.clipboard.writeText(textToCopy);
       // Mostrar feedback visual breve
       const card = document.getElementById(`nota-card-${nota.id}`);
