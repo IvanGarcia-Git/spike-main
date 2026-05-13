@@ -209,6 +209,11 @@ export default function CreateContractPage() {
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const [isLoadingFromLeadSheet, setIsLoadingFromLeadSheet] = useState(false);
 
+  // Key que se incrementa al restaurar un borrador para forzar el remount
+  // de los CreateContractForm hijos, que tienen estado interno propio
+  // (formData, isSelected) y no se sincronizan con el padre tras la restauración.
+  const [formInstanceKey, setFormInstanceKey] = useState(0);
+
   // Ref to prevent showing draft modal twice
   const draftModalShownRef = useRef(false);
 
@@ -286,6 +291,11 @@ export default function CreateContractPage() {
       if (savedDraftData.documentType) {
         setDocumentType(savedDraftData.documentType);
       }
+      // Fuerza el remount de los formularios hijos para que hidraten su
+      // estado interno con los datos restaurados (initialData). Sin esto,
+      // sus estados internos seguirían en defaults vacíos y sobreescribirían
+      // los datos al primer click del usuario sobre la tarjeta.
+      setFormInstanceKey((k) => k + 1);
     }
     setShowRestoreModal(false);
   };
@@ -663,15 +673,19 @@ export default function CreateContractPage() {
         {/* Contract Forms */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <CreateContractForm
+            key={`luz-${formInstanceKey}`}
             contractType="Luz"
             companies={companies}
             onContractUpdate={handleContractLuzUpdate}
+            initialData={contractLuzData}
           />
 
           <CreateContractForm
+            key={`gas-${formInstanceKey}`}
             contractType="Gas"
             companies={companies}
             onContractUpdate={handleContractGasUpdate}
+            initialData={contractGasData}
           />
         </div>
 

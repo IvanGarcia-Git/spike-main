@@ -3,27 +3,35 @@ import React, { useState, useEffect, useCallback } from "react";
 import { getCookie } from "cookies-next";
 import { authGetFetch } from "@/helpers/server-fetch.helper";
 
-export default function CreateTelephonyContractForm({ companies, onContractUpdate }) {
-  const [isSelected, setIsSelected] = useState(false);
+export default function CreateTelephonyContractForm({ companies, onContractUpdate, initialData }) {
+  // Hidrata el estado interno desde initialData en el primer montaje.
+  // Cuando el padre restaura un borrador, fuerza el remount con un key nuevo
+  // para que este inicializador vuelva a correr con los datos restaurados.
+  const [isSelected, setIsSelected] = useState(() => Boolean(initialData?.isSelected));
   const [selectedDocumentation, setSelectedDocumentation] = useState([]);
-  const [hasExtraServices, setHasExtraServices] = useState(false);
+  const [hasExtraServices, setHasExtraServices] = useState(() => {
+    const arr = initialData?.extraServices;
+    return Array.isArray(arr) && arr.length > 0;
+  });
   const [selectedFiles, setSelectedFiles] = useState([]);
 
   const [contractState, setContractState] = useState([]);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => ({
     type: "Telefonía",
     isDraft: true,
-    companyId: "",
-    extraInfo: "",
-    electronicBill: true,
-    isSelected: false,
-    telephoneLines: [0, 0],
-    landlinePhone: 0,
-    rates: [],
-    extraServices: [],
+    companyId: initialData?.companyId ?? "",
+    extraInfo: initialData?.extraInfo ?? "",
+    electronicBill: initialData?.electronicBill ?? true,
+    isSelected: Boolean(initialData?.isSelected),
+    telephoneLines: Array.isArray(initialData?.telephoneLines) && initialData.telephoneLines.length >= 2
+      ? initialData.telephoneLines
+      : [0, 0],
+    landlinePhone: initialData?.landlinePhone ?? 0,
+    rates: Array.isArray(initialData?.rates) ? initialData.rates : [],
+    extraServices: Array.isArray(initialData?.extraServices) ? initialData.extraServices : [],
     selectedFiles: [],
-  });
+  }));
 
   useEffect(() => {
     if (isSelected) {

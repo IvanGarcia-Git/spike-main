@@ -178,6 +178,11 @@ export default function CreateTelephonyContractPage() {
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const [isLoadingFromLeadSheet, setIsLoadingFromLeadSheet] = useState(false);
 
+  // Key que se incrementa al restaurar un borrador para forzar el remount
+  // del CreateTelephonyContractForm hijo y que hidrate su estado interno
+  // desde initialData.
+  const [formInstanceKey, setFormInstanceKey] = useState(0);
+
   // Combinar todos los datos para el autoguardado
   const draftData = useMemo(
     () => ({
@@ -231,6 +236,9 @@ export default function CreateTelephonyContractPage() {
       if (savedDraftData.documentType) {
         setDocumentType(savedDraftData.documentType);
       }
+      // Fuerza el remount del formulario hijo para que hidrate su estado
+      // interno desde initialData con los datos restaurados.
+      setFormInstanceKey((k) => k + 1);
     }
     setShowRestoreModal(false);
   };
@@ -488,8 +496,10 @@ export default function CreateTelephonyContractPage() {
         {/* Telephony Contract Form */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <CreateTelephonyContractForm
+            key={`telefonia-${formInstanceKey}`}
             companies={companies}
             onContractUpdate={handleContractTelephonyUpdate}
+            initialData={contractTelephonyData}
           />
         </div>
 

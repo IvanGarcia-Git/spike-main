@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { getCookie } from "cookies-next";
 import { authGetFetch } from "@/helpers/server-fetch.helper";
 
@@ -7,46 +7,78 @@ export default function CreateContractForm({
   contractType,
   companies,
   onContractUpdate,
+  initialData,
 }) {
-  const [isSelected, setIsSelected] = useState(false);
+  // Hidrata el estado interno desde initialData en el primer montaje.
+  // Cuando el padre restaura un borrador, fuerza el remount con un key nuevo
+  // para que este inicializador vuelva a correr con los datos restaurados.
+  const [isSelected, setIsSelected] = useState(() => Boolean(initialData?.isSelected));
   const [selectedDocumentation, setSelectedDocumentation] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState({
     Luz: [],
     Gas: [],
   });
 
-  const [contractState, setContractState] = useState({
+  // Si la tarifa restaurada es 3.0 o 6.1, el selector de tipo arranca en ese valor.
+  const initialRateType = useMemo(() => {
+    if (contractType !== "Luz") return "";
+    const powers = initialData?.contractedPowers;
+    if (Array.isArray(powers) && powers.filter((p) => Number(p) > 0).length > 2) {
+      return "3.0";
+    }
+    return "2.0";
+  }, [contractType, initialData]);
+
+  const [contractState, setContractState] = useState(() => ({
     rates: {},
     filteredRates: [],
     selectedTypeForContracts: {
-      Luz: "2.0",
+      Luz: contractType === "Luz" ? initialRateType : "2.0",
       Gas: "",
     },
-  });
+  }));
 
-  const [formData, setFormData] = useState({
-    type: contractType,
-    isDraft: true,
-    contractedPowers: Array(6).fill(0),
-    companyId: "",
-    rateId: "",
-    cups: "",
-    rateName: "",
-    extraInfo: "",
-    maintenance: false,
-    electronicBill: true,
-    virtualBat: false,
-    solarPlates: false,
-    product: "",
-    selectedFiles: [],
-    isSelected: false,
+  const [formData, setFormData] = useState(() => {
+    const powers = Array.isArray(initialData?.contractedPowers)
+      ? initialData.contractedPowers.map((p) => (typeof p === "string" ? parseFloat(p.replace(",", ".")) || 0 : Number(p) || 0))
+      : Array(6).fill(0);
+    return {
+      type: contractType,
+      isDraft: true,
+      contractedPowers: powers.length === 6 ? powers : [...powers, ...Array(6 - powers.length).fill(0)].slice(0, 6),
+      companyId: initialData?.companyId ?? "",
+      rateId: initialData?.rateId ?? "",
+      cups: initialData?.cups ?? "",
+      rateName: initialData?.rateName ?? "",
+      extraInfo: initialData?.extraInfo ?? "",
+      maintenance: initialData?.maintenance ?? false,
+      electronicBill: initialData?.electronicBill ?? true,
+      virtualBat: initialData?.virtualBat ?? false,
+      solarPlates: initialData?.solarPlates ?? false,
+      product: initialData?.product ?? "",
+      selectedFiles: [],
+      isSelected: Boolean(initialData?.isSelected),
+    };
   });
 
   // Estado para mantener los valores de texto de las potencias mientras se escribe
-  const [powerInputs, setPowerInputs] = useState(["", "", "", "", "", ""]);
+  const [powerInputs, setPowerInputs] = useState(() => {
+    const powers = Array.isArray(initialData?.contractedPowers) ? initialData.contractedPowers : [];
+    return Array.from({ length: 6 }).map((_, i) => {
+      const p = powers[i];
+      const num = typeof p === "string" ? parseFloat(p.replace(",", ".")) : Number(p);
+      if (!num || Number.isNaN(num)) return "";
+      return String(num).replace(".", ",");
+    });
+  });
 
   // Ref para rastrear el valor más reciente de isSelected sin causar re-renders
-  const isSelectedRef = useRef(false);
+  const isSelectedRef = useRef(Boolean(initialData?.isSelected));
+
+  // Ref para evitar que el useEffect que filtra rates resetee rateId en el
+  // montaje inicial o cuando llegan async las rates. Sólo debe resetear cuando
+  // companyId cambia realmente (acción del usuario).
+  const prevCompanyIdRef = useRef(initialData?.companyId ?? "");
 
   // Actualizar ref cuando cambia isSelected
   useEffect(() => {
@@ -97,10 +129,16 @@ export default function CreateContractForm({
       setContractState((prev) => ({ ...prev, filteredRates: [] }));
     }
 
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      rateId: "",
-    }));
+    // Sólo resetear rateId cuando companyId cambia por acción del usuario.
+    // Evita borrar la tarifa al hidratar desde initialData (borrador restaurado)
+    // o al llegar async las rates / companies.
+    if (prevCompanyIdRef.current !== formData.companyId) {
+      prevCompanyIdRef.current = formData.companyId;
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        rateId: "",
+      }));
+    }
   }, [
     formData.companyId,
     contractState.rates,
