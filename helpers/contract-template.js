@@ -4,7 +4,7 @@ En {{general_ciudad}}, a {{general_fechaInicio_formatted}}
 
 REUNIDOS:
 
-De una parte, {{partyA_representanteLegal}}, en nombre y representación de las mercantiles {{partyA_razonSocial}} y {{partyA_razonSocialSecundaria}}, ambas con domicilio social en {{partyA_domicilioSocial}}. con CIF {{partyA_cif}} la primera y {{partyA_cifSecundaria}} la segunda.
+De una parte, {{partyA_representanteLegal}}, en nombre y representación de {{#if partyA_razonSocialSecundaria}}las mercantiles {{partyA_razonSocial}} y {{partyA_razonSocialSecundaria}}, ambas con domicilio social en {{partyA_domicilioSocial}}, con CIF {{partyA_cif}} la primera y {{partyA_cifSecundaria}} la segunda.{{else}}la mercantil {{partyA_razonSocial}}, con domicilio social en {{partyA_domicilioSocial}}, con CIF {{partyA_cif}}.{{/if}}
 
 De otra parte, {{#if partyB_type_is_empresa}}D. {{partyB_representanteLegal}}, con D.N.I. {{partyB_dniRepresentante}}, como representante legal de la entidad {{partyB_razonSocial}}, de aquí en adelante denominada el AGENTE, con CIF {{partyB_cif}}, y con domicilio social en {{partyB_domicilioSocial}}.{{else}}D. {{partyB_nombreCompleto}}, con D.N.I. {{partyB_dni}}, de aquí en adelante denominado el AGENTE, con domicilio en {{partyB_domicilio}}.{{/if}}
 
@@ -12,7 +12,7 @@ Ambas partes, reconociéndose mutuamente y teniendo la capacidad legal y legitim
 
 EXPONEN:
 
-I.- Que {{partyA_razonSocial}} y {{partyA_razonSocialSecundaria}} (en adelante el DISTRIBUIDOR) son distribuidores autorizado de varias marcas comerciales de Telecomunicaciones, energía, seguridad y otros servicios (en adelante las OPERADORAS)
+I.- Que {{#if partyA_razonSocialSecundaria}}{{partyA_razonSocial}} y {{partyA_razonSocialSecundaria}} (en adelante el DISTRIBUIDOR) son distribuidoras autorizadas{{else}}{{partyA_razonSocial}} (en adelante el DISTRIBUIDOR) es distribuidora autorizada{{/if}} de varias marcas comerciales de Telecomunicaciones, energía, seguridad y otros servicios (en adelante las OPERADORAS)
 
 II.- Que {{#if partyB_type_is_empresa}}D. {{partyB_representanteLegal}}{{else}}D. {{partyB_nombreCompleto}}{{/if}} (en adelante el COLABORADOR) cuenta con los conocimientos, experiencia y capacidad necesarias para desarrollar eficazmente la comercialización de dichos servicios.
 
