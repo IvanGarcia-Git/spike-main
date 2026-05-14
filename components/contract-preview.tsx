@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect } from "react";
-import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
 interface ContractPreviewProps {
@@ -15,90 +14,111 @@ interface ContractPreviewProps {
   companyLogo: string | null;
 }
 
+// Carga la imagen como data URL y devuelve también sus dimensiones naturales,
+// necesarias para preservar el aspect ratio del logo dentro del PDF.
+const loadImageAsDataUrl = (
+  src: string
+): Promise<{ dataUrl: string; width: number; height: number }> =>
+  new Promise((resolve, reject) => {
+    const img = new window.Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Could not get canvas context"));
+        return;
+      }
+      ctx.drawImage(img, 0, 0);
+      resolve({
+        dataUrl: canvas.toDataURL("image/png"),
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+      });
+    };
+    img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+    img.src = src;
+  });
+
 export function ContractPreview({ content, setContent, focusedField, companyLogo }: ContractPreviewProps) {
   const handleDownloadPDF = async () => {
-    // Create a temporary div with the contract content for PDF generation
-    const tempDiv = document.createElement('div');
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.top = '0';
-    tempDiv.style.left = '0';
-    tempDiv.style.width = '210mm';
-    tempDiv.style.background = 'white';
-    tempDiv.style.color = 'black';
-    tempDiv.style.padding = '20px';
-    tempDiv.style.fontFamily = 'Arial, sans-serif';
-    tempDiv.style.fontSize = '14px';
-    tempDiv.style.lineHeight = '1.6';
-
-    // Add company logo if exists
-    if (companyLogo) {
-      const logoDiv = document.createElement('div');
-      logoDiv.style.textAlign = 'center';
-      logoDiv.style.marginBottom = '30px';
-      
-      const logoImg = document.createElement('img');
-      logoImg.src = companyLogo;
-      logoImg.style.maxWidth = '150px';
-      logoImg.style.maxHeight = '75px';
-      logoDiv.appendChild(logoImg);
-      tempDiv.appendChild(logoDiv);
-    }
-
-    // Add contract content
-    const contentDiv = document.createElement('div');
-    contentDiv.style.whiteSpace = 'pre-wrap';
-    contentDiv.textContent = plainTextContentForPrinting;
-    tempDiv.appendChild(contentDiv);
-
-    // Append to body temporarily
-    document.body.appendChild(tempDiv);
-
     try {
-      // Wait for images to load
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const canvas = await html2canvas(tempDiv, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
+      // PDF A4 vertical, milímetros, con compresión activada para tamaños mínimos.
+      const pdf = new jsPDF({
+        orientation: "p",
+        unit: "mm",
+        format: "a4",
+        compress: true,
       });
 
-      const imgData = canvas.toDataURL('image/png');
-      
-      // Create PDF with A4 dimensions
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 295; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      
-      let position = 0;
+      const pageWidth = pdf.internal.pageSize.getWidth(); // 210 mm
+      const pageHeight = pdf.internal.pageSize.getHeight(); // 297 mm
+      const marginX = 20; // 2 cm laterales
+      const marginTop = 25; // 2,5 cm superior
+      const marginBottom = 25; // 2,5 cm inferior
+      const contentWidth = pageWidth - marginX * 2;
+      const fontSize = 11;
+      const lineHeight = 5; // mm aprox para fontSize 11
 
-      // Add first page
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(fontSize);
 
-      // Add additional pages if content is longer
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      let cursorY = marginTop;
+
+      // Logo opcional centrado, manteniendo aspect ratio.
+      if (companyLogo) {
+        try {
+          const { dataUrl, width, height } = await loadImageAsDataUrl(companyLogo);
+          const maxLogoWidthMm = 40;
+          const maxLogoHeightMm = 20;
+          const ratio = width / height || 1;
+          let logoWidth = maxLogoWidthMm;
+          let logoHeight = logoWidth / ratio;
+          if (logoHeight > maxLogoHeightMm) {
+            logoHeight = maxLogoHeightMm;
+            logoWidth = logoHeight * ratio;
+          }
+          const logoX = (pageWidth - logoWidth) / 2;
+          pdf.addImage(dataUrl, "PNG", logoX, cursorY, logoWidth, logoHeight, undefined, "FAST");
+          cursorY += logoHeight + 8;
+        } catch (logoError) {
+          console.warn("No se pudo añadir el logo al PDF:", logoError);
+        }
       }
 
-      // Generate filename with current date
-      const now = new Date();
-      const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD format
-      const filename = `contrato-${dateStr}.pdf`;
+      // Trocea el texto en líneas que respetan el ancho útil y la paginación.
+      const paragraphs = plainTextContentForPrinting.split("\n");
 
-      pdf.save(filename);
+      for (const paragraph of paragraphs) {
+        if (paragraph.trim() === "") {
+          cursorY += lineHeight;
+          if (cursorY > pageHeight - marginBottom) {
+            pdf.addPage();
+            cursorY = marginTop;
+          }
+          continue;
+        }
+
+        const wrappedLines: string[] = pdf.splitTextToSize(paragraph, contentWidth);
+
+        for (const line of wrappedLines) {
+          if (cursorY > pageHeight - marginBottom) {
+            pdf.addPage();
+            cursorY = marginTop;
+          }
+          pdf.text(line, marginX, cursorY);
+          cursorY += lineHeight;
+        }
+      }
+
+      const now = new Date();
+      const dateStr = now.toISOString().split("T")[0];
+      pdf.save(`contrato-${dateStr}.pdf`);
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error al generar el PDF. Por favor, inténtalo de nuevo.');
-    } finally {
-      // Remove temporary element
-      document.body.removeChild(tempDiv);
+      console.error("Error generating PDF:", error);
+      alert("Error al generar el PDF. Por favor, inténtalo de nuevo.");
     }
   };
 
