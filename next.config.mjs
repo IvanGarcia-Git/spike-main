@@ -20,6 +20,11 @@ const nextConfig = {
           source: '/api/:path*',
           destination: `${backendUrl}/:path*`,
         },
+        // Proxy de archivos estáticos servidos por el backend (uploads locales)
+        {
+          source: '/files/:path*',
+          destination: `${backendUrl}/files/:path*`,
+        },
       ],
     };
   },
