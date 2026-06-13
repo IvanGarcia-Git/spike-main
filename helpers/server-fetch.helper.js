@@ -82,3 +82,10 @@ export const deleteComparativa = async (comparativaId, jwtToken) => {
 export const updateComparativa = async (comparativaId, data, jwtToken) => {
   return await authFetch("PUT", `comparativas/${comparativaId}`, data, jwtToken);
 };
+
+// PRES-018 B1 — Extrae datos de una factura (imagen/PDF) con IA para pre-rellenar el asistente.
+export const extractInvoiceData = async (file, jwtToken) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  return await authFetchFormData("POST", "comparativas/extract-invoice", formData, jwtToken);
+};

@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getCookie } from "cookies-next";
 import BaseModal, { ModalButton } from "../base-modal.component";
+import { extractInvoiceData } from "@/helpers/server-fetch.helper";
 
 // Helper function to get the number of periods based on tariff type
 const getPeriodCountByTariff = (tariff) => {
@@ -27,6 +29,10 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // PRES-018 B1 — extracción de factura con IA
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractError, setExtractError] = useState("");
+  const [extractedFields, setExtractedFields] = useState([]); // campos de baja confianza a revisar
   const [formData, setFormData] = useState({
     // Paso 1: Tipo de comparativa
     comparisonType: "",
@@ -86,6 +92,65 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
       newArray[index] = value;
       return { ...prev, [field]: newArray };
     });
+  };
+
+  // PRES-018 B1 — Sube una factura, la procesa con IA y pre-rellena el formulario.
+  const handleInvoiceUpload = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permite re-subir el mismo fichero
+    if (!file) return;
+
+    setExtractError("");
+    setExtractedFields([]);
+    setIsExtracting(true);
+    try {
+      const token = getCookie("factura-token");
+      const res = await extractInvoiceData(file, token);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "No se pudo procesar la factura");
+      }
+      const d = await res.json();
+
+      setFormData((prev) => {
+        const next = { ...prev };
+        if (d.comparisonType === "luz" || d.comparisonType === "gas") next.comparisonType = d.comparisonType;
+        if (d.customerType === "particular" || d.customerType === "empresa") next.customerType = d.customerType;
+        if (d.clientName) next.clientName = d.clientName;
+        if (d.currentBillAmount != null) next.currentBillAmount = String(d.currentBillAmount);
+        if (d.numDias != null) next.numDias = String(d.numDias);
+
+        if (d.comparisonType === "luz") {
+          const validTariffs = ["2.0TD", "3.0TD", "6.1TD"];
+          const tariff = validTariffs.includes(d.tariffType) ? d.tariffType : prev.selectedLightTariff;
+          next.selectedLightTariff = tariff;
+          const periodCount = getPeriodCountByTariff(tariff);
+          if (Array.isArray(d.potencias)) {
+            next.potencias = Array(periodCount).fill("").map((_, i) =>
+              d.potencias[i] != null ? String(d.potencias[i]) : ""
+            );
+          }
+          if (Array.isArray(d.energias)) {
+            next.energias = Array(periodCount).fill("").map((_, i) =>
+              d.energias[i] != null ? String(d.energias[i]) : ""
+            );
+          }
+        } else if (d.comparisonType === "gas") {
+          const validGas = ["RL.1", "RL.2", "RL.3"];
+          if (validGas.includes(d.tariffType)) next.selectedGasTariff = d.tariffType;
+          if (d.consumo != null) next.consumo = String(d.consumo);
+        }
+        return next;
+      });
+
+      setExtractedFields(Array.isArray(d.lowConfidenceFields) ? d.lowConfidenceFields : []);
+      // Avanza al paso de datos del cliente para que el usuario revise lo extraído.
+      setCurrentStep(2);
+    } catch (err) {
+      setExtractError(err.message || "Error al procesar la factura");
+    } finally {
+      setIsExtracting(false);
+    }
   };
 
   const handleNext = () => {
@@ -235,6 +300,48 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* PRES-018 B1 — Autorrelleno desde factura con IA */}
+          <div className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div className="flex items-start gap-2">
+                <span className="material-icons-outlined text-primary">auto_awesome</span>
+                <div>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                    Rellenar automáticamente desde una factura
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Sube la factura (PNG, JPG o PDF) y la IA extraerá los datos. Revísalos antes de continuar.
+                  </p>
+                </div>
+              </div>
+              <label className={`shrink-0 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold cursor-pointer transition-all ${
+                isExtracting
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-700"
+                  : "bg-primary text-white hover:opacity-90"
+              }`}>
+                <span className="material-icons-outlined text-lg">
+                  {isExtracting ? "hourglass_top" : "upload_file"}
+                </span>
+                {isExtracting ? "Procesando…" : "Subir factura"}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,application/pdf"
+                  className="hidden"
+                  disabled={isExtracting}
+                  onChange={handleInvoiceUpload}
+                />
+              </label>
+            </div>
+            {extractError && (
+              <p className="mt-2 text-xs text-red-600 dark:text-red-400">{extractError}</p>
+            )}
+            {extractedFields.length > 0 && (
+              <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                Revisa estos campos (baja confianza): {extractedFields.join(", ")}
+              </p>
+            )}
           </div>
 
           {/* Form Steps */}
