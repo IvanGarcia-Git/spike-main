@@ -13,8 +13,17 @@ export async function middleware(req) {
     const { payload } = await jose.jwtVerify(token, jwtKey);
 
     // Rutas que requieren ser Manager (no accesibles para Agentes)
-    const managerOnlyRoutes = ["/usuarios", "/liquidaciones", "/reglas-asignacion"];
+    const managerOnlyRoutes = ["/usuarios", "/liquidaciones"];
     if (managerOnlyRoutes.some(route => req.nextUrl.pathname.startsWith(route)) && !payload.isManager) {
+      return NextResponse.redirect(new URL("/contratos", req.url));
+    }
+
+    // Reglas de asignación: manager O super-admin (coincide con el gate del backend).
+    if (
+      req.nextUrl.pathname.startsWith("/reglas-asignacion") &&
+      !payload.isManager &&
+      payload.groupId !== 1
+    ) {
       return NextResponse.redirect(new URL("/contratos", req.url));
     }
 
