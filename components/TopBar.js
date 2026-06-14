@@ -453,6 +453,18 @@ export default function TopBar({ userGroupId, isManager, onMenuClick }) {
                       </span>
                     </Link>
                     <Link
+                      href="/reglas-asignacion"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                      onClick={() => setIsSettingsOpen(false)}
+                    >
+                      <span className="material-icons-outlined text-primary text-xl">
+                        rule
+                      </span>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Reglas de Asignación
+                      </span>
+                    </Link>
+                    <Link
                       href="/notifications-settings"
                       className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
                       onClick={() => setIsSettingsOpen(false)}

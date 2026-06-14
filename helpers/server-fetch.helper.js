@@ -89,3 +89,16 @@ export const extractInvoiceData = async (file, jwtToken) => {
   formData.append("file", file);
   return await authFetchFormData("POST", "comparativas/extract-invoice", formData, jwtToken);
 };
+
+// PRES-018 B2a — Reglas de asignación automática de leads
+export const getAssignmentRules = async (jwtToken) =>
+  await authGetFetch("lead-assignment-rules", jwtToken);
+
+export const createAssignmentRule = async (data, jwtToken) =>
+  await authFetch("POST", "lead-assignment-rules", data, jwtToken);
+
+export const updateAssignmentRule = async (uuid, data, jwtToken) =>
+  await authFetch("PUT", `lead-assignment-rules/${uuid}`, data, jwtToken);
+
+export const deleteAssignmentRule = async (uuid, jwtToken) =>
+  await authFetch("DELETE", `lead-assignment-rules/${uuid}`, null, jwtToken);
