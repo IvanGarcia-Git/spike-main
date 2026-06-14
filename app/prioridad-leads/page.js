@@ -30,6 +30,10 @@ const DEFAULT_LEAD_PRIORITIES = [
   { value: "morning_shift", label: "Agendados a grupo de mañana" },
   { value: "evening_shift", label: "Agendados a grupo tarde" },
   { value: "not_responding", label: "No contesta" },
+  { value: "service_luz", label: "Servicio: Luz" },
+  { value: "service_gas", label: "Servicio: Gas" },
+  { value: "service_placas", label: "Servicio: Placas" },
+  { value: "service_telefonia", label: "Servicio: Telefonía" },
 ];
 
 const LeadsPriorityConfigurationPage = () => {

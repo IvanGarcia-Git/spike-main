@@ -102,3 +102,10 @@ export const updateAssignmentRule = async (uuid, data, jwtToken) =>
 
 export const deleteAssignmentRule = async (uuid, jwtToken) =>
   await authFetch("DELETE", `lead-assignment-rules/${uuid}`, null, jwtToken);
+
+// PRES-018 B2b — el agente gestiona sus propias prioridades de leads
+export const getMyLeadPriorities = async (jwtToken) =>
+  await authGetFetch("users/me/lead-priorities", jwtToken);
+
+export const updateMyLeadPriorities = async (leadPriorities, jwtToken) =>
+  await authFetch("PATCH", "users/me/lead-priorities", { leadPriorities }, jwtToken);

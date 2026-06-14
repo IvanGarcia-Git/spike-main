@@ -222,6 +222,18 @@ export default function TopBar({ userGroupId, isManager, onMenuClick }) {
                       Gestor Leads
                     </span>
                   </Link>
+                  <Link
+                    href="/mis-prioridades"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                    onClick={() => setIsAppsOpen(false)}
+                  >
+                    <span className="material-icons-outlined text-primary text-xl">
+                      tune
+                    </span>
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Mis Prioridades
+                    </span>
+                  </Link>
                   {userGroupId === 1 && (
                     <>
                       <Link
