@@ -13,7 +13,7 @@ export async function middleware(req) {
     const { payload } = await jose.jwtVerify(token, jwtKey);
 
     // Rutas que requieren ser Manager (no accesibles para Agentes)
-    const managerOnlyRoutes = ["/usuarios", "/liquidaciones"];
+    const managerOnlyRoutes = ["/usuarios", "/liquidaciones", "/reglas-asignacion"];
     if (managerOnlyRoutes.some(route => req.nextUrl.pathname.startsWith(route)) && !payload.isManager) {
       return NextResponse.redirect(new URL("/contratos", req.url));
     }
@@ -58,6 +58,8 @@ export const config = {
     "/notificaciones",
     "/contract-customize",
     "/prioridad-leads",
+    "/reglas-asignacion",
+    "/mis-prioridades",
     "/notifications-settings",
     "/emitir-factura",
     "/perfil",

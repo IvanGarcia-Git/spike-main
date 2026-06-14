@@ -108,7 +108,8 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
       const res = await extractInvoiceData(file, token);
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || "No se pudo procesar la factura");
+        const msg = body?.error?.message || body?.error || "No se pudo procesar la factura";
+        throw new Error(msg);
       }
       const d = await res.json();
 
