@@ -151,6 +151,10 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
     const [results, setResults] = useState<TariffComparisonResult[]>([]);
     const [openRowId, setOpenRowId] = useState<string | null>(null);
     const [comparativaSaved, setComparativaSaved] = useState(false);
+    // Paginación de resultados: arranca mostrando 5 y amplía de 5 en 5.
+    const PAGE_SIZE = 5;
+    const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+    useEffect(() => { setVisibleCount(PAGE_SIZE); }, [results.length]);
 
 
     const handleRegulatedCostChange = (name: string, value: number) => {
@@ -429,7 +433,7 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                        {results.map(({ tariff, totalCost, breakdown }, index) => {
+                        {results.slice(0, visibleCount).map(({ tariff, totalCost, breakdown }, index) => {
                             const saving = currentBillAmount > 0 ? currentBillAmount - totalCost : 0;
                             const savingPercentage = currentBillAmount > 0 && saving > 0 ? (saving / currentBillAmount) * 100 : 0;
                             const annualSaving = currentBillAmount > 0 && numDias > 0 ? (saving / numDias) * 365 : 0;
@@ -529,6 +533,30 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
                         </TableBody>
                     </Table>
                 </div>
+
+                {results.length > PAGE_SIZE && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4">
+                        <span className="text-sm text-slate-500 dark:text-slate-400">
+                            Mostrando {Math.min(visibleCount, results.length)} de {results.length} tarifas
+                        </span>
+                        <div className="flex gap-2">
+                            {visibleCount < results.length && (
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setVisibleCount((v) => Math.min(v + PAGE_SIZE, results.length))}
+                                >
+                                    Mostrar más
+                                    <ChevronDown className="h-4 w-4 ml-2" />
+                                </Button>
+                            )}
+                            {visibleCount > PAGE_SIZE && (
+                                <Button variant="ghost" onClick={() => setVisibleCount(PAGE_SIZE)}>
+                                    Mostrar menos
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );
