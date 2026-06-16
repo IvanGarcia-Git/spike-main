@@ -65,7 +65,10 @@ const AssignmentRulesPage = () => {
     ]);
     setRules((await safeJson(rulesRes)) || []);
     setUsers((await safeJson(usersRes)) || []);
-    setGroups((await safeJson(groupsRes)) || []);
+    // El endpoint /groups devuelve el grupo anidado bajo `.group` (con stats);
+    // normalizamos a { id, name } para los selects.
+    const rawGroups = (await safeJson(groupsRes)) || [];
+    setGroups(rawGroups.map((g) => (g && g.group ? { id: g.group.id, name: g.group.name } : g)));
     setCampaigns((await safeJson(campaignsRes)) || []);
   };
 
