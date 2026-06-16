@@ -6,16 +6,27 @@ import { getCookie } from "cookies-next";
 import BaseModal, { ModalButton } from "../base-modal.component";
 import { extractInvoiceData } from "@/helpers/server-fetch.helper";
 
-// Helper function to get the number of periods based on tariff type
-const getPeriodCountByTariff = (tariff) => {
+// Periodos de POTENCIA por tarifa: 2.0TD → 2 (P1 punta, P2 valle); 3.0/6.1 → 6.
+const getPowerPeriods = (tariff) => {
   switch (tariff) {
-    case "2.0TD":
-      return 2; // P1, P2
     case "3.0TD":
     case "6.1TD":
       return 6; // P1-P6
+    case "2.0TD":
     default:
-      return 2;
+      return 2; // P1, P2
+  }
+};
+
+// Periodos de ENERGÍA por tarifa: 2.0TD → 3 (P1 punta, P2 llano, P3 valle); 3.0/6.1 → 6.
+const getEnergyPeriods = (tariff) => {
+  switch (tariff) {
+    case "3.0TD":
+    case "6.1TD":
+      return 6; // P1-P6
+    case "2.0TD":
+    default:
+      return 3; // P1, P2, P3
   }
 };
 
@@ -46,8 +57,8 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
 
     // Paso 3: Datos de luz (si aplica)
     selectedLightTariff: "2.0TD",
-    potencias: generateEmptyArray(getPeriodCountByTariff("2.0TD")), // 2 for 2.0TD
-    energias: generateEmptyArray(getPeriodCountByTariff("2.0TD")), // 2 for 2.0TD
+    potencias: generateEmptyArray(getPowerPeriods("2.0TD")), // 2 para 2.0TD
+    energias: generateEmptyArray(getEnergyPeriods("2.0TD")), // 3 para 2.0TD
     excedentes: "0",
     isSolar: false,
 
@@ -67,22 +78,18 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Effect to resize potencias/energias arrays when tariff changes
+  // Redimensiona potencias y energías de forma INDEPENDIENTE al cambiar de tarifa
+  // (2.0TD usa 2 potencias y 3 energías; 3.0/6.1 usan 6 y 6).
   useEffect(() => {
-    const newPeriodCount = getPeriodCountByTariff(formData.selectedLightTariff);
-    const currentPotenciasCount = formData.potencias.length;
+    const powerCount = getPowerPeriods(formData.selectedLightTariff);
+    const energyCount = getEnergyPeriods(formData.selectedLightTariff);
 
-    if (newPeriodCount !== currentPotenciasCount) {
-      setFormData((prev) => {
-        // Preserve existing values where possible
-        const newPotencias = Array(newPeriodCount).fill("").map((_, i) => prev.potencias[i] || "");
-        const newEnergias = Array(newPeriodCount).fill("").map((_, i) => prev.energias[i] || "");
-        return {
-          ...prev,
-          potencias: newPotencias,
-          energias: newEnergias,
-        };
-      });
+    if (powerCount !== formData.potencias.length || energyCount !== formData.energias.length) {
+      setFormData((prev) => ({
+        ...prev,
+        potencias: Array(powerCount).fill("").map((_, i) => prev.potencias[i] || ""),
+        energias: Array(energyCount).fill("").map((_, i) => prev.energias[i] || ""),
+      }));
     }
   }, [formData.selectedLightTariff]);
 
@@ -125,14 +132,15 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
           const validTariffs = ["2.0TD", "3.0TD", "6.1TD"];
           const tariff = validTariffs.includes(d.tariffType) ? d.tariffType : prev.selectedLightTariff;
           next.selectedLightTariff = tariff;
-          const periodCount = getPeriodCountByTariff(tariff);
+          const powerCount = getPowerPeriods(tariff);
+          const energyCount = getEnergyPeriods(tariff);
           if (Array.isArray(d.potencias)) {
-            next.potencias = Array(periodCount).fill("").map((_, i) =>
+            next.potencias = Array(powerCount).fill("").map((_, i) =>
               d.potencias[i] != null ? String(d.potencias[i]) : ""
             );
           }
           if (Array.isArray(d.energias)) {
-            next.energias = Array(periodCount).fill("").map((_, i) =>
+            next.energias = Array(energyCount).fill("").map((_, i) =>
               d.energias[i] != null ? String(d.energias[i]) : ""
             );
           }
@@ -200,8 +208,8 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
         numDias: "30",
         showCurrentBill: true,
         selectedLightTariff: "2.0TD",
-        potencias: generateEmptyArray(getPeriodCountByTariff("2.0TD")),
-        energias: generateEmptyArray(getPeriodCountByTariff("2.0TD")),
+        potencias: generateEmptyArray(getPowerPeriods("2.0TD")),
+        energias: generateEmptyArray(getEnergyPeriods("2.0TD")),
         excedentes: "0",
         isSolar: false,
         selectedGasTariff: "RL.1",
