@@ -18,9 +18,11 @@ export async function middleware(req) {
       return NextResponse.redirect(new URL("/contratos", req.url));
     }
 
-    // Reglas de asignación: manager O super-admin (coincide con el gate del backend).
+    // Reglas de asignación y estadísticas de leads: manager O super-admin
+    // (coincide con el gate del backend).
     if (
-      req.nextUrl.pathname.startsWith("/reglas-asignacion") &&
+      (req.nextUrl.pathname.startsWith("/reglas-asignacion") ||
+        req.nextUrl.pathname.startsWith("/estadisticas-leads")) &&
       !payload.isManager &&
       payload.groupId !== 1
     ) {
@@ -68,6 +70,7 @@ export const config = {
     "/contract-customize",
     "/prioridad-leads",
     "/reglas-asignacion",
+    "/estadisticas-leads",
     "/mis-prioridades",
     "/notifications-settings",
     "/emitir-factura",
