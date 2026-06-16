@@ -24,7 +24,6 @@ const EMPTY_FORM = {
   name: "",
   priority: 100,
   active: true,
-  zona: "",
   sector: "",
   origin: "",
   campaignId: "",
@@ -89,7 +88,6 @@ const AssignmentRulesPage = () => {
       name: rule.name || "",
       priority: rule.priority ?? 100,
       active: !!rule.active,
-      zona: rule.zona || "",
       sector: rule.sector || "",
       origin: rule.origin || "",
       campaignId: rule.campaignId || "",
@@ -108,7 +106,6 @@ const AssignmentRulesPage = () => {
       name: form.name.trim(),
       priority: Number(form.priority) || 100,
       active: !!form.active,
-      zona: form.zona.trim() || null,
       sector: form.sector || null,
       origin: form.origin.trim() || null,
       campaignId: form.campaignId ? Number(form.campaignId) : null,
@@ -176,7 +173,6 @@ const AssignmentRulesPage = () => {
 
   const describeCriteria = (r) => {
     const parts = [];
-    if (r.zona) parts.push(`zona=${r.zona}`);
     if (r.sector) parts.push(`sector=${r.sector}`);
     if (r.origin) parts.push(`origen=${r.origin}`);
     if (r.campaignId) parts.push(`campaña=${campaigns.find((c) => c.id === r.campaignId)?.name || r.campaignId}`);
@@ -234,16 +230,6 @@ const AssignmentRulesPage = () => {
 
           <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 pt-1">Criterios (vacío = no filtra)</p>
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-slate-600 dark:text-slate-300 mb-1">Zona (provincia)</label>
-              <input
-                type="text"
-                value={form.zona}
-                onChange={(e) => set("zona", e.target.value)}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent px-3 py-2 text-sm"
-                placeholder="p.ej. Madrid"
-              />
-            </div>
             <div>
               <label className="block text-xs text-slate-600 dark:text-slate-300 mb-1">Sector</label>
               <select
