@@ -89,8 +89,8 @@ const EditableRegulatedCostItem = ({ label, value, unit, onChange, name }: { lab
     };
     
     return (
-        <div className="flex flex-col items-center justify-center p-2 rounded-md bg-muted/50 text-center">
-            <span className="text-xs text-muted-foreground">{label}</span>
+        <div className="flex flex-col items-center justify-center p-2 rounded-md bg-slate-100 dark:bg-slate-800 text-center">
+            <span className="text-xs text-slate-500 dark:text-slate-400">{label}</span>
             <div className="flex items-center">
                 <Input
                     type="number"
@@ -108,7 +108,7 @@ const EditableRegulatedCostItem = ({ label, value, unit, onChange, name }: { lab
 
 const RegulatedCosts = ({ costs, type, onCostChange }: { costs: TariffComparisonResultsProps['initialRegulatedCosts'], type: ComparisonType, onCostChange: (name: string, value: number) => void }) => (
     <Collapsible>
-        <Card className="mb-6 bg-muted/20">
+        <Card className="mb-6 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
             <CollapsibleTrigger asChild>
                 <CardHeader className="p-4 cursor-pointer">
                     <div className="flex items-center justify-between">
@@ -395,17 +395,17 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
     const isLight = comparisonType === 'luz';
 
     return (
-        <Card className="mt-8">
+        <Card className="mt-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm">
             <CardHeader>
-                <CardTitle>Resultados de la Comparativa</CardTitle>
-                <CardDescription>Tarifas ordenadas de la más económica a la más cara, según los datos introducidos.</CardDescription>
+                <CardTitle className="text-slate-800 dark:text-slate-100">Resultados de la Comparativa</CardTitle>
+                <CardDescription className="text-slate-500 dark:text-slate-400">Tarifas ordenadas de la más económica a la más cara, según los datos introducidos.</CardDescription>
             </CardHeader>
             <CardContent>
                 <RegulatedCosts costs={regulatedCosts} type={comparisonType} onCostChange={handleRegulatedCostChange}/>
-                <div className="rounded-md border">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
+                <div className="rounded-md border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <Table className="[&_tr]:border-slate-200 dark:[&_tr]:border-slate-700">
+                        <TableHeader className="bg-slate-50 dark:bg-slate-800">
+                            <TableRow className="[&>th]:text-slate-600 dark:[&>th]:text-slate-300">
                                 <TableHead className="w-[80px]">#</TableHead>
                                 <TableHead>Compañía</TableHead>
                                 <TableHead>Tarifa</TableHead>
@@ -441,7 +441,7 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
 
                             return (
                                 <React.Fragment key={tariff.id}>
-                                    <TableRow className={index === 0 ? "bg-primary/10" : ""} data-state={isOpen ? 'open' : 'closed'}>
+                                    <TableRow className={index === 0 ? "bg-primary/10 hover:bg-primary/10" : "hover:bg-slate-50 dark:hover:bg-slate-800/50"} data-state={isOpen ? 'open' : 'closed'}>
                                         <TableCell>
                                             <div className="flex items-center gap-2 font-bold">
                                                 <span>{index + 1}</span>
@@ -506,14 +506,14 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
                                         </TableCell>
                                     </TableRow>
                                     {isOpen && (
-                                      <TableRow className="bg-muted/30 hover:bg-muted/30">
+                                      <TableRow className="bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                           <TableCell colSpan={isLight ? 11 : 10} className="p-0">
                                               <div className="p-4">
                                                   <h4 className="text-md font-semibold mb-2">Desglose de Factura</h4>
                                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
                                                     {isLight ? <LightBreakdown breakdown={breakdown} /> : <GasBreakdown breakdown={breakdown} />}
                                                   </div>
-                                                  <div className="mt-4 pt-4 border-t border-muted">
+                                                  <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                                                     <div className="flex justify-between items-center font-bold">
                                                       <p>Coste Total Factura</p>
                                                       <p className="text-lg">{formatCurrency(totalCost)}</p>
