@@ -392,6 +392,187 @@ export default function ContractSearch({
         </div>
       </div>
 
+      {/* Fila 3: Filtros permanentes (Estado, Agente, Compañía, Origen del Lead) */}
+      <div className="mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Estado */}
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
+              <span className="material-icons-outlined text-base mr-2 text-slate-400">check_circle</span>
+              Estado
+            </label>
+            <div className="neumorphic-card-inset rounded-lg p-3 max-h-40 overflow-y-auto">
+              {allStateOptions.map((state) => {
+                const isSelected = multifilterSelected.contractStateIds.includes(state.id);
+                return (
+                  <div
+                    key={state.id}
+                    className={`flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                      isSelected
+                        ? "bg-primary/10 dark:bg-primary/20"
+                        : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                    }`}
+                    onClick={() => handleMultifilterChange("contractStateIds", state.id)}
+                  >
+                    <input
+                      type="checkbox"
+                      id={`contractState-${state.id}`}
+                      className="mr-3 accent-primary"
+                      checked={isSelected}
+                      onChange={() => handleMultifilterChange("contractStateIds", state.id)}
+                    />
+                    <label
+                      htmlFor={`contractState-${state.id}`}
+                      className={`text-sm cursor-pointer ${
+                        isSelected
+                          ? "font-semibold text-primary"
+                          : "text-slate-600 dark:text-slate-400"
+                      }`}
+                    >
+                      {state.name}
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Agente */}
+          {isManager && (
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
+                <span className="material-icons-outlined text-base mr-2 text-slate-400">person</span>
+                Agente
+              </label>
+              <div className="neumorphic-card-inset rounded-lg p-3 max-h-40 overflow-y-auto">
+                {users.map((user) => {
+                  const isSelected = multifilterSelected.contractUserIds.includes(user.id);
+                  return (
+                    <div
+                      key={user.id}
+                      className={`flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                        isSelected
+                          ? "bg-primary/10 dark:bg-primary/20"
+                          : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                      }`}
+                      onClick={() => handleMultifilterChange("contractUserIds", user.id)}
+                    >
+                      <input
+                        type="checkbox"
+                        id={`contractUser-${user.id}`}
+                        className="mr-3 accent-primary"
+                        checked={isSelected}
+                        onChange={() => handleMultifilterChange("contractUserIds", user.id)}
+                      />
+                      <label
+                        htmlFor={`contractUser-${user.id}`}
+                        className={`text-sm cursor-pointer ${
+                          isSelected
+                            ? "font-semibold text-primary"
+                            : "text-slate-600 dark:text-slate-400"
+                        }`}
+                      >
+                        {user.name}
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Compañía */}
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
+              <span className="material-icons-outlined text-base mr-2 text-slate-400">business</span>
+              Compañía
+            </label>
+            <div className="neumorphic-card-inset rounded-lg p-3 max-h-40 overflow-y-auto">
+              {companies.map((company) => {
+                const isSelected = multifilterSelected.companyIds.includes(company.id);
+                return (
+                  <div
+                    key={company.id}
+                    className={`flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                      isSelected
+                        ? "bg-primary/10 dark:bg-primary/20"
+                        : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                    }`}
+                    onClick={() => handleMultifilterChange("companyIds", company.id)}
+                  >
+                    <input
+                      type="checkbox"
+                      id={`company-${company.id}`}
+                      className="mr-3 accent-primary"
+                      checked={isSelected}
+                      onChange={() => handleMultifilterChange("companyIds", company.id)}
+                    />
+                    <label
+                      htmlFor={`company-${company.id}`}
+                      className={`text-sm cursor-pointer ${
+                        isSelected
+                          ? "font-semibold text-primary"
+                          : "text-slate-600 dark:text-slate-400"
+                      }`}
+                    >
+                      {company.name}
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Origen del Lead */}
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
+              <span className="material-icons-outlined text-base mr-2 text-slate-400">source</span>
+              Origen del Lead
+            </label>
+            <div className="neumorphic-card-inset rounded-lg p-3 max-h-40 overflow-y-auto">
+              {origins.length > 0 ? (
+                origins.map((origin) => {
+                  const isSelected = multifilterSelected.originIds.includes(origin.id);
+                  return (
+                    <div
+                      key={origin.id}
+                      className={`flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                        isSelected
+                          ? "bg-primary/10 dark:bg-primary/20"
+                          : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                      }`}
+                      onClick={() => handleMultifilterChange("originIds", origin.id)}
+                    >
+                      <input
+                        type="checkbox"
+                        id={`origin-${origin.id}`}
+                        className="mr-3 accent-primary"
+                        checked={isSelected}
+                        onChange={() => handleMultifilterChange("originIds", origin.id)}
+                      />
+                      <label
+                        htmlFor={`origin-${origin.id}`}
+                        className={`text-sm cursor-pointer ${
+                          isSelected
+                            ? "font-semibold text-primary"
+                            : "text-slate-600 dark:text-slate-400"
+                        }`}
+                      >
+                        {origin.name}
+                      </label>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-2">
+                  No hay orígenes disponibles
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-4">
         {/* Búsqueda avanzada button */}
         <div className="flex items-center space-x-2">
@@ -700,187 +881,6 @@ export default function ContractSearch({
                       </option>
                     ))}
                   </select>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Filtros adicionales - Segunda fila */}
-          <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Estado */}
-              <div className="flex flex-col">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
-                  <span className="material-icons-outlined text-base mr-2 text-slate-400">check_circle</span>
-                  Estado
-                </label>
-                <div className="neumorphic-card-inset rounded-lg p-3 max-h-40 overflow-y-auto">
-                  {allStateOptions.map((state) => {
-                    const isSelected = multifilterSelected.contractStateIds.includes(state.id);
-                    return (
-                      <div
-                        key={state.id}
-                        className={`flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                          isSelected
-                            ? "bg-primary/10 dark:bg-primary/20"
-                            : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
-                        }`}
-                        onClick={() => handleMultifilterChange("contractStateIds", state.id)}
-                      >
-                        <input
-                          type="checkbox"
-                          id={`contractState-${state.id}`}
-                          className="mr-3 accent-primary"
-                          checked={isSelected}
-                          onChange={() => handleMultifilterChange("contractStateIds", state.id)}
-                        />
-                        <label
-                          htmlFor={`contractState-${state.id}`}
-                          className={`text-sm cursor-pointer ${
-                            isSelected
-                              ? "font-semibold text-primary"
-                              : "text-slate-600 dark:text-slate-400"
-                          }`}
-                        >
-                          {state.name}
-                        </label>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Agente */}
-              {isManager && (
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
-                    <span className="material-icons-outlined text-base mr-2 text-slate-400">person</span>
-                    Agente
-                  </label>
-                  <div className="neumorphic-card-inset rounded-lg p-3 max-h-40 overflow-y-auto">
-                    {users.map((user) => {
-                      const isSelected = multifilterSelected.contractUserIds.includes(user.id);
-                      return (
-                        <div
-                          key={user.id}
-                          className={`flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                            isSelected
-                              ? "bg-primary/10 dark:bg-primary/20"
-                              : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
-                          }`}
-                          onClick={() => handleMultifilterChange("contractUserIds", user.id)}
-                        >
-                          <input
-                            type="checkbox"
-                            id={`contractUser-${user.id}`}
-                            className="mr-3 accent-primary"
-                            checked={isSelected}
-                            onChange={() => handleMultifilterChange("contractUserIds", user.id)}
-                          />
-                          <label
-                            htmlFor={`contractUser-${user.id}`}
-                            className={`text-sm cursor-pointer ${
-                              isSelected
-                                ? "font-semibold text-primary"
-                                : "text-slate-600 dark:text-slate-400"
-                            }`}
-                          >
-                            {user.name}
-                          </label>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Compañía */}
-              <div className="flex flex-col">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
-                  <span className="material-icons-outlined text-base mr-2 text-slate-400">business</span>
-                  Compañía
-                </label>
-                <div className="neumorphic-card-inset rounded-lg p-3 max-h-40 overflow-y-auto">
-                  {companies.map((company) => {
-                    const isSelected = multifilterSelected.companyIds.includes(company.id);
-                    return (
-                      <div
-                        key={company.id}
-                        className={`flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                          isSelected
-                            ? "bg-primary/10 dark:bg-primary/20"
-                            : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
-                        }`}
-                        onClick={() => handleMultifilterChange("companyIds", company.id)}
-                      >
-                        <input
-                          type="checkbox"
-                          id={`company-${company.id}`}
-                          className="mr-3 accent-primary"
-                          checked={isSelected}
-                          onChange={() => handleMultifilterChange("companyIds", company.id)}
-                        />
-                        <label
-                          htmlFor={`company-${company.id}`}
-                          className={`text-sm cursor-pointer ${
-                            isSelected
-                              ? "font-semibold text-primary"
-                              : "text-slate-600 dark:text-slate-400"
-                          }`}
-                        >
-                          {company.name}
-                        </label>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Origen del Lead */}
-              <div className="flex flex-col">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center">
-                  <span className="material-icons-outlined text-base mr-2 text-slate-400">source</span>
-                  Origen del Lead
-                </label>
-                <div className="neumorphic-card-inset rounded-lg p-3 max-h-40 overflow-y-auto">
-                  {origins.length > 0 ? (
-                    origins.map((origin) => {
-                      const isSelected = multifilterSelected.originIds.includes(origin.id);
-                      return (
-                        <div
-                          key={origin.id}
-                          className={`flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                            isSelected
-                              ? "bg-primary/10 dark:bg-primary/20"
-                              : "hover:bg-slate-100 dark:hover:bg-slate-800/50"
-                          }`}
-                          onClick={() => handleMultifilterChange("originIds", origin.id)}
-                        >
-                          <input
-                            type="checkbox"
-                            id={`origin-${origin.id}`}
-                            className="mr-3 accent-primary"
-                            checked={isSelected}
-                            onChange={() => handleMultifilterChange("originIds", origin.id)}
-                          />
-                          <label
-                            htmlFor={`origin-${origin.id}`}
-                            className={`text-sm cursor-pointer ${
-                              isSelected
-                                ? "font-semibold text-primary"
-                                : "text-slate-600 dark:text-slate-400"
-                            }`}
-                          >
-                            {origin.name}
-                          </label>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-2">
-                      No hay orígenes disponibles
-                    </p>
-                  )}
                 </div>
               </div>
             </div>
