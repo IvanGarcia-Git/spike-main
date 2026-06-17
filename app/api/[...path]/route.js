@@ -87,16 +87,28 @@ async function handleRequest(req, params, method) {
 
     // Get response data
     const contentType = apiResponse.headers.get("content-type");
-    let data;
 
     if (contentType && contentType.includes("application/json")) {
-      data = await apiResponse.json();
-    } else {
-      data = await apiResponse.text();
+      const data = await apiResponse.json();
+      return NextResponse.json(data, { status: apiResponse.status });
     }
 
-    // Return response with same status code
-    return NextResponse.json(data, { status: apiResponse.status });
+    // Respuestas no-JSON (descargas binarias: Excel, PDF, imágenes, etc.):
+    // reenviar el cuerpo CRUDO sin decodificarlo. Antes se hacía
+    // apiResponse.text() + NextResponse.json, lo que decodificaba el binario
+    // como UTF-8 y corrompía el archivo (ej. la plantilla .xlsx de leads se
+    // descargaba con los bytes "PK..." del ZIP como texto). Preservamos los
+    // bytes y las cabeceras relevantes (Content-Type/Disposition/Length).
+    const arrayBuffer = await apiResponse.arrayBuffer();
+    const responseHeaders = {};
+    for (const header of ["content-type", "content-disposition", "content-length"]) {
+      const value = apiResponse.headers.get(header);
+      if (value) responseHeaders[header] = value;
+    }
+    return new NextResponse(arrayBuffer, {
+      status: apiResponse.status,
+      headers: responseHeaders,
+    });
   } catch (error) {
     console.error(`Error in API proxy [${method}]:`, error);
     return NextResponse.json(
