@@ -48,14 +48,15 @@ function checkAuthToken() {
   }
 }
 
+// Rutas públicas (sin sesión): son las únicas que NO muestran el chrome
+// (Sidebar + TopBar). El resto de rutas están protegidas por middleware.js,
+// así que la visibilidad del menú se decide por el pathname —determinista en
+// SSR y en cliente— y no por la cookie, que en el render del servidor no está
+// disponible y provocaba que el menú superior parpadease/desapareciese al
+// navegar entre pestañas (sobre todo en recargas completas vía window.location).
+const PUBLIC_ROUTES = ["/", "/reset-password"];
+
 export default function RootLayout({ children }) {
-  // Initialize isAuthenticated with lazy state — check token immediately
-  // This prevents the flash where the app shows the login view before
-  // the useEffect runs on navigation
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    const { authenticated } = checkAuthToken();
-    return authenticated;
-  });
   const [userGroupId, setUserGroupId] = useState(null);
   const [isManager, setIsManager] = useState(false);
   const [userRole, setUserRole] = useState(null);
@@ -65,9 +66,14 @@ export default function RootLayout({ children }) {
 
   const pathname = usePathname();
 
-  // Update auth state on route change
-  // This ensures user data (groupId, isManager, role) is refreshed
-  // and handles token expiration during navigation
+  // El chrome (Sidebar + TopBar) se muestra en todas las rutas salvo las
+  // públicas. Al depender solo del pathname, el render del servidor y el del
+  // cliente coinciden: el menú superior no parpadea ni desaparece al navegar.
+  const showChrome = !PUBLIC_ROUTES.includes(pathname);
+
+  // Refrescar los datos de usuario (groupId, isManager, role) en cada cambio
+  // de ruta para que el menú muestre los ítems acordes a permisos y para
+  // reaccionar a la expiración del token durante la navegación.
   useEffect(() => {
     const { authenticated, payload } = checkAuthToken();
 
@@ -76,13 +82,6 @@ export default function RootLayout({ children }) {
       setIsManager(payload.isManager === true);
       setUserRole(payload.role || null);
     }
-
-    // Only update isAuthenticated if it changed
-    // This prevents unnecessary re-renders
-    setIsAuthenticated((prev) => {
-      if (prev === authenticated) return prev;
-      return authenticated;
-    });
   }, [pathname]);
 
   // Close mobile sidebar on route change
@@ -129,7 +128,7 @@ export default function RootLayout({ children }) {
           isSidebarCollapsed,
           setIsSidebarCollapsed
         }}>
-          {isAuthenticated ? (
+          {showChrome ? (
             <div className="flex h-screen overflow-hidden">
               {!sideBarHidden && (
                 <Sidebar
