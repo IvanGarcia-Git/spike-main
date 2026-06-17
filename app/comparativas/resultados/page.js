@@ -53,13 +53,7 @@ export default function ComparativasResultadosPage() {
     const filteredTariffs = useMemo(() => {
         if (!formData) return [];
 
-        const { comparisonType, selectedLightTariff, selectedGasTariff, customerType } = formData;
-
-        // Normalizar customerType: "particular" es equivalente a "residencial"
-        const normalizeCustomerType = (type) => {
-            if (type === 'particular') return 'residencial';
-            return type;
-        };
+        const { comparisonType, selectedLightTariff, selectedGasTariff } = formData;
 
         // Normalizar tariffType: "2.0TD" -> "2.0", "3.0TD" -> "3.0", "6.1TD" -> "6.1"
         const normalizeTariffType = (type) => {
@@ -67,22 +61,24 @@ export default function ComparativasResultadosPage() {
             return type.replace('TD', '');
         };
 
-        const normalizedCustomerType = normalizeCustomerType(customerType);
-
+        // El tipo de tarifa ya determina de forma unívoca el segmento de cliente
+        // (2.0/RL.1 -> residencial; 3.0/6.1/RL.2/RL.3 -> empresa, ver lib/company-service.ts).
+        // Filtrar además por customerType excluía las tarifas de empresa (3.0/6.1) cuando la
+        // factura se marcaba como "particular", devolviendo "no hay tarifas" pese a existir.
+        // Por eso filtramos solo por tipo de tarifa.
         if (comparisonType === 'luz') {
             const normalizedLightTariff = normalizeTariffType(selectedLightTariff);
             return allTariffs.filter(
                 (t) =>
                     t.type === 'luz' &&
-                    (t.tariffType === selectedLightTariff || t.tariffType === normalizedLightTariff) &&
-                    (t.customerType === customerType || t.customerType === normalizedCustomerType)
+                    (t.tariffType === selectedLightTariff || t.tariffType === normalizedLightTariff)
             );
         } else {
+            const normalizedGasTariff = normalizeTariffType(selectedGasTariff);
             return allTariffs.filter(
                 (t) =>
                     t.type === 'gas' &&
-                    (t.tariffType === selectedGasTariff) &&
-                    (t.customerType === customerType || t.customerType === normalizedCustomerType)
+                    (t.tariffType === selectedGasTariff || t.tariffType === normalizedGasTariff)
             );
         }
     }, [formData, allTariffs]);
