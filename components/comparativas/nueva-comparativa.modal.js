@@ -58,6 +58,15 @@ const getDefaultFormData = () => ({
   // Paso 3: Datos de gas (si aplica)
   selectedGasTariff: "RL.1",
   consumo: "",
+
+  // Precios unitarios de la tarifa ACTUAL del cliente (la "tarifa antigua").
+  // Se extraen de la factura (OCR) para poder mostrar el desglose de lo que paga hoy
+  // en la previsualización de la comparativa. Vacíos = sin datos de la factura.
+  clientPowerPrices: [], // luz: €/kW y día por periodo de potencia
+  clientEnergyPrices: [], // luz: €/kWh por periodo de energía
+  clientSurplusPrice: "", // luz: €/kWh de excedentes
+  clientFixedPrice: "", // gas: término fijo €/día
+  clientGasEnergyPrice: "", // gas: €/kWh
 });
 
 export default function NuevaComparativaModal({ isOpen, editId, onClose, onCreated }) {
@@ -161,6 +170,15 @@ export default function NuevaComparativaModal({ isOpen, editId, onClose, onCreat
           isSolar: d.solarPanelActive || false,
           selectedGasTariff: gasTariff,
           consumo: d.energia != null ? String(d.energia) : "",
+          clientPowerPrices: Array.isArray(d.clientPowerPrices)
+            ? d.clientPowerPrices.map((p) => (p != null ? String(p) : ""))
+            : [],
+          clientEnergyPrices: Array.isArray(d.clientEnergyPrices)
+            ? d.clientEnergyPrices.map((e) => (e != null ? String(e) : ""))
+            : [],
+          clientSurplusPrice: d.clientSurplusPrice != null ? String(d.clientSurplusPrice) : "",
+          clientFixedPrice: d.clientFixedPrice != null ? String(d.clientFixedPrice) : "",
+          clientGasEnergyPrice: d.clientGasEnergyPrice != null ? String(d.clientGasEnergyPrice) : "",
         });
         setInvoiceAnalyzed(false);
         setExtractedFields([]);
@@ -229,10 +247,25 @@ export default function NuevaComparativaModal({ isOpen, editId, onClose, onCreat
               d.energias[i] != null ? String(d.energias[i]) : ""
             );
           }
+          // Precios unitarios de la tarifa actual (para el desglose de la antigua).
+          if (Array.isArray(d.precioPotencia)) {
+            next.clientPowerPrices = Array(powerCount).fill("").map((_, i) =>
+              d.precioPotencia[i] != null ? String(d.precioPotencia[i]) : ""
+            );
+          }
+          if (Array.isArray(d.precioEnergia)) {
+            next.clientEnergyPrices = Array(energyCount).fill("").map((_, i) =>
+              d.precioEnergia[i] != null ? String(d.precioEnergia[i]) : ""
+            );
+          }
+          if (d.precioExcedentes != null) next.clientSurplusPrice = String(d.precioExcedentes);
         } else if (d.comparisonType === "gas") {
           const validGas = ["RL.1", "RL.2", "RL.3", "RL.4", "RL.5", "RL.6"];
           if (validGas.includes(d.tariffType)) next.selectedGasTariff = d.tariffType;
           if (d.consumo != null) next.consumo = String(d.consumo);
+          // Precios unitarios de la tarifa de gas actual.
+          if (d.precioFijoGas != null) next.clientFixedPrice = String(d.precioFijoGas);
+          if (d.precioEnergiaGas != null) next.clientGasEnergyPrice = String(d.precioEnergiaGas);
         }
         return next;
       });
@@ -285,6 +318,13 @@ export default function NuevaComparativaModal({ isOpen, editId, onClose, onCreat
         currentBillAmount: parseFloat(formData.currentBillAmount) || 0,
         excedentes: parseFloat(formData.excedentes) || 0,
         solarPanelActive: formData.isSolar || false,
+        // Precios unitarios de la tarifa actual (extraídos de la factura) para que la
+        // previsualización pueda mostrar el desglose de la "tarifa antigua".
+        clientPowerPrices: (formData.clientPowerPrices || []).map((p) => parseFloat(p) || 0),
+        clientEnergyPrices: (formData.clientEnergyPrices || []).map((e) => parseFloat(e) || 0),
+        clientSurplusPrice: parseFloat(formData.clientSurplusPrice) || 0,
+        clientFixedPrice: parseFloat(formData.clientFixedPrice) || 0,
+        clientGasEnergyPrice: parseFloat(formData.clientGasEnergyPrice) || 0,
       }));
 
       // Reset form

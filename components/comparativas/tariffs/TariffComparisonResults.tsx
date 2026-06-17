@@ -372,12 +372,16 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
     const handleDownload = (result: TariffComparisonResult, annualSaving: number) => {
       const monthlySaving = annualSaving / 12;
 
+      // Solo enviamos los precios de la tarifa actual si la factura aportó datos reales;
+      // así la previsualización muestra el desglose de la "tarifa antigua" cuando hay datos
+      // extraídos y cae al placeholder cuando no los hay (en vez de pintar ceros).
+      const hasPrices = (arr?: number[]) => Array.isArray(arr) && arr.some((n) => n > 0);
       const clientPrices = {
-        power: formData.clientPowerPrices,
-        energy: formData.clientEnergyPrices,
+        power: hasPrices(formData.clientPowerPrices) ? formData.clientPowerPrices : undefined,
+        energy: hasPrices(formData.clientEnergyPrices) ? formData.clientEnergyPrices : undefined,
         surplus: formData.clientSurplusPrice,
-        fixed: formData.clientFixedPrice,
-        variable: formData.clientGasEnergyPrice,
+        fixed: formData.clientFixedPrice ? formData.clientFixedPrice : undefined,
+        variable: formData.clientGasEnergyPrice ? formData.clientGasEnergyPrice : undefined,
         maintenance: formData.clientMaintenanceCost,
       }
 
