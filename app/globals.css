@@ -37,6 +37,31 @@ body {
   @apply font-display bg-background-light text-slate-700 antialiased;
 }
 
+/* ========================================
+   RESPONSIVE / OVERFLOW SAFETY (global)
+   No ocultamos contenido: media fluida + wrapper de scroll para tablas.
+   El layout raíz (app/layout.js) usa min-w-0 para impedir que un hijo ancho
+   (tablas) empuje la columna principal fuera del viewport.
+   ======================================== */
+
+/* Media nunca debe desbordar su contenedor */
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Wrapper reutilizable para tablas anchas: scroll horizontal contenido,
+   sin romper el layout global. Usar envolviendo la <table>. */
+.table-responsive {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .dark body {
   @apply bg-background-dark text-slate-300;
 }

@@ -142,13 +142,13 @@ export default function RootLayout({ children }) {
                   onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                 />
               )}
-              <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 flex flex-col overflow-hidden min-w-0">
                 <TopBar
                   userGroupId={userGroupId}
                   isManager={isManager}
                   onMenuClick={() => setIsMobileSidebarOpen(true)}
                 />
-                <main className="flex-1 overflow-y-auto contracts-pastel-bg">
+                <main className="flex-1 overflow-auto contracts-pastel-bg min-w-0">
                   {children}
                 </main>
               </div>
