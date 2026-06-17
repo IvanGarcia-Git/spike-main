@@ -336,20 +336,7 @@ export default function TopBar({ userGroupId, isManager, onMenuClick }) {
                       </span>
                     </Link>
                   )}
-                  {(isManager || userGroupId === 1) && (
-                    <Link
-                      href="/estadisticas-leads"
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
-                      onClick={() => setIsAppsOpen(false)}
-                    >
-                      <span className="material-icons-outlined text-primary text-xl">
-                        insights
-                      </span>
-                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Estadísticas Leads
-                      </span>
-                    </Link>
-                  )}
+                  {/* PRES-018 B3 — Estadísticas Leads OCULTA temporalmente (no accesible). */}
                 </div>
               </div>
             )}

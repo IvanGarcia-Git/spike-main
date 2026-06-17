@@ -18,11 +18,15 @@ export async function middleware(req) {
       return NextResponse.redirect(new URL("/contratos", req.url));
     }
 
-    // Reglas de asignación y estadísticas de leads: manager O super-admin
-    // (coincide con el gate del backend).
+    // PRES-018 B3 — Estadísticas de Leads DESHABILITADA temporalmente:
+    // nadie puede entrar (ni por URL directa) hasta nueva orden.
+    if (req.nextUrl.pathname.startsWith("/estadisticas-leads")) {
+      return NextResponse.redirect(new URL("/contratos", req.url));
+    }
+
+    // Reglas de asignación: manager O super-admin (coincide con el gate del backend).
     if (
-      (req.nextUrl.pathname.startsWith("/reglas-asignacion") ||
-        req.nextUrl.pathname.startsWith("/estadisticas-leads")) &&
+      req.nextUrl.pathname.startsWith("/reglas-asignacion") &&
       !payload.isManager &&
       payload.groupId !== 1
     ) {
