@@ -35,6 +35,7 @@ const getInitialRateState = (companyType) => ({
   energySlot5: "",
   energySlot6: "",
   surplusSlot1: "",
+  rlCategory: "RL.1",
   products: "",
   finalPrice: 0,
 });
@@ -217,6 +218,7 @@ export default function NewRateModal({
       if (serviceType === "Luz") {
         nextRate.products = "";
         nextRate.finalPrice = 0;
+        nextRate.rlCategory = "";
         return nextRate;
       }
 
@@ -234,9 +236,12 @@ export default function NewRateModal({
         nextRate.surplusSlot1 = "";
         nextRate.products = "";
         nextRate.finalPrice = 0;
+        nextRate.rlCategory = prev.rlCategory || "RL.1";
         return nextRate;
       }
 
+      // Luz / Telefonía: rlCategory solo aplica a Gas.
+      nextRate.rlCategory = "";
       nextRate.powerSlot1 = "";
       nextRate.powerSlot2 = "";
       nextRate.powerSlot3 = "";
@@ -501,6 +506,29 @@ export default function NewRateModal({
                   <span className="material-icons-outlined text-yellow-500">local_fire_department</span>
                   Configuración de Gas
                 </h4>
+
+                {/* Categoría RL: las comparativas solo enfrentan tarifas de la misma RL */}
+                <div>
+                  <label
+                    htmlFor="rlCategory"
+                    className="block text-sm text-slate-600 dark:text-slate-400 mb-2"
+                  >
+                    Categoría (RL)
+                  </label>
+                  <select
+                    id="rlCategory"
+                    value={newRate.rlCategory || "RL.1"}
+                    onChange={(e) => setNewRate({ ...newRate, rlCategory: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-background-light dark:bg-background-dark text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  >
+                    <option value="RL.1">RL.1</option>
+                    <option value="RL.2">RL.2</option>
+                    <option value="RL.3">RL.3</option>
+                    <option value="RL.4">RL.4</option>
+                    <option value="RL.5">RL.5</option>
+                    <option value="RL.6">RL.6</option>
+                  </select>
+                </div>
 
                 <ModalInput
                   label="Término fijo (€/día)"

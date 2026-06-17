@@ -50,7 +50,7 @@ export interface CompanyLightTariff extends CompanyTariffBase {
 
 export interface CompanyGasTariff extends CompanyTariffBase {
     type: 'gas';
-    tariffType: 'RL.1' | 'RL.2' | 'RL.3';
+    tariffType: 'RL.1' | 'RL.2' | 'RL.3' | 'RL.4' | 'RL.5' | 'RL.6';
     fixedPrice: number; // €/day
     energyPrice: number; // €/kWh
 }

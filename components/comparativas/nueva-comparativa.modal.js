@@ -230,7 +230,7 @@ export default function NuevaComparativaModal({ isOpen, editId, onClose, onCreat
             );
           }
         } else if (d.comparisonType === "gas") {
-          const validGas = ["RL.1", "RL.2", "RL.3"];
+          const validGas = ["RL.1", "RL.2", "RL.3", "RL.4", "RL.5", "RL.6"];
           if (validGas.includes(d.tariffType)) next.selectedGasTariff = d.tariffType;
           if (d.consumo != null) next.consumo = String(d.consumo);
         }
@@ -715,6 +715,9 @@ export default function NuevaComparativaModal({ isOpen, editId, onClose, onCreat
                     <option value="RL.1">RL.1 - Uso doméstico (hasta 5.000 kWh/año)</option>
                     <option value="RL.2">RL.2 - Uso doméstico (5.000-50.000 kWh/año)</option>
                     <option value="RL.3">RL.3 - Uso industrial (50.000-100.000 kWh/año)</option>
+                    <option value="RL.4">RL.4 - Uso industrial (100.000-300.000 kWh/año)</option>
+                    <option value="RL.5">RL.5 - Uso industrial (300.000-1.000.000 kWh/año)</option>
+                    <option value="RL.6">RL.6 - Uso industrial (1.000.000-5.000.000 kWh/año)</option>
                   </select>
                 </div>
 

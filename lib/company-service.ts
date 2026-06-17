@@ -170,7 +170,9 @@ export async function getCompanyTariffs(): Promise<CompanyTariff[]> {
               customerType: 'residencial',
               companyName: company.name,
               tariffName: rate.name || `${company.name} Gas`,
-              tariffType: 'RL.1',
+              // Categoría RL real de la tarifa (fallback RL.1 para tarifas
+              // históricas sin categoría). La comparativa filtra por este valor.
+              tariffType: rate.rlCategory || 'RL.1',
               fixedPrice: fixedPrice,
               energyPrice: energyPrice,
             });
