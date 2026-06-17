@@ -20,6 +20,14 @@ function getIconFromMimeType(mimeType) {
   return "insert_drive_file";
 }
 
+// Resuelve uri relativo (/files/uploads/...) a URL absoluta del backend público
+// para que los archivos compartidos abran sin depender del proxy /files (BACKEND_URL).
+const resolveFileUri = (uri) => {
+  if (!uri || /^https?:\/\//i.test(uri)) return uri;
+  const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+  return `${base}${uri.startsWith("/") ? "" : "/"}${uri}`;
+};
+
 // Transform backend format to frontend format
 const toFrontendFormat = (backendFile) => ({
   id: backendFile.id,
@@ -30,7 +38,7 @@ const toFrontendFormat = (backendFile) => ({
   fecha: backendFile.createdAt ? new Date(backendFile.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
   destacado: false,
   icono: getIconFromMimeType(backendFile.mimetype || backendFile.type),
-  uri: backendFile.uri,
+  uri: resolveFileUri(backendFile.uri),
   compartidoCon: backendFile.sharedWith || [], // Array de usuarios con los que se compartió
 });
 

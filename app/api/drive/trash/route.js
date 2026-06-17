@@ -6,6 +6,14 @@ const generateFallbackData = () => ({
   files: [],
 });
 
+// Resuelve uri relativo (/files/uploads/...) a URL absoluta del backend público
+// para que los archivos de la papelera también abran sin depender del proxy /files (BACKEND_URL).
+const resolveFileUri = (uri) => {
+  if (!uri || /^https?:\/\//i.test(uri)) return uri;
+  const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+  return `${base}${uri.startsWith("/") ? "" : "/"}${uri}`;
+};
+
 // Transform backend format to frontend format for trash files
 const toFrontendFormat = (backendFile) => ({
   id: backendFile.id,
@@ -19,7 +27,7 @@ const toFrontendFormat = (backendFile) => ({
   destacado: backendFile.destacado || false,
   propietario: backendFile.ownerEmail || "Usuario",
   icono: getIconFromMimeType(backendFile.mimetype || backendFile.type),
-  uri: backendFile.uri,
+  uri: resolveFileUri(backendFile.uri),
   mimetype: backendFile.mimetype,
   size: backendFile.size,
 });

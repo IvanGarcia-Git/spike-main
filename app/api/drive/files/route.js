@@ -6,6 +6,19 @@ const generateFallbackData = () => ({
   files: [],
 });
 
+// Resuelve el uri del archivo a una URL absoluta servible desde el navegador.
+// Con S3 desactivado el backend devuelve una ruta relativa (/files/uploads/...),
+// que dependía del proxy /files/:path* (BACKEND_URL) del frontend — frágil y NO
+// definido en .env.production, por lo que en producción los archivos no abrían.
+// La prefijamos con NEXT_PUBLIC_API_URL (backend público que el frontend siempre
+// tiene) para que window.open/<img> lleguen al backend directo (sirve /files/uploads/*
+// con Content-Disposition: inline). Las URLs ya absolutas (S3/https) se dejan igual.
+export const resolveFileUri = (uri) => {
+  if (!uri || /^https?:\/\//i.test(uri)) return uri;
+  const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+  return `${base}${uri.startsWith("/") ? "" : "/"}${uri}`;
+};
+
 // Transform backend format to frontend format
 const toFrontendFormat = (backendFile) => ({
   id: backendFile.id,
@@ -18,7 +31,7 @@ const toFrontendFormat = (backendFile) => ({
   destacado: backendFile.destacado || false,
   propietario: backendFile.ownerEmail || "Usuario",
   icono: getIconFromMimeType(backendFile.mimetype || backendFile.type),
-  uri: backendFile.uri,
+  uri: resolveFileUri(backendFile.uri),
 });
 
 function formatFileSize(bytes) {
