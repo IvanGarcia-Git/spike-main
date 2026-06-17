@@ -137,6 +137,7 @@ export default function Companies() {
           </button>
         </div>
 
+        <div className="table-responsive">
         <table className="w-full text-left">
           <thead className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
             <tr>
@@ -177,6 +178,7 @@ export default function Companies() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Modal para crear nueva compañía */}

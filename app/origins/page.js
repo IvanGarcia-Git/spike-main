@@ -162,6 +162,7 @@ export default function Origins() {
           </div>
         )}
 
+        <div className="table-responsive">
         <table className="w-full text-left">
           <thead className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
             <tr>
@@ -189,6 +190,7 @@ export default function Origins() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

@@ -306,6 +306,7 @@ export default function Canales() {
             </div>
           </div>
         )}
+        <div className="table-responsive">
         <table className="w-full text-left">
           <thead className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
             <tr>
@@ -358,6 +359,7 @@ export default function Canales() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
