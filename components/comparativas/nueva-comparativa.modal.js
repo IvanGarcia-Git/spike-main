@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getCookie } from "cookies-next";
 import BaseModal, { ModalButton } from "../base-modal.component";
-import { extractInvoiceData } from "@/helpers/server-fetch.helper";
+import { extractInvoiceData, getComparativaById } from "@/helpers/server-fetch.helper";
 
 // Periodos de POTENCIA por tarifa: 2.0TD → 2 (P1 punta, P2 valle); 3.0/6.1 → 6.
 const getPowerPeriods = (tariff) => {
@@ -36,7 +36,31 @@ const generateEmptyArray = (count) => Array(count).fill("");
 // Generate period labels based on count
 const getPeriodLabels = (count) => Array.from({ length: count }, (_, i) => `P${i + 1}`);
 
-export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
+// Estado inicial del formulario (reutilizado al abrir/crear y tras enviar).
+const getDefaultFormData = () => ({
+  // Paso 1: Tipo de comparativa
+  comparisonType: "",
+  customerType: "particular",
+
+  // Paso 2: Datos del cliente
+  clientName: "",
+  currentBillAmount: "",
+  numDias: "30",
+  showCurrentBill: true,
+
+  // Paso 3: Datos de luz (si aplica)
+  selectedLightTariff: "2.0TD",
+  potencias: generateEmptyArray(getPowerPeriods("2.0TD")), // 2 para 2.0TD
+  energias: generateEmptyArray(getEnergyPeriods("2.0TD")), // 3 para 2.0TD
+  excedentes: "0",
+  isSolar: false,
+
+  // Paso 3: Datos de gas (si aplica)
+  selectedGasTariff: "RL.1",
+  consumo: "",
+});
+
+export default function NuevaComparativaModal({ isOpen, editId, onClose, onCreated }) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,28 +69,8 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
   const [extractError, setExtractError] = useState("");
   const [extractedFields, setExtractedFields] = useState([]); // campos de baja confianza a revisar
   const [invoiceAnalyzed, setInvoiceAnalyzed] = useState(false); // PRES-018 — la factura ya fue analizada por la IA
-  const [formData, setFormData] = useState({
-    // Paso 1: Tipo de comparativa
-    comparisonType: "",
-    customerType: "particular",
-
-    // Paso 2: Datos del cliente
-    clientName: "",
-    currentBillAmount: "",
-    numDias: "30",
-    showCurrentBill: true,
-
-    // Paso 3: Datos de luz (si aplica)
-    selectedLightTariff: "2.0TD",
-    potencias: generateEmptyArray(getPowerPeriods("2.0TD")), // 2 para 2.0TD
-    energias: generateEmptyArray(getEnergyPeriods("2.0TD")), // 3 para 2.0TD
-    excedentes: "0",
-    isSolar: false,
-
-    // Paso 3: Datos de gas (si aplica)
-    selectedGasTariff: "RL.1",
-    consumo: "",
-  });
+  const [isLoadingEdit, setIsLoadingEdit] = useState(false); // cargando datos de la comparativa a editar
+  const [formData, setFormData] = useState(getDefaultFormData());
 
   const steps = [
     { number: 1, title: "Tipo", description: "Selecciona el tipo de comparativa" },
@@ -93,6 +97,85 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
       }));
     }
   }, [formData.selectedLightTariff]);
+
+  // Al abrir el modal: en modo edición (editId) hace GET de la comparativa y
+  // precarga los primeros pasos del wizard; en modo creación resetea el form.
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Modo creación: parte de un formulario limpio.
+    if (!editId) {
+      setFormData(getDefaultFormData());
+      setCurrentStep(1);
+      setInvoiceAnalyzed(false);
+      setExtractedFields([]);
+      setExtractError("");
+      return;
+    }
+
+    // Modo edición: carga los datos existentes para precargar el wizard.
+    let cancelled = false;
+    const loadForEdit = async () => {
+      setIsLoadingEdit(true);
+      setCurrentStep(1);
+      try {
+        const token = getCookie("factura-token");
+        const response = await getComparativaById(editId, token);
+        if (!response.ok) {
+          console.error("Error loading comparativa for edit:", response.status);
+          return;
+        }
+        const d = await response.json();
+        if (cancelled) return;
+
+        const isGas = d.comparisonType === "gas";
+        const lightTariff = !isGas && d.tariffType ? d.tariffType : "2.0TD";
+        const gasTariff = isGas && d.tariffType ? d.tariffType : "RL.1";
+        const powerCount = getPowerPeriods(lightTariff);
+        const energyCount = getEnergyPeriods(lightTariff);
+
+        setFormData({
+          comparisonType: d.comparisonType || "",
+          customerType: d.customerType || "particular",
+          clientName: d.clientName || "",
+          currentBillAmount:
+            d.currentBillAmount != null
+              ? String(d.currentBillAmount)
+              : d.calculatedOldPrice != null
+              ? String(d.calculatedOldPrice)
+              : "",
+          numDias: d.numDias != null ? String(d.numDias) : "30",
+          showCurrentBill: d.showCurrentBill !== false,
+          selectedLightTariff: lightTariff,
+          potencias: Array(powerCount)
+            .fill("")
+            .map((_, i) =>
+              Array.isArray(d.potencias) && d.potencias[i] != null ? String(d.potencias[i]) : ""
+            ),
+          energias: Array(energyCount)
+            .fill("")
+            .map((_, i) =>
+              Array.isArray(d.energias) && d.energias[i] != null ? String(d.energias[i]) : ""
+            ),
+          excedentes: d.excedentes != null ? String(d.excedentes) : "0",
+          isSolar: d.solarPanelActive || false,
+          selectedGasTariff: gasTariff,
+          consumo: d.energia != null ? String(d.energia) : "",
+        });
+        setInvoiceAnalyzed(false);
+        setExtractedFields([]);
+        setExtractError("");
+      } catch (error) {
+        console.error("Error loading comparativa for edit:", error);
+      } finally {
+        if (!cancelled) setIsLoadingEdit(false);
+      }
+    };
+    loadForEdit();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, editId]);
 
   const handleArrayInputChange = (field, index, value) => {
     setFormData((prev) => {
@@ -185,6 +268,9 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
       // Store comparison data for results page (list of all company prices)
       // The results page will save the comparativa to backend after calculating results
       sessionStorage.setItem("comparisonData", JSON.stringify({
+        // En modo edición arrastra el id para que la página de resultados
+        // actualice (PUT) la comparativa existente en vez de crear un duplicado.
+        ...(editId ? { id: editId } : {}),
         clientName: formData.clientName,
         comparisonType: formData.comparisonType,
         customerType: formData.customerType,
@@ -203,21 +289,7 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
 
       // Reset form
       setCurrentStep(1);
-      setFormData({
-        comparisonType: "",
-        customerType: "particular",
-        clientName: "",
-        currentBillAmount: "",
-        numDias: "30",
-        showCurrentBill: true,
-        selectedLightTariff: "2.0TD",
-        potencias: generateEmptyArray(getPowerPeriods("2.0TD")),
-        energias: generateEmptyArray(getEnergyPeriods("2.0TD")),
-        excedentes: "0",
-        isSolar: false,
-        selectedGasTariff: "RL.1",
-        consumo: "",
-      });
+      setFormData(getDefaultFormData());
       setInvoiceAnalyzed(false);
       setExtractedFields([]);
       setExtractError("");
@@ -266,11 +338,19 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
         {/* Header */}
         <div className="text-center mb-8">
           <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-            Nueva Comparativa
+            {editId ? "Editar Comparativa" : "Nueva Comparativa"}
           </h3>
           <p className="text-slate-600 dark:text-slate-400 mt-2">
-            Completa el formulario para crear tu comparativa
+            {editId
+              ? "Modifica los datos de la comparativa y vuelve a calcular"
+              : "Completa el formulario para crear tu comparativa"}
           </p>
+          {isLoadingEdit && (
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2">
+              <span className="material-icons-outlined animate-spin text-base">sync</span>
+              Cargando datos de la comparativa…
+            </p>
+          )}
         </div>
 
           {/* Timeline */}
@@ -756,7 +836,11 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
             variant="primary"
             icon={currentStep !== steps.length ? "arrow_forward" : undefined}
           >
-            {currentStep === steps.length ? "Comparar" : "Siguiente"}
+            {currentStep === steps.length
+              ? editId
+                ? "Guardar cambios"
+                : "Comparar"
+              : "Siguiente"}
           </ModalButton>
         </div>
       </div>

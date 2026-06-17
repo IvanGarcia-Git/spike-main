@@ -10,7 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Button } from "@/components/ui/button";
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
-import { createComparativa } from '@/helpers/server-fetch.helper';
+import { createComparativa, updateComparativa } from '@/helpers/server-fetch.helper';
 import { useToast } from '@/hooks/use-toast';
 
 interface TariffComparisonResultsProps {
@@ -316,15 +316,21 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
                         }),
                     };
 
-                    const response = await createComparativa(comparativaData, token);
-                    
+                    // En modo edición (formData.id) actualiza la comparativa
+                    // existente (PUT); si no, crea una nueva (POST).
+                    const response = formData.id
+                        ? await updateComparativa(formData.id, comparativaData, token)
+                        : await createComparativa(comparativaData, token);
+
                     if (response && response.ok) {
                         const savedComparativa = await response.json();
                         console.log('Comparativa saved successfully:', savedComparativa);
                         setComparativaSaved(true);
                         toast({
-                            title: "Comparativa guardada",
-                            description: "La comparativa se ha guardado correctamente en tu historial.",
+                            title: formData.id ? "Comparativa actualizada" : "Comparativa guardada",
+                            description: formData.id
+                                ? "Los cambios se han guardado correctamente."
+                                : "La comparativa se ha guardado correctamente en tu historial.",
                         });
                     } else {
                         console.error('Failed to save comparativa');

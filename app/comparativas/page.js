@@ -25,6 +25,8 @@ export default function ComparativasPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedComparativa, setSelectedComparativa] = useState(null);
   const [newName, setNewName] = useState("");
+  // ID de la comparativa que se está editando (null = creación nueva)
+  const [editComparativaId, setEditComparativaId] = useState(null);
 
   // Load comparativas from backend
   useEffect(() => {
@@ -158,37 +160,13 @@ export default function ComparativasPage() {
     }
   };
 
-  const handleEdit = async (comparativa) => {
+  // Editar = abrir el wizard inicial (primeros pasos) precargado con los datos
+  // de la comparativa, no la vista de resultados. El propio wizard hace el GET
+  // a partir del ID y al guardar actualiza (PUT) en lugar de crear un duplicado.
+  const handleEdit = (comparativa) => {
     setOpenDropdownId(null);
-    try {
-      const token = getCookie("factura-token");
-      const response = await getComparativaById(comparativa.id, token);
-      if (response.ok) {
-        const fullData = await response.json();
-        // Store data for recalculation in results page
-        sessionStorage.setItem("comparisonData", JSON.stringify({
-          id: fullData.id,
-          clientName: fullData.clientName,
-          comparisonType: fullData.comparisonType,
-          customerType: fullData.customerType,
-          selectedLightTariff: fullData.tariffType,
-          selectedGasTariff: fullData.tariffType,
-          tariffType: fullData.tariffType,
-          potencias: fullData.potencias || [],
-          energias: fullData.energias || [],
-          energia: fullData.energia || 0,
-          numDias: fullData.numDias || 30,
-          showCurrentBill: fullData.showCurrentBill !== false,
-          currentBillAmount: fullData.calculatedOldPrice || fullData.currentBillAmount || 0,
-          excedentes: fullData.excedentes || 0,
-          solarPanelActive: fullData.solarPanelActive || false,
-        }));
-        // Navigate to results page to allow recalculation
-        router.push("/comparativas/resultados");
-      }
-    } catch (error) {
-      console.error("Error loading comparativa for edit:", error);
-    }
+    setEditComparativaId(comparativa.id);
+    setIsModalOpen(true);
   };
 
   const handleDelete = (comparativa) => {
@@ -247,7 +225,10 @@ export default function ComparativasPage() {
           </p>
         </div>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setEditComparativaId(null);
+            setIsModalOpen(true);
+          }}
           className="neumorphic-button flex items-center justify-center p-4 rounded-lg bg-primary text-white font-semibold hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all"
         >
           <span className="material-icons-outlined mr-2">add</span>
@@ -408,7 +389,11 @@ export default function ComparativasPage() {
       {/* Modal Nueva Comparativa */}
       <NuevaComparativaModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        editId={editComparativaId}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditComparativaId(null);
+        }}
         onCreated={handleNuevaComparativaCreated}
       />
 
