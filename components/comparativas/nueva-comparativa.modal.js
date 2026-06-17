@@ -44,6 +44,7 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState("");
   const [extractedFields, setExtractedFields] = useState([]); // campos de baja confianza a revisar
+  const [invoiceAnalyzed, setInvoiceAnalyzed] = useState(false); // PRES-018 — la factura ya fue analizada por la IA
   const [formData, setFormData] = useState({
     // Paso 1: Tipo de comparativa
     comparisonType: "",
@@ -109,6 +110,7 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
 
     setExtractError("");
     setExtractedFields([]);
+    setInvoiceAnalyzed(false);
     setIsExtracting(true);
     try {
       const token = getCookie("factura-token");
@@ -153,6 +155,7 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
       });
 
       setExtractedFields(Array.isArray(d.lowConfidenceFields) ? d.lowConfidenceFields : []);
+      setInvoiceAnalyzed(true);
       // Avanza al paso de datos del cliente para que el usuario revise lo extraído.
       setCurrentStep(2);
     } catch (err) {
@@ -215,6 +218,9 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
         selectedGasTariff: "RL.1",
         consumo: "",
       });
+      setInvoiceAnalyzed(false);
+      setExtractedFields([]);
+      setExtractError("");
 
       // Call onCreated callback to refresh the list
       if (onCreated) {
@@ -311,29 +317,45 @@ export default function NuevaComparativaModal({ isOpen, onClose, onCreated }) {
             </div>
           </div>
 
-          {/* PRES-018 B1 — Autorrelleno desde factura con IA */}
-          <div className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-4">
+          {/* PRES-018 B1 — Autorrelleno desde factura con IA.
+              Esta caja se renderiza por encima de todos los pasos, por lo que el icono de
+              "factura analizada" persiste visible en los demás pasos del stepper (PRES-018). */}
+          <div className={`mb-6 rounded-xl border p-4 transition-colors ${
+            invoiceAnalyzed
+              ? "border-green-500/40 bg-green-500/5"
+              : "border-primary/30 bg-primary/5"
+          }`}>
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <div className="flex items-start gap-2">
-                <span className="material-icons-outlined text-primary">auto_awesome</span>
+                <span className={`material-icons-outlined ${
+                  invoiceAnalyzed ? "text-green-600 dark:text-green-400" : "text-primary"
+                }`}>
+                  {invoiceAnalyzed ? "fact_check" : "auto_awesome"}
+                </span>
                 <div>
                   <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                    Rellenar automáticamente desde una factura
+                    {invoiceAnalyzed
+                      ? "Factura analizada"
+                      : "Rellenar automáticamente desde una factura"}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Sube la factura (PNG, JPG o PDF) y la IA extraerá los datos. Revísalos antes de continuar.
+                    {invoiceAnalyzed
+                      ? "Los datos se han rellenado automáticamente. Revísalos en cada paso antes de continuar."
+                      : "Sube la factura (PNG, JPG o PDF) y la IA extraerá los datos. Revísalos antes de continuar."}
                   </p>
                 </div>
               </div>
               <label className={`shrink-0 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold cursor-pointer transition-all ${
                 isExtracting
                   ? "bg-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-700"
+                  : invoiceAnalyzed
+                  ? "bg-green-600 text-white hover:opacity-90"
                   : "bg-primary text-white hover:opacity-90"
               }`}>
                 <span className="material-icons-outlined text-lg">
-                  {isExtracting ? "hourglass_top" : "upload_file"}
+                  {isExtracting ? "hourglass_top" : invoiceAnalyzed ? "fact_check" : "upload_file"}
                 </span>
-                {isExtracting ? "Procesando…" : "Subir factura"}
+                {isExtracting ? "Procesando…" : invoiceAnalyzed ? "Cambiar factura" : "Subir factura"}
                 <input
                   type="file"
                   accept="image/png,image/jpeg,application/pdf"
