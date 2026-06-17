@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import * as jose from "jose";
 
 export async function POST(req) {
   try {
@@ -23,6 +24,27 @@ export async function POST(req) {
       );
     }
 
+    // El backend exige `userId` además de type/startDate/endDate. El frontend no
+    // dispone del id del usuario (el perfil mapeado no lo expone), así que lo
+    // derivamos del JWT del usuario autenticado. Además de arreglar el error
+    // "userId, startDate, endDate, and type are required", es más seguro: nadie
+    // puede solicitar una ausencia en nombre de otro usuario.
+    let userId;
+    try {
+      userId = jose.decodeJwt(token.value)?.userId;
+    } catch {
+      userId = undefined;
+    }
+
+    if (userId == null) {
+      return NextResponse.json(
+        { error: "No se pudo identificar al usuario" },
+        { status: 400 }
+      );
+    }
+
+    const backendBody = { ...body, userId: Number(userId) };
+
     try {
       const apiResponse = await fetch(
         `${process.env.BACKEND_URL}/absences`,
@@ -32,7 +54,7 @@ export async function POST(req) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token.value}`,
           },
-          body: JSON.stringify(body),
+          body: JSON.stringify(backendBody),
           signal: AbortSignal.timeout(10000),
         }
       );
