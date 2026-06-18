@@ -2,9 +2,14 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import * as jose from "jose";
 
-// URL del backend Express. Se aceptan varias env vars por compatibilidad.
+// URL del backend Express para fetches server-to-server (este route handler → backend).
+// IMPORTANTE: hay que usar la URL ABSOLUTA interna `BACKEND_URL` (p.ej. http://spike-server:3000).
+// En producción `API_URL`/`NEXT_PUBLIC_API_URL` valen `/api` (path relativo del proxy del navegador),
+// que en un fetch del servidor lanza "Failed to parse URL" → la carga de ausencias/nóminas caía al
+// catch best-effort y devolvía lista vacía (la ausencia "desaparecía" al recargar). Se prioriza
+// `BACKEND_URL` igual que hace la route POST de ausencias (que sí funcionaba).
 const getApiUrl = () =>
-  process.env.API_URL || process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+  process.env.BACKEND_URL || process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 const MESES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -120,6 +125,10 @@ function mapPayrolls(payrolls) {
 async function authedJson(url, token, init = {}) {
   const res = await fetch(url, {
     ...init,
+    // Sin caché de datos: el perfil (incl. ausencias y nóminas) debe reflejar SIEMPRE el estado
+    // real del backend. Por defecto Next.js puede cachear el fetch y servir una respuesta antigua
+    // tras crear una ausencia, haciendo que "desaparezca" al recargar.
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
