@@ -259,6 +259,11 @@ export default function NuevaComparativaModal({ isOpen, editId, onClose, onCreat
             );
           }
           if (d.precioExcedentes != null) next.clientSurplusPrice = String(d.precioExcedentes);
+          // Autoconsumo / placas solares (Comparativas 6): marca el checkbox "Tiene placas"
+          // y rellena los excedentes (kWh) detectados por el OCR. El usuario puede corregirlo
+          // manualmente antes de guardar.
+          if (typeof d.hasSolarPanels === "boolean") next.isSolar = d.hasSolarPanels;
+          if (d.surplusCount != null) next.excedentes = String(d.surplusCount);
         } else if (d.comparisonType === "gas") {
           const validGas = ["RL.1", "RL.2", "RL.3", "RL.4", "RL.5", "RL.6"];
           if (validGas.includes(d.tariffType)) next.selectedGasTariff = d.tariffType;
