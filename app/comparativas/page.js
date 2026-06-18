@@ -6,17 +6,22 @@ import { getCookie } from "cookies-next";
 import NuevaComparativaModal from "@/components/comparativas/nueva-comparativa.modal";
 import BaseModal, { ModalButton, ModalInput, ModalActions } from "@/components/base-modal.component";
 import {
-  getRecentComparativas,
+  getComparativasPaginated,
   deleteComparativa,
   updateComparativa,
   getComparativaById,
 } from "@/helpers/server-fetch.helper";
+
+const PAGE_SIZE = 5;
 
 export default function ComparativasPage() {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [comparativas, setComparativas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  // Paginación (Comparativas 5): página actual y total de elementos para calcular páginas.
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const dropdownRef = useRef(null);
 
@@ -28,10 +33,13 @@ export default function ComparativasPage() {
   // ID de la comparativa que se está editando (null = creación nueva)
   const [editComparativaId, setEditComparativaId] = useState(null);
 
-  // Load comparativas from backend
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  // Load comparativas from backend (recarga al cambiar de página)
   useEffect(() => {
     loadComparativas();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -57,10 +65,11 @@ export default function ComparativasPage() {
         return;
       }
 
-      const response = await getRecentComparativas(20, token);
+      const response = await getComparativasPaginated(page, PAGE_SIZE, token);
       if (response.ok) {
-        const data = await response.json();
-        setComparativas(data);
+        const result = await response.json();
+        setComparativas(Array.isArray(result.data) ? result.data : []);
+        setTotal(typeof result.total === "number" ? result.total : 0);
       } else {
         console.error("Error loading comparativas:", response.status);
       }
@@ -183,12 +192,15 @@ export default function ComparativasPage() {
       const response = await deleteComparativa(selectedComparativa.id, token);
 
       if (response.ok) {
-        // Remove from local state
-        setComparativas((prev) =>
-          prev.filter((c) => c.id !== selectedComparativa.id)
-        );
         setIsDeleteModalOpen(false);
         setSelectedComparativa(null);
+        // Si era el último elemento de una página > 1, retrocede una página
+        // (cambiar `page` dispara la recarga); si no, recarga la página actual.
+        if (comparativas.length === 1 && page > 1) {
+          setPage(page - 1);
+        } else {
+          loadComparativas();
+        }
       } else {
         console.error("Error deleting comparativa:", response.status);
       }
@@ -197,9 +209,9 @@ export default function ComparativasPage() {
     }
   };
 
-  const handleVerMas = () => {
-    // Load more comparativas
-    console.log("Ver más comparativas");
+  const goToPage = (p) => {
+    if (p < 1 || p > totalPages || p === page) return;
+    setPage(p);
   };
 
   const handleComparativaClick = async (comparativa) => {
@@ -208,8 +220,13 @@ export default function ComparativasPage() {
   };
 
   const handleNuevaComparativaCreated = () => {
-    // Reload comparativas after creating a new one
-    loadComparativas();
+    // Tras crear, vuelve a la primera página (las más recientes). Si ya está en la 1,
+    // recarga directamente (cambiar a la misma página no dispara el efecto).
+    if (page === 1) {
+      loadComparativas();
+    } else {
+      setPage(1);
+    }
   };
 
   return (
@@ -374,14 +391,38 @@ export default function ComparativasPage() {
         </div>
       )}
 
-      {/* Ver más */}
-      {!isLoading && comparativas.length > 0 && (
-        <div className="mt-4 text-center">
+      {/* Paginación */}
+      {!isLoading && total > 0 && totalPages > 1 && (
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
           <button
-            onClick={handleVerMas}
-            className="text-sm font-semibold text-primary hover:underline"
+            onClick={() => goToPage(page - 1)}
+            disabled={page === 1}
+            aria-label="Página anterior"
+            className="neumorphic-button flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Ver más
+            <span className="material-icons-outlined text-lg">chevron_left</span>
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              onClick={() => goToPage(p)}
+              aria-current={p === page ? "page" : undefined}
+              className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
+                p === page
+                  ? "bg-primary text-white"
+                  : "neumorphic-button text-slate-700 dark:text-slate-300"
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+          <button
+            onClick={() => goToPage(page + 1)}
+            disabled={page === totalPages}
+            aria-label="Página siguiente"
+            className="neumorphic-button flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <span className="material-icons-outlined text-lg">chevron_right</span>
           </button>
         </div>
       )}

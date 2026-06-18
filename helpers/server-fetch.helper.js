@@ -67,6 +67,11 @@ export const getComparativas = async (jwtToken) => {
   return await authGetFetch("comparativas", jwtToken);
 };
 
+// Listado paginado de comparativas (Comparativas 5). Devuelve { data, total, page, limit }.
+export const getComparativasPaginated = async (page = 1, limit = 5, jwtToken) => {
+  return await authGetFetch(`comparativas?page=${page}&limit=${limit}`, jwtToken);
+};
+
 export const getRecentComparativas = async (limit, jwtToken) => {
   return await authGetFetch(`comparativas/recent?limit=${limit}`, jwtToken);
 };
