@@ -6,18 +6,22 @@ import {
   NeumorphicCard,
   StatsCard,
 } from "@/components/neumorphic";
+import { getCookie } from "cookies-next";
+import { getLeadStats } from "@/helpers/server-fetch.helper";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
   Filler
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
 
 // Register ChartJS components
 ChartJS.register(
@@ -25,11 +29,19 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
   Filler
 );
+
+// PRES-018 B3 — paleta para el doughnut de estados de leads
+const LEAD_DONUT_COLORS = [
+  "#14b8a6", "#0ea5e9", "#f59e0b", "#ef4444", "#8b5cf6",
+  "#22c55e", "#ec4899", "#64748b", "#eab308", "#06b6d4", "#f97316",
+];
 
 // Ventas por Mes Chart Component
 function VentasPorMesChart({ data }) {
@@ -127,9 +139,38 @@ export default function Dashboard() {
     weeklyActivity: [],
   });
 
+  // PRES-018 B3 — Estadísticas de leads (pestaña del dashboard)
+  const [leadStats, setLeadStats] = useState(null);
+  const [leadLoading, setLeadLoading] = useState(false);
+  const [leadStart, setLeadStart] = useState(
+    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  );
+  const [leadEnd, setLeadEnd] = useState(new Date().toISOString().slice(0, 10));
+
+  const fetchLeadStats = async () => {
+    setLeadLoading(true);
+    try {
+      const res = await getLeadStats(
+        `${leadStart}T00:00:00.000Z`,
+        `${leadEnd}T23:59:59.999Z`,
+        getCookie("factura-token")
+      );
+      setLeadStats(res.ok ? await res.json() : null);
+    } catch {
+      setLeadStats(null);
+    } finally {
+      setLeadLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "leads" && !leadStats) fetchLeadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   const fetchDashboardData = async () => {
     try {
@@ -175,6 +216,7 @@ export default function Dashboard() {
     { id: "colaboradores", label: "Colaboradores" },
     { id: "agentes", label: "Agentes" },
     { id: "pizarra", label: "Pizarra Semanal" },
+    { id: "leads", label: "Estadísticas Leads" },
   ];
 
   const getColorClasses = (color) => {
@@ -267,7 +309,8 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Top 3 Cards - Muestra Agentes o Colaboradores según el tab activo */}
+      {/* Top 3 Cards - Muestra Agentes o Colaboradores (oculto en la pestaña de leads) */}
+      {activeTab !== "leads" && (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {topCardsData.map((agente, idx) => (
           <div
@@ -331,6 +374,7 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+      )}
 
       {/* Contenido según el tab activo */}
       {activeTab === "general" && (
@@ -1030,6 +1074,152 @@ export default function Dashboard() {
               Actualizar datos
             </button>
           </div>
+        </div>
+      )}
+
+      {/* PRES-018 B3 — Estadísticas de Leads */}
+      {activeTab === "leads" && (
+        <div>
+          {/* Filtro de fechas */}
+          <div className="neumorphic-card p-5 mb-8 flex flex-wrap items-end gap-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Desde</label>
+              <input
+                type="date"
+                value={leadStart}
+                onChange={(e) => setLeadStart(e.target.value)}
+                className="neumorphic-card-inset px-3 py-2 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm bg-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Hasta</label>
+              <input
+                type="date"
+                value={leadEnd}
+                onChange={(e) => setLeadEnd(e.target.value)}
+                className="neumorphic-card-inset px-3 py-2 rounded-lg border-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-sm bg-transparent"
+              />
+            </div>
+            <button
+              onClick={fetchLeadStats}
+              disabled={leadLoading}
+              className="px-6 py-2 rounded-lg neumorphic-button font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors disabled:opacity-50"
+            >
+              <span className="material-icons-outlined align-middle mr-2">filter_alt</span>
+              {leadLoading ? "Cargando…" : "Aplicar"}
+            </button>
+          </div>
+
+          {leadLoading && !leadStats && (
+            <div className="neumorphic-card p-10 text-center text-slate-500 dark:text-slate-400">
+              <span className="material-icons-outlined text-4xl text-primary animate-spin">refresh</span>
+              <p className="mt-2">Cargando estadísticas…</p>
+            </div>
+          )}
+
+          {leadStats && (
+            <>
+              {/* Tarjetas de resumen */}
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+                <StatsCard icon="groups" value={leadStats.resumen.leadsGestionados} label="Leads gestionados" iconColor="primary" />
+                <StatsCard icon="call" value={`${leadStats.resumen.pctContacto}%`} label="% Contacto" sublabel={`${leadStats.resumen.contactados} contactados`} iconColor="info" />
+                <StatsCard icon="handshake" value={`${leadStats.resumen.pctContratacion}%`} label="% Contratación" sublabel="sobre contactados" iconColor="success" />
+                <StatsCard icon="check_circle" value={leadStats.resumen.ventas} label="Ventas" iconColor="success" />
+                <StatsCard icon="repeat" value={leadStats.resumen.mediaIntentosHastaContacto} label="Intentos medios" sublabel="hasta contactar" iconColor="warning" />
+                <StatsCard icon="schedule" value={`${leadStats.resumen.tiempoMedioRespuestaDias} días`} label="Resp. media" iconColor="primary" />
+              </div>
+
+              {/* Gráficos */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div className="neumorphic-card p-6">
+                  <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6">Conversión por origen</h3>
+                  <div className="h-72">
+                    {leadStats.porOrigen.length ? (
+                      <Bar
+                        data={{
+                          labels: leadStats.porOrigen.map((o) => o.origen),
+                          datasets: [
+                            { label: "Leads", data: leadStats.porOrigen.map((o) => o.leads), backgroundColor: "rgba(100,116,139,0.45)", borderRadius: 6 },
+                            { label: "Ventas", data: leadStats.porOrigen.map((o) => o.ventas), backgroundColor: "#14b8a6", borderRadius: 6 },
+                          ],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: { legend: { position: "bottom", labels: { color: "#64748b" } } },
+                          scales: {
+                            y: { beginAtZero: true, grid: { color: "rgba(0,0,0,0.05)" }, ticks: { color: "#64748b" } },
+                            x: { grid: { display: false }, ticks: { color: "#64748b" } },
+                          },
+                        }}
+                      />
+                    ) : (
+                      <p className="text-sm text-slate-400 flex items-center justify-center h-full">Sin datos en el rango.</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="neumorphic-card p-6">
+                  <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6">Distribución por estado</h3>
+                  <div className="h-72">
+                    {leadStats.porEstado.length ? (
+                      <Doughnut
+                        data={{
+                          labels: leadStats.porEstado.map((e) => e.estado),
+                          datasets: [{
+                            data: leadStats.porEstado.map((e) => e.count),
+                            backgroundColor: leadStats.porEstado.map((_, i) => LEAD_DONUT_COLORS[i % LEAD_DONUT_COLORS.length]),
+                            borderWidth: 0,
+                          }],
+                        }}
+                        options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "right", labels: { color: "#64748b" } } } }}
+                      />
+                    ) : (
+                      <p className="text-sm text-slate-400 flex items-center justify-center h-full">Sin datos en el rango.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Ranking de agentes */}
+              <div className="neumorphic-card p-6 mb-8">
+                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6">Ranking de agentes</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="text-xs uppercase text-slate-500 dark:text-slate-400 border-b border-slate-200/60 dark:border-slate-700/60">
+                        <th className="py-3 pr-4">#</th>
+                        <th className="py-3 pr-4">Agente</th>
+                        <th className="py-3 pr-4 text-right">Interacciones</th>
+                        <th className="py-3 pr-4 text-right">Contactos</th>
+                        <th className="py-3 pr-4 text-right">Ventas</th>
+                        <th className="py-3 pr-4 text-right">% Conversión</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {leadStats.ranking.length === 0 && (
+                        <tr><td colSpan={6} className="py-6 text-center text-slate-400">Sin actividad en el rango.</td></tr>
+                      )}
+                      {leadStats.ranking.map((a, i) => (
+                        <tr key={a.userId} className="border-b border-slate-100/60 dark:border-slate-800/60">
+                          <td className="py-3 pr-4 text-slate-400">{i + 1}</td>
+                          <td className="py-3 pr-4 font-medium text-slate-800 dark:text-slate-200">{a.name}</td>
+                          <td className="py-3 pr-4 text-right text-slate-600 dark:text-slate-300">{a.interacciones}</td>
+                          <td className="py-3 pr-4 text-right text-slate-600 dark:text-slate-300">{a.contactos}</td>
+                          <td className="py-3 pr-4 text-right font-bold text-green-500">{a.ventas}</td>
+                          <td className="py-3 pr-4 text-right text-slate-600 dark:text-slate-300">{a.pctConversion}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-xs text-slate-400 mt-4">
+                  Métricas aproximadas a partir del histórico de estados de leads (sin telefonía / sin duración de llamada).
+                  "Intentos" = registros "No contesta"/"Ilocalizable" antes del contacto.
+                </p>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
