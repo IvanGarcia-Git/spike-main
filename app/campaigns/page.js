@@ -49,7 +49,11 @@ export default function CampaignsPage() {
     const jwtToken = getCookie("factura-token");
 
     try {
-      const response = await authGetFetch("campaigns/basic", jwtToken);
+      // Usamos campaigns/all (no campaigns/basic): devuelve cada campaña con su
+      // primera página de leads (10 más recientes, orden createdAt DESC) + paginación.
+      // basic NO incluía leads, por lo que al recargar la tarjeta arrancaba vacía y
+      // un lead recién creado "desaparecía" (el botón "Ver más" carga el resto).
+      const response = await authGetFetch("campaigns/all", jwtToken);
       if (response.ok) {
         const campaignsData = await response.json();
         setCampaigns(campaignsData);
