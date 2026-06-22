@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ChangeEvent, useEffect, useRef } from 'react';
+import { useState, type ChangeEvent, useEffect } from 'react';
 import Image from 'next/image';
 import { Phone, Mail, Globe, Check } from 'lucide-react';
 import type { PdfData, CompanyLightTariff, CompanyGasTariff } from '@/lib/types';
@@ -23,89 +23,6 @@ const getContrastColor = (hexcolor: string): 'black' | 'white' => {
   const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
   return (yiq >= 128) ? 'black' : 'white';
 };
-
-const EditableCostDetail = ({ label, value, onLabelChange, onValueChange, className = '', textColor }: { label: string; value: string; onLabelChange: (e: ChangeEvent<HTMLTextAreaElement>) => void; onValueChange: (e: ChangeEvent<HTMLInputElement>) => void; className?: string; textColor?: string }) => {
-    const textAreaRef = useRef<HTMLTextAreaElement>(null);
-
-    useEffect(() => {
-        if (textAreaRef.current) {
-            textAreaRef.current.style.height = 'auto';
-            textAreaRef.current.style.height = `${textAreaRef.current.scrollHeight}px`;
-        }
-    }, [label]);
-
-    const effectiveColor = textColor || 'inherit';
-
-    return (
-        <div className={`flex justify-between items-start text-xs ${className} min-h-[20px]`} style={{ color: effectiveColor }}>
-            <textarea
-                ref={textAreaRef}
-                value={label}
-                onChange={onLabelChange}
-                className="flex-1 bg-transparent border-none p-0 m-0 pr-2 focus:ring-1 focus:ring-primary focus:bg-white/50 rounded-sm resize-none text-xs overflow-hidden"
-                style={{ lineHeight: '1.4', minHeight: '20px', color: effectiveColor }}
-                rows={1}
-            />
-            <input
-                type="text"
-                value={value}
-                onChange={onValueChange}
-                className="font-medium bg-transparent border-none p-0 m-0 w-24 text-right focus:ring-1 focus:ring-primary focus:bg-white/50 rounded-sm text-xs flex-shrink-0"
-                style={{ lineHeight: '1.4', color: effectiveColor }}
-            />
-        </div>
-    );
-};
-
-const Section = ({ title, color, children, textColor }: { title: string; color: string; children: React.ReactNode; textColor?: string }) => (
-    <div className="mb-6">
-        <h4 className="text-xl font-bold" style={{ color: textColor || '#000000' }}>{title}</h4>
-        <div className="border-t-2 border-gray-400 w-24 my-2"></div>
-        <div className="space-y-2" style={{ color: textColor || 'inherit' }}>{children}</div>
-    </div>
-);
-
-const EditableTotalSection = ({ color, total, onTotalChange, textColor }: { color: string; total: string; onTotalChange: (e: ChangeEvent<HTMLInputElement>) => void; textColor?: string }) => (
-    <div>
-        <div className="border-t-2 border-gray-400 w-full my-3"></div>
-        <div className="flex justify-between items-baseline">
-            <span className="text-3xl font-extrabold" style={{ color: textColor || '#000000' }}>Total</span>
-             <input
-                type="text"
-                value={total}
-                onChange={onTotalChange}
-                className="text-4xl font-extrabold bg-transparent border-none p-0 m-0 w-32 text-right focus:ring-1 focus:ring-primary focus:bg-white/50 rounded-sm"
-                style={{ color: textColor || '#000000', WebkitTextFillColor: textColor || '#000000' }}
-            />
-        </div>
-    </div>
-);
-
-const CompanyCard = ({
-    title,
-    subtitle,
-    subtitleColor,
-    borderColor,
-    children,
-    textColor
-}: {
-    title: string;
-    subtitle: string;
-    subtitleColor: string;
-    borderColor: string;
-    children: React.ReactNode;
-    textColor?: string;
-}) => (
-    <div className={`bg-white shadow-lg rounded-md overflow-visible ${borderColor}`}>
-        <div className="bg-black p-4 text-center">
-            <h2 className="text-lg font-semibold tracking-widest text-white">{title}</h2>
-            <h3 className={`text-4xl font-bold tracking-wider ${subtitleColor}`}>{subtitle}</h3>
-        </div>
-        <div className="p-8" style={{ color: textColor || '#000000' }}>
-            {children}
-        </div>
-    </div>
-);
 
 interface ComparisonPdfPreviewProps {
   pdfData: PdfData | null;
@@ -200,6 +117,30 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
     const [bestTariffDetails, setBestTariffDetails] = useState<EditableCardData>(initialBestTariffDetails);
     const [totalCurrent, setTotalCurrent] = useState('84,64€');
     const [totalBest, setTotalBest] = useState('84,64€');
+
+    // --- Página 2 (rediseño "Luzia"): datos del suministro editables (no vienen en pdfData) ---
+    const [supplyData, setSupplyData] = useState({ cups: '', comercializadora: '', tarifa: '', periodo: '' });
+    const [contactPhone, setContactPhone] = useState('');
+
+    // El teléfono de contacto es de la agencia → se recuerda entre comparativas.
+    useEffect(() => {
+        const savedPhone = localStorage.getItem('comparativaPhone');
+        if (savedPhone) setContactPhone(savedPhone);
+    }, []);
+
+    // Tarifa por defecto = tipo de la tarifa recomendada (la comparativa se hace dentro de la misma tarifa).
+    // No se sobrescribe si el asesor ya escribió un valor.
+    useEffect(() => {
+        const t = pdfData?.bestTariff?.tariff?.tariffType;
+        if (t) setSupplyData(prev => (prev.tarifa ? prev : { ...prev, tarifa: t }));
+    }, [pdfData]);
+
+    const handleSupplyChange = (field: 'cups' | 'comercializadora' | 'tarifa' | 'periodo', value: string) =>
+        setSupplyData(prev => ({ ...prev, [field]: value }));
+    const handlePhoneChange = (value: string) => {
+        setContactPhone(value);
+        localStorage.setItem('comparativaPhone', value);
+    };
 
 
     useEffect(() => {
@@ -384,24 +325,6 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
     }, [pdfData]);
 
 
-    const handleDetailChange = (
-        setter: React.Dispatch<React.SetStateAction<EditableCardData>>,
-        section: 'potencia' | 'energia' | 'impuestos',
-        index: number,
-        field: 'label' | 'value',
-        text: string
-    ) => {
-        setter(prevDetails => {
-            const newSectionDetails = [...prevDetails[section]];
-            newSectionDetails[index] = { ...newSectionDetails[index], [field]: text };
-            return {
-                ...prevDetails,
-                [section]: newSectionDetails
-            };
-        });
-    };
-
-
     const handleLogoChange = (e: ChangeEvent<HTMLInputElement>, index: number) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -450,6 +373,51 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
     const monthlySaving = pdfData?.monthlySaving || 0;
     const bestCompanyName = pdfData?.bestTariff?.tariff?.companyName?.toUpperCase() ?? "MEJOR";
     const sectionTitlePotencia = pdfData?.comparisonType === 'gas' ? 'Término Fijo' : 'Potencia';
+
+    // ---------------------------------------------------------------------------
+    // Página 2 — diseño "Luzia": agregados derivados del desglose ya calculado
+    // (reutiliza currentBillDetails / bestTariffDetails para no duplicar la lógica
+    //  de cálculo de luz/gas, excedentes, costes regulados y precios del cliente).
+    // ---------------------------------------------------------------------------
+    const isGas = pdfData?.comparisonType === 'gas';
+    const potenciasArr = pdfData?.potencias || [];
+    const consumoTotal = isGas ? (pdfData?.energia || 0) : (pdfData?.energias || []).reduce((a, b) => a + (b || 0), 0);
+    const importeFactura = pdfData?.currentBillAmount || 0;
+
+    const sumDetails = (arr: EditableDetail[] = []) => arr.reduce((a, d) => a + parseCurrency(d.value), 0);
+    const pickDetail = (arr: EditableDetail[] = [], frag: string) => {
+        const d = arr.find(x => x.id.includes(frag));
+        return d ? parseCurrency(d.value) : 0;
+    };
+    const taxLabel = isGas ? 'Imp. Hidrocarburos' : 'Impuesto eléctrico';
+    const potLabel = isGas ? 'Término fijo' : 'Coste potencia';
+
+    const buildRows = (details: EditableCardData, includeBono: boolean) => {
+        const alquiler = pickDetail(details.impuestos, 'rental');
+        const bono = pickDetail(details.impuestos, 'bonus');
+        const mant = pickDetail(details.impuestos, 'maintenance');
+        const tax = pickDetail(details.impuestos, 'tax');
+        const iva = pickDetail(details.impuestos, 'vat');
+        return [
+            { label: 'Coste energía', value: sumDetails(details.energia) },
+            { label: potLabel, value: sumDetails(details.potencia) },
+            ...(alquiler ? [{ label: 'Alquiler equipos', value: alquiler }] : []),
+            ...(includeBono && bono ? [{ label: 'Bono social', value: bono }] : []),
+            ...(mant ? [{ label: 'Mantenimiento', value: mant }] : []),
+            { label: taxLabel, value: tax },
+            { label: 'IVA', value: iva },
+        ];
+    };
+    const currentRows = buildRows(currentBillDetails, !isGas);
+    const bestRows = buildRows(bestTariffDetails, !isGas);
+
+    const bestTariffObj = pdfData?.bestTariff?.tariff;
+    const newPowerPrices: number[] = !isGas ? (((bestTariffObj as CompanyLightTariff)?.powerPrices) || []) : [];
+    const newEnergyPrices: number[] = !isGas ? (((bestTariffObj as CompanyLightTariff)?.energyPrices) || []) : [];
+    const newGasFixed = isGas ? ((bestTariffObj as CompanyGasTariff)?.fixedPrice ?? null) : null;
+    const newGasEnergy = isGas ? ((bestTariffObj as CompanyGasTariff)?.energyPrice ?? null) : null;
+    const bestTariffName = bestTariffObj?.tariffName || '';
+    const bestCompanyDisplay = bestTariffObj?.companyName || bestCompanyName;
 
 
     return (
@@ -559,129 +527,199 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                 </footer>
             </div>
 
-            {/* Page 2: Content */}
-            <div 
-                className="pdf-page aspect-[210/297] p-8 font-sans rounded-lg flex flex-col justify-center pdf-content-page"
-                style={{ backgroundColor: colors.background, color: colors.primaryText }}
+            {/* Page 2: Content — diseño "Luzia" (reciclado del chatbot Luzia) */}
+            <div
+                className="pdf-page aspect-[210/297] p-6 font-sans rounded-lg flex flex-col gap-3 pdf-content-page"
+                style={{ backgroundColor: '#ffffff' }}
             >
-                <div className="w-full">
-                    <h1 
-                        className="text-center text-4xl lg:text-6xl font-extrabold mb-4 lg:mb-8 tracking-tighter"
-                        style={{ color: colors.primaryText }}
-                    >
-                        Comparativa
-                    </h1>
-                    <div className={`max-w-5xl mx-auto ${showCurrentBill ? 'grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8' : 'flex justify-center'}`}>
-                        {/* Current Company Card */}
-                        {showCurrentBill && (
-                            <CompanyCard
-                                title="COMPAÑÍA"
-                                subtitle="ACTUAL"
-                                subtitleColor="text-white"
-                                borderColor="border-8 border-white ring-4 ring-black"
-                                textColor={colors.primaryText}
-                            >
-                                <Section title={sectionTitlePotencia} color="text-rose-500" textColor={colors.primaryText}>
-                                    {currentBillDetails.potencia.map((detail, index) => (
-                                        <EditableCostDetail
-                                            key={detail.id}
-                                            label={detail.label}
-                                            value={detail.value}
-                                            onLabelChange={(e) => handleDetailChange(setCurrentBillDetails, 'potencia', index, 'label', e.target.value)}
-                                            onValueChange={(e) => handleDetailChange(setCurrentBillDetails, 'potencia', index, 'value', e.target.value)}
-                                            className={index > 0 ? 'mt-1' : ''}
-                                            textColor={colors.primaryText}
-                                        />
-                                    ))}
-                                </Section>
-                                <Section title="Energía" color="text-rose-500" textColor={colors.primaryText}>
-                                     {currentBillDetails.energia.map((detail, index) => (
-                                        <EditableCostDetail
-                                            key={detail.id}
-                                            label={detail.label}
-                                            value={detail.value}
-                                            onLabelChange={(e) => handleDetailChange(setCurrentBillDetails, 'energia', index, 'label', e.target.value)}
-                                            onValueChange={(e) => handleDetailChange(setCurrentBillDetails, 'energia', index, 'value', e.target.value)}
-                                            className={index > 0 ? 'mt-1' : ''}
-                                            textColor={colors.primaryText}
-                                        />
-                                    ))}
-                                </Section>
-                                <Section title="Impuestos y Extras" color="text-rose-500" textColor={colors.primaryText}>
-                                    {currentBillDetails.impuestos.map((detail, index) => (
-                                        <EditableCostDetail
-                                            key={detail.id}
-                                            label={detail.label}
-                                            value={detail.value}
-                                            onLabelChange={(e) => handleDetailChange(setCurrentBillDetails, 'impuestos', index, 'label', e.target.value)}
-                                            onValueChange={(e) => handleDetailChange(setCurrentBillDetails, 'impuestos', index, 'value', e.target.value)}
-                                            className={index > 0 ? 'mt-1' : ''}
-                                            textColor={colors.primaryText}
-                                        />
-                                    ))}
-                                </Section>
-                                <EditableTotalSection color="text-rose-500" total={totalCurrent} onTotalChange={(e) => setTotalCurrent(e.target.value)} textColor={colors.primaryText} />
-                            </CompanyCard>
-                        )}
-
-                        {/* Best Company Card */}
-                        <div className={!showCurrentBill ? 'w-full max-w-lg' : ''}>
-                            <CompanyCard
-                                title={bestCompanyName}
-                                subtitle="COMPAÑÍA"
-                                subtitleColor="text-white"
-                                borderColor="border-8 border-emerald-500"
-                                textColor={colors.primaryText}
-                            >
-                                <Section title={sectionTitlePotencia} color="text-emerald-500" textColor={colors.primaryText}>
-                                    {bestTariffDetails.potencia.map((detail, index) => (
-                                        <EditableCostDetail
-                                            key={detail.id}
-                                            label={detail.label}
-                                            value={detail.value}
-                                            onLabelChange={(e) => handleDetailChange(setBestTariffDetails, 'potencia', index, 'label', e.target.value)}
-                                            onValueChange={(e) => handleDetailChange(setBestTariffDetails, 'potencia', index, 'value', e.target.value)}
-                                            className={index > 0 ? 'mt-1' : ''}
-                                            textColor={colors.primaryText}
-                                        />
-                                    ))}
-                                </Section>
-                                <Section title="Energía" color="text-emerald-500" textColor={colors.primaryText}>
-                                    {bestTariffDetails.energia.map((detail, index) => (
-                                        <EditableCostDetail
-                                            key={detail.id}
-                                            label={detail.label}
-                                            value={detail.value}
-                                            onLabelChange={(e) => handleDetailChange(setBestTariffDetails, 'energia', index, 'label', e.target.value)}
-                                            onValueChange={(e) => handleDetailChange(setBestTariffDetails, 'energia', index, 'value', e.target.value)}
-                                            className={index > 0 ? 'mt-1' : ''}
-                                            textColor={colors.primaryText}
-                                        />
-                                    ))}
-                                </Section>
-                                <Section title="Impuestos y Extras" color="text-emerald-500" textColor={colors.primaryText}>
-                                    {bestTariffDetails.impuestos.map((detail, index) => (
-                                        <EditableCostDetail
-                                            key={detail.id}
-                                            label={detail.label}
-                                            value={detail.value}
-                                            onLabelChange={(e) => handleDetailChange(setBestTariffDetails, 'impuestos', index, 'label', e.target.value)}
-                                            onValueChange={(e) => handleDetailChange(setBestTariffDetails, 'impuestos', index, 'value', e.target.value)}
-                                            className={index > 0 ? 'mt-1' : ''}
-                                            textColor={colors.primaryText}
-                                        />
-                                    ))}
-                                </Section>
-                                <EditableTotalSection color="text-emerald-500" total={totalBest} onTotalChange={(e) => setTotalBest(e.target.value)} textColor={colors.primaryText} />
-                            </CompanyCard>
+                {/* Cabecera: Datos del suministro + Consumo y potencia */}
+                <div className={`grid gap-3 ${showCurrentBill ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                    {/* Datos del suministro (editable) */}
+                    <div className="rounded-lg overflow-hidden shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
+                        <div className="px-3 py-2 text-white text-[11px] font-bold tracking-wide" style={{ backgroundColor: '#0f766e' }}>
+                            DATOS DEL SUMINISTRO
+                        </div>
+                        <div className="p-3 space-y-1">
+                            {([
+                                ['CUPS', 'cups', 'ES00...'],
+                                ['Comercializadora', 'comercializadora', 'Compañía actual'],
+                                ['Tarifa', 'tarifa', '2.0TD'],
+                                ['Período', 'periodo', 'dd/mm – dd/mm'],
+                            ] as [string, 'cups' | 'comercializadora' | 'tarifa' | 'periodo', string][]).map(([label, field, ph]) => (
+                                <div key={field} className="flex justify-between items-center gap-2">
+                                    <span className="text-[10px] font-medium flex-shrink-0" style={{ color: '#6b7280' }}>{label}</span>
+                                    <input
+                                        type="text"
+                                        value={supplyData[field]}
+                                        placeholder={ph}
+                                        onChange={(e) => handleSupplyChange(field, e.target.value)}
+                                        className="text-[10px] font-semibold text-right bg-transparent border-none p-0 m-0 w-32 focus:ring-1 focus:ring-emerald-500 focus:bg-white rounded-sm"
+                                        style={{ color: '#111827' }}
+                                    />
+                                </div>
+                            ))}
                         </div>
                     </div>
 
-                    {/* Savings Section */}
-                    {showCurrentBill && (
-                        <div className="p-4 mt-4 lg:mt-8 max-w-5xl mx-auto flex justify-center items-center gap-6 rounded-md">
-                            <p className="text-xl lg:text-3xl font-bold tracking-wider" style={{color: colors.primaryText}}>AHORRO MENSUAL</p>
-                            <p className="text-4xl lg:text-6xl font-extrabold" style={{color: colors.primaryText}}>{formatCurrency(monthlySaving)}</p>
+                    {/* Consumo y potencia (calculado) */}
+                    <div className="rounded-lg overflow-hidden shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
+                        <div className="px-3 py-2 text-white text-[11px] font-bold tracking-wide" style={{ backgroundColor: '#047857' }}>
+                            CONSUMO Y POTENCIA
+                        </div>
+                        <div className="p-3 space-y-1">
+                            {!isGas && potenciasArr.map((p, i) => (
+                                <div key={i} className="flex justify-between items-center">
+                                    <span className="text-[10px] font-medium" style={{ color: '#6b7280' }}>Potencia P{i + 1}</span>
+                                    <span className="text-[10px] font-semibold" style={{ color: '#111827' }}>{p} kW</span>
+                                </div>
+                            ))}
+                            <div className="flex justify-between items-center">
+                                <span className="text-[10px] font-medium" style={{ color: '#6b7280' }}>Consumo total</span>
+                                <span className="text-[10px] font-semibold" style={{ color: '#111827' }}>{consumoTotal} kWh</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-[10px] font-medium" style={{ color: '#6b7280' }}>Importe factura</span>
+                                <span className="text-[10px] font-semibold" style={{ color: '#111827' }}>{formatCurrency(importeFactura)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Banner: Ahorro anual estimado + acciones */}
+                <div className="rounded-xl px-5 py-4 flex items-center justify-between" style={{ backgroundColor: '#065f46' }}>
+                    <div>
+                        <p className="text-white text-[10px] font-semibold tracking-widest" style={{ opacity: 0.9 }}>AHORRO ANUAL ESTIMADO</p>
+                        <p className="text-white text-[11px] font-medium" style={{ opacity: 0.85 }}>{bestCompanyDisplay}</p>
+                        <p className="text-white text-3xl font-extrabold leading-tight">{formatCurrency(annualSaving)}</p>
+                    </div>
+                    <div className="flex flex-col gap-2 items-stretch">
+                        <div className="flex items-center gap-1.5 bg-white rounded-full px-3 py-1.5">
+                            <Phone className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#065f46' }} />
+                            <input
+                                type="text"
+                                value={contactPhone}
+                                placeholder="Llamar"
+                                onChange={(e) => handlePhoneChange(e.target.value)}
+                                className="text-[11px] font-bold bg-transparent border-none p-0 m-0 w-24 focus:ring-1 focus:ring-emerald-500 rounded-sm"
+                                style={{ color: '#065f46' }}
+                            />
+                        </div>
+                        <div className="rounded-full px-4 py-1.5 text-center text-white text-[11px] font-semibold" style={{ border: '1px solid rgba(255,255,255,0.6)' }}>
+                            Contratar Online
+                        </div>
+                    </div>
+                </div>
+
+                {/* Sección 1: Desglose de Comparativa */}
+                <div>
+                    <div className="flex items-center gap-2 mb-0.5">
+                        <span className="w-5 h-5 rounded-full text-white text-[11px] font-bold flex items-center justify-center" style={{ backgroundColor: '#059669' }}>1</span>
+                        <h3 className="text-sm font-bold" style={{ color: '#111827' }}>Desglose de Comparativa</h3>
+                    </div>
+                    <p className="text-[10px] mb-2 ml-7" style={{ color: '#6b7280' }}>
+                        Desglose detallado por partes de lo que has pagado y lo que pagarías con la nueva tarifa
+                    </p>
+                    <div className={`grid gap-3 ${showCurrentBill ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                        {/* Factura actual */}
+                        {showCurrentBill && (
+                            <div className="rounded-lg p-3" style={{ border: '1px solid #fecaca', backgroundColor: '#fff' }}>
+                                <p className="text-[10px] font-bold tracking-wide mb-0.5" style={{ color: '#dc2626' }}>FACTURA ACTUAL</p>
+                                <p className="text-[10px] font-semibold mb-2" style={{ color: '#6b7280' }}>{supplyData.comercializadora || 'Tu compañía actual'}</p>
+                                {currentRows.map((r, i) => (
+                                    <div key={i} className="flex justify-between items-baseline py-0.5" style={{ borderBottom: '1px solid #f3f4f6' }}>
+                                        <span className="text-[11px]" style={{ color: '#4b5563' }}>{r.label}</span>
+                                        <span className="text-[11px] font-semibold" style={{ color: '#111827' }}>{formatCurrency(r.value)}</span>
+                                    </div>
+                                ))}
+                                <div className="flex justify-between items-baseline pt-2 mt-1">
+                                    <span className="text-xs font-bold" style={{ color: '#dc2626' }}>TOTAL FACTURA</span>
+                                    <input
+                                        type="text"
+                                        value={totalCurrent}
+                                        onChange={(e) => setTotalCurrent(e.target.value)}
+                                        className="text-base font-extrabold bg-transparent border-none p-0 m-0 w-24 text-right focus:ring-1 focus:ring-emerald-500 rounded-sm"
+                                        style={{ color: '#dc2626' }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Mejor alternativa */}
+                        <div className="rounded-lg p-3" style={{ border: '1px solid #a7f3d0', backgroundColor: '#fff' }}>
+                            <p className="text-[10px] font-bold tracking-wide mb-0.5" style={{ color: '#059669' }}>MEJOR ALTERNATIVA</p>
+                            <p className="text-[10px] font-semibold mb-2" style={{ color: '#6b7280' }}>{bestCompanyDisplay}{bestTariffName ? ` — ${bestTariffName}` : ''}</p>
+                            {bestRows.map((r, i) => (
+                                <div key={i} className="flex justify-between items-baseline py-0.5" style={{ borderBottom: '1px solid #f3f4f6' }}>
+                                    <span className="text-[11px]" style={{ color: '#4b5563' }}>{r.label}</span>
+                                    <span className="text-[11px] font-semibold" style={{ color: '#111827' }}>{formatCurrency(r.value)}</span>
+                                </div>
+                            ))}
+                            <div className="flex justify-between items-baseline pt-2 mt-1">
+                                <span className="text-xs font-bold" style={{ color: '#059669' }}>TOTAL</span>
+                                <input
+                                    type="text"
+                                    value={totalBest}
+                                    onChange={(e) => setTotalBest(e.target.value)}
+                                    className="text-base font-extrabold bg-transparent border-none p-0 m-0 w-24 text-right focus:ring-1 focus:ring-emerald-500 rounded-sm"
+                                    style={{ color: '#059669' }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Ahorro en esta factura */}
+                {showCurrentBill && (
+                    <div className="rounded-lg px-4 py-3 flex items-center justify-between" style={{ backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0' }}>
+                        <div>
+                            <p className="text-xs font-bold" style={{ color: '#065f46' }}>Ahorro en esta factura</p>
+                            <p className="text-[10px]" style={{ color: '#047857' }}>Esto es lo que pagarías de menos con la nueva tarifa</p>
+                        </div>
+                        <p className="text-2xl font-extrabold" style={{ color: '#059669' }}>{formatCurrency(monthlySaving)}</p>
+                    </div>
+                )}
+
+                {/* Sección 2: Precios de la Nueva Tarifa */}
+                <div>
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="w-5 h-5 rounded-full text-white text-[11px] font-bold flex items-center justify-center" style={{ backgroundColor: '#059669' }}>2</span>
+                        <h3 className="text-sm font-bold" style={{ color: '#111827' }}>Precios de la Nueva Tarifa</h3>
+                    </div>
+                    {isGas ? (
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-lg p-2" style={{ backgroundColor: '#f0fdf4', border: '1px solid #dcfce7' }}>
+                                <p className="text-[10px] font-bold mb-1" style={{ color: '#166534' }}>TÉRMINO FIJO (€/día)</p>
+                                <p className="text-sm font-bold" style={{ color: '#111827' }}>{newGasFixed != null ? newGasFixed.toFixed(3) : '—'}</p>
+                            </div>
+                            <div className="rounded-lg p-2" style={{ backgroundColor: '#f0fdf4', border: '1px solid #dcfce7' }}>
+                                <p className="text-[10px] font-bold mb-1" style={{ color: '#166534' }}>ENERGÍA (€/kWh)</p>
+                                <p className="text-sm font-bold" style={{ color: '#111827' }}>{newGasEnergy != null ? newGasEnergy.toFixed(3) : '—'}</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-lg p-2" style={{ backgroundColor: '#f0fdf4', border: '1px solid #dcfce7' }}>
+                                <p className="text-[10px] font-bold mb-1" style={{ color: '#166534' }}>TÉRMINO POTENCIA (€/kW)</p>
+                                <div className="flex gap-4">
+                                    {newPowerPrices.length > 0 ? newPowerPrices.map((v, i) => (
+                                        <div key={i} className="text-center">
+                                            <p className="text-[10px]" style={{ color: '#6b7280' }}>P{i + 1}</p>
+                                            <p className="text-[11px] font-bold" style={{ color: '#111827' }}>{v.toFixed(3)}</p>
+                                        </div>
+                                    )) : <p className="text-[11px]" style={{ color: '#9ca3af' }}>—</p>}
+                                </div>
+                            </div>
+                            <div className="rounded-lg p-2" style={{ backgroundColor: '#f0fdf4', border: '1px solid #dcfce7' }}>
+                                <p className="text-[10px] font-bold mb-1" style={{ color: '#166534' }}>ENERGÍA (€/kWh)</p>
+                                <div className="flex gap-4">
+                                    {newEnergyPrices.length > 0 ? newEnergyPrices.map((v, i) => (
+                                        <div key={i} className="text-center">
+                                            <p className="text-[10px]" style={{ color: '#6b7280' }}>P{i + 1}</p>
+                                            <p className="text-[11px] font-bold" style={{ color: '#111827' }}>{v.toFixed(3)}</p>
+                                        </div>
+                                    )) : <p className="text-[11px]" style={{ color: '#9ca3af' }}>—</p>}
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
