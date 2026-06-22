@@ -2,6 +2,60 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import * as jose from "jose";
 
+// Cancelar (eliminar) una ausencia propia. El front llama a
+// DELETE /api/perfil/ausencias?uuid=<uuid>; reenviamos al backend
+// DELETE /absences/:uuid con el JWT del usuario (server-side, BACKEND_URL absoluta).
+export async function DELETE(req) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("factura-token");
+
+    if (!token) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const uuid = searchParams.get("uuid");
+    if (!uuid) {
+      return NextResponse.json(
+        { error: "Falta el identificador de la ausencia" },
+        { status: 400 }
+      );
+    }
+
+    try {
+      const apiResponse = await fetch(
+        `${process.env.BACKEND_URL}/absences/${uuid}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token.value}` },
+          signal: AbortSignal.timeout(10000),
+        }
+      );
+
+      if (apiResponse.ok || apiResponse.status === 204) {
+        return NextResponse.json({ message: "Ausencia cancelada" }, { status: 200 });
+      }
+      const errorData = await apiResponse
+        .json()
+        .catch(() => ({ message: "Error al cancelar la ausencia" }));
+      return NextResponse.json(
+        { error: errorData.message || "Error del servidor" },
+        { status: apiResponse.status }
+      );
+    } catch (fetchError) {
+      console.error("Backend no disponible para cancelar ausencia:", fetchError.message);
+      return NextResponse.json(
+        { error: "Servidor no disponible. Inténtalo más tarde." },
+        { status: 503 }
+      );
+    }
+  } catch (error) {
+    console.error("Error cancelando ausencia:", error);
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+  }
+}
+
 export async function POST(req) {
   try {
     const cookieStore = await cookies();

@@ -51,6 +51,29 @@ export default function Perfil() {
     }
   };
 
+  // Cancelar una ausencia pendiente (X). Llama a la API route que reenvía al
+  // backend DELETE /absences/:uuid y luego refresca la lista.
+  const handleCancelAusencia = async (ausencia) => {
+    if (!ausencia?.uuid) return;
+    if (!confirm("¿Seguro que quieres cancelar esta ausencia?")) return;
+    try {
+      const response = await fetch(`/api/perfil/ausencias?uuid=${ausencia.uuid}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        // Quita la ausencia de la vista al instante y resincroniza con el servidor.
+        setAusencias((prev) => prev.filter((a) => a.uuid !== ausencia.uuid));
+        fetchPerfilData();
+      } else {
+        const data = await response.json().catch(() => ({}));
+        alert(data.error || "No se pudo cancelar la ausencia.");
+      }
+    } catch (error) {
+      console.error("Error cancelando ausencia:", error);
+      alert("Error de conexión al cancelar la ausencia.");
+    }
+  };
+
   const handleEditProfile = () => {
     setEditForm({
       nombre: userData.nombre,
@@ -568,7 +591,11 @@ export default function Perfil() {
                           </div>
                         </div>
                         {ausencia.estado === "Pendiente" && (
-                          <button className="text-slate-400 hover:text-red-500 transition-colors">
+                          <button
+                            onClick={() => handleCancelAusencia(ausencia)}
+                            title="Cancelar ausencia"
+                            className="text-slate-400 hover:text-red-500 transition-colors"
+                          >
                             <span className="material-icons-outlined">close</span>
                           </button>
                         )}
