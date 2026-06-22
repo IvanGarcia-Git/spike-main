@@ -98,47 +98,179 @@ const calculateCurrentGasBillBreakdown = (
   };
 };
 
-const BreakdownDetail = ({ label, value }: { label: string, value: string }) => (
-    <div className="flex justify-between py-1 border-b border-muted last:border-b-0">
-        <p className="text-muted-foreground text-xs">{label}</p>
-        <p className="font-medium text-xs">{value}</p>
-    </div>
-);
+/** Formatea un precio unitario (€/kWh, €/kW/día, €/día) con 4 decimales, como en la factura. */
+const formatPrice = (value: number) => `${(Number(value) || 0).toFixed(4)}`;
 
-const LightBreakdown = ({ breakdown }: { breakdown: BillBreakdown }) => (
-  <>
-    <div className="space-y-1">
-        {breakdown.powerCosts?.map((cost, i) => (
-            <BreakdownDetail key={`p-${i}`} label={`Coste Potencia P${i + 1}`} value={formatCurrency(cost)} />
-        ))}
-        {breakdown.energyCosts?.map((cost, i) => (
-            <BreakdownDetail key={`e-${i}`} label={`Coste Energía E${i + 1}`} value={formatCurrency(cost)} />
-        ))}
-    </div>
-    <div className="space-y-1">
-        {breakdown.surplusCredit && breakdown.surplusCredit > 0 && <BreakdownDetail label="Abono Excedentes" value={formatCurrency(-breakdown.surplusCredit)} />}
-        {breakdown.socialBonus !== undefined && <BreakdownDetail label="Bono Social" value={formatCurrency(breakdown.socialBonus)} />}
-        <BreakdownDetail label="Alquiler Equipos" value={formatCurrency(breakdown.equipmentRental ?? 0)} />
-        {breakdown.maintenanceCost && breakdown.maintenanceCost > 0 && <BreakdownDetail label="Servicios Adicionales" value={formatCurrency(breakdown.maintenanceCost)} />}
-        {breakdown.electricityTax !== undefined && <BreakdownDetail label="Imp. Electricidad" value={formatCurrency(breakdown.electricityTax)} />}
-        <BreakdownDetail label="IVA" value={formatCurrency(breakdown.vat)} />
-    </div>
-  </>
-);
+/** Formatea una cantidad física (kWh, kW, días) sin forzar decimales. */
+const formatQty = (value: number) => `${Number(value) || 0}`;
 
-const GasBreakdown = ({ breakdown }: { breakdown: BillBreakdown }) => (
-  <>
-    <div className="space-y-1">
-      {breakdown.fixedCost !== undefined && <BreakdownDetail label="Coste Término Fijo" value={formatCurrency(breakdown.fixedCost)} />}
-      {breakdown.energyCost !== undefined && <BreakdownDetail label="Coste Energía" value={formatCurrency(breakdown.energyCost)} />}
-    </div>
-    <div className="space-y-1">
-        <BreakdownDetail label="Alquiler Equipos" value={formatCurrency(breakdown.equipmentRental ?? 0)} />
-        {breakdown.maintenanceCost && breakdown.maintenanceCost > 0 && <BreakdownDetail label="Servicios Adicionales" value={formatCurrency(breakdown.maintenanceCost)} />}
-        {breakdown.hydrocarbonTax !== undefined && <BreakdownDetail label="Imp. Hidrocarburos" value={formatCurrency(breakdown.hydrocarbonTax)} />}
-        <BreakdownDetail label="IVA" value={formatCurrency(breakdown.vat)} />
-    </div>
-  </>
+/** Formatea un porcentaje impositivo con los decimales indicados, sin ceros sobrantes. */
+const formatPct = (value: number, decimals = 2) => `${Number((Number(value) || 0).toFixed(decimals))}`;
+
+/** Precios unitarios usados para construir las fórmulas del desglose. */
+interface BreakdownUnitPrices {
+  powerPrices?: number[];
+  energyPrices?: number[];
+  surplusPrice?: number;
+  fixedPrice?: number;
+  energyPrice?: number;
+}
+
+/** Fila de desglose: concepto, importe y la fórmula de cómo se calcula. */
+interface BreakdownRow {
+  label: string;
+  value: number;
+  formula?: string;
+  isCredit?: boolean;
+}
+
+/** Devuelve el precio unitario del periodo i con el mismo fallback que el cálculo (último periodo). */
+const priceForPeriod = (prices: number[] | undefined, i: number) =>
+  prices?.[i] ?? prices?.[(prices?.length ?? 1) - 1] ?? 0;
+
+/** Construye las filas del desglose de luz (con fórmulas) a partir de un breakdown ya calculado. */
+const buildLightBreakdownRows = (
+  breakdown: BillBreakdown,
+  formData: any,
+  regulated: { ihp?: number; alquiler: number; social?: number; iva: number },
+  prices: BreakdownUnitPrices,
+): BreakdownRow[] => {
+  const rows: BreakdownRow[] = [];
+  const potencias: number[] = formData.potencias ?? [];
+  const energias: number[] = formData.energias ?? [];
+  const numDias: number = formData.numDias ?? 0;
+
+  if (breakdown.energyCosts?.length) {
+    const total = breakdown.energyCosts.reduce((a, b) => a + b, 0);
+    const formula = energias
+      .map((e, i) => `(P${i + 1}: ${formatQty(e)} kWh × ${formatPrice(priceForPeriod(prices.energyPrices, i))} €/kWh)`)
+      .join(' + ');
+    rows.push({ label: 'Coste energía', value: total, formula });
+  }
+
+  if (breakdown.powerCosts?.length) {
+    const total = breakdown.powerCosts.reduce((a, b) => a + b, 0);
+    const formula = potencias
+      .map((p, i) => `(P${i + 1}: ${formatQty(p)} kW × ${formatPrice(priceForPeriod(prices.powerPrices, i))} €/kW/día × ${formatQty(numDias)} días)`)
+      .join(' + ');
+    rows.push({ label: 'Coste potencia', value: total, formula });
+  }
+
+  if (breakdown.surplusCredit && breakdown.surplusCredit > 0) {
+    rows.push({
+      label: 'Excedentes',
+      value: -breakdown.surplusCredit,
+      isCredit: true,
+      formula: `${formatQty(formData.excedentes ?? 0)} kWh × ${formatPrice(prices.surplusPrice ?? 0)} €/kWh`,
+    });
+  }
+
+  rows.push({
+    label: 'Alquiler equipos',
+    value: breakdown.equipmentRental ?? 0,
+    formula: `${formatQty(numDias)} días × ${formatPrice(regulated.alquiler ?? 0)} €/día`,
+  });
+
+  if (breakdown.socialBonus && breakdown.socialBonus > 0) {
+    rows.push({
+      label: 'Bono social',
+      value: breakdown.socialBonus,
+      formula: `${formatQty(numDias)} días × ${formatPrice(regulated.social ?? 0)} €/día`,
+    });
+  }
+
+  if (breakdown.maintenanceCost && breakdown.maintenanceCost > 0) {
+    rows.push({ label: 'Servicios adicionales', value: breakdown.maintenanceCost });
+  }
+
+  if (breakdown.electricityTax !== undefined) {
+    rows.push({
+      label: `Impuesto eléctrico (${formatPct(regulated.ihp ?? 0)}%)`,
+      value: breakdown.electricityTax,
+      formula: `Base imponible × ${formatPct(regulated.ihp ?? 0, 3)}%`,
+    });
+  }
+
+  rows.push({
+    label: `IVA (${formatPct(regulated.iva ?? 0)}%)`,
+    value: breakdown.vat ?? 0,
+    formula: `(Base + Imp. eléctrico) × ${formatPct(regulated.iva ?? 0)}%`,
+  });
+
+  return rows;
+};
+
+/** Construye las filas del desglose de gas (con fórmulas) a partir de un breakdown ya calculado. */
+const buildGasBreakdownRows = (
+  breakdown: BillBreakdown,
+  formData: any,
+  regulated: { hydrocarbon?: number; alquiler: number; iva: number },
+  prices: BreakdownUnitPrices,
+): BreakdownRow[] => {
+  const rows: BreakdownRow[] = [];
+  const energia: number = formData.energia ?? 0;
+  const numDias: number = formData.numDias ?? 0;
+
+  if (breakdown.fixedCost !== undefined) {
+    rows.push({
+      label: 'Coste término fijo',
+      value: breakdown.fixedCost,
+      formula: `${formatPrice(prices.fixedPrice ?? 0)} €/día × ${formatQty(numDias)} días`,
+    });
+  }
+
+  if (breakdown.energyCost !== undefined) {
+    rows.push({
+      label: 'Coste energía',
+      value: breakdown.energyCost,
+      formula: `${formatQty(energia)} kWh × ${formatPrice(prices.energyPrice ?? 0)} €/kWh`,
+    });
+  }
+
+  rows.push({
+    label: 'Alquiler equipos',
+    value: breakdown.equipmentRental ?? 0,
+    formula: `${formatQty(numDias)} días × ${formatPrice(regulated.alquiler ?? 0)} €/día`,
+  });
+
+  if (breakdown.maintenanceCost && breakdown.maintenanceCost > 0) {
+    rows.push({ label: 'Servicios adicionales', value: breakdown.maintenanceCost });
+  }
+
+  if (breakdown.hydrocarbonTax !== undefined) {
+    rows.push({
+      label: 'Impuesto hidrocarburos',
+      value: breakdown.hydrocarbonTax,
+      formula: `${formatQty(energia)} kWh × ${formatPrice(regulated.hydrocarbon ?? 0)} €/kWh`,
+    });
+  }
+
+  rows.push({
+    label: `IVA (${formatPct(regulated.iva ?? 0)}%)`,
+    value: breakdown.vat ?? 0,
+    formula: `Base imponible × ${formatPct(regulated.iva ?? 0)}%`,
+  });
+
+  return rows;
+};
+
+/** Lista de desglose: cada concepto con su importe y, debajo, la fórmula de cálculo (estilo factura). */
+const BreakdownList = ({ rows }: { rows: BreakdownRow[] }) => (
+  <div className="space-y-2">
+    {rows.map((row, i) => (
+      <div key={i} className="border-b border-dashed border-muted/70 pb-2 last:border-b-0 last:pb-0">
+        <div className="flex justify-between items-baseline gap-2">
+          <span className="text-xs font-medium text-foreground">{row.label}</span>
+          <span className={`text-xs font-bold whitespace-nowrap ${row.isCredit ? 'text-green-600' : ''}`}>
+            {formatCurrency(row.value)}
+          </span>
+        </div>
+        {row.formula && (
+          <p className="mt-0.5 text-[11px] italic leading-snug text-muted-foreground">{row.formula}</p>
+        )}
+      </div>
+    ))}
+  </div>
 );
 
 
@@ -509,79 +641,24 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
                             return <p className="text-sm text-muted-foreground">Sin datos de precios unitarios de la factura actual</p>;
                           }
                           
+                          const currentRows = comparisonType === 'luz'
+                            ? buildLightBreakdownRows(currentBreakdown, formData, regulatedCosts, {
+                                powerPrices: formData.clientPowerPrices,
+                                energyPrices: formData.clientEnergyPrices,
+                                surplusPrice: formData.clientSurplusPrice,
+                              })
+                            : buildGasBreakdownRows(currentBreakdown, formData, regulatedCosts, {
+                                fixedPrice: formData.clientFixedPrice,
+                                energyPrice: formData.clientGasEnergyPrice,
+                              });
+
                           return (
                             <div className="space-y-3">
                               <div className="flex justify-between items-center pb-2 border-b border-red-200 dark:border-red-800">
                                 <span className="text-xs font-medium text-red-700 dark:text-red-400">TOTAL</span>
                                 <span className="text-lg font-bold text-red-700 dark:text-red-400">{formatCurrency(currentBillAmount)}</span>
                               </div>
-                              <div className="grid grid-cols-2 gap-2 text-xs">
-                                {comparisonType === 'luz' ? (
-                                  <>
-                                    {currentBreakdown.powerCosts?.map((cost, i) => (
-                                      <div key={`curr-p${i}`} className="flex justify-between">
-                                        <span className="text-muted-foreground">Potencia P{i + 1}</span>
-                                        <span className="font-medium">{formatCurrency(cost)}</span>
-                                      </div>
-                                    ))}
-                                    {currentBreakdown.energyCosts?.map((cost, i) => (
-                                      <div key={`curr-e${i}`} className="flex justify-between">
-                                        <span className="text-muted-foreground">Energía E{i + 1}</span>
-                                        <span className="font-medium">{formatCurrency(cost)}</span>
-                                      </div>
-                                    ))}
-                                    {currentBreakdown.surplusCredit && currentBreakdown.surplusCredit > 0 && (
-                                      <div className="flex justify-between">
-                                        <span className="text-muted-foreground">Excedentes</span>
-                                        <span className="font-medium text-green-600">-{formatCurrency(currentBreakdown.surplusCredit)}</span>
-                                      </div>
-                                    )}
-                                  </>
-                                ) : (
-                                  <>
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Término Fijo</span>
-                                      <span className="font-medium">{formatCurrency(currentBreakdown.fixedCost || 0)}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Energía</span>
-                                      <span className="font-medium">{formatCurrency(currentBreakdown.energyCost || 0)}</span>
-                                    </div>
-                                  </>
-                                )}
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Alquiler equipos</span>
-                                  <span className="font-medium">{formatCurrency(currentBreakdown.equipmentRental || 0)}</span>
-                                </div>
-                                {currentBreakdown.socialBonus && currentBreakdown.socialBonus > 0 && (
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Bono social</span>
-                                    <span className="font-medium">{formatCurrency(currentBreakdown.socialBonus)}</span>
-                                  </div>
-                                )}
-                                {currentBreakdown.maintenanceCost && currentBreakdown.maintenanceCost > 0 && (
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Mantenimiento</span>
-                                    <span className="font-medium">{formatCurrency(currentBreakdown.maintenanceCost)}</span>
-                                  </div>
-                                )}
-                                {currentBreakdown.electricityTax !== undefined && (
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Imp. Electricidad</span>
-                                    <span className="font-medium">{formatCurrency(currentBreakdown.electricityTax)}</span>
-                                  </div>
-                                )}
-                                {currentBreakdown.hydrocarbonTax !== undefined && (
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Imp. Hidrocarburos</span>
-                                    <span className="font-medium">{formatCurrency(currentBreakdown.hydrocarbonTax)}</span>
-                                  </div>
-                                )}
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">IVA</span>
-                                  <span className="font-medium">{formatCurrency(currentBreakdown.vat || 0)}</span>
-                                </div>
-                              </div>
+                              <BreakdownList rows={currentRows} />
                             </div>
                           );
                         })()}
@@ -600,13 +677,18 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
                             <span className="text-xs font-medium text-green-700 dark:text-green-400">TOTAL</span>
                             <span className="text-lg font-bold text-green-700 dark:text-green-400">{formatCurrency(results[0].totalCost)}</span>
                           </div>
-                          <div className="grid grid-cols-2 gap-2 text-xs">
-                            {comparisonType === 'luz' ? (
-                              <LightBreakdown breakdown={results[0].breakdown} />
-                            ) : (
-                              <GasBreakdown breakdown={results[0].breakdown} />
-                            )}
-                          </div>
+                          <BreakdownList rows={
+                            comparisonType === 'luz'
+                              ? buildLightBreakdownRows(results[0].breakdown, formData, regulatedCosts, {
+                                  powerPrices: (results[0].tariff as CompanyLightTariff).powerPrices,
+                                  energyPrices: (results[0].tariff as CompanyLightTariff).energyPrices,
+                                  surplusPrice: (results[0].tariff as CompanyLightTariff).surplusPrice,
+                                })
+                              : buildGasBreakdownRows(results[0].breakdown, formData, regulatedCosts, {
+                                  fixedPrice: (results[0].tariff as CompanyGasTariff).fixedPrice,
+                                  energyPrice: (results[0].tariff as CompanyGasTariff).energyPrice,
+                                })
+                          } />
                         </div>
                       </CardContent>
                     </Card>
@@ -720,9 +802,18 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
                                           <TableCell colSpan={isLight ? 11 : 10} className="p-0">
                                               <div className="p-4">
                                                   <h4 className="text-md font-semibold mb-2">Desglose de Factura</h4>
-                                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                                                    {isLight ? <LightBreakdown breakdown={breakdown} /> : <GasBreakdown breakdown={breakdown} />}
-                                                  </div>
+                                                  <BreakdownList rows={
+                                                    isLight
+                                                      ? buildLightBreakdownRows(breakdown, formData, regulatedCosts, {
+                                                          powerPrices: (tariff as CompanyLightTariff).powerPrices,
+                                                          energyPrices: (tariff as CompanyLightTariff).energyPrices,
+                                                          surplusPrice: (tariff as CompanyLightTariff).surplusPrice,
+                                                        })
+                                                      : buildGasBreakdownRows(breakdown, formData, regulatedCosts, {
+                                                          fixedPrice: (tariff as CompanyGasTariff).fixedPrice,
+                                                          energyPrice: (tariff as CompanyGasTariff).energyPrice,
+                                                        })
+                                                  } />
                                                   <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                                                     <div className="flex justify-between items-center font-bold">
                                                       <p>Coste Total Factura</p>
