@@ -8,6 +8,16 @@ import * as jose from "jose";
 import CommunicationModal from "@/components/communication.modal";
 import { useLayout } from '../layout';
 
+// Formatea una fecha de forma segura. date-fns `format(new Date(x))` LANZA
+// "Invalid time value" si la fecha es null/indefinida o no parseable, lo que
+// rompía la página entera (Application error: client-side exception) en cuanto
+// un lead/log/historial traía una fecha vacía o un dato sin `lead`. Devuelve "—".
+const safeDate = (value, fmt) => {
+  if (!value) return "—";
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? "—" : format(d, fmt);
+};
+
 export default function LeadDetailPage() {
   const [lead, setLead] = useState(null);
   const [leadCanBeLose, setLeadCanBeLose] = useState(false);
@@ -454,7 +464,7 @@ export default function LeadDetailPage() {
                 <div className="neumorphic-card-inset px-4 py-3 rounded-lg text-center min-w-[80px]">
                   <p className="text-xs text-slate-500 dark:text-slate-400">Fecha</p>
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                    {format(new Date(lead.createdAt), "dd/MM")}
+                    {safeDate(lead.createdAt, "dd/MM")}
                   </p>
                 </div>
                 <div className="neumorphic-card-inset px-4 py-3 rounded-lg text-center min-w-[80px]">
@@ -625,20 +635,20 @@ export default function LeadDetailPage() {
                   <div key={log.id} className="flex items-start gap-3 p-3 neumorphic-card-inset rounded-lg">
                     <div
                       className="w-3 h-3 rounded-full mt-1.5 flex-shrink-0"
-                      style={{ backgroundColor: log.leadState.colorHex }}
+                      style={{ backgroundColor: log.leadState?.colorHex }}
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                          {log.user.username}
+                          {log.user?.username}
                         </span>
                         <span className="text-xs text-slate-400">•</span>
                         <span className="text-xs text-slate-500 dark:text-slate-400">
-                          {format(new Date(log.createdAt), "dd/MM/yyyy")}
+                          {safeDate(log.createdAt, "dd/MM/yyyy")}
                         </span>
                       </div>
                       <p className="text-sm text-slate-600 dark:text-slate-400">{log.observations}</p>
-                      <span className="text-xs text-slate-500 dark:text-slate-400">{log.leadState.name}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">{log.leadState?.name}</span>
                     </div>
                   </div>
                 ))}
@@ -660,26 +670,26 @@ export default function LeadDetailPage() {
                   <div
                     key={index}
                     className="p-3 neumorphic-card-inset rounded-lg hover:scale-[1.01] transition-transform cursor-pointer"
-                    onClick={() => handleAssignLeadToUser(item.lead.id)}
+                    onClick={() => handleAssignLeadToUser(item.lead?.id)}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate">
-                        {item.lead.fullName}
+                        {item.lead?.fullName}
                       </span>
                       <span className="text-xs text-slate-400">
-                        {format(new Date(item.lead.createdAt), "dd/MM")}
+                        {safeDate(item.lead?.createdAt, "dd/MM")}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                        {item.lead.phoneNumber}
+                        {item.lead?.phoneNumber}
                       </span>
                       <div className="flex items-center gap-1">
                         <span
                           className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: item.leadState.colorHex }}
+                          style={{ backgroundColor: item.leadState?.colorHex }}
                         />
-                        <span className="text-xs text-slate-500">{item.leadState.name}</span>
+                        <span className="text-xs text-slate-500">{item.leadState?.name}</span>
                       </div>
                     </div>
                   </div>
@@ -759,18 +769,18 @@ function HistoryTable({ leadsHistory, onAssign }) {
           {leadsHistory.map((item, index) => (
             <tr key={index} className="table-row-divider hover:bg-slate-50 dark:hover:bg-slate-800/50">
               <td className="p-3 text-sm text-slate-600 dark:text-slate-400">
-                {format(new Date(item.lead.createdAt), "dd/MM/yyyy")}
+                {safeDate(item.lead?.createdAt, "dd/MM/yyyy")}
               </td>
               <td className="p-3">
                 <button
-                  onClick={() => onAssign(item.lead.id)}
+                  onClick={() => onAssign(item.lead?.id)}
                   className="text-sm font-medium text-primary hover:underline"
                 >
-                  {item.lead.fullName}
+                  {item.lead?.fullName}
                 </button>
               </td>
               <td className="p-3 text-sm text-slate-600 dark:text-slate-400">
-                {item.lead.phoneNumber}
+                {item.lead?.phoneNumber}
               </td>
               <td className="p-3 text-sm text-slate-600 dark:text-slate-400 max-w-[200px] truncate">
                 {item.observations}
@@ -779,9 +789,9 @@ function HistoryTable({ leadsHistory, onAssign }) {
                 <div className="flex items-center gap-2">
                   <span
                     className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: item.leadState.colorHex }}
+                    style={{ backgroundColor: item.leadState?.colorHex }}
                   />
-                  <span className="text-sm text-slate-700 dark:text-slate-300">{item.leadState.name}</span>
+                  <span className="text-sm text-slate-700 dark:text-slate-300">{item.leadState?.name}</span>
                 </div>
               </td>
             </tr>
