@@ -147,8 +147,16 @@ export default function RootLayout({ children }) {
                   isManager={isManager}
                   onMenuClick={() => setIsMobileSidebarOpen(true)}
                 />
-                <main className="flex-1 overflow-auto contracts-pastel-bg min-w-0">
-                  {children}
+                {/* min-h-0: imprescindible para que un hijo flex-1 con overflow-auto
+                    haga scroll dentro de su espacio en vez de crecer y que el padre
+                    (overflow-hidden) recorte la parte inferior — causa del contenido
+                    cortado abajo en listados largos. El wrapper pb-6 garantiza SIEMPRE
+                    un margen inferior (a nivel de contenido, fiable en todos los
+                    navegadores) equivalente al superior de las páginas (p-6). */}
+                <main className="flex-1 min-h-0 overflow-auto contracts-pastel-bg min-w-0">
+                  <div className="pb-6">
+                    {children}
+                  </div>
                 </main>
               </div>
               <ClockInReminder />
