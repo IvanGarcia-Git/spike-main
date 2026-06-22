@@ -129,12 +129,14 @@ export default function ComparativasPersonalizadaPage() {
         }
 
         const canvas = await html2canvas(page, {
-          scale: 3,
+          scale: 1.5, // Reducido de 3 a 1.5 (suficiente para calidad PDF sin inflar tamaño)
           useCORS: true,
           backgroundColor: colors.background,
-          windowWidth: 1920,
-          windowHeight: 1080,
+          windowWidth: 800, // Ancho real del contenedor PDF (no 1920)
+          windowHeight: 1130, // Alto aproximado de página A4 proporcional
           logging: false,
+          imageTimeout: 0,
+          removeContainer: false,
           onclone: (clonedDoc) => {
             // Find all PDF pages in cloned document
             const clonedPages = clonedDoc.querySelectorAll('.pdf-page');
@@ -226,9 +228,9 @@ export default function ComparativasPersonalizadaPage() {
           }
         });
 
-        const imgData = canvas.toDataURL('image/png');
+        const imgData = canvas.toDataURL('image/jpeg', 0.75); // JPEG con 75% calidad (reducción drástica vs PNG)
 
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST'); // Compresión FAST
       }
 
       pdf.save('comparativa.pdf');
