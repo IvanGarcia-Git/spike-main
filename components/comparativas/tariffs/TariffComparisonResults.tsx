@@ -28,6 +28,76 @@ interface TariffComparisonResultsProps {
 
 const formatCurrency = (value: number) => `${value.toFixed(2)} €`;
 
+/** Calcula el desglose de la factura actual de luz con los precios unitarios del cliente. */
+const calculateCurrentLightBillBreakdown = (
+  formData: any,
+  regulatedCosts: { ihp?: number; alquiler: number; social?: number; iva: number }
+): BillBreakdown | null => {
+  const { potencias, energias, numDias, solarPanelActive, excedentes, clientPowerPrices, clientEnergyPrices, clientSurplusPrice, clientMaintenanceCost } = formData;
+  
+  if (!potencias || !energias || !numDias || !clientPowerPrices || !clientEnergyPrices) return null;
+
+  const powerCosts = potencias.map((p: number, i: number) => {
+    const price = clientPowerPrices?.[i] ?? clientPowerPrices?.[clientPowerPrices.length - 1] ?? 0;
+    return p * price * numDias;
+  });
+
+  const energyCosts = energias.map((e: number, i: number) => {
+    const price = clientEnergyPrices?.[i] ?? clientEnergyPrices?.[clientEnergyPrices.length - 1] ?? 0;
+    return e * price;
+  });
+
+  const surplusCredit = solarPanelActive && excedentes ? excedentes * (clientSurplusPrice ?? 0) : 0;
+  const equipmentRental = numDias * (regulatedCosts.alquiler || 0);
+  const socialBonus = numDias * (regulatedCosts.social || 0);
+  const maintenanceCost = clientMaintenanceCost ?? 0;
+
+  const baseForTax = powerCosts.reduce((a: number, b: number) => a + b, 0) + energyCosts.reduce((a: number, b: number) => a + b, 0) - surplusCredit + equipmentRental + socialBonus + maintenanceCost;
+  const electricityTax = baseForTax > 0 ? baseForTax * ((regulatedCosts.ihp || 0) / 100) : 0;
+  
+  const baseIVA = baseForTax + electricityTax;
+  const vat = baseIVA > 0 ? baseIVA * ((regulatedCosts.iva || 0) / 100) : 0;
+
+  return {
+    powerCosts,
+    energyCosts,
+    surplusCredit,
+    socialBonus,
+    equipmentRental,
+    maintenanceCost,
+    electricityTax,
+    vat,
+  };
+};
+
+/** Calcula el desglose de la factura actual de gas con los precios unitarios del cliente. */
+const calculateCurrentGasBillBreakdown = (
+  formData: any,
+  regulatedCosts: { hydrocarbon?: number; alquiler: number; iva: number }
+): BillBreakdown | null => {
+  const { energia, numDias, clientFixedPrice, clientGasEnergyPrice, clientMaintenanceCost } = formData;
+  
+  if (!energia || !numDias || clientFixedPrice === undefined || clientGasEnergyPrice === undefined) return null;
+
+  const fixedCost = clientFixedPrice * numDias;
+  const energyCost = energia * clientGasEnergyPrice;
+  const equipmentRental = numDias * (regulatedCosts.alquiler || 0);
+  const maintenanceCost = clientMaintenanceCost ?? 0;
+  const hydrocarbonTax = energia * (regulatedCosts.hydrocarbon || 0);
+
+  const baseForTax = fixedCost + energyCost + equipmentRental + hydrocarbonTax + maintenanceCost;
+  const vat = baseForTax > 0 ? baseForTax * ((regulatedCosts.iva || 0) / 100) : 0;
+
+  return {
+    fixedCost,
+    energyCost,
+    equipmentRental,
+    maintenanceCost,
+    hydrocarbonTax,
+    vat,
+  };
+};
+
 const BreakdownDetail = ({ label, value }: { label: string, value: string }) => (
     <div className="flex justify-between py-1 border-b border-muted last:border-b-0">
         <p className="text-muted-foreground text-xs">{label}</p>
@@ -419,6 +489,129 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
             </CardHeader>
             <CardContent>
                 <RegulatedCosts costs={regulatedCosts} type={comparisonType} onCostChange={handleRegulatedCostChange}/>
+                
+                {/* Tarjetas comparativas: Factura Actual vs Mejor Alternativa */}
+                {results.length > 0 && showCurrentBill && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    {/* Factura Actual */}
+                    <Card className="border-red-200 bg-red-50 dark:bg-red-950/20">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-bold text-red-700 dark:text-red-400">FACTURA ACTUAL</CardTitle>
+                        <CardDescription className="text-xs text-red-600 dark:text-red-500">Desglose de tu factura actual</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {(() => {
+                          const currentBreakdown = comparisonType === 'luz'
+                            ? calculateCurrentLightBillBreakdown(formData, regulatedCosts)
+                            : calculateCurrentGasBillBreakdown(formData, regulatedCosts);
+                          
+                          if (!currentBreakdown) {
+                            return <p className="text-sm text-muted-foreground">Sin datos de precios unitarios de la factura actual</p>;
+                          }
+                          
+                          return (
+                            <div className="space-y-3">
+                              <div className="flex justify-between items-center pb-2 border-b border-red-200 dark:border-red-800">
+                                <span className="text-xs font-medium text-red-700 dark:text-red-400">TOTAL</span>
+                                <span className="text-lg font-bold text-red-700 dark:text-red-400">{formatCurrency(currentBillAmount)}</span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                {comparisonType === 'luz' ? (
+                                  <>
+                                    {currentBreakdown.powerCosts?.map((cost, i) => (
+                                      <div key={`curr-p${i}`} className="flex justify-between">
+                                        <span className="text-muted-foreground">Potencia P{i + 1}</span>
+                                        <span className="font-medium">{formatCurrency(cost)}</span>
+                                      </div>
+                                    ))}
+                                    {currentBreakdown.energyCosts?.map((cost, i) => (
+                                      <div key={`curr-e${i}`} className="flex justify-between">
+                                        <span className="text-muted-foreground">Energía E{i + 1}</span>
+                                        <span className="font-medium">{formatCurrency(cost)}</span>
+                                      </div>
+                                    ))}
+                                    {currentBreakdown.surplusCredit && currentBreakdown.surplusCredit > 0 && (
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Excedentes</span>
+                                        <span className="font-medium text-green-600">-{formatCurrency(currentBreakdown.surplusCredit)}</span>
+                                      </div>
+                                    )}
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">Término Fijo</span>
+                                      <span className="font-medium">{formatCurrency(currentBreakdown.fixedCost || 0)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">Energía</span>
+                                      <span className="font-medium">{formatCurrency(currentBreakdown.energyCost || 0)}</span>
+                                    </div>
+                                  </>
+                                )}
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Alquiler equipos</span>
+                                  <span className="font-medium">{formatCurrency(currentBreakdown.equipmentRental || 0)}</span>
+                                </div>
+                                {currentBreakdown.socialBonus && currentBreakdown.socialBonus > 0 && (
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Bono social</span>
+                                    <span className="font-medium">{formatCurrency(currentBreakdown.socialBonus)}</span>
+                                  </div>
+                                )}
+                                {currentBreakdown.maintenanceCost && currentBreakdown.maintenanceCost > 0 && (
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Mantenimiento</span>
+                                    <span className="font-medium">{formatCurrency(currentBreakdown.maintenanceCost)}</span>
+                                  </div>
+                                )}
+                                {currentBreakdown.electricityTax !== undefined && (
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Imp. Electricidad</span>
+                                    <span className="font-medium">{formatCurrency(currentBreakdown.electricityTax)}</span>
+                                  </div>
+                                )}
+                                {currentBreakdown.hydrocarbonTax !== undefined && (
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Imp. Hidrocarburos</span>
+                                    <span className="font-medium">{formatCurrency(currentBreakdown.hydrocarbonTax)}</span>
+                                  </div>
+                                )}
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">IVA</span>
+                                  <span className="font-medium">{formatCurrency(currentBreakdown.vat || 0)}</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </CardContent>
+                    </Card>
+
+                    {/* Mejor Alternativa */}
+                    <Card className="border-green-200 bg-green-50 dark:bg-green-950/20">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-bold text-green-700 dark:text-green-400">MEJOR ALTERNATIVA</CardTitle>
+                        <CardDescription className="text-xs text-green-600 dark:text-green-500">{results[0].tariff.companyName} - {results[0].tariff.tariffName}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center pb-2 border-b border-green-200 dark:border-green-800">
+                            <span className="text-xs font-medium text-green-700 dark:text-green-400">TOTAL</span>
+                            <span className="text-lg font-bold text-green-700 dark:text-green-400">{formatCurrency(results[0].totalCost)}</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            {comparisonType === 'luz' ? (
+                              <LightBreakdown breakdown={results[0].breakdown} />
+                            ) : (
+                              <GasBreakdown breakdown={results[0].breakdown} />
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
                 <div className="rounded-md border border-slate-200 dark:border-slate-700 overflow-hidden">
                     <Table className="[&_tr]:border-slate-200 dark:[&_tr]:border-slate-700">
                         <TableHeader className="bg-slate-50 dark:bg-slate-800">
