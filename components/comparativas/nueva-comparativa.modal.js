@@ -48,6 +48,10 @@ const getDefaultFormData = () => ({
   numDias: "30",
   showCurrentBill: true,
 
+  // Datos del suministro (cabecera del PDF). Los pre-rellena el OCR (cups, companyName).
+  cups: "",
+  comercializadora: "",
+
   // Paso 3: Datos de luz (si aplica)
   selectedLightTariff: "2.0TD",
   potencias: generateEmptyArray(getPowerPeriods("2.0TD")), // 2 para 2.0TD
@@ -155,6 +159,8 @@ export default function NuevaComparativaModal({ isOpen, editId, onClose, onCreat
               : "",
           numDias: d.numDias != null ? String(d.numDias) : "30",
           showCurrentBill: d.showCurrentBill !== false,
+          cups: d.cups || "",
+          comercializadora: d.comercializadora || "",
           selectedLightTariff: lightTariff,
           potencias: Array(powerCount)
             .fill("")
@@ -230,6 +236,8 @@ export default function NuevaComparativaModal({ isOpen, editId, onClose, onCreat
         if (d.clientName) next.clientName = d.clientName;
         if (d.currentBillAmount != null) next.currentBillAmount = String(d.currentBillAmount);
         if (d.numDias != null) next.numDias = String(d.numDias);
+        if (d.cups) next.cups = d.cups;
+        if (d.companyName) next.comercializadora = d.companyName;
 
         if (d.comparisonType === "luz") {
           const validTariffs = ["2.0TD", "3.0TD", "6.1TD"];
@@ -310,6 +318,8 @@ export default function NuevaComparativaModal({ isOpen, editId, onClose, onCreat
         // actualice (PUT) la comparativa existente en vez de crear un duplicado.
         ...(editId ? { id: editId } : {}),
         clientName: formData.clientName,
+        cups: formData.cups,
+        comercializadora: formData.comercializadora,
         comparisonType: formData.comparisonType,
         customerType: formData.customerType,
         selectedLightTariff: formData.selectedLightTariff,

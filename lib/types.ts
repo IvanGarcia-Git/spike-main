@@ -86,6 +86,10 @@ export interface PdfData {
   clientName: string;
   showCurrentBill: boolean;
   comparisonType: 'luz' | 'gas';
+  // Datos del suministro (cabecera del PDF) — del OCR / wizard
+  cups?: string;
+  comercializadora?: string;
+  tariffType?: string;
   // Luz
   potencias?: number[];
   energias?: number[];
