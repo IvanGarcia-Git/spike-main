@@ -10,19 +10,57 @@ export default function InlineStateSelector({
   isLoading = false,
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, maxHeight: 240 });
   const buttonRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  // Posicionar el dropdown debajo del botón
+  // Posicionar el dropdown SIEMPRE visible entero: por defecto debajo del botón,
+  // pero si no cabe abajo y hay más sitio arriba, se abre hacia arriba. En todo
+  // caso se acota al viewport (con scroll interno) para que NUNCA se corte.
+  // Como el portal usa position: fixed, las coords son de viewport (sin scrollX/Y).
   useEffect(() => {
-    if (isOpen && buttonRef.current) {
+    if (!isOpen) return;
+
+    const positionDropdown = () => {
+      if (!buttonRef.current) return;
       const rect = buttonRef.current.getBoundingClientRect();
-      setDropdownPosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX,
-      });
-    }
+      const viewportH = window.innerHeight;
+      const viewportW = window.innerWidth;
+      const gap = 4; // separación con el botón
+      const margin = 8; // separación mínima con el borde del viewport
+      const MAX_H = 240; // == max-h-[240px] del diseño
+      const DROPDOWN_W = 180; // == min-w-[180px]
+
+      const spaceBelow = viewportH - rect.bottom - gap - margin;
+      const spaceAbove = rect.top - gap - margin;
+
+      // Abrir hacia arriba solo si no cabe abajo y arriba hay más espacio.
+      const openUp = spaceBelow < MAX_H && spaceAbove > spaceBelow;
+      const available = Math.max(0, openUp ? spaceAbove : spaceBelow);
+      const maxHeight = Math.min(MAX_H, available);
+
+      let top = openUp ? rect.top - gap - maxHeight : rect.bottom + gap;
+      // Clamp final por seguridad: nunca fuera del viewport.
+      top = Math.max(margin, Math.min(top, viewportH - maxHeight - margin));
+
+      // Evitar desborde horizontal por la derecha.
+      let left = rect.left;
+      if (left + DROPDOWN_W + margin > viewportW) {
+        left = Math.max(margin, viewportW - DROPDOWN_W - margin);
+      }
+
+      setDropdownPosition({ top, left, maxHeight });
+    };
+
+    positionDropdown();
+    // Recolocar si cambia el viewport o se hace scroll (el scroll real vive en
+    // <main>, por eso capturamos en fase de captura para enterarnos).
+    window.addEventListener("resize", positionDropdown);
+    window.addEventListener("scroll", positionDropdown, true);
+    return () => {
+      window.removeEventListener("resize", positionDropdown);
+      window.removeEventListener("scroll", positionDropdown, true);
+    };
   }, [isOpen]);
 
   // Cerrar al hacer click fuera
@@ -108,12 +146,13 @@ export default function InlineStateSelector({
         createPortal(
           <div
             ref={dropdownRef}
-            className="fixed z-[100] min-w-[180px] max-h-[240px] overflow-y-auto
+            className="fixed z-[100] min-w-[180px] overflow-y-auto
                        bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700
                        animate-in fade-in slide-in-from-top-1 duration-150"
             style={{
               top: dropdownPosition.top,
               left: dropdownPosition.left,
+              maxHeight: dropdownPosition.maxHeight,
             }}
           >
             <div className="p-1">
