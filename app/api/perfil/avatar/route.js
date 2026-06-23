@@ -68,7 +68,15 @@ export async function POST(req) {
       backendFormData.append("userData", JSON.stringify({})); // Solo actualizamos la imagen
       backendFormData.append("userImage", file, file.name);
 
-      const apiUrl = process.env.API_URL || process.env.BACKEND_URL || "http://localhost:3000";
+      // IMPORTANTE: usar la URL ABSOLUTA interna `BACKEND_URL` (p.ej. http://spike-server:3000).
+      // En producción `API_URL`/`NEXT_PUBLIC_API_URL` valen `/api` (path relativo del proxy del
+      // navegador), inválido en un fetch server-side → la subida se enrutaba mal y daba 404.
+      // Mismo patrón que /api/perfil y /api/perfil/ausencias (que sí funcionan).
+      const apiUrl =
+        process.env.BACKEND_URL ||
+        process.env.API_URL ||
+        process.env.NEXT_PUBLIC_API_URL ||
+        "http://localhost:3000";
 
       const apiResponse = await fetch(`${apiUrl}/users/`, {
         method: "PATCH",
