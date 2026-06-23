@@ -18,6 +18,29 @@ const safeDate = (value, fmt) => {
   return isNaN(d.getTime()) ? "—" : format(d, fmt);
 };
 
+// El backend migró su manejo de errores: ahora responde
+// `{ success:false, error:{ message, code, statusCode, details } }` con mensajes en
+// ESPAÑOL y statuses 404 (NotFoundError "no hay leads") / 422 (BusinessRuleError
+// "sin grupo"/"sin campañas"). El frontend asumía el formato viejo (status 500 +
+// `errorData.message` en inglés) y SIEMPRE caía al error genérico ⇒ el botón
+// "Solicitar Lead" parecía no funcionar. Este helper lee ambos formatos.
+const readLeadTypeError = async (response) => {
+  let data = {};
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+  const err = data?.error || {};
+  const message = err.message || data?.message || "";
+  const noLeads =
+    /no available lead to assign/i.test(message) || // formato legacy (inglés)
+    /no hay leads disponibles/i.test(message) || // BusinessRuleError ES
+    /disponible para asignar/i.test(message) || // NotFoundError ES ("Lead disponible para asignar no encontrado")
+    err?.details?.rule === "NO_AVAILABLE_LEAD";
+  return { message, noLeads };
+};
+
 export default function LeadDetailPage() {
   const [lead, setLead] = useState(null);
   const [leadCanBeLose, setLeadCanBeLose] = useState(false);
@@ -232,17 +255,16 @@ export default function LeadDetailPage() {
         alert("Informacion subida correctamente");
         window.location.reload();
       } else {
-        const errorData = await response.json();
-        console.error(errorData);
+        const { message, noLeads } = await readLeadTypeError(response);
 
-        if (
-          response.status === 500 &&
-          errorData.message === "No available lead to assign"
-        ) {
+        if (noLeads) {
           alert(
             "Información subida correctamente, por el momento no quedan mas leads sin asignar"
           );
           window.location.reload();
+        } else if (message) {
+          // El backend ya devuelve el motivo en español (sin grupo / sin campañas).
+          setError(message);
         } else {
           setError("Ocurrió un error al solicitar el nuevo lead.");
         }
@@ -306,21 +328,16 @@ export default function LeadDetailPage() {
       if (response.ok) {
         window.location.reload();
       } else {
-        const errorData = await response.json();
-        console.error(errorData);
+        const { message, noLeads } = await readLeadTypeError(response);
 
-        if (response.status === 500) {
-          if (errorData.message === "No available lead to assign") {
-            alert("Por el momento no quedan más leads sin asignar");
-          } else if (errorData.message === "No campaigns available for the user's groups") {
-            alert("Tu grupo no tiene campañas asignadas. Contacta con un administrador para configurar las campañas.");
-          } else if (errorData.message === "User does not belong to any group") {
-            alert("No perteneces a ningún grupo. Contacta con un administrador.");
-          } else {
-            setError("Ocurrió un error al solicitar el nuevo lead.");
-          }
+        if (noLeads) {
+          alert("Por el momento no quedan más leads sin asignar");
+        } else if (message) {
+          // Motivo real ya en español desde el backend (p.ej. "El usuario no
+          // pertenece a ningún grupo." / "No hay campañas disponibles...").
+          alert(message);
         } else {
-          setError("Ocurrió un error al solicitar el nuevo lead.");
+          alert("Ocurrió un error al solicitar el nuevo lead.");
         }
       }
     } catch (error) {
