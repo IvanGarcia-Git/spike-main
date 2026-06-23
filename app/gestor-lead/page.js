@@ -46,6 +46,7 @@ export default function LeadDetailPage() {
   const [leadCanBeLose, setLeadCanBeLose] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(false);
+  const [requestingLead, setRequestingLead] = useState(false);
 
   const [error, setError] = useState("");
   const [showUsefulOptions, setShowUsefulOptions] = useState(false);
@@ -313,10 +314,13 @@ export default function LeadDetailPage() {
   };
 
   const handleSearchNewLead = async () => {
+    if (requestingLead) return; // evita dobles clics mientras se asigna
+
     const payload = {};
 
     const jwtToken = getCookie("factura-token");
 
+    setRequestingLead(true);
     try {
       const response = await authFetch(
         "POST",
@@ -326,22 +330,28 @@ export default function LeadDetailPage() {
       );
 
       if (response.ok) {
+        // Éxito: se recarga para mostrar el lead. Mantenemos el spinner activo
+        // (no reseteamos requestingLead) hasta que la navegación toma el control.
         window.location.reload();
-      } else {
-        const { message, noLeads } = await readLeadTypeError(response);
-
-        if (noLeads) {
-          alert("Por el momento no quedan más leads sin asignar");
-        } else if (message) {
-          // Motivo real ya en español desde el backend (p.ej. "El usuario no
-          // pertenece a ningún grupo." / "No hay campañas disponibles...").
-          alert(message);
-        } else {
-          alert("Ocurrió un error al solicitar el nuevo lead.");
-        }
+        return;
       }
+
+      const { message, noLeads } = await readLeadTypeError(response);
+
+      if (noLeads) {
+        alert("Por el momento no quedan más leads sin asignar");
+      } else if (message) {
+        // Motivo real ya en español desde el backend (p.ej. "El usuario no
+        // pertenece a ningún grupo." / "No hay campañas disponibles...").
+        alert(message);
+      } else {
+        alert("Ocurrió un error al solicitar el nuevo lead.");
+      }
+      setRequestingLead(false);
     } catch (error) {
       console.error("Error enviando la solicitud:", error);
+      alert("Ocurrió un error al solicitar el nuevo lead.");
+      setRequestingLead(false);
     }
   };
 
@@ -388,10 +398,13 @@ export default function LeadDetailPage() {
           </p>
           <button
             onClick={handleSearchNewLead}
-            className="neumorphic-button bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors inline-flex items-center gap-2"
+            disabled={requestingLead}
+            className="neumorphic-button bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors inline-flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            <span className="material-icons-outlined">add</span>
-            Solicitar Lead
+            <span className={`material-icons-outlined ${requestingLead ? "animate-spin" : ""}`}>
+              {requestingLead ? "sync" : "add"}
+            </span>
+            {requestingLead ? "Solicitando lead..." : "Solicitar Lead"}
           </button>
         </div>
 
