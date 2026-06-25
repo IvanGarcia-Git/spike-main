@@ -2,7 +2,7 @@
 
 import { useState, type ChangeEvent, useEffect } from 'react';
 import Image from 'next/image';
-import { Phone, Mail, Globe, Check } from 'lucide-react';
+import { Phone } from 'lucide-react';
 import type { PdfData, CompanyLightTariff, CompanyGasTariff } from '@/lib/types';
 
 const formatCurrency = (value: number | undefined | null) => {
@@ -87,16 +87,11 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
     ];
     const [logos, setLogos] = useState<string[]>(defaultLogos);
     const [headerLine1, setHeaderLine1] = useState('Comparado entre');
-    const [headerLine2, setHeaderLine2] = useState('+ 150 compañías');
-
-    const [mainLogoSrc, setMainLogoSrc] = useState('/images/logo.svg');
-    const [footerLogoSrc, setFooterLogoSrc] = useState('/images/logo.svg');
+    const [headerLine2, setHeaderLine2] = useState('+ 60 compañías');
 
     // Load saved logos from localStorage on first render
     useEffect(() => {
         const savedLogos = localStorage.getItem('comparativaLogos');
-        const savedMainLogo = localStorage.getItem('comparativaMainLogo');
-        const savedFooterLogo = localStorage.getItem('comparativaFooterLogo');
         const savedHeader1 = localStorage.getItem('comparativaHeader1');
         const savedHeader2 = localStorage.getItem('comparativaHeader2');
 
@@ -107,8 +102,6 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                 console.error('Error parsing saved logos:', e);
             }
         }
-        if (savedMainLogo) setMainLogoSrc(savedMainLogo);
-        if (savedFooterLogo) setFooterLogoSrc(savedFooterLogo);
         if (savedHeader1) setHeaderLine1(savedHeader1);
         if (savedHeader2) setHeaderLine2(savedHeader2);
     }, []);
@@ -348,34 +341,6 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
         }
     };
 
-    const handleMainLogoChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const logoData = reader.result as string;
-                setMainLogoSrc(logoData);
-                // Save to localStorage
-                localStorage.setItem('comparativaMainLogo', logoData);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    const handleFooterLogoChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const logoData = reader.result as string;
-                setFooterLogoSrc(logoData);
-                // Save to localStorage
-                localStorage.setItem('comparativaFooterLogo', logoData);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
     const showCurrentBill = pdfData?.showCurrentBill ?? true;
     const annualSaving = pdfData?.annualSaving || 0;
     const monthlySaving = pdfData?.monthlySaving || 0;
@@ -433,78 +398,89 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
 
     return (
         <div className="space-y-8">
-            {/* Page 1: Cover — diseño "Luzia" */}
+            {/* Page 1: Cover — diseño locomparo (fondo gris) */}
+            {/* El fondo gris va en un wrapper interno: el onclone de la página de
+                descarga fuerza el backgroundColor de cada `.pdf-page` a colors.background
+                (blanco por defecto), así que el gris debe vivir en un hijo a pantalla completa. */}
             <div
-                className="pdf-page aspect-[210/297] shadow-lg rounded-lg p-10 flex flex-col font-sans"
-                style={{ backgroundColor: '#ffffff' }}
+                className="pdf-page aspect-[210/297] shadow-lg rounded-lg font-sans"
+                style={{ backgroundColor: '#757575' }}
             >
-                {/* Cabecera: texto editable + logos comparados */}
-                <header className="flex items-start justify-between">
-                    <div>
-                        <input
-                            type="text"
-                            value={headerLine1}
-                            onChange={(e) => {
-                                setHeaderLine1(e.target.value);
-                                localStorage.setItem('comparativaHeader1', e.target.value);
-                            }}
-                            className="font-bold text-sm bg-transparent border-none p-0 m-0 w-full focus:ring-1 focus:ring-emerald-500 rounded-sm"
-                            style={{ color: '#0f766e' }}
-                        />
-                        <input
-                            type="text"
-                            value={headerLine2}
-                            onChange={(e) => {
-                                setHeaderLine2(e.target.value);
-                                localStorage.setItem('comparativaHeader2', e.target.value);
-                            }}
-                            className="text-lg font-extrabold bg-transparent border-none p-0 m-0 w-full focus:ring-1 focus:ring-emerald-500 rounded-sm"
-                            style={{ color: '#059669' }}
-                        />
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {logos.map((logoSrc, index) => (
-                            <label key={index} className="logo-container cursor-pointer group relative border-2 border-dashed rounded-md p-1 hover:border-primary transition-colors duration-200">
-                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleLogoChange(e, index)} />
-                                <Image data-ai-hint="company logo" src={logoSrc} alt={`Company logo ${index + 1}`} width={56} height={28} className="object-contain" />
-                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                    <p className="text-white text-xs font-bold">Cambiar</p>
-                                </div>
-                            </label>
-                        ))}
-                    </div>
-                </header>
-
-                {/* Logo principal */}
-                <div className="flex-grow flex flex-col items-center justify-center text-center">
-                    <label className="logo-container cursor-pointer group relative border-2 border-dashed rounded-md p-1 hover:border-primary transition-colors duration-200 block w-64 h-32 mx-auto">
-                        <input type="file" accept="image/*" className="hidden" onChange={handleMainLogoChange} />
-                        <Image data-ai-hint="company logo" src={mainLogoSrc} alt="Main Logo" fill className="object-contain" />
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <p className="text-white text-xs font-bold">Cambiar Logo Principal</p>
+                <div className="w-full h-full rounded-lg p-10 flex flex-col" style={{ backgroundColor: '#757575' }}>
+                    {/* Cabecera: texto editable + logos comparados */}
+                    <header className="flex items-start justify-between gap-4">
+                        <div>
+                            <input
+                                type="text"
+                                value={headerLine1}
+                                onChange={(e) => {
+                                    setHeaderLine1(e.target.value);
+                                    localStorage.setItem('comparativaHeader1', e.target.value);
+                                }}
+                                className="font-bold text-sm bg-transparent border-none p-0 m-0 w-full focus:ring-1 focus:ring-emerald-500 rounded-sm"
+                                style={{ color: '#ffffff' }}
+                            />
+                            <input
+                                type="text"
+                                value={headerLine2}
+                                onChange={(e) => {
+                                    setHeaderLine2(e.target.value);
+                                    localStorage.setItem('comparativaHeader2', e.target.value);
+                                }}
+                                className="text-lg font-extrabold bg-transparent border-none p-0 m-0 w-full focus:ring-1 focus:ring-emerald-500 rounded-sm"
+                                style={{ color: '#ffffff' }}
+                            />
                         </div>
-                    </label>
-                </div>
-
-                {/* Hero: saludo + ahorro anual destacado */}
-                <div className="rounded-2xl px-8 py-8 text-center" style={{ backgroundColor: '#065f46' }}>
-                    <h1 className="text-4xl font-extrabold text-white">{pdfData?.clientName || 'Cliente'},</h1>
-                    <h2 className="text-2xl font-medium text-white" style={{ opacity: 0.92 }}>aquí tienes tu comparativa</h2>
-                    <div className="mt-5 inline-block rounded-xl px-6 py-3" style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}>
-                        <p className="text-[11px] font-semibold tracking-widest text-white" style={{ opacity: 0.85 }}>AHORRO ANUAL ESTIMADO</p>
-                        <p className="text-4xl font-extrabold text-white">{formatCurrency(annualSaving)}</p>
-                    </div>
-                </div>
-
-                {/* Logo footer */}
-                <div className="flex justify-center mt-6">
-                    <label className="logo-container cursor-pointer group relative border-2 border-dashed rounded-md p-1 hover:border-primary transition-colors duration-200 block w-72 h-14">
-                        <input type="file" accept="image/*" className="hidden" onChange={handleFooterLogoChange} />
-                        <Image data-ai-hint="company logo" src={footerLogoSrc} alt="Footer Logo" fill className="object-contain" />
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <p className="text-white text-xs font-bold">Cambiar Logo Footer</p>
+                        <div className="flex items-center gap-2">
+                            {logos.map((logoSrc, index) => (
+                                <label key={index} className="logo-container cursor-pointer group relative border-2 border-dashed border-white/60 rounded-md p-1 hover:border-primary transition-colors duration-200">
+                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleLogoChange(e, index)} />
+                                    <Image data-ai-hint="company logo" src={logoSrc} alt={`Company logo ${index + 1}`} width={56} height={28} className="object-contain" unoptimized />
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                        <p className="text-white text-xs font-bold">Cambiar</p>
+                                    </div>
+                                </label>
+                            ))}
                         </div>
-                    </label>
+                    </header>
+
+                    {/* Imagen central: "COMPARATIVA De Ahorro" */}
+                    <div className="flex-grow flex flex-col items-center justify-center text-center">
+                        <Image
+                            data-ai-hint="comparativa de ahorro"
+                            src="/images/comparativa/comparativa-ahorro.png"
+                            alt="Comparativa de Ahorro"
+                            width={1400}
+                            height={385}
+                            className="w-4/5 h-auto object-contain"
+                            unoptimized
+                            priority
+                        />
+                    </div>
+
+                    {/* Hero: saludo + ahorro anual destacado */}
+                    <div className="rounded-3xl px-8 py-8 text-center" style={{ backgroundColor: '#41ab7b' }}>
+                        <h1 className="text-4xl font-extrabold" style={{ color: '#ffffff' }}>{pdfData?.clientName || 'Cliente'},</h1>
+                        <h2 className="text-2xl font-medium" style={{ color: '#ffffff', opacity: 0.95 }}>aquí tienes tu comparativa</h2>
+                        <div className="mt-5 inline-block rounded-2xl px-8 py-3" style={{ backgroundColor: '#46c88c' }}>
+                            <p className="text-[11px] font-semibold tracking-widest" style={{ color: '#ffffff' }}>AHORRO ANUAL ESTIMADO</p>
+                            <p className="text-4xl font-extrabold" style={{ color: '#ffffff' }}>{formatCurrency(annualSaving)}</p>
+                        </div>
+                    </div>
+
+                    {/* Logo footer: locomparo.com (versión blanca para fondo gris) */}
+                    <div className="flex justify-center mt-6">
+                        <Image
+                            data-ai-hint="company logo"
+                            src="/images/comparativa/locomparo-blanco.png"
+                            alt="locomparo.com"
+                            width={1000}
+                            height={174}
+                            className="h-9 w-auto object-contain"
+                            unoptimized
+                            priority
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -706,94 +682,83 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                 </div>
             </div>
 
-            {/* Page 3: About Us — diseño "Luzia" */}
+            {/* Page 3: About Us — diseño locomparo */}
             <div
-                className="pdf-page aspect-[210/297] shadow-lg rounded-lg p-10 flex flex-col font-sans text-sm"
+                className="pdf-page aspect-[210/297] shadow-lg rounded-lg p-8 flex flex-col font-sans text-sm"
                 style={{ backgroundColor: '#ffffff' }}
             >
-                <header className="flex justify-center mb-6">
-                    <div className="rounded-full px-12 py-3" style={{ backgroundColor: '#065f46' }}>
-                        <h1 className="text-2xl font-extrabold text-white">Sobre nosotros</h1>
+                <header className="flex justify-center mb-4">
+                    <div className="rounded-full px-12 py-2.5" style={{ backgroundColor: '#10b981' }}>
+                        <h1 className="text-2xl font-extrabold" style={{ color: '#ffffff' }}>Sobre nosotros</h1>
                     </div>
                 </header>
 
-                <main className="flex-grow grid grid-cols-2 gap-8">
-                    <div className="flex flex-col justify-between">
-                        <div>
-                            <ul className="space-y-2 mb-6">
-                                {['Precio fijo 24h / 12 meses', 'Compromiso ahorro', 'Sin mantenimientos', 'Sin permanencias'].map((t) => (
-                                    <li key={t} className="flex items-center gap-3">
-                                        <Check className="w-5 h-5 flex-shrink-0" style={{ color: '#059669' }} />
-                                        <span className="font-semibold" style={{ color: '#111827' }}>{t}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                            <div>
-                                <h2 className="font-bold text-base tracking-wider" style={{ color: '#0f766e' }}>VISÍTANOS</h2>
-                                <p className="font-semibold" style={{ color: '#374151' }}>Calle Virgen de Luján 20</p>
-                                <p className="font-semibold" style={{ color: '#374151' }}>41011 Sevilla</p>
-                                <Image
-                                    data-ai-hint="office building"
-                                    src="https://placehold.co/280x180.png"
-                                    alt="Oficina"
-                                    width={280}
-                                    height={170}
-                                    className="rounded-xl mt-3 shadow-md object-cover"
-                                />
-                            </div>
-                        </div>
-                        <div className="flex items-end gap-4 mt-4">
-                            <div>
-                                <p className="text-lg font-extrabold leading-tight" style={{ color: '#065f46' }}>CONOCE</p>
-                                <p className="text-lg font-extrabold leading-tight" style={{ color: '#065f46' }}>NUESTRAS</p>
-                                <p className="text-lg font-extrabold leading-tight" style={{ color: '#065f46' }}>RESEÑAS</p>
-                            </div>
-                            <div className="relative">
-                                <div className="absolute -top-2.5 right-0 text-[10px] font-bold px-1.5 py-0.5 rounded-sm text-white" style={{ backgroundColor: '#059669' }}>
-                                    ESCANEA AQUÍ
-                                </div>
-                                <Image
-                                    data-ai-hint="QR code"
-                                    src="https://placehold.co/100x100.png"
-                                    alt="QR Code"
-                                    width={100}
-                                    height={100}
-                                    className="rounded-lg p-0.5"
-                                    style={{ border: '4px solid #059669' }}
-                                />
-                            </div>
-                        </div>
+                {/* Fila: reseñas (Trustpilot) + tu asesor */}
+                <div className="grid grid-cols-3 gap-5 items-start">
+                    <div className="col-span-2">
+                        <Image
+                            data-ai-hint="reseñas trustpilot"
+                            src="/images/comparativa/resenas.png"
+                            alt="Reseñas de clientes"
+                            width={1500}
+                            height={1311}
+                            className="w-full h-auto object-contain"
+                            unoptimized
+                            priority
+                        />
                     </div>
 
-                    <div className="flex flex-col items-center pt-2">
-                        <h2 className="font-bold text-base tracking-wider" style={{ color: '#0f766e' }}>TU ASESOR</h2>
+                    <div className="col-span-1 flex flex-col items-center text-center">
+                        <h2 className="font-bold text-sm tracking-wider mb-2" style={{ color: '#0f766e' }}>TU ASESOR</h2>
                         <Image
                             data-ai-hint="portrait person"
-                            src={userData?.profileImageUri || "https://images.unsplash.com/photo-1633332755192-727a05c4013d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxwZXJzb25hfGVufDB8fHx8MTc1MTczNTY2OXww&ixlib=rb-4.1.0&q=80&w=1080"}
+                            src={userData?.profileImageUri || "/images/comparativa/locomparo-negro.png"}
                             alt={`Asesor ${userData?.name || 'Usuario'}`}
-                            width={120}
-                            height={120}
-                            className="rounded-full my-2 object-cover"
-                            style={{ border: '4px solid #d1fae5' }}
+                            width={110}
+                            height={110}
+                            className="rounded-full object-cover"
+                            style={{ border: '4px solid #d1fae5', width: '96px', height: '96px' }}
+                            unoptimized
                         />
-                        <p className="text-2xl font-extrabold mb-4" style={{ color: '#111827' }}>{userData?.name || 'Usuario'}</p>
-                        <div className="space-y-2.5 w-full max-w-xs text-center">
-                            {['Asesoramiento GRATIS', 'Asistencia 365 días', 'Recordatorio Renovaciones'].map((t) => (
-                                <div key={t} className="rounded-full py-2.5" style={{ backgroundColor: '#065f46' }}>
-                                    <p className="font-bold text-sm text-white">{t}</p>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="text-center mt-4 font-semibold">
-                            <p style={{ color: '#374151' }}>Contacto: 621 19 36 34</p>
+                        <p className="text-lg font-extrabold mt-2" style={{ color: '#111827' }}>{userData?.name || 'Usuario'}</p>
+                        <div className="mt-2 font-semibold text-xs space-y-0.5">
+                            <p style={{ color: '#374151' }}>Contacto: {contactPhone || '621 19 36 34'}</p>
                             <p style={{ color: '#374151' }}>Nombre: {userData?.name || 'Usuario'}</p>
                         </div>
                     </div>
-                </main>
+                </div>
 
-                <footer className="text-center mt-6 pt-2" style={{ borderTop: '1px solid #e5e7eb' }}>
+                {/* Nuestros servicios */}
+                <div className="mt-4">
+                    <h2 className="text-center text-xl font-extrabold mb-2">
+                        <span style={{ color: '#111827' }}>Nuestros </span>
+                        <span style={{ color: '#10b981', fontStyle: 'italic' }}>servicios.</span>
+                    </h2>
+                    <Image
+                        data-ai-hint="servicios características"
+                        src="/images/comparativa/caracteristicas.png"
+                        alt="Nuestros servicios"
+                        width={1600}
+                        height={553}
+                        className="w-full h-auto object-contain"
+                        unoptimized
+                        priority
+                    />
+                </div>
+
+                {/* Aviso legal */}
+                <div className="mt-4 rounded-lg px-4 py-3" style={{ backgroundColor: '#fef9c3' }}>
+                    <p className="text-[9px] leading-snug mb-2" style={{ color: '#374151' }}>
+                        *Los precios, tarifas y condiciones económicas reflejados en la presente comparativa corresponden a la información disponible en la fecha de su elaboración. Dichos importes tienen carácter meramente informativo y orientativo, y no constituyen una oferta vinculante ni un compromiso contractual por parte de las compañías proveedoras.
+                    </p>
+                    <p className="text-[9px] leading-snug" style={{ color: '#374151' }}>
+                        La reserva o garantía del precio únicamente se producirá una vez que la contratación haya sido formalizada y aceptada por la compañía correspondiente, de acuerdo con sus procedimientos y condiciones de contratación vigentes en ese momento.
+                    </p>
+                </div>
+
+                <footer className="text-center mt-auto pt-3" style={{ borderTop: '1px solid #e5e7eb' }}>
                     <p className="text-[10px]" style={{ color: '#6b7280' }}>
-                        Política Privacidad: <a href="https://bajaturafactura.es/politica-de-privacidad/" className="underline font-semibold" style={{ color: '#059669' }}>https://bajaturafactura.es/politica-de-privacidad/</a>
+                        Política Privacidad: <a href="https://locomparo.com/politicas-de-privacidad/" className="underline font-semibold" style={{ color: '#10b981' }}>https://locomparo.com/politicas-de-privacidad/</a>
                     </p>
                 </footer>
             </div>
