@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -557,21 +557,7 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
     }, [results, comparativaSaved, formData, currentBillAmount, regulatedCosts, toast]);
 
 
-    if (results.length === 0) {
-        return (
-            <Card className="mt-8">
-                <CardHeader>
-                    <CardTitle>No se encontraron resultados</CardTitle>
-                    <CardDescription>No hay tarifas que coincidan con los criterios de búsqueda. Prueba a cambiar las opciones en el formulario.</CardDescription>
-                </CardHeader>
-                 <CardContent>
-                    <Button onClick={() => router.push('/')}>Volver al Inicio</Button>
-                </CardContent>
-            </Card>
-        )
-    }
-
-    const handleDownload = (result: TariffComparisonResult, annualSaving: number) => {
+    const handleDownload = useCallback((result: TariffComparisonResult, annualSaving: number) => {
       const monthlySaving = annualSaving / 12;
 
       // Solo enviamos los precios de la tarifa actual si la factura aportó datos reales;
@@ -609,7 +595,39 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
 
       sessionStorage.setItem('pdfDataForGeneration', JSON.stringify(data));
       router.push('/comparativas/personalizada');
-    };
+    }, [formData, currentBillAmount, clientName, showCurrentBill, comparisonType, numDias, regulatedCosts, router]);
+
+    // Auto-descarga: al "Exportar" una comparativa guardada desde el historial se recalcula
+    // aquí (mejor tarifa + desglose + ahorro, que el backend NO guarda) y se descarga el PDF
+    // automáticamente. La activa app/comparativas/page.js (handleExport) con `autoDownloadComparativa`.
+    const autoDownloadedRef = useRef(false);
+    useEffect(() => {
+        if (autoDownloadedRef.current || results.length === 0) return;
+        if (typeof window === 'undefined') return;
+        if (sessionStorage.getItem('autoDownloadComparativa') !== 'true') return;
+        autoDownloadedRef.current = true;
+        sessionStorage.removeItem('autoDownloadComparativa');
+        const best = results[0];
+        const saving = currentBillAmount - best.totalCost;
+        const annualSaving = currentBillAmount > 0 && numDias > 0 ? (saving / numDias) * 365 : 0;
+        // Para que /comparativas/personalizada descargue el PDF y vuelva al historial.
+        sessionStorage.setItem('autoDownloadPDF', 'true');
+        handleDownload(best, annualSaving);
+    }, [results, currentBillAmount, numDias, handleDownload]);
+
+    if (results.length === 0) {
+        return (
+            <Card className="mt-8">
+                <CardHeader>
+                    <CardTitle>No se encontraron resultados</CardTitle>
+                    <CardDescription>No hay tarifas que coincidan con los criterios de búsqueda. Prueba a cambiar las opciones en el formulario.</CardDescription>
+                </CardHeader>
+                 <CardContent>
+                    <Button onClick={() => router.push('/')}>Volver al Inicio</Button>
+                </CardContent>
+            </Card>
+        )
+    }
 
     const isLight = comparisonType === 'luz';
 

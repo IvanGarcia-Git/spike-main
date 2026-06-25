@@ -108,24 +108,50 @@ export default function ComparativasPage() {
     try {
       const token = getCookie("factura-token");
       const response = await getComparativaById(comparativa.id, token);
-      if (response.ok) {
-        const fullData = await response.json();
-        // Store data for PDF generation and navigate to personalizada page
-        sessionStorage.setItem("pdfDataForGeneration", JSON.stringify({
-          clientName: fullData.clientName,
-          comparisonType: fullData.comparisonType,
-          customerType: fullData.customerType,
-          tariffType: fullData.tariffType,
-          calculatedNewPrice: fullData.calculatedNewPrice,
-          calculatedOldPrice: fullData.calculatedOldPrice,
-          savings: fullData.savings,
-          potencias: fullData.potencias,
-          energias: fullData.energias,
-          numDias: fullData.numDias,
-        }));
-        sessionStorage.setItem("autoDownloadPDF", "true");
-        router.push("/comparativas/personalizada");
+      if (!response.ok) {
+        console.error("Error exporting comparativa:", response.status);
+        return;
       }
+      const fd = await response.json();
+      const isGas = fd.comparisonType === "gas";
+      const num = (v) => (v != null && v !== "" ? Number(v) : 0);
+
+      // El backend solo guarda un cálculo MOCK: la mejor tarifa, su desglose y el ahorro real
+      // se calculan en el frontend (página de resultados, contra las tarifas de las compañías).
+      // Por eso reconstruimos el MISMO `comparisonData` que produce el wizard y enviamos al
+      // usuario a /comparativas/resultados, que recalcula todo y (con `autoDownloadComparativa`)
+      // descarga el PDF de la mejor tarifa automáticamente. Incluimos `id` para ACTUALIZAR la
+      // comparativa existente (PUT) y no crear un duplicado.
+      sessionStorage.setItem("comparisonData", JSON.stringify({
+        id: fd.id,
+        clientName: fd.clientName,
+        cups: fd.cups || "",
+        comercializadora: fd.comercializadora || "",
+        comparisonType: fd.comparisonType,
+        customerType: fd.customerType || "particular",
+        selectedLightTariff: !isGas ? (fd.tariffType || "2.0TD") : "2.0TD",
+        selectedGasTariff: isGas ? (fd.tariffType || "RL.1") : "RL.1",
+        tariffType: fd.tariffType,
+        potencias: Array.isArray(fd.potencias) ? fd.potencias.map(num) : [],
+        energias: Array.isArray(fd.energias) ? fd.energias.map(num) : [],
+        energia: num(fd.energia),
+        numDias: fd.numDias != null ? Number(fd.numDias) : 30,
+        showCurrentBill: fd.showCurrentBill !== false,
+        currentBillAmount: num(fd.currentBillAmount),
+        excedentes: num(fd.excedentes),
+        solarPanelActive: fd.solarPanelActive || false,
+        hasMainServices: fd.hasMainServices || false,
+        mainMaintenanceCost: num(fd.mainMaintenanceCost),
+        hasClientServices: fd.hasClientServices || false,
+        clientMaintenanceCost: num(fd.clientMaintenanceCost),
+        clientPowerPrices: Array.isArray(fd.clientPowerPrices) ? fd.clientPowerPrices.map(num) : [],
+        clientEnergyPrices: Array.isArray(fd.clientEnergyPrices) ? fd.clientEnergyPrices.map(num) : [],
+        clientSurplusPrice: num(fd.clientSurplusPrice),
+        clientFixedPrice: num(fd.clientFixedPrice),
+        clientGasEnergyPrice: num(fd.clientGasEnergyPrice),
+      }));
+      sessionStorage.setItem("autoDownloadComparativa", "true");
+      router.push("/comparativas/resultados");
     } catch (error) {
       console.error("Error exporting comparativa:", error);
     }
