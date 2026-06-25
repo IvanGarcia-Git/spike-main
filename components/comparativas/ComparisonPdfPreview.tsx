@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ChangeEvent, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Phone } from 'lucide-react';
 import type { PdfData, CompanyLightTariff, CompanyGasTariff } from '@/lib/types';
@@ -79,29 +79,20 @@ const initialBestTariffDetails: EditableCardData = {
 
 
 export default function ComparisonPdfPreview({ pdfData, colors, userData }: ComparisonPdfPreviewProps) {
-    const defaultLogos = [
-        'https://placehold.co/80x35.png',
-        'https://placehold.co/80x35.png',
-        'https://placehold.co/80x35.png',
-        'https://placehold.co/80x35.png',
+    // Logos de las compañías comparadas (portada). Fijos, desde Recursos del proyecto.
+    const COMPANY_LOGOS = [
+        { src: '/images/comparativa/octopus.png', alt: 'Octopus Energy' },
+        { src: '/images/comparativa/endesa.png', alt: 'Endesa' },
+        { src: '/images/comparativa/naturgy.png', alt: 'Naturgy' },
+        { src: '/images/comparativa/repsol.png', alt: 'Repsol' },
     ];
-    const [logos, setLogos] = useState<string[]>(defaultLogos);
     const [headerLine1, setHeaderLine1] = useState('Comparado entre');
     const [headerLine2, setHeaderLine2] = useState('+ 60 compañías');
 
-    // Load saved logos from localStorage on first render
+    // Load saved header texts from localStorage on first render
     useEffect(() => {
-        const savedLogos = localStorage.getItem('comparativaLogos');
         const savedHeader1 = localStorage.getItem('comparativaHeader1');
         const savedHeader2 = localStorage.getItem('comparativaHeader2');
-
-        if (savedLogos) {
-            try {
-                setLogos(JSON.parse(savedLogos));
-            } catch (e) {
-                console.error('Error parsing saved logos:', e);
-            }
-        }
         if (savedHeader1) setHeaderLine1(savedHeader1);
         if (savedHeader2) setHeaderLine2(savedHeader2);
     }, []);
@@ -326,21 +317,6 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
     }, [pdfData]);
 
 
-    const handleLogoChange = (e: ChangeEvent<HTMLInputElement>, index: number) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const newLogos = [...logos];
-                newLogos[index] = reader.result as string;
-                setLogos(newLogos);
-                // Save to localStorage
-                localStorage.setItem('comparativaLogos', JSON.stringify(newLogos));
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
     const showCurrentBill = pdfData?.showCurrentBill ?? true;
     const annualSaving = pdfData?.annualSaving || 0;
     const monthlySaving = pdfData?.monthlySaving || 0;
@@ -431,15 +407,19 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                                 style={{ color: '#ffffff' }}
                             />
                         </div>
-                        <div className="flex items-center gap-2">
-                            {logos.map((logoSrc, index) => (
-                                <label key={index} className="logo-container cursor-pointer group relative border-2 border-dashed border-white/60 rounded-md p-1 hover:border-primary transition-colors duration-200">
-                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleLogoChange(e, index)} />
-                                    <Image data-ai-hint="company logo" src={logoSrc} alt={`Company logo ${index + 1}`} width={56} height={28} className="object-contain" unoptimized />
-                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                        <p className="text-white text-xs font-bold">Cambiar</p>
-                                    </div>
-                                </label>
+                        <div className="flex items-center gap-3 flex-wrap justify-end max-w-[55%]">
+                            {COMPANY_LOGOS.map((logo) => (
+                                <Image
+                                    key={logo.src}
+                                    data-ai-hint="company logo"
+                                    src={logo.src}
+                                    alt={logo.alt}
+                                    width={120}
+                                    height={40}
+                                    className="h-5 w-auto max-w-[80px] object-contain"
+                                    unoptimized
+                                    priority
+                                />
                             ))}
                         </div>
                     </header>
