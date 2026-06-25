@@ -6,7 +6,15 @@ import { authGetFetch, authFetch } from "@/helpers/server-fetch.helper";
 import EditAndCreateLeadSheet from "@/components/edit-and-create-leadSheet.modal";
 import * as jose from "jose";
 import CommunicationModal from "@/components/communication.modal";
+import LeadTipificationModal from "@/components/lead-tipification.modal";
 import { useLayout } from '../layout';
+
+// Etiquetas y colores del ciclo de vida del lead (nuevo sistema PRES-018 B2b).
+const LEAD_STATUS_META = {
+  activo: { label: "Activo", badge: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
+  callback: { label: "Callback", badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+  muerto: { label: "Muerto", badge: "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300" },
+};
 
 // Formatea una fecha de forma segura. date-fns `format(new Date(x))` LANZA
 // "Invalid time value" si la fecha es null/indefinida o no parseable, lo que
@@ -47,6 +55,8 @@ export default function LeadDetailPage() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(false);
   const [requestingLead, setRequestingLead] = useState(false);
+  const [queueStats, setQueueStats] = useState(null);
+  const [showTipifyModal, setShowTipifyModal] = useState(false);
 
   const [error, setError] = useState("");
   const [showUsefulOptions, setShowUsefulOptions] = useState(false);
@@ -173,10 +183,23 @@ export default function LeadDetailPage() {
     }
   }
 
+  const getQueueStats = async () => {
+    const jwtToken = getCookie("factura-token");
+    try {
+      const response = await authGetFetch("leads/queue-stats", jwtToken);
+      if (response.ok) {
+        setQueueStats(await response.json());
+      }
+    } catch (error) {
+      console.error("Error cargando estadísticas de cola:", error);
+    }
+  };
+
   useEffect(() => {
     fetchLeadData();
     getLeadsHistory();
     getUnnotifiedNotifications();
+    getQueueStats();
   }, []);
 
   useEffect(() => {
@@ -385,6 +408,7 @@ export default function LeadDetailPage() {
   if (!lead) {
     return (
       <div className="p-6 space-y-6">
+        <QueueStatsBar stats={queueStats} />
         {/* Empty State Card */}
         <div className="neumorphic-card p-12 text-center max-w-xl mx-auto">
           <div className="w-20 h-20 rounded-full neumorphic-card-inset flex items-center justify-center mx-auto mb-6">
@@ -435,6 +459,13 @@ export default function LeadDetailPage() {
           >
             <span className="material-icons-outlined text-sm">assignment</span>
             Ficha
+          </button>
+          <button
+            onClick={() => setShowTipifyModal(true)}
+            className="neumorphic-button px-4 py-2 rounded-lg text-primary font-medium flex items-center gap-2"
+          >
+            <span className="material-icons-outlined text-sm">fact_check</span>
+            Tipificar
           </button>
           {lead.billUri && (
             <a
@@ -507,6 +538,36 @@ export default function LeadDetailPage() {
                   <p className="text-xs text-slate-500 dark:text-slate-400">Logs</p>
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
                     {lead.leadLogs?.length || 0}
+                  </p>
+                </div>
+                {/* Ciclo de vida del lead (PRES-018 B2b) */}
+                <div className="neumorphic-card-inset px-4 py-3 rounded-lg text-center min-w-[80px]">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Estado</p>
+                  <span
+                    className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      (LEAD_STATUS_META[lead.status] || {}).badge ||
+                      "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                    }`}
+                  >
+                    {(LEAD_STATUS_META[lead.status] || {}).label || lead.status || "—"}
+                  </span>
+                </div>
+                <div className="neumorphic-card-inset px-4 py-3 rounded-lg text-center min-w-[80px]">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Intentos</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                    {lead.attemptCount ?? 0}/6
+                  </p>
+                </div>
+                <div className="neumorphic-card-inset px-4 py-3 rounded-lg text-center min-w-[80px]">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Próx. llamada</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                    {safeDate(lead.nextCallDate, "dd/MM HH:mm")}
+                  </p>
+                </div>
+                <div className="neumorphic-card-inset px-4 py-3 rounded-lg text-center min-w-[80px]">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Últ. tipif.</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate max-w-[100px]">
+                    {lead.lastTipification?.name || "—"}
                   </p>
                 </div>
               </div>
@@ -736,6 +797,17 @@ export default function LeadDetailPage() {
       </div>
 
       {/* Modals */}
+      {showTipifyModal && (
+        <LeadTipificationModal
+          lead={lead}
+          onClose={() => setShowTipifyModal(false)}
+          onTipified={() => {
+            setShowTipifyModal(false);
+            window.location.reload();
+          }}
+        />
+      )}
+
       {isEditModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <EditAndCreateLeadSheet
@@ -768,6 +840,29 @@ export default function LeadDetailPage() {
           />
         </div>
       )}
+    </div>
+  );
+}
+
+// Barra de contadores de cola (PRES-018 B2b): leads disponibles + callbacks de hoy.
+function QueueStatsBar({ stats }) {
+  if (!stats) return null;
+  return (
+    <div className="grid grid-cols-2 gap-4 max-w-xl mx-auto">
+      <div className="neumorphic-card-inset px-4 py-3 rounded-lg flex items-center gap-3">
+        <span className="material-icons-outlined text-primary">groups</span>
+        <div>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Leads en cola</p>
+          <p className="text-xl font-bold text-slate-800 dark:text-slate-100">{stats.availableInQueue ?? 0}</p>
+        </div>
+      </div>
+      <div className="neumorphic-card-inset px-4 py-3 rounded-lg flex items-center gap-3">
+        <span className="material-icons-outlined text-amber-500">event_repeat</span>
+        <div>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Callbacks hoy</p>
+          <p className="text-xl font-bold text-slate-800 dark:text-slate-100">{stats.callbacksToday ?? 0}</p>
+        </div>
+      </div>
     </div>
   );
 }
