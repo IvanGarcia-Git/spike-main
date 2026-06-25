@@ -339,18 +339,13 @@ export default function LeadDetailPage() {
   const handleSearchNewLead = async () => {
     if (requestingLead) return; // evita dobles clics mientras se asigna
 
-    const payload = {};
-
     const jwtToken = getCookie("factura-token");
 
     setRequestingLead(true);
     try {
-      const response = await authFetch(
-        "POST",
-        "leads/type/",
-        payload,
-        jwtToken
-      );
+      // Nuevo motor de ciclo de vida: prioridad cola > callbacks > nuevos > reintentos,
+      // con rotación entre agentes. Sustituye al antiguo "leads/type" sin leadStateId.
+      const response = await authFetch("POST", "leads/request-next", {}, jwtToken);
 
       if (response.ok) {
         // Éxito: se recarga para mostrar el lead. Mantenemos el spinner activo
@@ -359,10 +354,15 @@ export default function LeadDetailPage() {
         return;
       }
 
-      const { message, noLeads } = await readLeadTypeError(response);
+      let message = "";
+      const noLeads = response.status === 404;
+      try {
+        const d = await response.json();
+        message = d?.error?.message || d?.message || "";
+      } catch {}
 
       if (noLeads) {
-        alert("Por el momento no quedan más leads sin asignar");
+        alert("Por el momento no quedan más leads disponibles");
       } else if (message) {
         // Motivo real ya en español desde el backend (p.ej. "El usuario no
         // pertenece a ningún grupo." / "No hay campañas disponibles...").
@@ -574,144 +574,26 @@ export default function LeadDetailPage() {
             </div>
           </div>
 
-          {/* Actions Card */}
+          {/* Tipificación (sistema de ciclo de vida — sustituye al antiguo "Codificar") */}
           <div className="neumorphic-card p-6 space-y-4">
-            {/* Observation Input */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Observaciones
-              </label>
-              <textarea
-                placeholder="Escribe tus observaciones..."
-                value={observation}
-                onChange={(e) => setObservation(e.target.value)}
-                className="w-full neumorphic-card-inset px-4 py-3 rounded-lg bg-transparent text-slate-800 dark:text-slate-200 border-none focus:outline-none resize-none h-20"
-              />
+            <div className="flex items-start gap-3">
+              <span className="material-icons-outlined text-primary">fact_check</span>
+              <div>
+                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Tipificar lead</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Registra el resultado de la llamada. El sistema programa el reintento, el callback o
+                  cierra el lead automáticamente, y lo rota al siguiente agente cuando corresponde. En
+                  el 6º intento pedirá un WhatsApp obligatorio y te asignará el lead de forma permanente.
+                </p>
+              </div>
             </div>
-
-            {/* Action Buttons Row */}
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => {
-                  setShowUsefulOptions(!showUsefulOptions);
-                  setShowNotUsefulOptions(false);
-                }}
-                className={`neumorphic-button px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-all ${
-                  showUsefulOptions ? "active bg-green-50 dark:bg-green-900/20 text-green-600" : "text-green-600"
-                }`}
-              >
-                <span className="material-icons-outlined text-sm">thumb_up</span>
-                Útil
-                <span className={`material-icons-outlined text-sm transition-transform ${showUsefulOptions ? "rotate-180" : ""}`}>expand_more</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setShowNotUsefulOptions(!showNotUsefulOptions);
-                  setShowUsefulOptions(false);
-                }}
-                className={`neumorphic-button px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-all ${
-                  showNotUsefulOptions ? "active bg-red-50 dark:bg-red-900/20 text-red-600" : "text-red-600"
-                }`}
-              >
-                <span className="material-icons-outlined text-sm">thumb_down</span>
-                No Útil
-                <span className={`material-icons-outlined text-sm transition-transform ${showNotUsefulOptions ? "rotate-180" : ""}`}>expand_more</span>
-              </button>
-
-              <button
-                onClick={handleSubmit}
-                disabled={!observation || !selectedOption}
-                className={`neumorphic-button bg-primary text-white px-6 py-2.5 rounded-lg font-semibold flex items-center gap-2 ml-auto ${
-                  !observation || !selectedOption ? "opacity-50 cursor-not-allowed" : "hover:bg-primary/90"
-                }`}
-              >
-                <span className="material-icons-outlined text-sm">send</span>
-                Codificar
-              </button>
-            </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="p-3 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm flex items-center gap-2">
-                <span className="material-icons-outlined text-sm">error</span>
-                {error}
-              </div>
-            )}
-
-            {/* Options Grid */}
-            {showUsefulOptions && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-                {usefulOptions.map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => setSelectedOption(option.id)}
-                    className={`p-3 rounded-lg text-center transition-all ${
-                      selectedOption === option.id
-                        ? "neumorphic-card-inset bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                        : "neumorphic-button text-slate-600 dark:text-slate-400 hover:text-green-600"
-                    }`}
-                  >
-                    <span className="material-icons-outlined text-xl block mb-1">{option.icon}</span>
-                    <span className="text-xs font-medium">{option.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {showNotUsefulOptions && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {notUsefulOptions.map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => setSelectedOption(option.id)}
-                    className={`p-3 rounded-lg text-center transition-all ${
-                      selectedOption === option.id
-                        ? "neumorphic-card-inset bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
-                        : "neumorphic-button text-slate-600 dark:text-slate-400 hover:text-red-600"
-                    }`}
-                  >
-                    <span className="material-icons-outlined text-xl block mb-1">{option.icon}</span>
-                    <span className="text-xs font-medium">{option.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Conditional Fields */}
-            {selectedOption === leadStatesIds.AgendaPersonal && (
-              <div className="neumorphic-card-inset p-4 rounded-lg">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Fecha y hora de la llamada
-                </label>
-                <input
-                  type="datetime-local"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg bg-transparent text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-primary"
-                />
-              </div>
-            )}
-
-            {selectedOption === leadStatesIds.AgendarUsuario && (
-              <div className="neumorphic-card-inset p-4 rounded-lg">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Seleccionar compañero
-                </label>
-                <select
-                  value={selectedUserId || ""}
-                  onChange={(e) => setSelectedUserId(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg bg-transparent text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-primary"
-                >
-                  <option value="">Seleccionar...</option>
-                  {users.map((user) => (
-                    <option key={user.visibleShareLeadUser.id} value={user.visibleShareLeadUser.id}>
-                      {user.visibleShareLeadUser.name} {user.visibleShareLeadUser.firstSurname}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <button
+              onClick={() => setShowTipifyModal(true)}
+              className="neumorphic-button bg-primary text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 hover:bg-primary/90"
+            >
+              <span className="material-icons-outlined text-sm">fact_check</span>
+              Tipificar lead
+            </button>
           </div>
 
           {/* Lead Logs */}
