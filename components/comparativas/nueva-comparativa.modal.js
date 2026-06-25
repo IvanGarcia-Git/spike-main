@@ -102,11 +102,20 @@ export default function NuevaComparativaModal({ isOpen, editId, onClose, onCreat
     const powerCount = getPowerPeriods(formData.selectedLightTariff);
     const energyCount = getEnergyPeriods(formData.selectedLightTariff);
 
-    if (powerCount !== formData.potencias.length || energyCount !== formData.energias.length) {
+    if (
+      powerCount !== formData.potencias.length ||
+      energyCount !== formData.energias.length ||
+      powerCount !== formData.clientPowerPrices.length ||
+      energyCount !== formData.clientEnergyPrices.length
+    ) {
       setFormData((prev) => ({
         ...prev,
         potencias: Array(powerCount).fill("").map((_, i) => prev.potencias[i] || ""),
         energias: Array(energyCount).fill("").map((_, i) => prev.energias[i] || ""),
+        // Mantener los precios unitarios de la tarifa ACTUAL alineados con el nº de periodos
+        // (inputs controlados + arrays densos para que el desglose de la factura actual cuadre).
+        clientPowerPrices: Array(powerCount).fill("").map((_, i) => prev.clientPowerPrices[i] || ""),
+        clientEnergyPrices: Array(energyCount).fill("").map((_, i) => prev.clientEnergyPrices[i] || ""),
       }));
     }
   }, [formData.selectedLightTariff]);
@@ -715,6 +724,60 @@ export default function NuevaComparativaModal({ isOpen, editId, onClose, onCreat
                   </div>
                 </div>
 
+                {/* Precios de la tarifa ACTUAL del cliente: necesarios para que el PDF muestre
+                    el desglose de costes de la "Factura actual". Si se sube factura, el OCR los
+                    rellena; aquí se pueden introducir/corregir a mano. Opcionales. */}
+                <div className="border-t border-slate-200 dark:border-slate-700 pt-5">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Precios de tu tarifa ACTUAL (opcional)
+                  </label>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                    Rellénalos (o súbelos con la factura) para que el PDF muestre el desglose de costes de la factura actual. Si los dejas vacíos, solo se mostrará el importe total.
+                  </p>
+
+                  <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1">
+                    Precio Potencia (€/kW y día)
+                  </label>
+                  <div className={`grid gap-4 mb-4 ${formData.potencias.length <= 3 ? "grid-cols-3" : "grid-cols-3 md:grid-cols-6"}`}>
+                    {getPeriodLabels(formData.potencias.length).map((label, index) => (
+                      <div key={`cpp-${label}`}>
+                        <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1">
+                          {label}
+                        </label>
+                        <input
+                          type="number"
+                          step="0.000001"
+                          value={formData.clientPowerPrices[index] ?? ""}
+                          onChange={(e) => handleArrayInputChange("clientPowerPrices", index, e.target.value)}
+                          className="w-full px-4 py-3 rounded-lg neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary"
+                          placeholder="0.000000"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1">
+                    Precio Energía (€/kWh)
+                  </label>
+                  <div className={`grid gap-4 ${formData.energias.length <= 3 ? "grid-cols-3" : "grid-cols-3 md:grid-cols-6"}`}>
+                    {getPeriodLabels(formData.energias.length).map((label, index) => (
+                      <div key={`cep-${label}`}>
+                        <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1">
+                          {label}
+                        </label>
+                        <input
+                          type="number"
+                          step="0.000001"
+                          value={formData.clientEnergyPrices[index] ?? ""}
+                          onChange={(e) => handleArrayInputChange("clientEnergyPrices", index, e.target.value)}
+                          className="w-full px-4 py-3 rounded-lg neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary"
+                          placeholder="0.000000"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div>
                   <div className="flex items-center space-x-3 mb-2">
                     <input
@@ -733,18 +796,33 @@ export default function NuevaComparativaModal({ isOpen, editId, onClose, onCreat
                   </div>
 
                   {formData.isSolar && (
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        Excedentes (kWh)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={formData.excedentes}
-                        onChange={(e) => handleInputChange("excedentes", e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary"
-                        placeholder="0.00"
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                          Excedentes (kWh)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={formData.excedentes}
+                          onChange={(e) => handleInputChange("excedentes", e.target.value)}
+                          className="w-full px-4 py-3 rounded-lg neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary"
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                          Precio Excedentes (€/kWh)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.000001"
+                          value={formData.clientSurplusPrice ?? ""}
+                          onChange={(e) => handleInputChange("clientSurplusPrice", e.target.value)}
+                          className="w-full px-4 py-3 rounded-lg neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary"
+                          placeholder="0.000000"
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -788,6 +866,46 @@ export default function NuevaComparativaModal({ isOpen, editId, onClose, onCreat
                     className="w-full px-4 py-3 rounded-lg neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="0.00"
                   />
+                </div>
+
+                {/* Precios de la tarifa ACTUAL del cliente: necesarios para que el PDF muestre
+                    el desglose de costes de la "Factura actual". Si se sube factura, el OCR los
+                    rellena; aquí se pueden introducir/corregir a mano. Opcionales. */}
+                <div className="border-t border-slate-200 dark:border-slate-700 pt-5">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Precios de tu tarifa ACTUAL (opcional)
+                  </label>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                    Rellénalos (o súbelos con la factura) para que el PDF muestre el desglose de costes de la factura actual. Si los dejas vacíos, solo se mostrará el importe total.
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1">
+                        Término Fijo (€/día)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.000001"
+                        value={formData.clientFixedPrice ?? ""}
+                        onChange={(e) => handleInputChange("clientFixedPrice", e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary"
+                        placeholder="0.000000"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1">
+                        Precio Energía (€/kWh)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.000001"
+                        value={formData.clientGasEnergyPrice ?? ""}
+                        onChange={(e) => handleInputChange("clientGasEnergyPrice", e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg neumorphic-card-inset bg-transparent text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary"
+                        placeholder="0.000000"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
