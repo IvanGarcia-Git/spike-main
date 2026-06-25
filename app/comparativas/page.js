@@ -103,25 +103,26 @@ export default function ComparativasPage() {
   };
 
   // Action handlers
-  const handleExport = async (comparativa) => {
+  // Abre una comparativa guardada recalculándola en el front (el backend solo guarda un cálculo
+  // mock; la mejor tarifa, su desglose y el ahorro se calculan contra las tarifas de las
+  // compañías). Reconstruye el MISMO `comparisonData` que produce el wizard y va a la página de
+  // resultados, que recalcula todo. `mode` decide la acción final allí:
+  //   - "download" → descarga el PDF automáticamente (botón Exportar).
+  //   - "view"     → abre la vista previa para mirarla (botón Ver).
+  // Incluye `id` para ACTUALIZAR la comparativa existente (PUT) y no crear un duplicado.
+  const openComparativa = async (comparativa, mode) => {
     setOpenDropdownId(null);
     try {
       const token = getCookie("factura-token");
       const response = await getComparativaById(comparativa.id, token);
       if (!response.ok) {
-        console.error("Error exporting comparativa:", response.status);
+        console.error("Error abriendo comparativa:", response.status);
         return;
       }
       const fd = await response.json();
       const isGas = fd.comparisonType === "gas";
       const num = (v) => (v != null && v !== "" ? Number(v) : 0);
 
-      // El backend solo guarda un cálculo MOCK: la mejor tarifa, su desglose y el ahorro real
-      // se calculan en el frontend (página de resultados, contra las tarifas de las compañías).
-      // Por eso reconstruimos el MISMO `comparisonData` que produce el wizard y enviamos al
-      // usuario a /comparativas/resultados, que recalcula todo y (con `autoDownloadComparativa`)
-      // descarga el PDF de la mejor tarifa automáticamente. Incluimos `id` para ACTUALIZAR la
-      // comparativa existente (PUT) y no crear un duplicado.
       sessionStorage.setItem("comparisonData", JSON.stringify({
         id: fd.id,
         clientName: fd.clientName,
@@ -150,12 +151,18 @@ export default function ComparativasPage() {
         clientFixedPrice: num(fd.clientFixedPrice),
         clientGasEnergyPrice: num(fd.clientGasEnergyPrice),
       }));
-      sessionStorage.setItem("autoDownloadComparativa", "true");
+      sessionStorage.setItem(
+        mode === "download" ? "autoDownloadComparativa" : "autoViewComparativa",
+        "true"
+      );
       router.push("/comparativas/resultados");
     } catch (error) {
-      console.error("Error exporting comparativa:", error);
+      console.error("Error abriendo comparativa:", error);
     }
   };
+
+  const handleView = (comparativa) => openComparativa(comparativa, "view");
+  const handleExport = (comparativa) => openComparativa(comparativa, "download");
 
   const handleRename = (comparativa) => {
     setOpenDropdownId(null);
@@ -367,6 +374,16 @@ export default function ComparativasPage() {
 
                   {openDropdownId === comparativa.id && (
                     <div className="absolute right-0 top-full mt-1 w-48 neumorphic-card rounded-lg shadow-lg z-50 py-1 animate-fade-in">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleView(comparativa);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 flex items-center"
+                      >
+                        <span className="material-icons-outlined text-lg mr-3">visibility</span>
+                        Ver
+                      </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

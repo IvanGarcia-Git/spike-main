@@ -597,21 +597,26 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
       router.push('/comparativas/personalizada');
     }, [formData, currentBillAmount, clientName, showCurrentBill, comparisonType, numDias, regulatedCosts, router]);
 
-    // Auto-descarga: al "Exportar" una comparativa guardada desde el historial se recalcula
-    // aquí (mejor tarifa + desglose + ahorro, que el backend NO guarda) y se descarga el PDF
-    // automáticamente. La activa app/comparativas/page.js (handleExport) con `autoDownloadComparativa`.
-    const autoDownloadedRef = useRef(false);
+    // Auto-acción al abrir una comparativa guardada desde el historial: se recalcula aquí
+    // (mejor tarifa + desglose + ahorro, que el backend NO guarda) y luego, según el flag que
+    // active app/comparativas/page.js:
+    //   - `autoDownloadComparativa` → "Exportar": va a la vista previa y descarga el PDF solo.
+    //   - `autoViewComparativa`     → "Ver": va a la vista previa SIN descargar (para mirarla).
+    const autoActionedRef = useRef(false);
     useEffect(() => {
-        if (autoDownloadedRef.current || results.length === 0) return;
+        if (autoActionedRef.current || results.length === 0) return;
         if (typeof window === 'undefined') return;
-        if (sessionStorage.getItem('autoDownloadComparativa') !== 'true') return;
-        autoDownloadedRef.current = true;
+        const wantsDownload = sessionStorage.getItem('autoDownloadComparativa') === 'true';
+        const wantsView = sessionStorage.getItem('autoViewComparativa') === 'true';
+        if (!wantsDownload && !wantsView) return;
+        autoActionedRef.current = true;
         sessionStorage.removeItem('autoDownloadComparativa');
+        sessionStorage.removeItem('autoViewComparativa');
         const best = results[0];
         const saving = currentBillAmount - best.totalCost;
         const annualSaving = currentBillAmount > 0 && numDias > 0 ? (saving / numDias) * 365 : 0;
-        // Para que /comparativas/personalizada descargue el PDF y vuelva al historial.
-        sessionStorage.setItem('autoDownloadPDF', 'true');
+        // Solo "Exportar" descarga automáticamente; "Ver" deja la vista previa abierta.
+        if (wantsDownload) sessionStorage.setItem('autoDownloadPDF', 'true');
         handleDownload(best, annualSaving);
     }, [results, currentBillAmount, numDias, handleDownload]);
 
