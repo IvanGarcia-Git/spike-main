@@ -129,7 +129,7 @@ export default function ComparativasPersonalizadaPage() {
         }
 
         const canvas = await html2canvas(page, {
-          scale: 1.5, // Reducido de 3 a 1.5 (suficiente para calidad PDF sin inflar tamaño)
+          scale: 2.5, // Aumentado de 1.5 a 2.5 para mejorar nitidez (commit anterior optimizó tamaño)
           useCORS: true,
           backgroundColor: colors.background,
           windowWidth: 800, // Ancho real del contenedor PDF (no 1920)
@@ -228,9 +228,9 @@ export default function ComparativasPersonalizadaPage() {
           }
         });
 
-        const imgData = canvas.toDataURL('image/jpeg', 0.75); // JPEG con 75% calidad (reducción drástica vs PNG)
+        const imgData = canvas.toDataURL('image/jpeg', 0.95); // JPEG con 95% calidad (mejor nitidez)
 
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST'); // Compresión FAST
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'MEDIUM'); // Compresión MEDIUM (mejor calidad que FAST)
       }
 
       pdf.save('comparativa.pdf');
