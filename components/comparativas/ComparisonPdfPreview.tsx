@@ -496,9 +496,15 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                     <div className="rounded-3xl px-8 py-8 text-center" style={{ backgroundColor: '#41ab7b' }}>
                         <h1 className="text-4xl font-extrabold" style={{ color: '#ffffff' }}>{pdfData?.clientName || 'Cliente'},</h1>
                         <h2 className="text-2xl font-medium" style={{ color: '#ffffff', opacity: 0.95 }}>aquí tienes tu comparativa</h2>
-                        <div className="mt-5 inline-block rounded-2xl px-8 py-3" style={{ backgroundColor: '#46c88c' }}>
-                            <p className="text-[11px] font-semibold tracking-widest" style={{ color: '#ffffff' }}>AHORRO ANUAL ESTIMADO</p>
-                            <p className="text-4xl font-extrabold" style={{ color: '#ffffff' }}>{formatCurrency(annualSaving)}</p>
+                        {/* Contenedor de bloque (flex) en vez de inline-block: html2canvas
+                            colapsa a veces el ancho de un inline-block con letter-spacing
+                            (tracking-widest) a 0 y oculta su contenido → el importe del ahorro
+                            no aparecía en la portada del PDF descargado. */}
+                        <div className="mt-5 flex justify-center">
+                            <div className="rounded-2xl px-8 py-3 text-center" style={{ backgroundColor: '#46c88c' }}>
+                                <p className="text-[11px] font-semibold tracking-widest" style={{ color: '#ffffff' }}>AHORRO ANUAL ESTIMADO</p>
+                                <p className="text-4xl font-extrabold" style={{ color: '#ffffff' }}>{formatCurrency(annualSaving)}</p>
+                            </div>
                         </div>
                     </div>
 
