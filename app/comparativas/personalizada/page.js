@@ -138,34 +138,27 @@ export default function ComparativasPersonalizadaPage() {
           imageTimeout: 0,
           removeContainer: false,
           onclone: (clonedDoc) => {
-            // Find all PDF pages in cloned document
+            // Solo forzamos el FONDO de cada página (el color de texto NO se toca: el
+            // diseño usa colores inline en cada elemento, así que el canvas debe respetarlos
+            // EXACTAMENTE igual que la vista previa — no recolorear nada).
             const clonedPages = clonedDoc.querySelectorAll('.pdf-page');
             clonedPages.forEach((clonedPage) => {
               if (clonedPage instanceof HTMLElement) {
-                // Apply colors directly to cloned element
                 clonedPage.style.backgroundColor = colors.background;
-                clonedPage.style.color = colors.primaryText;
               }
             });
 
-            // Remove dashed borders from image containers (labels with logo-container class)
+            // Quitar bordes punteados de contenedores de imagen (UI de subida de logos).
             const imageLabels = clonedDoc.querySelectorAll('.logo-container, label.border-dashed, label.border-2');
             imageLabels.forEach((label) => {
               if (label instanceof HTMLElement) {
-                // Remove all border properties completely
                 label.style.setProperty('border', 'none', 'important');
-                label.style.setProperty('border-width', '0', 'important');
-                label.style.setProperty('border-style', 'none', 'important');
-                label.style.setProperty('border-color', 'transparent', 'important');
                 label.style.setProperty('outline', 'none', 'important');
-                // Also remove Tailwind border classes inline
                 label.classList.remove('border-2', 'border-dashed', 'rounded-md');
-                // Set border properties directly on element to override Tailwind
-                label.style.cssText += '; border: none !important; border-width: 0 !important; border-style: none !important;';
               }
             });
 
-            // Also hide the "Cambiar" overlay on hover
+            // Ocultar overlays de hover (botón "Cambiar").
             const hoverOverlays = clonedDoc.querySelectorAll('.group-hover\\:opacity-100');
             hoverOverlays.forEach((overlay) => {
               if (overlay instanceof HTMLElement) {
@@ -175,54 +168,37 @@ export default function ComparativasPersonalizadaPage() {
 
             const allElements = clonedDoc.querySelectorAll('*');
             allElements.forEach((el) => {
-              if (el instanceof HTMLElement) {
-                el.style.setProperty('font-family', 'Arial, sans-serif', 'important');
+              if (!(el instanceof HTMLElement)) return;
 
-                // Apply primary text color to all elements that have color
-                // Preserve inline styles that include color
-                const originalStyle = el.getAttribute('style');
-                if (originalStyle && originalStyle.includes('color:')) {
-                  // Extract and preserve the color from inline style if it's primaryText
-                  const colorMatch = originalStyle.match(/color:\s*([^;]+)/);
-                  if (colorMatch) {
-                    // If color matches primaryText, apply with important
-                    const currentColor = colorMatch[1].trim();
-                    if (currentColor === colors.primaryText || currentColor === 'rgb(31, 41, 55)' || currentColor === '#1f2937') {
-                      el.style.setProperty('color', colors.primaryText, 'important');
-                    } else {
-                      el.style.setProperty('color', currentColor, 'important');
-                    }
-                  }
-                } else if (!el.classList.contains('text-white') && !el.classList.contains('text-green-500') && !el.classList.contains('text-rose-500') && !el.classList.contains('text-emerald-500')) {
-                  // If no specific color and not an element with fixed color, apply primaryText
-                  el.style.setProperty('color', colors.primaryText, 'important');
-                }
+              // Fuente uniforme (Geist no siempre embebe bien en el canvas).
+              el.style.setProperty('font-family', 'Arial, sans-serif', 'important');
 
-                // Convert inputs and textareas to divs for better rendering
-                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                  const div = clonedDoc.createElement('div');
-                  div.textContent = el.value;
-                  div.className = el.className;
+              // Convertir inputs/textarea a divs para que html2canvas pinte el texto.
+              // Se conserva la geometría (ancho, alto, alineación, color) del input para
+              // que el resultado quede pixel a pixel como en la vista previa.
+              if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                const cs = window.getComputedStyle(el);
+                const hasValue = !!el.value;
+                const div = clonedDoc.createElement('div');
+                div.textContent = hasValue ? el.value : (el.getAttribute('placeholder') || '');
 
-                  // Copy computed styles including color
-                  const computedStyle = window.getComputedStyle(el);
-                  div.style.cssText = computedStyle.cssText;
-                  div.style.whiteSpace = 'nowrap';
-                  div.style.overflow = 'visible';
-                  div.style.width = 'auto';
-                  div.style.minWidth = computedStyle.width;
+                div.style.fontFamily = 'Arial, sans-serif';
+                div.style.fontSize = cs.fontSize;
+                div.style.fontWeight = cs.fontWeight;
+                div.style.fontStyle = cs.fontStyle;
+                div.style.letterSpacing = cs.letterSpacing;
+                div.style.textAlign = cs.textAlign;
+                div.style.width = cs.width;
+                div.style.height = cs.height;
+                div.style.lineHeight = cs.height; // centra verticalmente la línea como el input
+                div.style.padding = '0';
+                div.style.margin = cs.margin;
+                div.style.whiteSpace = 'nowrap';
+                div.style.overflow = 'visible';
+                // Color: el del input (placeholder → gris) tal cual se ve en la preview.
+                div.style.color = hasValue ? (el.style.color || cs.color) : '#9ca3af';
 
-                  // Ensure color is maintained
-                  if (el.style.color) {
-                    div.style.setProperty('color', el.style.color, 'important');
-                  } else if (computedStyle.color) {
-                    div.style.setProperty('color', computedStyle.color, 'important');
-                  } else {
-                    div.style.setProperty('color', colors.primaryText, 'important');
-                  }
-
-                  el.parentNode?.replaceChild(div, el);
-                }
+                el.parentNode?.replaceChild(div, el);
               }
             });
           }

@@ -4,6 +4,13 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Phone } from 'lucide-react';
 import type { PdfData, CompanyLightTariff, CompanyGasTariff } from '@/lib/types';
+import {
+  calculateCurrentLightBillBreakdown,
+  calculateCurrentGasBillBreakdown,
+  buildLightBreakdownRows,
+  buildGasBreakdownRows,
+  type BreakdownRow,
+} from '@/lib/comparativa-breakdown';
 
 const formatCurrency = (value: number | undefined | null) => {
   if (value === undefined || value === null || isNaN(value)) {
@@ -11,7 +18,6 @@ const formatCurrency = (value: number | undefined | null) => {
   }
   return `${value.toFixed(2).replace('.', ',')}€`;
 };
-const parseCurrency = (value: string) => parseFloat(value.replace('€', '').replace(',', '.')) || 0;
 
 
 const getContrastColor = (hexcolor: string): 'black' | 'white' => {
@@ -38,44 +44,31 @@ interface ComparisonPdfPreviewProps {
   };
 }
 
-interface EditableDetail {
-    id: string;
-    label: string;
-    value: string;
-}
-interface EditableCardData {
-    potencia: EditableDetail[];
-    energia: EditableDetail[];
-    impuestos: EditableDetail[];
-}
-
-const initialCurrentBillDetails: EditableCardData = {
-    potencia: [
-        { id: 'curr-p1', label: 'XkW x Ndias x PrecioP1', value: '0,00€' },
-        { id: 'curr-p2', label: 'XkW x Ndias x PrecioP2', value: '0,00€' },
-    ],
-    energia: [
-        { id: 'curr-e1', label: 'Energía E1', value: '0,00€' },
-    ],
-    impuestos: [
-        { id: 'curr-rental', label: 'Alquiler Equipos', value: '0,00€' },
-        { id: 'curr-bonus', label: 'Bono Social', value: '0,00€' },
-        { id: 'curr-tax', label: 'Imp. Electricidad', value: '0,00€' },
-        { id: 'curr-vat', label: 'IVA', value: '0,00€' },
-    ],
-};
-
-const initialBestTariffDetails: EditableCardData = {
-    potencia: [
-        { id: 'best-p1', label: 'XkW x Ndias x PrecioP1', value: '0,00€' },
-    ],
-    energia: [
-        { id: 'best-e1', label: 'Coste Energía E1', value: '0,00€' },
-    ],
-    impuestos: [
-        { id: 'best-i1', label: 'Alquiler Equipos', value: '0,00€' },
-    ],
-};
+/** Lista de desglose para el PDF: concepto + importe y, debajo, la fórmula (estilo factura).
+ *  Usa estilos inline (no clases de Tailwind) para que html2canvas reproduzca exactamente
+ *  los mismos colores que la vista previa al descargar. */
+const PdfBreakdownList = ({ rows }: { rows: BreakdownRow[] }) => (
+    <div>
+        {rows.map((row, i) => (
+            <div
+                key={i}
+                style={{ borderBottom: '1px dashed #e5e7eb', paddingTop: 3, paddingBottom: 3 }}
+            >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+                    <span style={{ fontSize: 10, fontWeight: 500, color: '#374151' }}>{row.label}</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap', color: row.isCredit ? '#059669' : '#111827' }}>
+                        {formatCurrency(row.value)}
+                    </span>
+                </div>
+                {row.formula && (
+                    <p style={{ margin: 0, marginTop: 1, fontSize: 8, fontStyle: 'italic', lineHeight: 1.25, color: '#9ca3af' }}>
+                        {row.formula}
+                    </p>
+                )}
+            </div>
+        ))}
+    </div>
+);
 
 
 export default function ComparisonPdfPreview({ pdfData, colors, userData }: ComparisonPdfPreviewProps) {
@@ -96,11 +89,6 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
         if (savedHeader1) setHeaderLine1(savedHeader1);
         if (savedHeader2) setHeaderLine2(savedHeader2);
     }, []);
-
-    const [currentBillDetails, setCurrentBillDetails] = useState<EditableCardData>(initialCurrentBillDetails);
-    const [bestTariffDetails, setBestTariffDetails] = useState<EditableCardData>(initialBestTariffDetails);
-    const [totalCurrent, setTotalCurrent] = useState('84,64€');
-    const [totalBest, setTotalBest] = useState('84,64€');
 
     // --- Página 2 (rediseño "Luzia"): datos del suministro editables (no vienen en pdfData) ---
     const [supplyData, setSupplyData] = useState({ cups: '', comercializadora: '', tarifa: '', periodo: '' });
@@ -134,290 +122,76 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
         localStorage.setItem('comparativaPhone', value);
     };
 
-
-    useEffect(() => {
-        if (pdfData && pdfData.bestTariff?.tariff) {
-            const numDias = pdfData.numDias || 0;
-            const bestTariff = pdfData.bestTariff.tariff;
-
-            if (pdfData.comparisonType === 'luz') {
-                const bestLightTariff = bestTariff as CompanyLightTariff;
-                const potencias = pdfData.potencias || [];
-                const energias = pdfData.energias || [];
-                const excedentes = pdfData.excedentes || 0;
-
-                const bestTariffPowerPrices = bestLightTariff.powerPrices || [];
-                const bestTariffEnergyPrices = bestLightTariff.energyPrices || [];
-                const bestTariffSurplusPrice = bestLightTariff.surplusPrice || 0;
-                
-                const bestImpuestos = [
-                    { id: 'best-rental', label: 'Alquiler Equipos', value: formatCurrency(pdfData.bestTariff?.breakdown?.equipmentRental || 0) },
-                    { id: 'best-bonus', label: 'Bono Social', value: formatCurrency(pdfData.bestTariff?.breakdown?.socialBonus || 0) }
-                ];
-
-                if ((bestLightTariff as any).maintenanceCost > 0) {
-                    bestImpuestos.push({ id: 'best-maintenance', label: 'Servicios Adicionales', value: formatCurrency((bestLightTariff as any).maintenanceCost) });
-                }
-
-                bestImpuestos.push({ id: 'best-tax', label: 'Imp. Electricidad', value: formatCurrency(pdfData.bestTariff?.breakdown?.electricityTax || 0) });
-                bestImpuestos.push({ id: 'best-vat', label: 'IVA', value: formatCurrency(pdfData.bestTariff?.breakdown?.vat || 0) });
-
-                setBestTariffDetails({
-                    potencia: (pdfData.bestTariff?.breakdown?.powerCosts || []).map((cost, i) => ({
-                        id: `best-p-cost-${i}`,
-                        label: `${potencias[i] || 'X'}kW x ${numDias}dias x ${bestTariffPowerPrices[i] !== undefined ? bestTariffPowerPrices[i].toFixed(3) : `PrecioP${i + 1}`}`,
-                        value: formatCurrency(cost)
-                    })),
-                    energia: [
-                        ...(pdfData.bestTariff?.breakdown?.energyCosts || []).map((cost, i) => ({
-                            id: `best-e-cost-${i}`,
-                            label: `${energias[i] || 'X'}kWh x ${bestTariffEnergyPrices[i] !== undefined ? bestTariffEnergyPrices[i].toFixed(3) : `PrecioE${i + 1}`}€/kWh`,
-                            value: formatCurrency(cost)
-                        })),
-                        ...((pdfData.bestTariff?.breakdown?.surplusCredit ?? 0) > 0 ? [{
-                            id: 'best-surplus',
-                            label: `Abono Excedentes: ${excedentes}kWh x ${bestTariffSurplusPrice.toFixed(3)}€/kWh`,
-                            value: formatCurrency(-(pdfData.bestTariff?.breakdown?.surplusCredit || 0))
-                        }] : [])
-                    ],
-                    impuestos: bestImpuestos
-                });
-                
-                if (pdfData.showCurrentBill && pdfData.clientPrices?.power && pdfData.clientPrices?.energy) {
-                    const clientPowerPrices = pdfData.clientPrices.power;
-                    const clientEnergyPrices = pdfData.clientPrices.energy;
-                    const clientSurplusPrice = pdfData.clientPrices.surplus || 0;
-                    const maintenanceCost = pdfData.clientPrices.maintenance || 0;
-                    const regulatedCosts = pdfData.regulatedCosts;
-
-                    const powerCosts = potencias.map((p, i) => p * numDias * (clientPowerPrices[i] || 0));
-                    const energyCosts = energias.map((e, i) => e * (clientEnergyPrices[i] || 0));
-                    const costePotencia = powerCosts.reduce((a, b) => a + b, 0);
-                    const costeEnergia = energyCosts.reduce((a, b) => a + b, 0);
-                    const surplusCredit = (excedentes || 0) * clientSurplusPrice;
-                    const equipmentRental = numDias * (regulatedCosts?.alquiler || 0);
-                    const socialBonus = numDias * (regulatedCosts?.social || 0);
-                    const baseIH = costePotencia + costeEnergia - surplusCredit + equipmentRental + socialBonus;
-                    const electricityTax = baseIH > 0 ? baseIH * ((regulatedCosts?.ihp || 0) / 100) : 0;
-                    const baseIVA = baseIH + electricityTax + maintenanceCost;
-                    const vat = baseIVA > 0 ? baseIVA * ((regulatedCosts?.iva || 0) / 100) : 0;
-
-                    const currentImpuestos = [
-                        { id: 'curr-rental', label: 'Alquiler Equipos', value: formatCurrency(equipmentRental) },
-                        { id: 'curr-bonus', label: 'Bono Social', value: formatCurrency(socialBonus) }
-                    ];
-
-                    if (maintenanceCost > 0) {
-                        currentImpuestos.push({ id: 'curr-maintenance', label: 'Mantenimiento', value: formatCurrency(maintenanceCost) });
-                    }
-                    currentImpuestos.push({ id: 'curr-tax', label: 'Imp. Electricidad', value: formatCurrency(electricityTax) });
-                    currentImpuestos.push({ id: 'curr-vat', label: 'IVA', value: formatCurrency(vat) });
-
-                    setCurrentBillDetails({
-                        potencia: powerCosts.map((cost, i) => ({
-                            id: `curr-p${i + 1}`,
-                            label: `${potencias[i] || 'X'}kW x ${numDias}dias x ${(clientPowerPrices[i] || 0).toFixed(3)}`,
-                            value: formatCurrency(cost)
-                        })),
-                        energia: [
-                            ...energyCosts.map((cost, i) => ({
-                                id: `curr-e${i + 1}`,
-                                label: `${energias[i] || 'X'}kWh x ${(clientEnergyPrices[i] || 0).toFixed(3)}€/kWh`,
-                                value: formatCurrency(cost)
-                            })),
-                            ...(excedentes > 0 ? [{
-                                id: 'curr-surplus',
-                                label: `Abono Excedentes: ${excedentes}kWh x ${clientSurplusPrice.toFixed(3)}€/kWh`,
-                                value: formatCurrency(-surplusCredit)
-                            }] : [])
-                        ],
-                        impuestos: currentImpuestos,
-                    });
-                } else if (pdfData.showCurrentBill && (pdfData.currentBillAmount || 0) > 0) {
-                    // Sin precios de la tarifa actual: desglose DERIVADO del importe total.
-                    // Energía y potencia van combinadas (no se pueden separar sin precios), pero
-                    // alquiler, bono, impuesto e IVA se calculan con los costes regulados y la
-                    // suma cuadra EXACTAMENTE con el total de la factura.
-                    const rc: any = pdfData.regulatedCosts || {};
-                    const total = pdfData.currentBillAmount || 0;
-                    const equipmentRental = numDias * (rc.alquiler || 0);
-                    const socialBonus = numDias * (rc.social || 0);
-                    const ihp = (rc.ihp || 0) / 100;
-                    const iva = (rc.iva || 0) / 100;
-                    const baseIVA = iva > 0 ? total / (1 + iva) : total;
-                    const baseIH = ihp > 0 ? baseIVA / (1 + ihp) : baseIVA;
-                    const electricityTax = baseIVA - baseIH;
-                    const vat = total - baseIVA;
-                    const energyPower = Math.max(0, baseIH - equipmentRental - socialBonus);
-                    setCurrentBillDetails({
-                        potencia: [],
-                        energia: [{ id: 'curr-combined', label: 'Energía y potencia', value: formatCurrency(energyPower) }],
-                        impuestos: [
-                            { id: 'curr-rental', label: 'Alquiler Equipos', value: formatCurrency(equipmentRental) },
-                            { id: 'curr-bonus', label: 'Bono Social', value: formatCurrency(socialBonus) },
-                            { id: 'curr-tax', label: 'Imp. Electricidad', value: formatCurrency(electricityTax) },
-                            { id: 'curr-vat', label: 'IVA', value: formatCurrency(vat) },
-                        ],
-                    });
-                } else {
-                     setCurrentBillDetails(initialCurrentBillDetails);
-                }
-
-            } else if (pdfData.comparisonType === 'gas') {
-                const bestGasTariff = bestTariff as CompanyGasTariff;
-                const energia = pdfData.energia || 0;
-
-                const bestImpuestos = [
-                    { id: 'best-gas-rental', label: 'Alquiler Equipos', value: formatCurrency(pdfData.bestTariff?.breakdown?.equipmentRental || 0) },
-                ];
-                
-                if ((bestGasTariff as any).maintenanceCost > 0) {
-                    bestImpuestos.push({ id: 'best-gas-maintenance', label: 'Servicios Adicionales', value: formatCurrency((bestGasTariff as any).maintenanceCost) });
-                }
-
-                bestImpuestos.push({ id: 'best-gas-tax', label: 'Imp. Hidrocarburos', value: formatCurrency(pdfData.bestTariff?.breakdown?.hydrocarbonTax || 0) });
-                bestImpuestos.push({ id: 'best-gas-vat', label: 'IVA', value: formatCurrency(pdfData.bestTariff?.breakdown?.vat || 0) });
-
-                setBestTariffDetails({
-                    potencia: [{
-                        id: 'best-fixed',
-                        label: `Término Fijo: ${numDias}dias x ${bestGasTariff.fixedPrice.toFixed(3)}€/día`,
-                        value: formatCurrency(pdfData.bestTariff?.breakdown?.fixedCost || 0)
-                    }],
-                    energia: [{
-                        id: 'best-gas-energy',
-                        label: `Energía: ${energia}kWh x ${bestGasTariff.energyPrice.toFixed(3)}€/kWh`,
-                        value: formatCurrency(pdfData.bestTariff?.breakdown?.energyCost || 0)
-                    }],
-                    impuestos: bestImpuestos
-                });
-
-                if (pdfData.showCurrentBill && pdfData.clientPrices?.fixed !== undefined && pdfData.clientPrices?.variable !== undefined) {
-                    const clientFixed = pdfData.clientPrices.fixed;
-                    const clientVariable = pdfData.clientPrices.variable;
-                    const maintenanceCost = pdfData.clientPrices.maintenance || 0;
-                    const regulatedCosts = pdfData.regulatedCosts;
-
-                    const fixedCost = clientFixed * numDias;
-                    const energyCost = energia * clientVariable;
-                    const equipmentRental = (regulatedCosts.alquiler || 0) * numDias;
-                    const hydrocarbonTax = (regulatedCosts.hydrocarbon || 0) * energia;
-                    const baseCost = fixedCost + energyCost + equipmentRental + hydrocarbonTax;
-                    const vat = (baseCost + maintenanceCost) > 0 ? (baseCost + maintenanceCost) * ((regulatedCosts?.iva || 0) / 100) : 0;
-                    
-                    const currentImpuestos = [
-                        { id: 'curr-gas-rental', label: 'Alquiler Equipos', value: formatCurrency(equipmentRental) },
-                    ];
-
-                    if (maintenanceCost > 0) {
-                        currentImpuestos.push({ id: 'curr-gas-maintenance', label: 'Mantenimiento', value: formatCurrency(maintenanceCost) });
-                    }
-                    currentImpuestos.push({ id: 'curr-gas-tax', label: 'Imp. Hidrocarburos', value: formatCurrency(hydrocarbonTax) });
-                    currentImpuestos.push({ id: 'curr-gas-vat', label: 'IVA', value: formatCurrency(vat) });
-
-                    setCurrentBillDetails({
-                       potencia: [{
-                           id: 'curr-fixed',
-                           label: `Término Fijo: ${numDias}dias x ${clientFixed.toFixed(3)}€/día`,
-                           value: formatCurrency(fixedCost)
-                       }],
-                       energia: [{
-                           id: 'curr-gas-energy',
-                           label: `Energía: ${energia}kWh x ${clientVariable.toFixed(3)}€/kWh`,
-                           value: formatCurrency(energyCost)
-                       }],
-                       impuestos: currentImpuestos,
-                    });
-                } else if (pdfData.showCurrentBill && (pdfData.currentBillAmount || 0) > 0) {
-                    // Desglose DERIVADO del importe total para gas (sin precios de la tarifa actual).
-                    const rc: any = pdfData.regulatedCosts || {};
-                    const total = pdfData.currentBillAmount || 0;
-                    const equipmentRental = (rc.alquiler || 0) * numDias;
-                    const hydrocarbonTax = (rc.hydrocarbon || 0) * energia;
-                    const iva = (rc.iva || 0) / 100;
-                    const baseIVA = iva > 0 ? total / (1 + iva) : total;
-                    const vat = total - baseIVA;
-                    const fixedEnergy = Math.max(0, baseIVA - equipmentRental - hydrocarbonTax);
-                    setCurrentBillDetails({
-                        potencia: [],
-                        energia: [{ id: 'curr-gas-combined', label: 'Término fijo y energía', value: formatCurrency(fixedEnergy) }],
-                        impuestos: [
-                            { id: 'curr-gas-rental', label: 'Alquiler Equipos', value: formatCurrency(equipmentRental) },
-                            { id: 'curr-gas-tax', label: 'Imp. Hidrocarburos', value: formatCurrency(hydrocarbonTax) },
-                            { id: 'curr-gas-vat', label: 'IVA', value: formatCurrency(vat) },
-                        ],
-                    });
-                } else {
-                    setCurrentBillDetails(initialCurrentBillDetails);
-                }
-            }
-
-            setTotalBest(formatCurrency(pdfData.bestTariff?.totalCost || 0));
-            setTotalCurrent(formatCurrency(pdfData.currentBillAmount || 0));
-
-        } else {
-            setBestTariffDetails(initialBestTariffDetails);
-            setCurrentBillDetails(initialCurrentBillDetails);
-            setTotalBest('84,64€');
-            setTotalCurrent('84,64€');
-        }
-    }, [pdfData]);
-
-
     const showCurrentBill = pdfData?.showCurrentBill ?? true;
     const annualSaving = pdfData?.annualSaving || 0;
     const monthlySaving = pdfData?.monthlySaving || 0;
     const bestCompanyName = pdfData?.bestTariff?.tariff?.companyName?.toUpperCase() ?? "MEJOR";
-    const sectionTitlePotencia = pdfData?.comparisonType === 'gas' ? 'Término Fijo' : 'Potencia';
 
     // ---------------------------------------------------------------------------
-    // Página 2 — diseño "Luzia": agregados derivados del desglose ya calculado
-    // (reutiliza currentBillDetails / bestTariffDetails para no duplicar la lógica
-    //  de cálculo de luz/gas, excedentes, costes regulados y precios del cliente).
+    // Página 2 — diseño "Luzia": datos de cabecera (consumo, potencia, importe).
     // ---------------------------------------------------------------------------
     const isGas = pdfData?.comparisonType === 'gas';
     const potenciasArr = pdfData?.potencias || [];
     const consumoTotal = isGas ? (pdfData?.energia || 0) : (pdfData?.energias || []).reduce((a, b) => a + (b || 0), 0);
     const importeFactura = pdfData?.currentBillAmount || 0;
 
-    const sumDetails = (arr: EditableDetail[] = []) => arr.reduce((a, d) => a + parseCurrency(d.value), 0);
-    const pickDetail = (arr: EditableDetail[] = [], frag: string) => {
-        const d = arr.find(x => x.id.includes(frag));
-        return d ? parseCurrency(d.value) : 0;
-    };
-    const taxLabel = isGas ? 'Imp. Hidrocarburos' : 'Impuesto eléctrico';
-    const potLabel = isGas ? 'Término fijo' : 'Coste potencia';
-
-    const buildRows = (details: EditableCardData, includeBono: boolean) => {
-        const alquiler = pickDetail(details.impuestos, 'rental');
-        const bono = pickDetail(details.impuestos, 'bonus');
-        const mant = pickDetail(details.impuestos, 'maintenance');
-        const tax = pickDetail(details.impuestos, 'tax');
-        const iva = pickDetail(details.impuestos, 'vat');
-        const energiaTotal = sumDetails(details.energia);
-        const potenciaTotal = sumDetails(details.potencia);
-        // Si no hay desglose por periodos de la potencia/término fijo (desglose derivado del
-        // importe total, sin precios del cliente), energía y potencia van en una sola línea.
-        const energiaLabel = potenciaTotal > 0.0001
-            ? 'Coste energía'
-            : (isGas ? 'Término fijo y energía' : 'Coste energía y potencia');
-        const rows = [
-            { label: energiaLabel, value: energiaTotal },
-            { label: potLabel, value: potenciaTotal },
-            { label: 'Alquiler equipos', value: alquiler },
-            ...(includeBono ? [{ label: 'Bono social', value: bono }] : []),
-            { label: 'Mantenimiento', value: mant },
-            { label: taxLabel, value: tax },
-            { label: 'IVA', value: iva },
-        ];
-        // No mostrar filas a 0 (requisito: ningún dato debe quedarse en 0). El TOTAL
-        // se muestra siempre aparte (importe real de la factura / mejor tarifa).
-        return rows.filter((r) => Math.abs(r.value) > 0.0001);
-    };
-    const currentRows = buildRows(currentBillDetails, !isGas);
-    const bestRows = buildRows(bestTariffDetails, !isGas);
-
+    // Desglose de la comparativa: reutiliza EXACTAMENTE la misma lógica que las
+    // tarjetas "FACTURA ACTUAL" y "MEJOR ALTERNATIVA" de la página de resultados
+    // (concepto + importe + fórmula), vía el módulo compartido lib/comparativa-breakdown.
     const bestTariffObj = pdfData?.bestTariff?.tariff;
+
+    // Objeto tipo `formData` que esperan los builders, construido desde pdfData.
+    const breakdownFormData = {
+        potencias: pdfData?.potencias ?? [],
+        energias: pdfData?.energias ?? [],
+        numDias: pdfData?.numDias ?? 0,
+        excedentes: pdfData?.excedentes ?? 0,
+        solarPanelActive: (pdfData?.excedentes ?? 0) > 0,
+        energia: pdfData?.energia ?? 0,
+        clientPowerPrices: pdfData?.clientPrices?.power,
+        clientEnergyPrices: pdfData?.clientPrices?.energy,
+        clientSurplusPrice: pdfData?.clientPrices?.surplus,
+        clientFixedPrice: pdfData?.clientPrices?.fixed,
+        clientGasEnergyPrice: pdfData?.clientPrices?.variable,
+        clientMaintenanceCost: pdfData?.clientPrices?.maintenance,
+    };
+    const regulated = pdfData?.regulatedCosts ?? { alquiler: 0, iva: 0 };
+
+    // FACTURA ACTUAL: desglose con los precios unitarios del cliente (igual que en resultados).
+    // Si no hay precios unitarios, el builder devuelve null → se muestra el aviso "sin datos".
+    const currentBreakdown = pdfData
+        ? (isGas
+            ? calculateCurrentGasBillBreakdown(breakdownFormData, regulated)
+            : calculateCurrentLightBillBreakdown(breakdownFormData, regulated))
+        : null;
+    const currentRows: BreakdownRow[] = currentBreakdown
+        ? (isGas
+            ? buildGasBreakdownRows(currentBreakdown, breakdownFormData, regulated, {
+                fixedPrice: pdfData?.clientPrices?.fixed,
+                energyPrice: pdfData?.clientPrices?.variable,
+            })
+            : buildLightBreakdownRows(currentBreakdown, breakdownFormData, regulated, {
+                powerPrices: pdfData?.clientPrices?.power,
+                energyPrices: pdfData?.clientPrices?.energy,
+                surplusPrice: pdfData?.clientPrices?.surplus,
+            }))
+        : [];
+
+    // MEJOR ALTERNATIVA: desglose de la mejor tarifa (igual que en resultados).
+    const bestBreakdown = pdfData?.bestTariff?.breakdown;
+    const bestRows: BreakdownRow[] = bestBreakdown
+        ? (isGas
+            ? buildGasBreakdownRows(bestBreakdown, breakdownFormData, regulated, {
+                fixedPrice: (bestTariffObj as CompanyGasTariff)?.fixedPrice,
+                energyPrice: (bestTariffObj as CompanyGasTariff)?.energyPrice,
+            })
+            : buildLightBreakdownRows(bestBreakdown, breakdownFormData, regulated, {
+                powerPrices: (bestTariffObj as CompanyLightTariff)?.powerPrices,
+                energyPrices: (bestTariffObj as CompanyLightTariff)?.energyPrices,
+                surplusPrice: (bestTariffObj as CompanyLightTariff)?.surplusPrice,
+            }))
+        : [];
+
     const newPowerPrices: number[] = !isGas ? (((bestTariffObj as CompanyLightTariff)?.powerPrices) || []) : [];
     const newEnergyPrices: number[] = !isGas ? (((bestTariffObj as CompanyLightTariff)?.energyPrices) || []) : [];
     const newGasFixed = isGas ? ((bestTariffObj as CompanyGasTariff)?.fixedPrice ?? null) : null;
@@ -607,7 +381,9 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                     </div>
                 </div>
 
-                {/* Sección 1: Desglose de Comparativa */}
+                {/* Sección 1: Desglose de Comparativa
+                    Reproduce EXACTAMENTE las tarjetas "FACTURA ACTUAL" y "MEJOR ALTERNATIVA"
+                    de la página de resultados (concepto + importe + fórmula de cálculo). */}
                 <div>
                     <div className="flex items-center gap-2 mb-0.5">
                         <span className="w-5 h-5 rounded-full text-white text-[11px] font-bold flex items-center justify-center" style={{ backgroundColor: '#059669' }}>1</span>
@@ -619,48 +395,32 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                     <div className={`grid gap-3 ${showCurrentBill ? 'grid-cols-2' : 'grid-cols-1'}`}>
                         {/* Factura actual */}
                         {showCurrentBill && (
-                            <div className="rounded-lg p-3" style={{ border: '1px solid #fecaca', backgroundColor: '#fff' }}>
-                                <p className="text-[10px] font-bold tracking-wide mb-0.5" style={{ color: '#dc2626' }}>FACTURA ACTUAL</p>
-                                <p className="text-[10px] font-semibold mb-2" style={{ color: '#6b7280' }}>{supplyData.comercializadora || 'Tu compañía actual'}</p>
-                                {currentRows.map((r, i) => (
-                                    <div key={i} className="flex justify-between items-baseline py-0.5" style={{ borderBottom: '1px solid #f3f4f6' }}>
-                                        <span className="text-[11px]" style={{ color: '#4b5563' }}>{r.label}</span>
-                                        <span className="text-[11px] font-semibold" style={{ color: '#111827' }}>{formatCurrency(r.value)}</span>
-                                    </div>
-                                ))}
-                                <div className="flex justify-between items-baseline pt-2 mt-1">
-                                    <span className="text-xs font-bold" style={{ color: '#dc2626' }}>TOTAL FACTURA</span>
-                                    <input
-                                        type="text"
-                                        value={totalCurrent}
-                                        onChange={(e) => setTotalCurrent(e.target.value)}
-                                        className="text-base font-extrabold bg-transparent border-none p-0 m-0 w-24 text-right focus:ring-1 focus:ring-emerald-500 rounded-sm"
-                                        style={{ color: '#dc2626' }}
-                                    />
-                                </div>
+                            <div className="rounded-lg p-3" style={{ border: '1px solid #fecaca', backgroundColor: '#fef2f2' }}>
+                                <p className="text-[10px] font-bold tracking-wide" style={{ color: '#b91c1c' }}>FACTURA ACTUAL</p>
+                                <p className="text-[9px] font-semibold mb-2" style={{ color: '#dc2626' }}>Desglose de tu factura actual</p>
+                                {currentBreakdown ? (
+                                    <>
+                                        <div className="flex justify-between items-center pb-1 mb-2" style={{ borderBottom: '1px solid #fecaca' }}>
+                                            <span className="text-[10px] font-medium" style={{ color: '#b91c1c' }}>TOTAL</span>
+                                            <span className="text-base font-extrabold" style={{ color: '#b91c1c' }}>{formatCurrency(importeFactura)}</span>
+                                        </div>
+                                        <PdfBreakdownList rows={currentRows} />
+                                    </>
+                                ) : (
+                                    <p className="text-[10px]" style={{ color: '#6b7280' }}>Sin datos de precios unitarios de la factura actual</p>
+                                )}
                             </div>
                         )}
 
                         {/* Mejor alternativa */}
-                        <div className="rounded-lg p-3" style={{ border: '1px solid #a7f3d0', backgroundColor: '#fff' }}>
-                            <p className="text-[10px] font-bold tracking-wide mb-0.5" style={{ color: '#059669' }}>MEJOR ALTERNATIVA</p>
-                            <p className="text-[10px] font-semibold mb-2" style={{ color: '#6b7280' }}>{bestCompanyDisplay}{bestTariffName ? ` — ${bestTariffName}` : ''}</p>
-                            {bestRows.map((r, i) => (
-                                <div key={i} className="flex justify-between items-baseline py-0.5" style={{ borderBottom: '1px solid #f3f4f6' }}>
-                                    <span className="text-[11px]" style={{ color: '#4b5563' }}>{r.label}</span>
-                                    <span className="text-[11px] font-semibold" style={{ color: '#111827' }}>{formatCurrency(r.value)}</span>
-                                </div>
-                            ))}
-                            <div className="flex justify-between items-baseline pt-2 mt-1">
-                                <span className="text-xs font-bold" style={{ color: '#059669' }}>TOTAL</span>
-                                <input
-                                    type="text"
-                                    value={totalBest}
-                                    onChange={(e) => setTotalBest(e.target.value)}
-                                    className="text-base font-extrabold bg-transparent border-none p-0 m-0 w-24 text-right focus:ring-1 focus:ring-emerald-500 rounded-sm"
-                                    style={{ color: '#059669' }}
-                                />
+                        <div className="rounded-lg p-3" style={{ border: '1px solid #a7f3d0', backgroundColor: '#f0fdf4' }}>
+                            <p className="text-[10px] font-bold tracking-wide" style={{ color: '#047857' }}>MEJOR ALTERNATIVA</p>
+                            <p className="text-[9px] font-semibold mb-2" style={{ color: '#059669' }}>{bestCompanyDisplay}{bestTariffName ? ` - ${bestTariffName}` : ''}</p>
+                            <div className="flex justify-between items-center pb-1 mb-2" style={{ borderBottom: '1px solid #a7f3d0' }}>
+                                <span className="text-[10px] font-medium" style={{ color: '#047857' }}>TOTAL</span>
+                                <span className="text-base font-extrabold" style={{ color: '#047857' }}>{formatCurrency(pdfData?.bestTariff?.totalCost || 0)}</span>
                             </div>
+                            <PdfBreakdownList rows={bestRows} />
                         </div>
                     </div>
                 </div>
