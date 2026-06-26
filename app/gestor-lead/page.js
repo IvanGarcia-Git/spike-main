@@ -202,6 +202,15 @@ export default function LeadDetailPage() {
     getQueueStats();
   }, []);
 
+  // Refresco periódico de la cola: si se crea un lead nuevo en una campaña, el
+  // contador del gestor lo refleja sin necesidad de recargar la página a mano.
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      getQueueStats();
+    }, 30000);
+    return () => clearInterval(intervalId);
+  }, []);
+
   useEffect(() => {
     if (selectedOption === leadStatesIds.AgendarUsuario) {
       getUsersToShareLead();
