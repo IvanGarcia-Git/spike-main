@@ -342,16 +342,16 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
     const buildPdfData = useCallback((result: TariffComparisonResult, annualSaving: number): PdfData => {
       const monthlySaving = annualSaving / 12;
 
-      // Solo enviamos los precios de la tarifa actual si la factura aportó datos reales;
-      // así la previsualización muestra el desglose de la "tarifa antigua" cuando hay datos
-      // extraídos y cae al placeholder cuando no los hay (en vez de pintar ceros).
-      const hasPrices = (arr?: number[]) => Array.isArray(arr) && arr.some((n) => n > 0);
+      // Pasamos los precios unitarios del cliente EXACTAMENTE como los usa la página de
+      // Resultados (en crudo, sin filtrar). El filtro anterior (hasPrices: algún valor > 0)
+      // descartaba casos válidos —p.ej. factura con precios de energía pero potencia a 0 por
+      // OCR parcial— que Resultados SÍ desglosa, provocando "Sin datos" en la preview/PDF.
       const clientPrices = {
-        power: hasPrices(formData.clientPowerPrices) ? formData.clientPowerPrices : undefined,
-        energy: hasPrices(formData.clientEnergyPrices) ? formData.clientEnergyPrices : undefined,
+        power: formData.clientPowerPrices,
+        energy: formData.clientEnergyPrices,
         surplus: formData.clientSurplusPrice,
-        fixed: formData.clientFixedPrice ? formData.clientFixedPrice : undefined,
-        variable: formData.clientGasEnergyPrice ? formData.clientGasEnergyPrice : undefined,
+        fixed: formData.clientFixedPrice,
+        variable: formData.clientGasEnergyPrice,
         maintenance: formData.clientMaintenanceCost,
       }
 
