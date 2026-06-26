@@ -444,6 +444,31 @@ export default function LeadDetailPage() {
     );
   }
 
+  // Historial DEL LEAD actual (no del agente): cada llamada/gestión con qué pasó, quién y cuándo.
+  // Combina las tipificaciones del nuevo ciclo de vida con los logs antiguos de estado, orden desc.
+  const userLabel = (u) =>
+    u ? [u.name, u.firstSurname].filter(Boolean).join(" ").trim() || u.username || "—" : "—";
+  const leadCallHistory = [
+    ...(lead.tipificationHistory || []).map((h) => ({
+      key: `t-${h.id}`,
+      date: h.createdAt,
+      who: userLabel(h.user),
+      what: h.tipification?.name || "Tipificación",
+      observation: h.observation,
+      attempt: h.attemptCountAtTipification != null ? h.attemptCountAtTipification + 1 : null,
+      color: "#10b981",
+    })),
+    ...(lead.leadLogs || []).map((l) => ({
+      key: `l-${l.id}`,
+      date: l.createdAt,
+      who: userLabel(l.user),
+      what: l.leadState?.name || "Cambio de estado",
+      observation: l.observations,
+      attempt: null,
+      color: l.leadState?.colorHex || "#94a3b8",
+    })),
+  ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -596,73 +621,49 @@ export default function LeadDetailPage() {
             </button>
           </div>
 
-          {/* Lead Logs */}
-          {lead.leadLogs && lead.leadLogs.length > 0 && (
-            <div className="neumorphic-card p-6">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-                <span className="material-icons-outlined text-primary">timeline</span>
-                Historial del Lead
-              </h3>
-              <div className="space-y-3">
-                {lead.leadLogs.map((log) => (
-                  <div key={log.id} className="flex items-start gap-3 p-3 neumorphic-card-inset rounded-lg">
-                    <div
-                      className="w-3 h-3 rounded-full mt-1.5 flex-shrink-0"
-                      style={{ backgroundColor: log.leadState?.colorHex }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                          {log.user?.username}
-                        </span>
-                        <span className="text-xs text-slate-400">•</span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
-                          {safeDate(log.createdAt, "dd/MM/yyyy")}
-                        </span>
-                      </div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">{log.observations}</p>
-                      <span className="text-xs text-slate-500 dark:text-slate-400">{log.leadState?.name}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Right Column - History */}
+        {/* Right Column - Historial del lead actual */}
         <div className="xl:col-span-1">
           <div className="neumorphic-card p-6 sticky top-6">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-1 flex items-center gap-2">
               <span className="material-icons-outlined text-primary">history</span>
-              Mi Historial
+              Historial del lead
             </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+              {leadCallHistory.length} gestión{leadCallHistory.length === 1 ? "" : "es"} registrada{leadCallHistory.length === 1 ? "" : "s"}
+            </p>
             <div className="space-y-2 max-h-[600px] overflow-y-auto">
-              {leadsHistory && leadsHistory.length > 0 ? (
-                leadsHistory.map((item, index) => (
-                  <div
-                    key={index}
-                    className="p-3 neumorphic-card-inset rounded-lg hover:scale-[1.01] transition-transform cursor-pointer"
-                    onClick={() => handleAssignLeadToUser(item.lead?.id)}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate">
-                        {item.lead?.fullName}
-                      </span>
-                      <span className="text-xs text-slate-400">
-                        {safeDate(item.lead?.createdAt, "dd/MM")}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                        {item.lead?.phoneNumber}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <span
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: item.leadState?.colorHex }}
-                        />
-                        <span className="text-xs text-slate-500">{item.leadState?.name}</span>
+              {leadCallHistory.length > 0 ? (
+                leadCallHistory.map((item) => (
+                  <div key={item.key} className="p-3 neumorphic-card-inset rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
+                            {item.what}
+                          </span>
+                          {item.attempt != null && (
+                            <span className="text-[10px] font-bold text-primary bg-primary/10 rounded-full px-2 py-0.5 flex-shrink-0">
+                              Intento {item.attempt}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                          <span className="material-icons-outlined text-[13px]">person</span>
+                          <span className="truncate">{item.who}</span>
+                          <span className="text-slate-400">•</span>
+                          <span className="flex-shrink-0">{safeDate(item.date, "dd/MM/yyyy HH:mm")}</span>
+                        </div>
+                        {item.observation && (
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 whitespace-pre-wrap break-words">
+                            {item.observation}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -670,7 +671,7 @@ export default function LeadDetailPage() {
               ) : (
                 <div className="text-center py-8">
                   <span className="material-icons-outlined text-3xl text-slate-300 dark:text-slate-600 mb-2 block">inbox</span>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Sin historial</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Aún no hay gestiones de este lead</p>
                 </div>
               )}
             </div>
