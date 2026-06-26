@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import ComparisonPdfPreview from '@/components/comparativas/ComparisonPdfPreview';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { buildPdfCanvasOptions } from '@/lib/pdf-canvas';
 import { authGetFetch } from '@/helpers/server-fetch.helper';
 import { getCookie } from 'cookies-next';
 import * as jose from 'jose';
@@ -78,7 +79,9 @@ export default function ComparativasPersonalizadaPage() {
       try {
         const data = JSON.parse(storedData);
         setPdfData(data);
-        sessionStorage.removeItem('pdfDataForGeneration');
+        // NO borramos 'pdfDataForGeneration': así la vista sobrevive a un refresco o a
+        // volver atrás. Se sobreescribe en Resultados (guardado pasivo de la mejor tarifa)
+        // o al pulsar el icono de descarga de una fila concreta.
 
         // If auto download flag is set, activate state
         if (autoDownload) {
@@ -128,81 +131,8 @@ export default function ComparativasPersonalizadaPage() {
           pdf.addPage();
         }
 
-        const canvas = await html2canvas(page, {
-          scale: 2.5, // Aumentado de 1.5 a 2.5 para mejorar nitidez (commit anterior optimizó tamaño)
-          useCORS: true,
-          backgroundColor: colors.background,
-          windowWidth: 800, // Ancho real del contenedor PDF (no 1920)
-          windowHeight: 1130, // Alto aproximado de página A4 proporcional
-          logging: false,
-          imageTimeout: 0,
-          removeContainer: false,
-          onclone: (clonedDoc) => {
-            // Solo forzamos el FONDO de cada página (el color de texto NO se toca: el
-            // diseño usa colores inline en cada elemento, así que el canvas debe respetarlos
-            // EXACTAMENTE igual que la vista previa — no recolorear nada).
-            const clonedPages = clonedDoc.querySelectorAll('.pdf-page');
-            clonedPages.forEach((clonedPage) => {
-              if (clonedPage instanceof HTMLElement) {
-                clonedPage.style.backgroundColor = colors.background;
-              }
-            });
-
-            // Quitar bordes punteados de contenedores de imagen (UI de subida de logos).
-            const imageLabels = clonedDoc.querySelectorAll('.logo-container, label.border-dashed, label.border-2');
-            imageLabels.forEach((label) => {
-              if (label instanceof HTMLElement) {
-                label.style.setProperty('border', 'none', 'important');
-                label.style.setProperty('outline', 'none', 'important');
-                label.classList.remove('border-2', 'border-dashed', 'rounded-md');
-              }
-            });
-
-            // Ocultar overlays de hover (botón "Cambiar").
-            const hoverOverlays = clonedDoc.querySelectorAll('.group-hover\\:opacity-100');
-            hoverOverlays.forEach((overlay) => {
-              if (overlay instanceof HTMLElement) {
-                overlay.style.setProperty('display', 'none', 'important');
-              }
-            });
-
-            const allElements = clonedDoc.querySelectorAll('*');
-            allElements.forEach((el) => {
-              if (!(el instanceof HTMLElement)) return;
-
-              // Fuente uniforme (Geist no siempre embebe bien en el canvas).
-              el.style.setProperty('font-family', 'Arial, sans-serif', 'important');
-
-              // Convertir inputs/textarea a divs para que html2canvas pinte el texto.
-              // Se conserva la geometría (ancho, alto, alineación, color) del input para
-              // que el resultado quede pixel a pixel como en la vista previa.
-              if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                const cs = window.getComputedStyle(el);
-                const hasValue = !!el.value;
-                const div = clonedDoc.createElement('div');
-                div.textContent = hasValue ? el.value : (el.getAttribute('placeholder') || '');
-
-                div.style.fontFamily = 'Arial, sans-serif';
-                div.style.fontSize = cs.fontSize;
-                div.style.fontWeight = cs.fontWeight;
-                div.style.fontStyle = cs.fontStyle;
-                div.style.letterSpacing = cs.letterSpacing;
-                div.style.textAlign = cs.textAlign;
-                div.style.width = cs.width;
-                div.style.height = cs.height;
-                div.style.lineHeight = cs.height; // centra verticalmente la línea como el input
-                div.style.padding = '0';
-                div.style.margin = cs.margin;
-                div.style.whiteSpace = 'nowrap';
-                div.style.overflow = 'visible';
-                // Color: el del input (placeholder → gris) tal cual se ve en la preview.
-                div.style.color = hasValue ? (el.style.color || cs.color) : '#9ca3af';
-
-                el.parentNode?.replaceChild(div, el);
-              }
-            });
-          }
-        });
+        // Opciones + onclone compartidas con el harness de verificación (lib/pdf-canvas).
+        const canvas = await html2canvas(page, buildPdfCanvasOptions({ background: colors.background, scale: 2.5 }));
 
         const imgData = canvas.toDataURL('image/jpeg', 0.95); // JPEG con 95% calidad (mejor nitidez)
 

@@ -199,6 +199,27 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
     const bestTariffName = bestTariffObj?.tariffName || '';
     const bestCompanyDisplay = bestTariffObj?.companyName || bestCompanyName;
 
+    // Sin datos de comparativa (p.ej. se abrió /comparativas/personalizada directamente sin
+    // haber hecho una comparativa): en vez de un lienzo en blanco, mensaje claro + volver.
+    if (!pdfData) {
+        return (
+            <div className="flex flex-col items-center justify-center text-center py-16 px-6">
+                <span className="material-icons-outlined text-5xl text-slate-300 mb-4">description</span>
+                <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">No hay ninguna comparativa para personalizar</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-md">
+                    Genera primero una comparativa para ver aquí la vista previa y descargar el PDF.
+                </p>
+                <a
+                    href="/comparativas"
+                    className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-colors"
+                >
+                    <span className="material-icons-outlined text-sm">arrow_back</span>
+                    Ir a Comparativas
+                </a>
+            </div>
+        );
+    }
+
 
     return (
         <div className="space-y-8">
@@ -375,7 +396,7 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                                 style={{ color: '#065f46' }}
                             />
                         </div>
-                        <div className="rounded-full px-4 py-1.5 text-center text-white text-[11px] font-semibold" style={{ border: '1px solid rgba(255,255,255,0.6)' }}>
+                        <div className="rounded-full px-4 py-1.5 text-center text-white text-[11px] font-semibold" style={{ border: '1px solid rgba(255,255,255,0.6)', lineHeight: 1 }}>
                             Contratar Online
                         </div>
                     </div>
@@ -386,7 +407,7 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                     de la página de resultados (concepto + importe + fórmula de cálculo). */}
                 <div>
                     <div className="flex items-center gap-2 mb-0.5">
-                        <span className="w-5 h-5 rounded-full text-white text-[11px] font-bold flex items-center justify-center" style={{ backgroundColor: '#059669' }}>1</span>
+                        <span className="w-5 h-5 rounded-full text-white text-[11px] font-bold text-center" style={{ backgroundColor: '#059669', display: 'inline-block', lineHeight: '1', paddingTop: '2px', boxSizing: 'border-box' }}>1</span>
                         <h3 className="text-sm font-bold" style={{ color: '#111827' }}>Desglose de Comparativa</h3>
                     </div>
                     <p className="text-[10px] mb-2 ml-7" style={{ color: '#6b7280' }}>
@@ -439,7 +460,7 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                 {/* Sección 2: Precios de la Nueva Tarifa */}
                 <div>
                     <div className="flex items-center gap-2 mb-2">
-                        <span className="w-5 h-5 rounded-full text-white text-[11px] font-bold flex items-center justify-center" style={{ backgroundColor: '#059669' }}>2</span>
+                        <span className="w-5 h-5 rounded-full text-white text-[11px] font-bold text-center" style={{ backgroundColor: '#059669', display: 'inline-block', lineHeight: '1', paddingTop: '2px', boxSizing: 'border-box' }}>2</span>
                         <h3 className="text-sm font-bold" style={{ color: '#111827' }}>Precios de la Nueva Tarifa</h3>
                     </div>
                     {isGas ? (
@@ -489,7 +510,7 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
             >
                 <header className="flex justify-center mb-4">
                     <div className="rounded-full px-12 py-2.5" style={{ backgroundColor: '#10b981' }}>
-                        <h1 className="text-2xl font-extrabold" style={{ color: '#ffffff' }}>Sobre nosotros</h1>
+                        <h1 className="text-2xl font-extrabold" style={{ color: '#ffffff', lineHeight: 1 }}>Sobre nosotros</h1>
                     </div>
                 </header>
 

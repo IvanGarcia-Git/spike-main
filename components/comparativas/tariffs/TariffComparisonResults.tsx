@@ -338,7 +338,8 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
     }, [results, comparativaSaved, formData, currentBillAmount, regulatedCosts, toast]);
 
 
-    const handleDownload = useCallback((result: TariffComparisonResult, annualSaving: number) => {
+    // Construye el PdfData (lo que consume la vista previa / PDF) para una tarifa concreta.
+    const buildPdfData = useCallback((result: TariffComparisonResult, annualSaving: number): PdfData => {
       const monthlySaving = annualSaving / 12;
 
       // Solo enviamos los precios de la tarifa actual si la factura aportó datos reales;
@@ -354,7 +355,7 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
         maintenance: formData.clientMaintenanceCost,
       }
 
-      const data: PdfData = {
+      return {
           bestTariff: result,
           currentBillAmount,
           annualSaving,
@@ -373,10 +374,29 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
           clientPrices: clientPrices,
           regulatedCosts: regulatedCosts,
       };
+    }, [formData, currentBillAmount, clientName, showCurrentBill, comparisonType, numDias, regulatedCosts]);
 
-      sessionStorage.setItem('pdfDataForGeneration', JSON.stringify(data));
+    const handleDownload = useCallback((result: TariffComparisonResult, annualSaving: number) => {
+      sessionStorage.setItem('pdfDataForGeneration', JSON.stringify(buildPdfData(result, annualSaving)));
       router.push('/comparativas/personalizada');
-    }, [formData, currentBillAmount, clientName, showCurrentBill, comparisonType, numDias, regulatedCosts, router]);
+    }, [buildPdfData, router]);
+
+    // El botón "Personalizar Comparativa" de la cabecera (components/comparativas/Header.js)
+    // navega a /comparativas/personalizada SIN pasar datos. Para que esa vista (y el PDF)
+    // muestren la comparativa ACTUAL —igual que en Resultados— persistimos de forma pasiva el
+    // PdfData de la MEJOR tarifa (#1) cada vez que hay resultados. El icono de descarga por
+    // fila lo sobreescribe con la tarifa concreta elegida justo antes de navegar.
+    useEffect(() => {
+      if (results.length === 0 || typeof window === 'undefined') return;
+      const best = results[0];
+      const saving = currentBillAmount - best.totalCost;
+      const annualSaving = currentBillAmount > 0 && numDias > 0 ? (saving / numDias) * 365 : 0;
+      try {
+        sessionStorage.setItem('pdfDataForGeneration', JSON.stringify(buildPdfData(best, annualSaving)));
+      } catch (e) {
+        console.error('No se pudo preparar la comparativa para personalizar:', e);
+      }
+    }, [results, currentBillAmount, numDias, buildPdfData]);
 
     // Auto-acción al abrir una comparativa guardada desde el historial: se recalcula aquí
     // (mejor tarifa + desglose + ahorro, que el backend NO guarda) y luego, según el flag que
