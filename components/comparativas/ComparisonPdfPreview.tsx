@@ -233,6 +233,32 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                         ],
                         impuestos: currentImpuestos,
                     });
+                } else if (pdfData.showCurrentBill && (pdfData.currentBillAmount || 0) > 0) {
+                    // Sin precios de la tarifa actual: desglose DERIVADO del importe total.
+                    // Energía y potencia van combinadas (no se pueden separar sin precios), pero
+                    // alquiler, bono, impuesto e IVA se calculan con los costes regulados y la
+                    // suma cuadra EXACTAMENTE con el total de la factura.
+                    const rc: any = pdfData.regulatedCosts || {};
+                    const total = pdfData.currentBillAmount || 0;
+                    const equipmentRental = numDias * (rc.alquiler || 0);
+                    const socialBonus = numDias * (rc.social || 0);
+                    const ihp = (rc.ihp || 0) / 100;
+                    const iva = (rc.iva || 0) / 100;
+                    const baseIVA = iva > 0 ? total / (1 + iva) : total;
+                    const baseIH = ihp > 0 ? baseIVA / (1 + ihp) : baseIVA;
+                    const electricityTax = baseIVA - baseIH;
+                    const vat = total - baseIVA;
+                    const energyPower = Math.max(0, baseIH - equipmentRental - socialBonus);
+                    setCurrentBillDetails({
+                        potencia: [],
+                        energia: [{ id: 'curr-combined', label: 'Energía y potencia', value: formatCurrency(energyPower) }],
+                        impuestos: [
+                            { id: 'curr-rental', label: 'Alquiler Equipos', value: formatCurrency(equipmentRental) },
+                            { id: 'curr-bonus', label: 'Bono Social', value: formatCurrency(socialBonus) },
+                            { id: 'curr-tax', label: 'Imp. Electricidad', value: formatCurrency(electricityTax) },
+                            { id: 'curr-vat', label: 'IVA', value: formatCurrency(vat) },
+                        ],
+                    });
                 } else {
                      setCurrentBillDetails(initialCurrentBillDetails);
                 }
@@ -302,6 +328,27 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
                        }],
                        impuestos: currentImpuestos,
                     });
+                } else if (pdfData.showCurrentBill && (pdfData.currentBillAmount || 0) > 0) {
+                    // Desglose DERIVADO del importe total para gas (sin precios de la tarifa actual).
+                    const rc: any = pdfData.regulatedCosts || {};
+                    const total = pdfData.currentBillAmount || 0;
+                    const equipmentRental = (rc.alquiler || 0) * numDias;
+                    const hydrocarbonTax = (rc.hydrocarbon || 0) * energia;
+                    const iva = (rc.iva || 0) / 100;
+                    const baseIVA = iva > 0 ? total / (1 + iva) : total;
+                    const vat = total - baseIVA;
+                    const fixedEnergy = Math.max(0, baseIVA - equipmentRental - hydrocarbonTax);
+                    setCurrentBillDetails({
+                        potencia: [],
+                        energia: [{ id: 'curr-gas-combined', label: 'Término fijo y energía', value: formatCurrency(fixedEnergy) }],
+                        impuestos: [
+                            { id: 'curr-gas-rental', label: 'Alquiler Equipos', value: formatCurrency(equipmentRental) },
+                            { id: 'curr-gas-tax', label: 'Imp. Hidrocarburos', value: formatCurrency(hydrocarbonTax) },
+                            { id: 'curr-gas-vat', label: 'IVA', value: formatCurrency(vat) },
+                        ],
+                    });
+                } else {
+                    setCurrentBillDetails(initialCurrentBillDetails);
                 }
             }
 
@@ -347,9 +394,16 @@ export default function ComparisonPdfPreview({ pdfData, colors, userData }: Comp
         const mant = pickDetail(details.impuestos, 'maintenance');
         const tax = pickDetail(details.impuestos, 'tax');
         const iva = pickDetail(details.impuestos, 'vat');
+        const energiaTotal = sumDetails(details.energia);
+        const potenciaTotal = sumDetails(details.potencia);
+        // Si no hay desglose por periodos de la potencia/término fijo (desglose derivado del
+        // importe total, sin precios del cliente), energía y potencia van en una sola línea.
+        const energiaLabel = potenciaTotal > 0.0001
+            ? 'Coste energía'
+            : (isGas ? 'Término fijo y energía' : 'Coste energía y potencia');
         const rows = [
-            { label: 'Coste energía', value: sumDetails(details.energia) },
-            { label: potLabel, value: sumDetails(details.potencia) },
+            { label: energiaLabel, value: energiaTotal },
+            { label: potLabel, value: potenciaTotal },
             { label: 'Alquiler equipos', value: alquiler },
             ...(includeBono ? [{ label: 'Bono social', value: bono }] : []),
             { label: 'Mantenimiento', value: mant },
