@@ -222,6 +222,8 @@ export default function TopBar({ userGroupId, isManager, onMenuClick }) {
                       Gestor Leads
                     </span>
                   </Link>
+                  {/* Oculto: el ciclo de vida de leads usa una prioridad fija
+                      (cola > callbacks > nuevos > reintentos), el orden configurable ya no se usa.
                   <Link
                     href="/mis-prioridades"
                     className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
@@ -234,6 +236,7 @@ export default function TopBar({ userGroupId, isManager, onMenuClick }) {
                       Mis Prioridades
                     </span>
                   </Link>
+                  */}
                   {userGroupId === 1 && (
                     <>
                       <Link
@@ -453,6 +456,8 @@ export default function TopBar({ userGroupId, isManager, onMenuClick }) {
                         Personalizar Columnas
                       </span>
                     </Link>
+                    {/* Oculto: el ciclo de vida de leads usa una prioridad fija
+                        (cola > callbacks > nuevos > reintentos), el orden configurable ya no se usa.
                     <Link
                       href="/prioridad-leads"
                       className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
@@ -465,6 +470,7 @@ export default function TopBar({ userGroupId, isManager, onMenuClick }) {
                         Prioridad de Leads
                       </span>
                     </Link>
+                    */}
                     <Link
                       href="/reglas-asignacion"
                       className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
