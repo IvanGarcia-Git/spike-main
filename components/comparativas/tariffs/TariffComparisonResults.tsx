@@ -518,7 +518,7 @@ export default function TariffComparisonResults(props: TariffComparisonResultsPr
                     </Card>
                   </div>
                 )}
-                <div className="rounded-md border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div className="rounded-md border border-slate-200 dark:border-slate-700 overflow-hidden overflow-x-auto">
                     <Table className="[&_tr]:border-slate-200 dark:[&_tr]:border-slate-700">
                         <TableHeader className="bg-slate-50 dark:bg-slate-800">
                             <TableRow className="[&>th]:text-slate-600 dark:[&>th]:text-slate-300">

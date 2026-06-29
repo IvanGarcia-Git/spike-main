@@ -322,11 +322,11 @@ export default function ComparativasPage() {
 
       {/* Lista de comparativas */}
       {!isLoading && comparativas.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-4 max-w-full overflow-x-hidden">
           {comparativas.map((comparativa) => (
             <div
               key={comparativa.id}
-              className="neumorphic-card p-4 flex items-center justify-between hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all cursor-pointer"
+              className="neumorphic-card p-4 flex items-center justify-between hover:shadow-neumorphic-inset-light dark:hover:shadow-neumorphic-inset-dark transition-all cursor-pointer max-w-full overflow-hidden"
               onClick={() => handleComparativaClick(comparativa)}
             >
               <div className="flex items-center">
@@ -373,7 +373,7 @@ export default function ComparativasPage() {
                   </button>
 
                   {openDropdownId === comparativa.id && (
-                    <div className="absolute right-0 top-full mt-1 w-48 neumorphic-card rounded-lg shadow-lg z-50 py-1 animate-fade-in">
+                    <div className="absolute right-0 top-full mt-1 w-48 max-w-[calc(100vw-2rem)] neumorphic-card rounded-lg shadow-lg z-50 py-1 animate-fade-in">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
