@@ -263,7 +263,7 @@ export default function ComparativasPage() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-full overflow-x-hidden">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>

@@ -520,7 +520,7 @@ export default function NuevaComparativaModal({ isOpen, editId, onClose, onCreat
           </div>
 
           {/* Form Steps */}
-          <div className="min-h-[400px]">
+          <div className="min-h-[400px] max-w-full overflow-x-hidden">
             {/* Paso 1: Tipo de Comparativa */}
             {currentStep === 1 && (
               <div className="space-y-6">
@@ -528,10 +528,10 @@ export default function NuevaComparativaModal({ isOpen, editId, onClose, onCreat
                   <h4 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">
                     Selecciona el tipo de suministro
                   </h4>
-                  <div className="flex items-center justify-center space-x-8">
+                  <div className="flex items-center justify-center gap-4 sm:gap-8">
                     <button
                       onClick={() => handleInputChange("comparisonType", "luz")}
-                      className={`neumorphic-button flex flex-col items-center justify-center p-8 w-48 h-48 rounded-xl transition-all duration-200 ${
+                      className={`neumorphic-button flex flex-col items-center justify-center p-6 sm:p-8 flex-1 max-w-[12rem] aspect-square rounded-xl transition-all duration-200 ${
                         formData.comparisonType === "luz"
                           ? "active text-primary shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark"
                           : "text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary"
@@ -545,7 +545,7 @@ export default function NuevaComparativaModal({ isOpen, editId, onClose, onCreat
 
                     <button
                       onClick={() => handleInputChange("comparisonType", "gas")}
-                      className={`neumorphic-button flex flex-col items-center justify-center p-8 w-48 h-48 rounded-xl transition-all duration-200 ${
+                      className={`neumorphic-button flex flex-col items-center justify-center p-6 sm:p-8 flex-1 max-w-[12rem] aspect-square rounded-xl transition-all duration-200 ${
                         formData.comparisonType === "gas"
                           ? "active text-orange-400 shadow-neumorphic-inset-light dark:shadow-neumorphic-inset-dark"
                           : "text-slate-600 dark:text-slate-400 hover:text-orange-400 dark:hover:text-orange-400"
