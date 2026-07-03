@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { getCookie } from "cookies-next";
 import { authFetch, authGetFetch } from "@/helpers/server-fetch.helper";
+import { withAssignedUserName } from "@/helpers/leads.helper";
 import GroupLinkModal from "./group-link.modal";
 import CampaignBulkImportModal from "./campaign-bulk-import.modal";
 import * as XLSX from "xlsx";
@@ -433,7 +434,11 @@ export default function CampaignCard({
     try {
       const response = await authGetFetch(`campaigns/${campaign.uuid}`, jwtToken);
       if (response.ok) {
-        const { leads } = await response.json();
+        const { leads: rawLeads } = await response.json();
+
+        // Derivamos `assignedUserName` desde `lead.user` (igual que en la carga
+        // inicial) para que la columna Agente muestre el gestor asignado.
+        const leads = withAssignedUserName(rawLeads);
 
         campaign.leads = leads;
         setFilteredLeads(leads);
@@ -782,7 +787,7 @@ export default function CampaignCard({
                       </datalist>
                     </>
                   ) : (
-                    lead.assignedUserName || "No asignado"
+                    lead.assignedUserName || "En cola"
                   )}
                 </td>
 

@@ -3,6 +3,7 @@ import CampaignCard from "@/components/campaign.card";
 import { useState, useEffect } from "react";
 import { getCookie } from "cookies-next";
 import { authGetFetch } from "@/helpers/server-fetch.helper";
+import { withAssignedUserName } from "@/helpers/leads.helper";
 import NewCampaignModal from "@/components/new-campaign.modal";
 import RepeatedLeads from "@/components/repeated-leads.sections";
 import CommunicationModal from "@/components/communication.modal";
@@ -55,7 +56,13 @@ export default function CampaignsPage() {
       // un lead recién creado "desaparecía" (el botón "Ver más" carga el resto).
       const response = await authGetFetch("campaigns/all", jwtToken);
       if (response.ok) {
-        const campaignsData = await response.json();
+        const rawCampaignsData = await response.json();
+        // El backend devuelve el agente asignado en `lead.user`; derivamos
+        // `assignedUserName` para que la columna Agente lo pinte correctamente.
+        const campaignsData = rawCampaignsData.map((campaign) => ({
+          ...campaign,
+          leads: withAssignedUserName(campaign.leads),
+        }));
         setCampaigns(campaignsData);
         setFilteredCampaigns(campaignsData);
       } else {
